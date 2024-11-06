@@ -1,0 +1,152 @@
+HETATM    1  C   ACE A  27      17.568 -74.143  -9.286  1.00  0.00           C  
+HETATM    2  O   ACE A  27      17.564 -73.555 -10.375  1.00  0.00           O  
+HETATM    3  CH3 ACE A  27      18.604 -73.822  -8.230  1.00  0.00           C  
+HETATM    4 1HH3 ACE A  27      18.533 -72.782  -7.946  1.00  0.00           H  
+HETATM    5 2HH3 ACE A  27      18.442 -74.435  -7.355  1.00  0.00           H  
+HETATM    6 3HH3 ACE A  27      19.594 -74.014  -8.614  1.00  0.00           H  
+HETATM    7  N   FTH A  28      16.675 -75.043  -9.047  1.00  0.00           N  
+HETATM    8  CA  FTH A  28      15.670 -75.367 -10.048  1.00  0.00           C  
+HETATM    9  C   FTH A  28      14.304 -75.563  -9.406  1.00  0.00           C  
+HETATM   10  O   FTH A  28      13.841 -76.697  -9.237  1.00  0.00           O  
+HETATM   11  CB  FTH A  28      16.065 -76.597 -10.821  1.00  0.00           C  
+HETATM   12  CG2 FTH A  28      14.896 -77.359 -11.377  1.00  0.00           C  
+HETATM   13  OG1 FTH A  28      16.769 -77.456  -9.879  1.00  0.00           O  
+HETATM   14  OE1 FTH A  28      17.226 -79.471 -11.155  1.00  0.00           O  
+HETATM   15  OE2 FTH A  28      18.697 -77.511 -11.324  1.00  0.00           O  
+HETATM   16  OE3 FTH A  28      18.774 -78.845  -9.169  1.00  0.00           O  
+HETATM   17  CZ  FTH A  28      17.820 -80.782 -11.331  1.00  0.00           C  
+HETATM   18  CI2 FTH A  28      15.695 -81.611 -12.458  1.00  0.00           C  
+HETATM   19  OI1 FTH A  28      15.951 -81.700 -10.095  1.00  0.00           O  
+HETATM   20  CK2 FTH A  28      14.306 -82.150 -12.241  1.00  0.00           C  
+HETATM   21  OK1 FTH A  28      16.188 -82.286 -13.615  1.00  0.00           O  
+HETATM   22  CL2 FTH A  28      13.523 -82.069 -13.532  1.00  0.00           C  
+HETATM   23  OL1 FTH A  28      13.563 -81.372 -11.301  1.00  0.00           O  
+HETATM   24  NM  FTH A  28      12.245 -81.373 -13.370  1.00  0.00           N  
+HETATM   25  CN1 FTH A  28      11.379 -81.747 -12.342  1.00  0.00           C  
+HETATM   26  CN2 FTH A  28      11.914 -80.368 -14.223  1.00  0.00           C  
+HETATM   27  PD  FTH A  28      17.978 -78.347 -10.348  1.00  0.00           P  
+HETATM   28  CX2 FTH A  28      10.202 -81.011 -12.172  1.00  0.00           C  
+HETATM   29  CX3 FTH A  28      10.679 -79.669 -13.960  1.00  0.00           C  
+HETATM   30  CX4 FTH A  28      11.657 -82.826 -11.472  1.00  0.00           C  
+HETATM   31  NX1 FTH A  28      12.758 -80.087 -15.214  1.00  0.00           N  
+HETATM   32  CO2 FTH A  28       9.306 -81.333 -11.122  1.00  0.00           C  
+HETATM   33  CO3 FTH A  28      10.777 -83.124 -10.453  1.00  0.00           C  
+HETATM   34  CO4 FTH A  28      12.415 -79.062 -16.072  1.00  0.00           C  
+HETATM   35  CO5 FTH A  28      10.308 -78.544 -14.877  1.00  0.00           C  
+HETATM   36  CP4 FTH A  28       9.570 -82.369 -10.245  1.00  0.00           C  
+HETATM   37  CP5 FTH A  28      11.091 -84.277  -9.526  1.00  0.00           C  
+HETATM   38  CR  FTH A  28       8.623 -82.697  -9.110  1.00  0.00           C  
+HETATM   39  CT  FTH A  28      16.694 -81.806 -11.308  1.00  0.00           C  
+HETATM   40  NO1 FTH A  28       9.859 -79.953 -12.980  1.00  0.00           N  
+HETATM   41  NP3 FTH A  28      11.233 -78.368 -15.898  1.00  0.00           N  
+HETATM   42  OP1 FTH A  28      13.173 -78.761 -17.003  1.00  0.00           O  
+HETATM   43  OP2 FTH A  28       9.306 -77.860 -14.741  1.00  0.00           O  
+HETATM   44  H   FTH A  28      16.674 -75.526  -8.160  1.00  0.00           H  
+HETATM   45  HA  FTH A  28      15.601 -74.536 -10.750  1.00  0.00           H  
+HETATM   46 1HB  FTH A  28      16.719 -76.318 -11.620  1.00  0.00           H  
+HETATM   47 1HG2 FTH A  28      14.688 -77.020 -12.370  1.00  0.00           H  
+HETATM   48 2HG2 FTH A  28      14.038 -77.198 -10.758  1.00  0.00           H  
+HETATM   49 3HG2 FTH A  28      15.128 -78.404 -11.400  1.00  0.00           H  
+HETATM   50 1HE3 FTH A  28      18.355 -78.556  -8.354  1.00  0.00           H  
+HETATM   51 1HZ  FTH A  28      18.508 -80.981 -10.536  1.00  0.00           H  
+HETATM   52 2HZ  FTH A  28      18.334 -80.827 -12.269  1.00  0.00           H  
+HETATM   53 1HI1 FTH A  28      16.250 -80.933  -9.601  1.00  0.00           H  
+HETATM   54 1HI2 FTH A  28      15.619 -80.563 -12.660  1.00  0.00           H  
+HETATM   55 1HK1 FTH A  28      16.993 -82.760 -13.392  1.00  0.00           H  
+HETATM   56 1HK2 FTH A  28      14.364 -83.170 -11.924  1.00  0.00           H  
+HETATM   57 1HL1 FTH A  28      14.105 -80.643 -10.988  1.00  0.00           H  
+HETATM   58 1HL2 FTH A  28      13.330 -83.063 -13.877  1.00  0.00           H  
+HETATM   59 2HL2 FTH A  28      14.109 -81.546 -14.257  1.00  0.00           H  
+HETATM   60 1HO2 FTH A  28       8.433 -80.779 -11.009  1.00  0.00           H  
+HETATM   61 1HP3 FTH A  28      11.026 -77.680 -16.565  1.00  0.00           H  
+HETATM   62 1HP5 FTH A  28      10.179 -84.686  -9.144  1.00  0.00           H  
+HETATM   63 2HP5 FTH A  28      11.692 -83.927  -8.713  1.00  0.00           H  
+HETATM   64 3HP5 FTH A  28      11.623 -85.032 -10.066  1.00  0.00           H  
+HETATM   65 1HR  FTH A  28       8.966 -82.226  -8.212  1.00  0.00           H  
+HETATM   66 2HR  FTH A  28       8.592 -83.757  -8.967  1.00  0.00           H  
+HETATM   67 3HR  FTH A  28       7.643 -82.339  -9.348  1.00  0.00           H  
+HETATM   68 1HT  FTH A  28      17.120 -82.784 -11.389  1.00  0.00           H  
+HETATM   69 1HX4 FTH A  28      12.519 -83.392 -11.601  1.00  0.00           H  
+TER   
+HETATM   70  N   NME A  29      13.338 -74.836 -10.242  1.00  0.00           N  
+HETATM   71  CH3 NME A  29      11.930 -74.831  -9.888  1.00  0.00           C  
+HETATM   72  H   NME A  29      13.654 -74.339 -11.063  1.00  0.00           H  
+HETATM   73 1HH3 NME A  29      11.454 -75.729 -10.253  1.00  0.00           H  
+HETATM   74 2HH3 NME A  29      11.818 -74.787  -8.814  1.00  0.00           H  
+HETATM   75 3HH3 NME A  29      11.441 -73.973 -10.327  1.00  0.00           H  
+CONECT    1    2    3    7
+CONECT    2    1
+CONECT    3    1    4    5    6
+CONECT    4    3
+CONECT    5    3
+CONECT    6    3
+CONECT    7    1    8   44
+CONECT    8    7    9   11   45
+CONECT    9    8   10   70
+CONECT   10    9
+CONECT   11    8   12   13   46
+CONECT   12   11   47   48   49
+CONECT   13   11   27
+CONECT   14   17   27
+CONECT   15   27
+CONECT   16   50   27
+CONECT   17   14   39   51   52
+CONECT   18   20   21   54   39
+CONECT   19   53   39
+CONECT   20   18   22   23   56
+CONECT   21   18   55
+CONECT   22   20   24   58   59
+CONECT   23   20   57
+CONECT   24   22   25   26
+CONECT   25   24   28   30
+CONECT   26   24   29   31
+CONECT   27   13   14   15   16
+CONECT   28   25   32   40
+CONECT   29   26   35   40
+CONECT   30   25   33   69
+CONECT   31   26   34
+CONECT   32   28   36   60
+CONECT   33   30   36   37
+CONECT   34   31   41   42
+CONECT   35   29   41   43
+CONECT   36   32   33   38
+CONECT   37   33   62   63   64
+CONECT   38   36   65   66   67
+CONECT   39   17   18   19   68
+CONECT   40   28   29
+CONECT   41   34   35   61
+CONECT   42   34
+CONECT   43   35
+CONECT   44    7
+CONECT   45    8
+CONECT   46   11
+CONECT   47   12
+CONECT   48   12
+CONECT   49   12
+CONECT   50   16
+CONECT   51   17
+CONECT   52   17
+CONECT   53   19
+CONECT   54   18
+CONECT   55   21
+CONECT   56   20
+CONECT   57   23
+CONECT   58   22
+CONECT   59   22
+CONECT   60   32
+CONECT   61   41
+CONECT   62   37
+CONECT   63   37
+CONECT   64   37
+CONECT   65   38
+CONECT   66   38
+CONECT   67   38
+CONECT   68   39
+CONECT   69   30
+CONECT   70    9   71   72
+CONECT   71   70   73   74   75
+CONECT   72   70
+CONECT   73   71
+CONECT   74   71
+CONECT   75   71
+END

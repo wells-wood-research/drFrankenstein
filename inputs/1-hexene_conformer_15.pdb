@@ -1,0 +1,26 @@
+COMPND    Conformer_15
+HETATM    1  C1  UNL     1       2.752   0.741   0.515  1.00  0.00           C  
+HETATM    2  C2  UNL     1       2.055  -0.328   0.158  1.00  0.00           C  
+HETATM    3  C3  UNL     1       0.652  -0.152  -0.296  1.00  0.00           C  
+HETATM    4  C4  UNL     1      -0.329  -0.903   0.571  1.00  0.00           C  
+HETATM    5  C5  UNL     1      -1.716  -0.626  -0.019  1.00  0.00           C  
+HETATM    6  C6  UNL     1      -1.992   0.843   0.008  1.00  0.00           C  
+HETATM    7  H1  UNL     1       2.328   1.739   0.484  1.00  0.00           H  
+HETATM    8  H2  UNL     1       3.785   0.685   0.858  1.00  0.00           H  
+HETATM    9  H3  UNL     1       2.454  -1.331   0.179  1.00  0.00           H  
+HETATM   10  H4  UNL     1       0.521  -0.546  -1.332  1.00  0.00           H  
+HETATM   11  H5  UNL     1       0.345   0.905  -0.331  1.00  0.00           H  
+HETATM   12  H6  UNL     1      -0.312  -0.535   1.609  1.00  0.00           H  
+HETATM   13  H7  UNL     1      -0.117  -1.983   0.603  1.00  0.00           H  
+HETATM   14  H8  UNL     1      -1.767  -0.960  -1.073  1.00  0.00           H  
+HETATM   15  H9  UNL     1      -2.445  -1.228   0.544  1.00  0.00           H  
+HETATM   16  H10 UNL     1      -1.571   1.353  -0.880  1.00  0.00           H  
+HETATM   17  H11 UNL     1      -3.102   1.016   0.010  1.00  0.00           H  
+HETATM   18  H12 UNL     1      -1.541   1.311   0.906  1.00  0.00           H  
+CONECT    1    2    2    7    8
+CONECT    2    3    9
+CONECT    3    4   10   11
+CONECT    4    5   12   13
+CONECT    5    6   14   15
+CONECT    6   16   17   18
+END

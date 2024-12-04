@@ -1,0 +1,19 @@
+pathInfo:
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/inputs
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/ALA_outputs
+
+moleculeInfo:
+  charge: 0
+  multiplicity: 1
+  moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/inputs/ALA.pdb
+
+scanInfo:
+  nScanSteps: 37
+  convergenceTolerance: 0.1
+  minBatches: 5
+  maxBatches: 30
+
+hardwareInfo:
+  nCores: 16
+
+

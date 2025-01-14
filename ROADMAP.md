@@ -18,16 +18,16 @@ Protocol:
 1. take pdb file as input [x]          
 2. identify torsions that need to be scanned [x]
 3. For each torsion that needs to be scanned: 
-    While covergance criteria not met:
+    While convergence criteria not met:
         a. generate nCpus conformer                                 [x]
         b. perform an opt with xtb                                  [x]
         c. perform a forward scan with xtb                          [x]
         d. perform a backward scan with xtb                         [x]
-        e. add results of forwards and backwards scans to dataframe [x]
+        e. add results of forwards and backwards scans to DataFrame [x]
         f. calculate average                                        [x]
         g. perform convergence check                                [x]
 4. plot results [x]
-5. return final scan results in a useful format
+5. return final scan results in a useful format []
 
 Things to do:
 [x] suppress orca errors
@@ -36,6 +36,8 @@ Things to do:
 [x] on the fly conformer generation
 [] work out what the low-lying scans are (have they secretly exploded?)
 [] clean up output directories (more subdirs, delete failed dirs)
-[] don't scan amide bonds?
+[x] don't scan amide bonds?
+[] don't scan non-polar hydrogens
 [] suppress "[16:46:20] Molecule does not have explicit Hs. Consider calling AddHs()" warning
-[] work out a way of doing (geom-opt) // single-point energy calculations on minima/maxima
+[x] work out a way of doing (geom-opt) // single-point energy calculations on minima/maxima
+[] improper terms for Nitrogen centres (1 degree increments)

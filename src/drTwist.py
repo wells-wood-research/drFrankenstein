@@ -16,9 +16,10 @@ from mpire import WorkerPool
 from mpire.utils import make_single_arguments
 
 ## RDKIT IMPORTS ##
-from rdkit import Chem
+from rdkit import Chem, RDLogger
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdmolfiles import MolToPDBFile
+RDLogger.DisableLog('rdApp.warning')
 
 ## PLOTTING LIBRARIES ##
 import matplotlib.pyplot as plt
@@ -128,23 +129,28 @@ def twist_protocol(config):
 
             ## STEP BATCH INDEX
             batchIndex += 1
+        else:
+            finalScanEnergiesDf = pd.DataFrame()
+            finalScanEnergiesDf["Angle"] = scanAverageDf["Angle"]
+            finalScanEnergiesDf[torsionId] = rollingAverageDf.iloc[:, -1]
+
+            dataDir = p.join(torsionTopDir, "scan_data")
+            finalScanEnergiesDf.to_csv(p.join(dataDir, "final_scan_energies.csv"), index=False)
+            
 
 
-  
 
         plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
-
+        exit()
 
 def scan_in_paralell(scanDfs, argsList, nCores, batchIndex) -> List[pd.DataFrame]:
 
 
     tqdmBarOptions = {
         "desc": f"Scanning Batch {batchIndex}",
-        # "bar_format": '{l_bar}{bar}| {n_fmt}/{total_fmt}',
-        # "ascii": "-Ϟ",  # Use the character for the bar
-        "ascii": "o🗲",  # Use the character for the bar
+        "ascii": "-🗲",  # Use the character for the bar
         "colour": "yellow",
-        "unit": "scans",
+        "unit":  "scan",
         "dynamic_ncols": True
     }
 
@@ -260,7 +266,7 @@ def process_scan_data(scanDfs: List[pd.DataFrame],
     else:   
         ## read data from averages csv
         scanAverageDf = pd.read_csv(averagesCsv, index_col=None)
-
+    ## calculate averages
     scanAverageDf[f"Batch {batchIndex}"] = mergedDf.drop(columns="Angle").mean(axis=1)
     scanAverageDf.to_csv(averagesCsv, index=False)
 
@@ -501,26 +507,38 @@ def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]
         if bond.IsInRing():
             continue
         if bond.GetBondType() == Chem.BondType.SINGLE:
-            beginAtom = bond.GetBeginAtom()
-            endAtom = bond.GetEndAtom()
-            if not (beginAtom.IsInRing() or endAtom.IsInRing()):
+            atom2 = bond.GetBeginAtom()
+            atom3 = bond.GetEndAtom()
+
+            ## get atom names for begin and end atoms
+            atom2Name = atom2.GetPDBResidueInfo().GetName().strip()
+            atom3Name = atom3.GetPDBResidueInfo().GetName().strip()
+
+            ## dont scan amide bonds
+            if atom2Name in ["NN", "C"] and atom3Name in ["NN", "C"]:
+                continue
+            if atom2Name in ["N", "CC1"] and atom3Name in ["NN", "CC1"]:
+                continue
+            
+            if not (atom2.IsInRing() or atom3.IsInRing()):
                 # Find neighboring atoms for torsion angle
-                neighborsBegin = [a for a in beginAtom.GetNeighbors() if a.GetIdx() != endAtom.GetIdx()]
-                neighborsEnd = [a for a in endAtom.GetNeighbors() if a.GetIdx() != beginAtom.GetIdx()]
+                neighborsBegin = [a for a in atom2.GetNeighbors() if a.GetIdx() != atom3.GetIdx()]
+                neighborsEnd = [a for a in atom3.GetNeighbors() if a.GetIdx() != atom2.GetIdx()]
                 
                 if neighborsBegin and neighborsEnd:
                     atom1 = neighborsBegin[0]
                     atom4 = neighborsEnd[0]
                     
                     atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
-                    beginAtomName = beginAtom.GetPDBResidueInfo().GetName().strip()
-                    endAtomName = endAtom.GetPDBResidueInfo().GetName().strip()
+
                     atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
                     
                     torsionAngles.append({
-                        'atoms': (atom1Name, beginAtomName, endAtomName, atom4Name),
-                        'indices': (atom1.GetIdx(), beginAtom.GetIdx(), endAtom.GetIdx(), atom4.GetIdx())
+                        'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
+                        'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
                     })
+
+    
 
     return torsionAngles
 

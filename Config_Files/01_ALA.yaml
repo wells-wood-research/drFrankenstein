@@ -10,7 +10,7 @@ moleculeInfo:
 scanInfo:
   nScanSteps: 37
   convergenceTolerance: 0.1
-  minBatches: 5
+  minBatches: 2
   maxBatches: 30
 
 hardwareInfo:

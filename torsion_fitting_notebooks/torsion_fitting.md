@@ -1,6 +1,6 @@
 A. **mol2_mm_parameterisation**
 
-Processes mol2 files from the QM scans. They can have GAFF2 atom types, but the CA type should be changed to CX to differentiate it from other sp3 carbons.
+Processes mol2 files from the QM scans and creates prmtop and inpcrd files from which we will get the MM energy. The mol2 files can have GAFF2 atom types, but the CA type should be changed to CX to differentiate it from other sp3 carbons.
 Can get frcmod of a reference mol2 file with: 
 
 ``parmchk2 -i somemol2filefromQMscans.mol2 -f mol2 -o molecule.frcmod -a Y -p /home/eva/anaconda3/envs/AmberTools22/dat/leap/parm/gaff2.dat``

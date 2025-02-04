@@ -136,13 +136,10 @@ def twist_protocol(config):
 
             dataDir = p.join(torsionTopDir, "scan_data")
             finalScanEnergiesDf.to_csv(p.join(dataDir, "final_scan_energies.csv"), index=False)
-            
-
-
 
         plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
-        exit()
-
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def scan_in_paralell(scanDfs, argsList, nCores, batchIndex) -> List[pd.DataFrame]:
 
 
@@ -167,8 +164,6 @@ def scan_in_paralell(scanDfs, argsList, nCores, batchIndex) -> List[pd.DataFrame
             scanDfs.append(backwardsDf)
 
     return scanDfs
-
-
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors):
     plotDir = p.join(torsionTopDir, "plots")
@@ -196,6 +191,7 @@ def plot_raw_data(scanRawDfs, plotDir):
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(p.join(plotDir, "raw_data.png"))
+    plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_average_data(scanAverageDf, plotDir):
     colors = cm.YlGn(np.linspace(0, 1, len(scanAverageDf.columns)-1))
@@ -212,7 +208,7 @@ def plot_average_data(scanAverageDf, plotDir):
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(p.join(plotDir, "average_data.png"))
-
+    plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_rolling_average_data(rollingAverageDf, plotDir):
     colors = cm.YlGn(np.linspace(0, 1, len(rollingAverageDf.columns)-1))
@@ -229,6 +225,7 @@ def plot_rolling_average_data(rollingAverageDf, plotDir):
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(p.join(plotDir, "rolling_average_data.png"))
+    plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_mean_average_data(meanAverageErrors, plotDir):
     plt.figure(figsize=(12, 8))
@@ -239,6 +236,7 @@ def plot_mean_average_data(meanAverageErrors, plotDir):
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(p.join(plotDir, "mean_average_error.png"))
+    plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def process_scan_data(scanDfs: List[pd.DataFrame],
                        torsionTopDir: DirectoryPath,
@@ -519,6 +517,7 @@ def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]
                 continue
             if atom2Name in ["N", "CC1"] and atom3Name in ["NN", "CC1"]:
                 continue
+
             
             if not (atom2.IsInRing() or atom3.IsInRing()):
                 # Find neighboring atoms for torsion angle
@@ -530,15 +529,20 @@ def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]
                     atom4 = neighborsEnd[0]
                     
                     atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
-
                     atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
-                    
+
+                    ## dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
+                    if atom1Name.startswith("H"):
+                        if atom2Name.startswith("C"):
+                            continue
+                    if atom4Name.startswith("H"):
+                        if atom3Name.startswith("C"):
+                            continue
+                    ## add torsion data to list
                     torsionAngles.append({
                         'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
                         'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
                     })
-
-    
 
     return torsionAngles
 

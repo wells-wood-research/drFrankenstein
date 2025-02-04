@@ -1,0 +1,13 @@
+name: Igor
+channels:
+  - defaults
+  - conda-forge
+  - psi4
+dependencies:
+  - python=3.8
+  - ambertools
+  - rdkit=2022.09.5
+  - parmed=4.0.0
+  - psi4=1.6.1
+  - psiresp=0.4.2
+  - pydantic=1.10.8

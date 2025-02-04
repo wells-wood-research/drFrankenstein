@@ -37,7 +37,8 @@ Things to do:
 [] work out what the low-lying scans are (have they secretly exploded?)
 [] clean up output directories (more subdirs, delete failed dirs)
 [x] don't scan amide bonds?
-[] don't scan non-polar hydrogens
-[] suppress "[16:46:20] Molecule does not have explicit Hs. Consider calling AddHs()" warning
+[x] don't scan non-polar hydrogens
+[x] suppress "[16:46:20] Molecule does not have explicit Hs. Consider calling AddHs()" warning
 [x] work out a way of doing (geom-opt) // single-point energy calculations on minima/maxima
 [] improper terms for Nitrogen centres (1 degree increments)
+[] /home/esp/anaconda3/envs/MD/lib/python3.10/site-packages/pandas/core/internals/blocks.py:2540: RuntimeWarning: invalid value encountered in cast values = values.astype(str) ERROR/WARNING??

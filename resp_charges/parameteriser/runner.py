@@ -6,7 +6,6 @@ import rdkit
 import psiresp
 
 from parameteriser.prep import build_molecule_from_smiles
-#from parameteriser.run_resp import run_psiresp
 
 
 def in_notebook():
@@ -98,15 +97,16 @@ class FF_Genenerator:
         resp_job.run()
 
     def run_resp_optimisation_eva(self, resp_job):
-        os.chdir("resp_qm_calculations/optimization/")
+        os.chdir("/home/esp/scriptDevelopment/drFrankenstein/resp_charges/resp_qm_calculations/optimization/")
         os.system("bash run_optimization.sh")
         os.chdir("../../")
         resp_job.run()
     
     def run_qm_get_charges_eva(self, resp_job):
-        os.chdir("resp_qm_calculations/single_point/")
+        os.chdir("/home/esp/scriptDevelopment/drFrankenstein/resp_charges/resp_qm_calculations/single_point/")
         os.system("bash run_single_point.sh")
         os.chdir("../../")
+        exit()
         resp_job.run()
         self.charges = resp_job.molecules[0].stage_2_restrained_charges
         

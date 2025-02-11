@@ -1,0 +1,10 @@
+*************************************************
+******************* ORCA 6.0.1 ******************
+*************************************************
+$Calculation_Status
+   &GeometryIndex 0
+   &ListStatus       OUT
+   &version [&Type "String"] "6.0.1"
+   &progName [&Type "String"] "orca"
+   &Status [&Type "String"] "Running"
+$End

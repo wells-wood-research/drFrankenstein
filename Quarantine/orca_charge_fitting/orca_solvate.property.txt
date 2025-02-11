@@ -1,0 +1,31 @@
+*************************************************
+******************* ORCA 6.0.1 ******************
+*************************************************
+$PAL_Flags
+   &GeometryIndex 0
+   &ListStatus       OUT
+   &DISKFLAG [&Type "Integer"] 2
+$End
+$Calculation_Status
+   &GeometryIndex 0
+   &ListStatus       OUT
+   &VERSION [&Type "String"] "6.0.1"
+   &PROGNAME [&Type "String"] "orca"
+   &STATUS [&Type "String"] "NORMAL TERMINATION"
+$End
+$Calculation_Info
+   &GeometryIndex 0
+   &ListStatus       OUT
+   &MULT [&Type "Integer"] 1
+   &CHARGE [&Type "Integer"] 0
+   &NUMOFATOMS [&Type "Integer"] 322
+   &NUMOFELECTRONS [&Type "Integer"] 0
+   &NUMOFFCELECTRONS [&Type "Integer"] 1
+   &NUMOFCORRELECTRONS [&Type "Integer"] 0
+   &NUMOFBASISFUNCTS [&Type "Integer"] 0
+   &NUMOFAUXCBASISFUNCTS [&Type "Integer"] 0
+   &NUMOFAUXJBASISFUNCTS [&Type "Integer"] 0
+   &NUMOFAUXJKBASISFUNCTS [&Type "Integer"] 0
+   &NUMOFCABSBASISFUNCTS [&Type "Integer"] 0
+   &TOTALENERGY [&Type "Double"]      -5.4031242094272000e+02  "Hartrees"
+$End

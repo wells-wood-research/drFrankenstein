@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import  Optional
 
-import psi4
+# import psi4
 import psiresp
 
 
 @dataclass
 class ConformerOptions:
     keep_original_conformer: bool
-    minimize: Optional[Literal["uff", "mmff94"]]
+    minimize: Optional[str]
     n_conformer_pool: int
     n_max_conformers: int = 200
     rms_tolerance: float = 0.05

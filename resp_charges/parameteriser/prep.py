@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-import parmed
+# import parmed
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -31,9 +31,9 @@ def write_mol_to_pdb(mol: Chem, outputfile: Path) -> None:
     Chem.MolToPDBFile(mol, outputfile)
 
 
-def get_mol_coordinates(mol):
-    struct = parmed.rdkit.load_rdkit(mol)
-    return struct.positions
+# def get_mol_coordinates(mol):
+#     struct = parmed.rdkit.load_rdkit(mol)
+#     return struct.positions
 
 
 def get_dih_random(mol):

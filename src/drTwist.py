@@ -32,129 +32,122 @@ class DirectoryPath:
     pass
 
 from typing import List, Tuple, Dict
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def dummy_inputs() -> dict:
-    config: dict = {
-        "pathInfo": {
-            "inputDir": "/home/esp/scriptDevelopment/drFrankenstein/dummy_input",
-            "outputDir": "/home/esp/scriptDevelopment/drFrankenstein/outputs"
-        },
-        "moleculeInfo": {
-            "charge": 0,
-            "multiplicity": 1, 
-            "moleculePdb": "/home/esp/scriptDevelopment/drFrankenstein/dummy_input/1-hexene.pdb"
-        }, 
-        "scanInfo": {
-            "nScanSteps": 37,
-            "convergenceTolerance": 0.1,
-            "minBatches": 5,
-            "maxBatches": 30
-        },
-        "hardwareInfo": {
-            "nCores": 16
-        }
-    }
-    return config
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def twist_protocol(config):
-    ## UNPACK CONFIG DICT ##
-    ## PATH INFO
-    inputDir: FilePath = config["pathInfo"]["inputDir"]
-    outputDir: FilePath = config["pathInfo"]["outputDir"]
-    ## MOLECULE INFO
-    moleculeInfo: dict = config["moleculeInfo"]
-    charge: int = moleculeInfo["charge"]
-    multiplicity: int = moleculeInfo["multiplicity"]
-    moleculePdb: FilePath = moleculeInfo["moleculePdb"]
-    ## SCAN INFO
-    scanInfo: dict = config["scanInfo"]
-    nScanSteps: int = scanInfo["nScanSteps"]
-    convergenceTolerance: float = scanInfo["convergenceTolerance"]
-    minBatches: int = scanInfo["minBatches"]
-    maxBatches: int = scanInfo["maxBatches"]
-    ## HARDWARE INFO
-    hardwareInfo: dict = config["hardwareInfo"]
-    nCores: int = hardwareInfo["nCores"]
 
-    ## make top level output dir
-    os.makedirs(outputDir,exist_ok=True)
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def twist_protocol(config):
+
+    config = set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
-    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = identify_rotatable_bonds(moleculePdb, outputDir)
+    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = identify_rotatable_bonds(config["moleculeInfo"]["cappedPdb"])
 
     ## loop over torsions that need to be scanned
+    config["pathInfo"]["torsionDirs"] = []
     for rotatableBond in rotatableBonds:
-        print(f"Running torsion scans for {rotatableBond['atoms']}")
-        ## make a top level dir for this torsion
-        torsionId: str = "-".join(map(str, rotatableBond["atoms"])) 
-        torsionTopDir = p.join(outputDir, f"torsion_{torsionId}" )
-        os.makedirs(torsionTopDir, exist_ok=True)
+        config = run_torsion_scanning(rotatableBond, config)
 
-        ## init some variables
-        meanAverageError = np.inf
-        batchIndex = 1
-        meanAverageErrors = []
-        scanRawDfs = {}
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
+    print(f"Running torsion scans for {rotatableBond['atoms']}")
+    ## make a top level dir for this torsion
+    torsionId: str = "-".join(map(str, rotatableBond["atoms"])) 
+    torsionDir = p.join(config["pathInfo"]["torsionTopDir"], f"torsion_{torsionId}" )
+    os.makedirs(torsionDir, exist_ok=True)
+    ## add to config
+    config["pathInfo"]["torsionDirs"].append(torsionDir)
+    ## init some variables
+    meanAverageError = np.inf
+    batchIndex = 1
+    meanAverageErrors = []
+    scanRawDfs = {}
+    ## unpack torsionScanInfo
+    conversionTolerance = config["torsionScanInfo"]["convergenceTolerance"]
+    minScanBatches = config["torsionScanInfo"]["minScanBatches"]
+    maxScanBatches = config["torsionScanInfo"]["minScanBatches"]
+    ## INIT A WHILE LOOP - BREAK WHEN CONVERGENCE IS REACHED
+    while (meanAverageError > conversionTolerance) and (batchIndex +1 != maxScanBatches):
+
+        torsionBatchDir = p.join(torsionDir, f"batch_{batchIndex}")
+        os.makedirs(torsionBatchDir, exist_ok=True)
+        ## generate a batch of conformers
+        conformerPdbs = gen_conformers(inputPdb=config["moleculeInfo"]["cappedPdb"],
+                                        batchDir=torsionBatchDir,
+                                        iteration=batchIndex,
+                                        nConformers=config["hardwareInfo"]["nCores"])
         
-        ## get torsion index
-        torsionIndexes = rotatableBond["indices"]
+        
+        ## CREATE A DIR FOR THIS TORSION ANGLE
+        torsionScanDir = p.join(torsionBatchDir, f"torsion_scans")
+        os.makedirs(torsionScanDir, exist_ok=True)
+        
+        ## INIT EMPTY LIST TO STORE SCAN DATA
+        scanDfs = []
+        if debug:
+            ## run in serial
+            scanDfs = scan_in_serial(scanDfs, torsionScanDir, conformerPdbs, rotatableBond["indices"], batchIndex, config)
+        else:
+            # run torsion scans in paralell
+            scanDfs = scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, rotatableBond["indices"], batchIndex, config)
 
-        ## INIT A WHILE LOOP - BREAK WHEN CONVERGENCE IS REACHED
-        while (meanAverageError > convergenceTolerance or batchIndex < minBatches) or (batchIndex + 1 == maxBatches):
-            batchDir = p.join(torsionTopDir, f"batch_{batchIndex}")
-            os.makedirs(batchDir, exist_ok=True)
-            ## generate a batch of conformers
-            conformerPdbs = gen_conformers(inputPdb=moleculePdb,
-                                            batchDir=batchDir,
-                                            iteration=batchIndex,
-                                            nConformers=nCores)
-            ## CREATE A DIR FOR THIS TORSION ANGLE
-            torsionDir = p.join(batchDir, f"torsions")
-            os.makedirs(torsionDir, exist_ok=True)
-            ## INIT EMPTY LIST TO STORE SCAN DATA
-            scanDfs = []
-            ## CONSTRUCT ARGS LIST FOR MULTIPROCESSING
-            argsList = [
-                (conformerPdb, torsionDir, torsionIndexes, charge, multiplicity, nScanSteps)
-                for  conformerPdb in conformerPdbs
-            ]
-            ## run torsion scans in paralell
-            scanDfs = scan_in_paralell(scanDfs, argsList, nCores, batchIndex)
-   
-
-            meanAverageError, mergedDf, scanAverageDf, rollingAverageDf = process_scan_data(scanDfs, torsionTopDir, batchIndex)
+        if not len(scanDfs) == 0:
+            ## Merge scan data, calculate averages, rolling averages and mean average errors
+            meanAverageError, mergedDf, scanAverageDf, rollingAverageDf = process_scan_data(scanDfs, torsionDir, batchIndex)
             meanAverageErrors.append(meanAverageError)
             scanRawDfs[batchIndex] = mergedDf
+        ## STEP BATCH INDEX
+        batchIndex += 1
+    else:
+        ## once convergence criteria has been met
+        ## create a dataframe containing final scan energies
+        finalScanEnergiesDf = pd.DataFrame()
+        finalScanEnergiesDf["Angle"] = scanAverageDf["Angle"]
+        finalScanEnergiesDf[torsionId] = rollingAverageDf.iloc[:, -1]
+        ## write to file
+        dataDir = p.join(torsionDir, "scan_data")
+        finalScanEnergiesDf.to_csv(p.join(dataDir, "final_scan_energies.csv"), index=False)
+        ## plot scan data
+        plot_torsion_scans(torsionDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
 
-            ## STEP BATCH INDEX
-            batchIndex += 1
-        else:
-            finalScanEnergiesDf = pd.DataFrame()
-            finalScanEnergiesDf["Angle"] = scanAverageDf["Angle"]
-            finalScanEnergiesDf[torsionId] = rollingAverageDf.iloc[:, -1]
+    return config
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def set_up_directories(config: dict) -> dict:
+    outputDir = config["pathInfo"]["outputDir"]
+    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
+    os.makedirs(torsionTopDir, exist_ok=True)
+    config["pathInfo"]["torsionTopDir"] = torsionTopDir
 
-            dataDir = p.join(torsionTopDir, "scan_data")
-            finalScanEnergiesDf.to_csv(p.join(dataDir, "final_scan_energies.csv"), index=False)
+    return config
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def scan_in_serial(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batchIndex, config) -> List[pd.DataFrame]:
+    argsList = [(conformerPdb, torsionScanDir,  torsionIndexes, config) for  conformerPdb in conformerPdbs]
 
-        plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def scan_in_paralell(scanDfs, argsList, nCores, batchIndex) -> List[pd.DataFrame]:
+    for args in argsList:
+        forwardsDf, backwardsDf = do_the_twist_worker(args)
+        if forwardsDf is not None and backwardsDf is not None:
+            scanDfs.append(forwardsDf)
+            scanDfs.append(backwardsDf)
 
+    return scanDfs
 
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+def scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batchIndex, config) -> List[pd.DataFrame]:
     tqdmBarOptions = {
         "desc": f"Scanning Batch {batchIndex}",
-        "ascii": "-🗲",  # Use the character for the bar
+        "ascii": "-ϟ",  
         "colour": "yellow",
         "unit":  "scan",
         "dynamic_ncols": True
     }
+    argsList = [(conformerPdb, torsionScanDir,  torsionIndexes, config) for  conformerPdb in conformerPdbs]
 
-    with WorkerPool(n_jobs=nCores) as pool:
-        results = pool.map(process_conformer,
-                            make_single_arguments(argsList)
-                            , progress_bar=True,
+    with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
+        results = pool.map(do_the_twist_worker,
+                            make_single_arguments(argsList),
+                              progress_bar=True,
                               iterable_len = len(argsList),
                               progress_bar_options=tqdmBarOptions)
     
@@ -309,74 +302,75 @@ def gen_conformers(inputPdb: FilePath,
         MolToPDBFile(mol, conformerPdb, confId=i)
         conformerPdbs.append(conformerPdb)
     return conformerPdbs
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def detect_jumps_in_data(df):
-    # Calculate differences between consecutive values
-    diffDf = df.drop(columns='Angle').diff().abs()
-    
-    # Identify columns with any difference greater than the threshold
-    jumpyCols = diffDf.columns[((diffDf > 3).any())]
-    
-    # Drop these columns from the original DataFrame
-    cleanDf = df.drop(columns=jumpyCols)
-    
-    return cleanDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_means(df):
-    return df.drop(columns='Angle').mean(axis=1)
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def process_conformer(args):
-    conformerPdb, torsionDir, torsionIndex, charge, multiplicity, nScanSteps = args
+def do_the_twist_worker(args):
+    ## unpack args tuple
+    conformerPdb, torsionScanDir,  torsionIndexes, config= args
     try:
-        forwardsDf, backwardsDf = do_the_twist(
-            torsionDir,
-            conformerPdb,
-            torsionIndex,
-            charge,
-            multiplicity,
-            nScanSteps
-        )
+        forwardsDf, backwardsDf = do_the_twist(conformerPdb, torsionScanDir, torsionIndexes, config)
         return forwardsDf, backwardsDf
     except Exception as e:
-        ## delete scan dir
-        conformerId = p.basename(conformerPdb).split(".")[0]
-        conformerScanDir = p.join(torsionDir, f"scans_conformer{conformerId}")
-        # rmtree(conformerScanDir)
+        # ## delete scan dir
+        # conformerId = p.basename(conformerPdb).split(".")[0]
+        # conformerScanDir = p.join(torsionScanDir, f"scans_conformer{conformerId}")
+        # # rmtree(conformerScanDir)
         return None, None
 
         
         
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def do_the_twist(torsionScanDir: DirectoryPath,
-                 conformerPdb: FilePath,
-                 torsionIndex: List[int],
-                 charge: int,
-                 multiplicity: int,
-                 nScanSteps: int) -> Tuple[pd.DataFrame]:
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def do_the_twist(conformerPdb: FilePath,
+                 torsionScanDir: DirectoryPath,
+                 torsionIndexes: List[int],
+                 config: dict) -> Tuple[pd.DataFrame]:
 
     conformerId = p.basename(conformerPdb).split(".")[0]
 
     conformerScanDir = p.join(torsionScanDir, f"scans_conformer{conformerId}")
-    ## do an initial optimisation with XTB
+    optXyz = run_optimisation_step(conformerPdb, torsionIndexes, conformerScanDir, conformerId, config)
+    ## get angle of torsion in this conformer
+    initalTorsionAngle = measure_current_torsion_angle(optXyz, torsionIndexes)
+
+    forwardsScanDf, forwardsXyz = run_forwards_scan_step(optXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config)
+
+    backwardsScanDf = run_backwards_scan_step(forwardsXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config)
+
+    return forwardsScanDf, backwardsScanDf
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_optimisation_step(conformerPdb, torsionIndexes, conformerScanDir, conformerId, config):
+            ## XTB-GFN2 OPTIMISATION ##
     optDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_optimise")
     os.makedirs(optDir, exist_ok=True)
-    # extract xyz and element from input pdb
-    optOrcaInput: FilePath = generate_orca_input(conformerPdb, torsionIndex, optDir, charge, multiplicity, scanAngles = None)
+    ## make an ORCA input file for optimisation
+    optOrcaInput: FilePath = generate_orca_input(inputGeom=conformerPdb,
+                                                  torsionIndexes=torsionIndexes,
+                                                   outDir = optDir,
+                                                    charge = config["moleculeInfo"]["charge"],
+                                                      multiplicity = config["moleculeInfo"]["multiplicity"],
+                                                        scanAngles = None)
+    ## Run orca optimisation
     optOrcaOuput: FilePath = p.join(optDir, "orca.out")
     if not p.isfile(optOrcaOuput):
         run_orca(optOrcaInput, optOrcaOuput)
     optXyz = p.join(optDir, "orca.xyz")
+    return optXyz
 
-    initalTorsionAngle = measure_current_torsion_angle(optXyz, torsionIndex)
-
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_forwards_scan_step(optXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config):
+    ## XTB-GFN2 FORWARDS SCAN ##
     ## do a forwards scan
     forwardsDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_forwards")
     os.makedirs(forwardsDir, exist_ok=True)
     forwardsScanAngle = initalTorsionAngle + 360
-    forwardsScanText = f"{str(initalTorsionAngle)}, {str(forwardsScanAngle)}, {str(nScanSteps)}"
+    forwardsScanText = f"{str(initalTorsionAngle)}, {str(forwardsScanAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
 
-    forwardsOrcaInput: FilePath = generate_orca_input(optXyz, torsionIndex, forwardsDir, charge, multiplicity, scanAngles = forwardsScanText)
+    forwardsOrcaInput: FilePath = generate_orca_input(inputGeom=optXyz,
+                                                      torsionIndexes=torsionIndexes,
+                                                      outDir = forwardsDir,
+                                                        charge = config["moleculeInfo"]["charge"],
+                                                        multiplicity = config["moleculeInfo"]["multiplicity"],
+                                                        scanAngles = forwardsScanText)
     forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca.out")
     if not p.isfile(forwardsOrcaOutput):
         run_orca(forwardsOrcaInput, forwardsOrcaOutput)
@@ -387,12 +381,22 @@ def do_the_twist(torsionScanDir: DirectoryPath,
     forwardsScanDf = forwardsScanDf.sort_values(by="Angle", ascending=True)
     forwardsScanDf = average_duplicate_angles(forwardsScanDf)
 
+    return forwardsScanDf, forwardsXyz
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_backwards_scan_step(forwardsXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config):
     ## do a backwards scan
     backwardsDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_backwards")
     os.makedirs(backwardsDir, exist_ok=True)
-    scanAngles_backwards = f"{str(forwardsScanAngle)}, {str(initalTorsionAngle)}, {str(nScanSteps)}"
+    forwardsScanAngle = initalTorsionAngle + 360
 
-    backwardsOrcaInput: FilePath = generate_orca_input(forwardsXyz, torsionIndex, backwardsDir, charge, multiplicity, scanAngles = scanAngles_backwards)
+    backwardsScanText = f"{str(forwardsScanAngle)}, {str(initalTorsionAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
+
+    backwardsOrcaInput: FilePath = generate_orca_input(inputGeom = forwardsXyz,
+                                                       torsionIndexes = torsionIndexes,
+                                                       outDir =backwardsDir,                                      
+                                                        charge = config["moleculeInfo"]["charge"],
+                                                        multiplicity = config["moleculeInfo"]["multiplicity"],
+                                                        scanAngles = backwardsScanText)
     backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca.out")
     if not p.isfile(backwardsOrcaOutput):
         run_orca(backwardsOrcaInput, backwardsOrcaOutput)
@@ -402,7 +406,7 @@ def do_the_twist(torsionScanDir: DirectoryPath,
     backwardsScanDf["Angle"] = backwardsScanDf["Angle"].apply(rescale_torsion_angles)
     backwardsScanDf = backwardsScanDf.sort_values(by="Angle", ascending=True)
     backwardsScanDf = average_duplicate_angles(backwardsScanDf)
-    return forwardsScanDf, backwardsScanDf  
+    return backwardsScanDf  
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
@@ -435,8 +439,8 @@ def rescale_torsion_angles(angle):
     return angle
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def find_final_xyz(conformerTorsionDir):
-    allXyzFiles = glob.glob(p.join(conformerTorsionDir, "*.xyz"))
+def find_final_xyz(conformertorsionScanDir):
+    allXyzFiles = glob.glob(p.join(conformertorsionScanDir, "*.xyz"))
     scanXYZFiles = sorted([f for f in allXyzFiles if re.match(r'orca\.\d+\.xyz$', os.path.basename(f))])
 
     finalXyzFile = scanXYZFiles[-1]
@@ -444,18 +448,18 @@ def find_final_xyz(conformerTorsionDir):
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def measure_current_torsion_angle(conformerXyz, torsionIndex):
+def measure_current_torsion_angle(conformerXyz, torsionIndexes):
     atomCoords = xyz_to_np_array(conformerXyz)
-    torsionAngle = calculate_torsion_angle(atomCoords)
+    torsionAngle = calculate_torsion_angle(atomCoords, torsionIndexes)
     roundedToTenAngle = round(torsionAngle, -1)
     return roundedToTenAngle
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_torsion_angle(coords):
+def calculate_torsion_angle(coords, torsionIndexes):
     # Vectors between points
-    b1 = coords[1] - coords[0]
-    b2 = coords[2] - coords[1]
-    b3 = coords[3] - coords[2]
+    b1 = coords[torsionIndexes[1]] - coords[torsionIndexes[0]]
+    b2 = coords[torsionIndexes[2]] - coords[torsionIndexes[1]]
+    b3 = coords[torsionIndexes[3]] - coords[torsionIndexes[2]]
 
     # Normal vectors to the planes
     n1 = np.cross(b1, b2)
@@ -496,7 +500,7 @@ def plot_torsion(df, torsionTopDir):
     plt.savefig(p.join(torsionTopDir, "torsion.png"))
     plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]]:
+def identify_rotatable_bonds(inputPdb) -> List[Tuple[int,int,int,int]]:
     # Load the molecule from a PDB file
     mol = Chem.MolFromPDBFile(inputPdb, removeHs=False)
     # Identify torsion angles for rotatable bonds
@@ -515,7 +519,7 @@ def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]
             ## dont scan amide bonds
             if atom2Name in ["NN", "C"] and atom3Name in ["NN", "C"]:
                 continue
-            if atom2Name in ["N", "CC1"] and atom3Name in ["NN", "CC1"]:
+            if atom2Name in ["N", "CC1"] and atom3Name in ["N", "CC1"]:
                 continue
 
             
@@ -547,11 +551,11 @@ def identify_rotatable_bonds(inputPdb, outputDir) -> List[Tuple[int,int,int,int]
     return torsionAngles
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_data(conformerTorsionDir):
-    scanDat: FilePath = p.join(conformerTorsionDir, "orca.relaxscanact.dat")
+def read_data(conformertorsionScanDir):
+    scanDat: FilePath = p.join(conformertorsionScanDir, "orca.relaxscanact.dat")
     if not os.path.exists(scanDat):
-        raise FileNotFoundError(f"Scan data not found in {conformerTorsionDir}")
-    scanDf: pd.DataFrame = pd.read_csv(scanDat, delim_whitespace=True, header=None)
+        raise FileNotFoundError(f"Scan data not found in {conformertorsionScanDir}")
+    scanDf: pd.DataFrame = pd.read_csv(scanDat, sep='\s+', header=None)
     return scanDf
     
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -563,33 +567,33 @@ def run_orca(orcaInput, orcaOutput):
         except Exception as e:
             pass
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def generate_orca_input(conformerGeom, torsionIndex, conformerTorsionDir, charge, multiplicity, scanAngles):
+def generate_orca_input(inputGeom, torsionIndexes, outDir, charge, multiplicity, scanAngles):
 
     ## create orca input file
-    orcaInputFile = p.join(conformerTorsionDir, "orca.inp")
+    orcaInputFile = p.join(outDir, "orca.inp")
     with open(orcaInputFile, "w") as f:
         ## METHOD
         f.write("! XTB2 Opt\n")
         ## SCAN (OPTIONAL)
         if not scanAngles is None:
             f.write("%geom Scan\n")
-            torsionText: str = f"D {' '.join(map(str, torsionIndex))} = {scanAngles}\n"
+            torsionText: str = f"D {' '.join(map(str, torsionIndexes))} = {scanAngles}\n"
             f.write(torsionText)
             f.write("end\n")
             f.write("end\n")
 
         ## GEOMETRY
         ## if we have a pdb file, read coords and place in orca input file
-        if p.splitext(conformerGeom)[1] == ".pdb":
-            conformerDf = pdbUtils.pdb2df(conformerGeom)
+        if p.splitext(inputGeom)[1] == ".pdb":
+            conformerDf = pdbUtils.pdb2df(inputGeom)
             f.write(f"*xyz {charge} {multiplicity}\n\n")
             for index, row in conformerDf.iterrows():
                 geomLine = f"{row['ELEMENT']} {row['X']} {row['Y']} {row['Z']}\n"
                 f.write(geomLine)
             f.write("*")
         ## if we have an xyz file, put path in input line instead
-        elif p.splitext(conformerGeom)[1] == ".xyz":
-            f.write(f"*xyzfile {charge} {multiplicity} {conformerGeom}\n\n")
+        elif p.splitext(inputGeom)[1] == ".xyz":
+            f.write(f"*xyzfile {charge} {multiplicity} {inputGeom}\n\n")
 
     return orcaInputFile
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -610,6 +614,21 @@ def xyz_to_np_array(filePath):
 
     return np.array(coords)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def detect_jumps_in_data(df):
+    # Calculate differences between consecutive values
+    diffDf = df.drop(columns='Angle').diff().abs()
+    
+    # Identify columns with any difference greater than the threshold
+    jumpyCols = diffDf.columns[((diffDf > 3).any())]
+    
+    # Drop these columns from the original DataFrame
+    cleanDf = df.drop(columns=jumpyCols)
+    
+    return cleanDf
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def calculate_means(df):
+    return df.drop(columns='Angle').mean(axis=1)
 
 if __name__ == "__main__":
-    main()
+    twist_protocol()

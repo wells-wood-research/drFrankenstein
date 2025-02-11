@@ -50,7 +50,7 @@ def capping_protocol(config: dict):
     cappedMol = Chem.AddHs(cappedMol)
     AllChem.EmbedMolecule(cappedMol)
 
-    cappingDir = p.join(outputDir, "capped_amino_acids")
+    cappingDir = p.join(outputDir, "01_capped_amino_acids")
     os.makedirs(cappingDir,exist_ok=True)
 
     molName = p.basename(molPdb).split(".")[0]

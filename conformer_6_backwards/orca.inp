@@ -1,7 +1,0 @@
-! XTB2 Opt
-%geom Scan
-D 3 4 5 6 = 250.0, -110.0, 37
-end
-end
-*xyzfile 0 1 /home/esp/scriptDevelopment/drFrankenstein/outputs/torsion_3-4-5-6/conformer_6_forwards/orca.037.xyz
-

@@ -298,7 +298,6 @@ def calculate_boltzmann_probabilities(df, temperature=298.15):
     return df    
 
 ###########################################################################
-
 def find_final_single_point_energy(outFilePath):
     with open(outFilePath, 'r') as file:
         for line in file:

@@ -1,6 +1,0 @@
-! XTB2 Opt
-%geom Scan
-D 12 4 1 0 = -70.0, 290.0, 37
-end
-end
-*xyzfile 0 1 ./orca_solvate.solvator.xyz

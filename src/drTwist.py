@@ -21,10 +21,9 @@ from rdkit.Chem import AllChem
 from rdkit.Chem.rdmolfiles import MolToPDBFile
 RDLogger.DisableLog('rdApp.warning')
 
-## PLOTTING LIBRARIES ##
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
+## drFRANKENSTEIN LIBRARIES ##
+import drPlotter
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -67,7 +66,7 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
     minScanBatches = config["torsionScanInfo"]["minScanBatches"]
     maxScanBatches = config["torsionScanInfo"]["minScanBatches"]
     ## INIT A WHILE LOOP - BREAK WHEN CONVERGENCE IS REACHED
-    while (meanAverageError > conversionTolerance) and (batchIndex +1 != maxScanBatches):
+    while (meanAverageError > conversionTolerance or batchIndex < minScanBatches) and (batchIndex + 1 != maxScanBatches):
 
         torsionBatchDir = p.join(torsionDir, f"batch_{batchIndex}")
         os.makedirs(torsionBatchDir, exist_ok=True)
@@ -108,7 +107,7 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
         dataDir = p.join(torsionDir, "scan_data")
         finalScanEnergiesDf.to_csv(p.join(dataDir, "final_scan_energies.csv"), index=False)
         ## plot scan data
-        plot_torsion_scans(torsionDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
+        drPlotter.plot_torsion_scans(torsionDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
 
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -136,7 +135,7 @@ def scan_in_serial(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batch
 
 def scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batchIndex, config) -> List[pd.DataFrame]:
     tqdmBarOptions = {
-        "desc": f"Scanning Batch {batchIndex}",
+        "desc": f"\033[32mScanning Batch {batchIndex}\033[0m",
         "ascii": "-ϟ",  
         "colour": "yellow",
         "unit":  "scan",
@@ -157,79 +156,7 @@ def scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, bat
             scanDfs.append(backwardsDf)
 
     return scanDfs
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors):
-    plotDir = p.join(torsionTopDir, "plots")
-    os.makedirs(plotDir, exist_ok=True)
 
-    plot_raw_data(scanRawDfs, plotDir)
-    plot_average_data(scanAverageDf, plotDir)
-    plot_rolling_average_data(rollingAverageDf, plotDir)
-    plot_mean_average_data(meanAverageErrors, plotDir)
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_raw_data(scanRawDfs, plotDir):
-    colors = cm.YlGn(np.linspace(0, 1, len(scanRawDfs)))
-    
-    plt.figure(figsize=(12, 8))
-    
-    for (batchIndex, df), color in zip(scanRawDfs.items(), colors):
-        for column in df.columns:
-            if column != 'Angle':
-                plt.scatter(df['Angle'], df[column], label=f'{batchIndex} - {column}', color=color)
-    
-
-    plt.xlabel('Angle')
-    plt.ylabel('Relative Energy (kcal/mol)')
-    plt.title('Raw Data')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(p.join(plotDir, "raw_data.png"))
-    plt.close()
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_average_data(scanAverageDf, plotDir):
-    colors = cm.YlGn(np.linspace(0, 1, len(scanAverageDf.columns)-1))
-
-    plt.figure(figsize=(12, 8))
-    
-    for column, color in zip(scanAverageDf.columns, colors):
-        if column != 'Angle':
-            plt.plot(scanAverageDf['Angle'], scanAverageDf[column], label=column, color=color)
-    
-    plt.xlabel('Angle')
-    plt.ylabel('Relative Energy (kcal/mol)')
-    plt.title('Average Data')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(p.join(plotDir, "average_data.png"))
-    plt.close()
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_rolling_average_data(rollingAverageDf, plotDir):
-    colors = cm.YlGn(np.linspace(0, 1, len(rollingAverageDf.columns)-1))
-
-    plt.figure(figsize=(12, 8))
-    
-    for column, color in zip(rollingAverageDf.columns, colors):
-        if column != 'Angle':
-            plt.plot(rollingAverageDf['Angle'], rollingAverageDf[column], label=column, color=color)
-    
-    plt.xlabel('Angle')
-    plt.ylabel('Relative Energy (kcal/mol)')
-    plt.title('Rolling Average Data')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(p.join(plotDir, "rolling_average_data.png"))
-    plt.close()
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_mean_average_data(meanAverageErrors, plotDir):
-    plt.figure(figsize=(12, 8))
-    
-    plt.plot(meanAverageErrors)
-    plt.ylabel('Relative Energy (kcal/mol)')
-    plt.title('Mean Average Error')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(p.join(plotDir, "mean_average_error.png"))
-    plt.close()
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def process_scan_data(scanDfs: List[pd.DataFrame],
                        torsionTopDir: DirectoryPath,
@@ -365,6 +292,7 @@ def run_forwards_scan_step(optXyz, initalTorsionAngle, torsionIndexes, conformer
     forwardsScanAngle = initalTorsionAngle + 360
     forwardsScanText = f"{str(initalTorsionAngle)}, {str(forwardsScanAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
 
+
     forwardsOrcaInput: FilePath = generate_orca_input(inputGeom=optXyz,
                                                       torsionIndexes=torsionIndexes,
                                                       outDir = forwardsDir,
@@ -383,15 +311,15 @@ def run_forwards_scan_step(optXyz, initalTorsionAngle, torsionIndexes, conformer
 
     return forwardsScanDf, forwardsXyz
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_backwards_scan_step(forwardsXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config):
+def run_backwards_scan_step(optXyz, initalTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config):
     ## do a backwards scan
     backwardsDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_backwards")
     os.makedirs(backwardsDir, exist_ok=True)
-    forwardsScanAngle = initalTorsionAngle + 360
+    forwardsScanAngle = initalTorsionAngle + 360 
 
     backwardsScanText = f"{str(forwardsScanAngle)}, {str(initalTorsionAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
 
-    backwardsOrcaInput: FilePath = generate_orca_input(inputGeom = forwardsXyz,
+    backwardsOrcaInput: FilePath = generate_orca_input(inputGeom = optXyz,
                                                        torsionIndexes = torsionIndexes,
                                                        outDir =backwardsDir,                                      
                                                         charge = config["moleculeInfo"]["charge"],

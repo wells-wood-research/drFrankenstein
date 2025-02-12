@@ -12,14 +12,15 @@ moleculeInfo:
 torsionScanInfo:
   nScanSteps: 37
   convergenceTolerance: 0.1
-  minScanBatches: 4
-  minScanBatches: 6
-
+  minScanBatches: 10
+  maxScanBatches: 25
 chargeFittingInfo:
   nConformers: 4
   nCoresPerCalculation: 8
-  optMethod: '! XTB2 ALPB(WATER)'
-  singlePointMethod: '! revPBE def2-SVP D3BJ CPCM(water)'
+  optMethod: XTB2
+  optSolvationMethod: ALPB(water)
+  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointSolvationMethod: CPCM(water)
 
 hardwareInfo:
   nCores: 16

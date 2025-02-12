@@ -4,6 +4,7 @@ import pandas as pd
 import os
 from os import path as p
 from typing import Tuple, List
+import plotly.graph_objects as go
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ## dummy classes
@@ -14,8 +15,9 @@ class DirPath:
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def dummy_inputs():
     outputDir = "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/"
+    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
     torsionTag = 'O-C-CA-N'
-    torsionDir = p.join(outputDir, f"torsion_{torsionTag}")
+    torsionDir = p.join(torsionTopDir, f"torsion_{torsionTag}")
     scanDir = p.join(torsionDir, "scan_data")
     energyCsv = p.join(scanDir, "final_scan_energies.csv")
     energyDf = pd.read_csv(energyCsv)
@@ -30,14 +32,25 @@ def dummy_inputs():
 def main():
     energyDf, torsionTag, fittingDir = dummy_inputs()
     os.makedirs(fittingDir, exist_ok=True)
+    ## load energy data [range of -170 to 180 degrees]
+    ## convert to a [0 - 360] degree range
+    energyDf["Angle"] = energyDf["Angle"].apply(rescale_torsion_angles)
+    energyDf = energyDf.sort_values(by="Angle", ascending=True)
 
     energyData: np.array = energyDf[torsionTag].values
 
-    energyDataPadded: np.array = pad_energy_data(energyData, paddingFactor=2)
+    energyDataPadded: np.array = pad_energy_data(energyData, paddingFactor=1)
 
-    fit_scan_data(energyDataPadded, outDir=fittingDir, maxFunctions = 4)
+    fit_scan_data(energyDataPadded, outDir=fittingDir, maxFunctions = 4, tag = torsionTag)
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def rescale_torsion_angles(angle):
+    angle = angle % 360  # Reduce the angle to the 0-360 range
+    if angle < 0:
+        angle += 360  # Shift negative angles to the positive side
+    return angle
+
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def perform_rfft(signal: np.array) -> np.array:
     return np.fft.rfft(signal)
@@ -51,7 +64,7 @@ def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple
     ## round phases
     phases: np.array = np.degrees(phases)
     phases: np.array = np.round(phases).astype(int)
-    phases: np.array = convert_phases_to_nearest(phases)
+    # phases: np.array = convert_phases_to_nearest(phases)
     return amplitudes, phases
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def convert_phases_to_nearest(phases: np.array) ->  np.array:
@@ -60,7 +73,7 @@ def convert_phases_to_nearest(phases: np.array) ->  np.array:
 def construct_cosine_components(dataDf: pd.DataFrame,
                                  angle: np.array,
                                      maxFunctions: int,
-                                       tolerance: float = 1.0) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+                                       tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     # Initialize variables
     cosineComponents: list = []
     converged: bool = False
@@ -71,7 +84,7 @@ def construct_cosine_components(dataDf: pd.DataFrame,
         reconstructedSignal: np.array = np.zeros_like(previousSignal)
         for index, row in dataDf.iterrows():
             print(index + 1)
-            if index + 1 > maxFunctions:
+            if index + 1  == maxFunctions:
                 print("Max Functions reached!")
                 nFunctionsUsed = maxFunctions
                 converged = True
@@ -108,36 +121,82 @@ def construct_cosine_components(dataDf: pd.DataFrame,
 def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:
     return np.sqrt(np.mean((signal1 - signal2) ** 2))
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def plot_signal_and_components_html(angle: np.array,
+                               signal: np.array,
+                               cosineComponents: List[Tuple[float, np.array]],
+                               outDir: DirPath,
+                               tag: str):
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=angle, y=signal, mode='lines',
+                             name='QM Scan Energy', line=dict(color='black', width=2)))
+
+    # Initialize reconstructed signal as zeros
+    reconstructedSignal = np.zeros_like(angle)
+
+    for freq, cosineComponent in cosineComponents:
+        fig.add_trace(go.Scatter(x=angle, y=cosineComponent, mode='lines',
+                                 name=f'Cosine Component {freq:.2f}', 
+                                 line=dict(dash='dash')))
+        # Add each cosine component to the reconstructed signal
+        reconstructedSignal += cosineComponent
+
+    fig.add_trace(go.Scatter(x=angle, y=reconstructedSignal, mode='lines',
+                             name='Reconstructed Signal', 
+                             line=dict(color='red', width=2), opacity=0.7))
+
+    fig.update_layout(
+        xaxis_title='angle',
+        yaxis_title='Amplitude',
+        title='Original Signal and Cosine Components',
+        legend=dict(x=0, y=1),
+        xaxis=dict(tickmode='array', tickvals=np.arange(min(angle), max(angle) + 1, 60)),
+        template='plotly_white'
+    )
+
+    saveHtml = p.join(outDir, f"{tag}.html")
+    fig.write_html(saveHtml)
+##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_signal_and_components(angle: np.array,
                                 signal: np.array,
-                                  reconstructedSignal: np.array,
-                                    cosineComponents: List[Tuple[float, np.array]],
-                                      outDir: DirPath,
-                                        tag: str):
-    ## set up a figure
+                                reconstructed_signal: np.array,
+                                cosine_components: List[Tuple[float, np.array]],
+                                out_dir: DirPath,
+                                tag: str):
+    ########
     plt.figure(figsize=(12, 6))
-    plt.plot(angle, signal, label='QM Scan Energy', color='black', linewidth=2)
-    # plot the cosine components
-    for freq, cosineComponent in cosineComponents:
-        plt.plot(angle, cosineComponent, linestyle='--', label=f'Cosine Component {freq:.2f}')
-    # plot reconstructed signal
-    plt.plot(angle, reconstructedSignal, label='Reconstructed Signal', color='red', linewidth=2, alpha=0.7)
-    # add labels and title
-    plt.xlabel('angle')
-    plt.ylabel('Amplitude')
-    plt.title('Original Signal and Cosine Components')
+    angle_mask = (angle >= 0) & (angle <= 360)
+    angle = angle[angle_mask]
+    signal = signal[angle_mask]
+    reconstructed_signal = reconstructed_signal[angle_mask]
+    ########
+    plt.plot(angle, signal, label='QM Scan Energy', color='black',
+             linewidth=2)
+    ########
+    for freq, cosine_component in cosine_components:
+        cosine_component = cosine_component[angle_mask]
+        plt.plot(angle, cosine_component, linestyle='--',
+                 label=f'Cosine Component {freq:.2f}')
+    ########
+    plt.plot(angle, reconstructed_signal, label='Reconstructed Signal',
+             color='red', linewidth=2, alpha=0.7)
+    ########
+    plt.xticks(np.arange(min(angle), max(angle) + 1, 60))
+    plt.xlabel('Torsion Angle (Degrees)')
+    plt.ylabel('Torsion Energy (kJ / mol)')
+    plt.title(f'Fourier Tranform for {tag} Scan')
     plt.legend()
     plt.grid(True)
-    # save the figure and close
-    savePng = p.join(outDir, f"{tag}.png")
-    plt.savefig(savePng)
+    ########
+    save_png = p.join(out_dir, f"{tag}.png")
+    plt.savefig(save_png)
     plt.close()
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def fit_scan_data(signal: np.array,
                    outDir: DirPath,
+                     maxFunctions: int,
                      sampleSpacing: float = 10.0,
-                       tag: str = 'cosine_components',
-                         maxFunctions: int = 10) -> None:
+                       tag: str = 'cosine_components') -> None:
     
     ## calculate signal length
     signalLength: int = len(signal)
@@ -150,6 +209,7 @@ def fit_scan_data(signal: np.array,
     angle: np.array = np.arange(signalLength) * sampleSpacing
     ## convert data to dataframe
     dataDf: pd.DataFrame = convert_data_to_df(frequencies, amplitudes, phases)
+    print(dataDf)
     ## construct cosine components from parameters
     reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components(dataDf, angle, maxFunctions)
     ## plot signal and components
@@ -165,7 +225,7 @@ def convert_data_to_df(frequencies: np.array, amplitudes: np.array, phases: np.a
     ## convert to df
     dataDf: pd.DataFrame = pd.DataFrame(data)
 
-    # remove first component (this will be a constant)
+    # # remove first component (this will be a constant)
     dataDf = dataDf.iloc[1:]
 
     # sort data by amplitude
@@ -175,6 +235,9 @@ def convert_data_to_df(frequencies: np.array, amplitudes: np.array, phases: np.a
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_energy_data(energyData: np.array, paddingFactor: int) -> np.array:
     energyDataPadded = np.concatenate([energyData[::-1] if i % 2 else energyData for i in range(paddingFactor * 2)])
+
+    energyDataPadded = np.concatenate([energyData for I in range(paddingFactor * 2)])
+
     return energyDataPadded
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_angle_data(angleData: np.array, paddingFactor: int) -> np.array:

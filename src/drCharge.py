@@ -225,17 +225,14 @@ def run_charge_fitting(pathInfo):
     child.expect(r'.*Input.*\n?\r?')
     child.sendline(conformerListTxt)
 
-
     ####### LOAD CHARGE CONSTRAINTS #######
     ## look for RESP main menu, input "6" to load charge constraint file
     child.expect(r'.*11.*\n?\r?')
     child.sendline("6")
 
-
     ## look for conformation, input "1" to proceed
     child.expect(r'.*1.*\n?\r?')
     child.sendline("1")
-
 
     ## look for directory input prompt, input directory
     child.expect(r'.*Input.*\n?\r?')
@@ -307,7 +304,7 @@ def find_final_single_point_energy(outFilePath):
 
 
 ###########################################################################
-def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo):
+def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo, debug = False):
     ## unpack molecule info to get input pdb
     inputPdb = moleculeInfo["cappedPdb"]
     ## make a pre-set number of conformers
@@ -323,17 +320,17 @@ def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittin
         "dynamic_ncols": True
     }
     
+    if debug:
+        for arg in argsList:
+            process_conformer(arg)
 
-    # for arg in argsList:
-    #     process_conformer(arg)
-
-
-    with WorkerPool(n_jobs = chargeFittingInfo["nConformers"]) as pool:
-        pool.map(process_conformer,
-                 make_single_arguments(argsList),
-                  progress_bar=True,
-                iterable_len = len(argsList),
-                progress_bar_options=tqdmBarOptions)
+    else:
+        with WorkerPool(n_jobs = chargeFittingInfo["nConformers"]) as pool:
+            pool.map(process_conformer,
+                    make_single_arguments(argsList),
+                    progress_bar=True,
+                    iterable_len = len(argsList),
+                    progress_bar_options=tqdmBarOptions)
 
 
 ###########################################################################
@@ -349,6 +346,7 @@ def process_conformer(args):
                                                             moleculeInfo["charge"], 
                                                             moleculeInfo["multiplicity"],
                                                             chargeFittingInfo["optMethod"],
+                                                            chargeFittingInfo["optSolvationMethod"],
                                                             chargeFittingInfo["nCoresPerCalculation"])
     
     run_orca(pathInfo["orcaExe"], orcaOptInput, p.join(conformerQmDir, "orca_geom_opt.out"))
@@ -367,6 +365,7 @@ def process_conformer(args):
                                                                 moleculeInfo["charge"],
                                                                 moleculeInfo["multiplicity"],
                                                             chargeFittingInfo["singlePointMethod"],
+                                                            chargeFittingInfo["singlePointSolvationMethod"],
                                                             chargeFittingInfo["nCoresPerCalculation"])
     
     run_orca(pathInfo["orcaExe"], orcaSinglePointInput, p.join(conformerQmDir, "orca_single_point.out"))
@@ -458,8 +457,6 @@ def get_charge_group_indexes(pdbFile) -> dict:
 
     rdkitMol = Chem.MolFromPDBFile(pdbFile, removeHs = False)
     rdkitMol = enforce_carboxyl_bonding(rdkitMol)
-    # backBoneAndCapsSmarts = "[#6]([H])([H])([H])[#7]([H])[#6](=[#8])-[#6@@](-[H])-[#7]([H])-[#6](=[#8])-[#6]([H])([H])([H])"
-
 
     backBoneAndCapsSmarts = "[C]([H])([H])([H])[N]([H])[C](=[O])[C@@]([H])[N]([H])[C](=[O])[C]([H])([H])([H])"
     # Find the substructure match
@@ -486,7 +483,7 @@ def get_charge_group_indexes(pdbFile) -> dict:
     nAtoms = rdkitMol.GetNumAtoms()
     return chargeGroupIndexes, nAtoms
 ##########################################################
-def generate_orca_input_for_single_point(optXyz, conformerChargeDir, charge, multiplicity, qmMethod, nCores):
+def generate_orca_input_for_single_point(optXyz, conformerChargeDir, charge, multiplicity, qmMethod, solvationMethod, nCores):
     ## create orca input file
     orcaInputFile = p.join(conformerChargeDir, "orca_single_point.inp")
     with open(orcaInputFile, "w") as f:
@@ -495,14 +492,14 @@ def generate_orca_input_for_single_point(optXyz, conformerChargeDir, charge, mul
         f.write("#  Single Point Calculation         #\n")
         f.write("# --------------------------------- #\n")
         ## METHOD
-        f.write(f"{qmMethod}\n")
+        f.write(f"! {qmMethod} {solvationMethod}\n")
         f.write(f"! pal{str(nCores)}\n")
         ## GEOMETRY
         f.write(f"*xyzfile {charge} {multiplicity} {optXyz}\n\n")
 
     return orcaInputFile
 ##########################################################
-def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charge, multiplicity, qmMethod, nCores):
+def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charge, multiplicity, qmMethod, solvationMethod, nCores):
     ## create orca input file
     orcaInputFile = p.join(conformerChargeDir, "orca_geom_opt.inp")
     with open(orcaInputFile, "w") as f:
@@ -511,7 +508,7 @@ def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charg
         f.write(" #  Geometry Optimisation            #\n")
         f.write(" # --------------------------------- #\n")
         ## METHOD
-        f.write(f"{qmMethod} OPT\n")
+        f.write(f"! {qmMethod} {solvationMethod} OPT\n")
         f.write(f"! pal{str(nCores)}\n")
         ## GEOMETRY
         conformerDf = pdbUtils.pdb2df(conformerPdb)

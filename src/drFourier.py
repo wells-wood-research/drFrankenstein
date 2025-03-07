@@ -1,4 +1,7 @@
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')  # Set the Agg backend before importing pyplot
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
@@ -12,150 +15,109 @@ class FilePath:
     pass
 class DirPath:
     pass
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def dummy_inputs():
-    outputDir = "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/"
-    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
-    torsionTag = 'O-C-CA-N'
-    torsionDir = p.join(torsionTopDir, f"torsion_{torsionTag}")
-    scanDir = p.join(torsionDir, "scan_data")
-    energyCsv = p.join(scanDir, "final_scan_energies.csv")
-    energyDf = pd.read_csv(energyCsv)
-
-    fittingDir = p.join(torsionDir, "fitting")
-
-    ##TODO: maxFunctions = 4
-
-    return energyDf, torsionTag, fittingDir
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def main():
-    energyDf, torsionTag, fittingDir = dummy_inputs()
-    os.makedirs(fittingDir, exist_ok=True)
-    ## load energy data [range of -170 to 180 degrees]
-    ## convert to a [0 - 360] degree range
-    energyDf["Angle"] = energyDf["Angle"].apply(rescale_torsion_angles)
-    energyDf = energyDf.sort_values(by="Angle", ascending=True)
-
-    energyData: np.array = energyDf[torsionTag].values
-
-    energyDataPadded: np.array = pad_energy_data(energyData, paddingFactor=1)
-
-    fit_scan_data(energyDataPadded, outDir=fittingDir, maxFunctions = 4, tag = torsionTag)
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def rescale_torsion_angles(angle):
-    angle = angle % 360  # Reduce the angle to the 0-360 range
-    if angle < 0:
-        angle += 360  # Shift negative angles to the positive side
-    return angle
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=10):
+    energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
+    ## calculate signal length
+    signalLength: int = len(energyDataPadded)
+    ## run reverse fourier transform
+    fftResult: np.array = perform_rfft(energyDataPadded)
+    ## get frequencies, amplitudes and phases
+    frequencies: np.array = get_frequencies(signalLength, sampleSpacing)
+    amplitudes, phases = compute_amplitude_and_phase(fftResult, signalLength)
+    ## construct angle x-axis
+    angle: np.array = np.arange(signalLength) * sampleSpacing
+    ## convert data to dataframe
+    fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies, amplitudes, phases)
 
+    amberParamDf: pd.DataFrame = convert_params_to_amber_format(fourierDf)
+    ## construct cosine components from parameters
+    reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components(amberParamDf, angle, maxFunctions)
+    ## plot signal and components
+    plot_signal_and_components(angle, qmTorsionEnergy, reconstructedSignal, cosineComponents, torsionFittingDir , torsionTag)
+    ## write data to csv file
+    outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
+    amberParamDf.iloc[:nFunctionsUsed].to_csv(outCsv)
+
+    return amberParamDf.iloc[:nFunctionsUsed]   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def perform_rfft(signal: np.array) -> np.array:
-    return np.fft.rfft(signal)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_frequencies(signalLength: int, sampleSpacing: int) -> np.array:
-    return np.fft.rfftfreq(signalLength, sampleSpacing) * 360
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple[np.array, np.array]:
-    amplitudes: np.array = np.abs(fftResult) * 2 / signalLength
-    phases: np.array = np.angle(fftResult)
-    ## round phases
-    phases: np.array = np.degrees(phases)
-    phases: np.array = np.round(phases).astype(int)
-    # phases: np.array = convert_phases_to_nearest(phases)
-    return amplitudes, phases
+def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
+    data = {"Frequency": frequencies, "Amplitude": amplitudes, "Phase": phases}
+    dataDf = pd.DataFrame(data)
+    dataDf = dataDf.sort_values(by='Amplitude', ascending=False).reset_index(drop=True)
+    return dataDf
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_phases_to_nearest(phases: np.array) ->  np.array:
-    return   np.where((180 - np.abs(phases)) < (np.abs(phases)), 180, 0)
+def convert_params_to_amber_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+    amberDf = pd.DataFrame()
+    amberDf["Amplitude"] = fourierDf["Amplitude"]
+    amberDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
+    amberDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
+
+    ## remove period == 0 (DC) Signal
+    amberDf = amberDf[amberDf["Period"] > 0]
+
+    amberDf.sort_values(by="Amplitude", ascending=False, inplace=True,ignore_index=True)
+    return amberDf
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components(dataDf: pd.DataFrame,
+def construct_cosine_components(amberParamDf: pd.DataFrame,
                                  angle: np.array,
                                      maxFunctions: int,
                                        tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
-    # Initialize variables
-    cosineComponents: list = []
-    converged: bool = False
-    previousSignal: np.array = np.zeros_like(angle)  # Initial previous signal
-
-    while not converged:
-        # Reset reconstructedSignal for each iteration
-        reconstructedSignal: np.array = np.zeros_like(previousSignal)
-        for index, row in dataDf.iterrows():
-            print(index + 1)
-            if index + 1  == maxFunctions:
-                print("Max Functions reached!")
-                nFunctionsUsed = maxFunctions
-                converged = True
-                break
-            # Get variables from row
-            A: float = row["Amplitude"]
-            F: float = row["Frequency"]
-            Phi: float = row["Phase"]
-            # Construct cosine function using variables
-            cosineComponent: np.array = A * np.cos(2 * np.pi * F * angle / 360 + np.radians(Phi))
-            # Add to reconstructed signal
-            reconstructedSignal += cosineComponent
-
-            # Calculate RMSD between the current and previous reconstructed signals
-            rmsd: float = calculate_rmsd(reconstructedSignal, previousSignal)
-
-            # Check for convergence
-            if rmsd < tolerance:
-                print("reached Tol")
-                previousSignal = reconstructedSignal.copy()
-                cosineComponents.append((F, cosineComponent))
-                nFunctionsUsed = index + 1
-                converged = True
-                break
-            else:
-                # Update previousSignal for the next iteration
-                print("not reached tol")
-                previousSignal = reconstructedSignal.copy()
-                cosineComponents.append((F, cosineComponent))
     
+    amplitudes = amberParamDf["Amplitude"]
+    periods = amberParamDf["Period"]
+    phases = amberParamDf["Phase"]
 
-    return previousSignal, cosineComponents, nFunctionsUsed
+    sample_spacing = 10
+    signalLength = 36
+    
+    # Angle array
+    angle = np.arange(signalLength) * sample_spacing  # Shape: (N,)
+    
+    # Initialize reconstructed signal
+    reconstructedSignal = np.zeros(signalLength)
+    previousSignal = np.zeros(signalLength)
+
+    ## init mean average error
+    meanAverageError = np.inf
+    ## collect cosine components for plotting
+    cosineComponents = []
+    # Construct each cosine component
+    while True:
+        for nFunctionsUsed in range(1, maxFunctions+1):
+            amberComponent =  amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
+
+            previousSignal = reconstructedSignal.copy()
+            reconstructedSignal += amberComponent
+            meanAverageError =  np.mean(np.abs(reconstructedSignal - previousSignal))
+            cosineComponents.append((nFunctionsUsed , amberComponent))
+            if meanAverageError < tolerance:
+                break
+        if meanAverageError < tolerance:
+            break
+            
+    return reconstructedSignal, cosineComponents, nFunctionsUsed
+
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:
     return np.sqrt(np.mean((signal1 - signal2) ** 2))
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_signal_and_components_html(angle: np.array,
-                               signal: np.array,
-                               cosineComponents: List[Tuple[float, np.array]],
-                               outDir: DirPath,
-                               tag: str):
-    fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=angle, y=signal, mode='lines',
-                             name='QM Scan Energy', line=dict(color='black', width=2)))
+def plot_array(x: np.array, y:np.array ):
 
-    # Initialize reconstructed signal as zeros
-    reconstructedSignal = np.zeros_like(angle)
+    fig, ax = plt.subplots()
+    ax.plot(x,y)
 
-    for freq, cosineComponent in cosineComponents:
-        fig.add_trace(go.Scatter(x=angle, y=cosineComponent, mode='lines',
-                                 name=f'Cosine Component {freq:.2f}', 
-                                 line=dict(dash='dash')))
-        # Add each cosine component to the reconstructed signal
-        reconstructedSignal += cosineComponent
+    plt.savefig("test.png")
+    plt.close()
 
-    fig.add_trace(go.Scatter(x=angle, y=reconstructedSignal, mode='lines',
-                             name='Reconstructed Signal', 
-                             line=dict(color='red', width=2), opacity=0.7))
 
-    fig.update_layout(
-        xaxis_title='angle',
-        yaxis_title='Amplitude',
-        title='Original Signal and Cosine Components',
-        legend=dict(x=0, y=1),
-        xaxis=dict(tickmode='array', tickvals=np.arange(min(angle), max(angle) + 1, 60)),
-        template='plotly_white'
-    )
 
-    saveHtml = p.join(outDir, f"{tag}.html")
-    fig.write_html(saveHtml)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_signal_and_components(angle: np.array,
                                 signal: np.array,
@@ -165,16 +127,13 @@ def plot_signal_and_components(angle: np.array,
                                 tag: str):
     ########
     plt.figure(figsize=(12, 6))
-    angle_mask = (angle >= 0) & (angle <= 360)
-    angle = angle[angle_mask]
-    signal = signal[angle_mask]
-    reconstructed_signal = reconstructed_signal[angle_mask]
+
+    angle = range(0,360, 10)
     ########
-    plt.plot(angle, signal, label='QM Scan Energy', color='black',
-             linewidth=2)
+
+    plt.plot(angle, signal, label='QM Scan Energy', color='black',linewidth=2)
     ########
     for freq, cosine_component in cosine_components:
-        cosine_component = cosine_component[angle_mask]
         plt.plot(angle, cosine_component, linestyle='--',
                  label=f'Cosine Component {freq:.2f}')
     ########
@@ -191,58 +150,48 @@ def plot_signal_and_components(angle: np.array,
     save_png = p.join(out_dir, f"{tag}.png")
     plt.savefig(save_png)
     plt.close()
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fit_scan_data(signal: np.array,
-                   outDir: DirPath,
-                     maxFunctions: int,
-                     sampleSpacing: float = 10.0,
-                       tag: str = 'cosine_components') -> None:
-    
-    ## calculate signal length
-    signalLength: int = len(signal)
-    ## run reverse fourier transform
-    fftResult: np.array = perform_rfft(signal)
-    ## get frequencies, amplitudes and phases
-    frequencies: np.array = get_frequencies(signalLength, sampleSpacing)
-    amplitudes, phases = compute_amplitude_and_phase(fftResult, signalLength)
-    ## construct angle x-axis
-    angle: np.array = np.arange(signalLength) * sampleSpacing
-    ## convert data to dataframe
-    dataDf: pd.DataFrame = convert_data_to_df(frequencies, amplitudes, phases)
-    print(dataDf)
-    ## construct cosine components from parameters
-    reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components(dataDf, angle, maxFunctions)
-    ## plot signal and components
-    plot_signal_and_components(angle, signal, reconstructedSignal, cosineComponents, outDir, tag)
-    ## write data to csv file
-    outCsv: FilePath = p.join(outDir, f"{tag}.csv")
-    dataDf.iloc[:nFunctionsUsed].to_csv(outCsv)
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_data_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
-    data = {"Frequency": frequencies,
-            "Amplitude": amplitudes,
-            "Phase": phases}    
-    ## convert to df
-    dataDf: pd.DataFrame = pd.DataFrame(data)
+    ########
 
-    # # remove first component (this will be a constant)
-    dataDf = dataDf.iloc[1:]
 
-    # sort data by amplitude
-    dataDf = dataDf.sort_values(by='Amplitude', ascending=False).reset_index(drop=True)
-
-    return dataDf
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_energy_data(energyData: np.array, paddingFactor: int) -> np.array:
-    energyDataPadded = np.concatenate([energyData[::-1] if i % 2 else energyData for i in range(paddingFactor * 2)])
-
-    energyDataPadded = np.concatenate([energyData for I in range(paddingFactor * 2)])
-
-    return energyDataPadded
+    return np.tile(energyData, paddingFactor)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_angle_data(angleData: np.array, paddingFactor: int) -> np.array:
-    angleDataPadded = np.concatenate([angleData + 360 * i for i in range(paddingFactor * 2)])
-    return angleDataPadded
+    return np.tile(angleData, paddingFactor)
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def rescale_torsion_angles(angle):
+    angle = angle % 360  # Reduce the angle to the 0-360 range
+    if angle < 0:
+        angle += 360  # Shift negative angles to the positive side
+    return angle
+
+##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def perform_rfft(signal: np.array) -> np.array:
+    return np.fft.rfft(signal)
+##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def get_frequencies(signalLength: int, sampleSpacing: int) -> np.array:
+    return np.fft.rfftfreq(signalLength, sampleSpacing)
+##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple[np.array, np.array]:
+    amplitudes: np.array = np.abs(fftResult) * 2 / signalLength
+    phases: np.array = np.angle(fftResult)
+
+    return amplitudes, phases
+
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
-    main()
+    
+    outputDir = "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/"
+    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
+    torsionTag = 'O-C-CA-N'
+    torsionDir = p.join(torsionTopDir, f"torsion_{torsionTag}")
+    scanDir = p.join(torsionDir, "scan_data")
+    energyCsv = p.join(scanDir, "final_scan_energies.csv")
+    energyDf = pd.read_csv(energyCsv)
+
+    fittingDir = p.join(torsionDir, "fitting")
+
+    ##TODO: maxFunctions = 4
+    
+    fourier_transform_protocol(energyDf[torsionTag], torsionTag, fittingDir)

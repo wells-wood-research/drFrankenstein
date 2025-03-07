@@ -1,6 +1,5 @@
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import subprocess
 from subprocess import call, DEVNULL 
 from os import path as p
 import os
@@ -9,12 +8,13 @@ from shutil import rmtree, copy
 from pdbUtils import pdbUtils
 import pandas as pd
 import numpy as np
-import time
 import pexpect
+import yaml
+import re
 
+from tqdm import tqdm
 ## drFrankenstein LIBRARIES ##
 import drTwist
-import drInputs
 
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##c
 from mpire import WorkerPool
@@ -75,8 +75,6 @@ def dummy_inputs():
     }
 
     return config
-    
-
 
 ###########################################################################
 ###########################################################################
@@ -89,19 +87,23 @@ def charge_protocol(config, debug=False):
 
     pathInfo = config["pathInfo"]
 
-    chargeGroupIndexes, nAtoms = get_charge_group_indexes(moleculeInfo["cappedPdb"])
-    chargeConstraintsTxt = generate_charge_constraints_file(chargeGroupIndexes, moleculeInfo["charge"], pathInfo["chargeFittingDir"])
+    config = get_charge_group_indexes(moleculeInfo["cappedPdb"], config)
+    chargeConstraintsTxt = generate_charge_constraints_file(config)
 
     pathInfo.update({"chargeConstraints": chargeConstraintsTxt})
 
-    run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo)
+    run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo, config, debug)
     conformerListTxt = generate_conformer_list_file(pathInfo["orcaCalculationsDir"], pathInfo["chargeFittingDir"])
     pathInfo.update({"conformerListForChargeFitting": conformerListTxt})
 
-    rawMultiWfnOutputs = run_charge_fitting(pathInfo)
+    rawMultiWfnOutputs = run_charge_fitting(config)
     chargesDf = parse_multiwfn_output(rawMultiWfnOutputs)
     chargesCsv = p.join(pathInfo["chargeFittingDir"], "charges.csv")
     chargesDf.to_csv(chargesCsv)
+
+
+    config["checkpointInfo"]["chargesComplete"] = True
+    return config
 
 ###########################################################################
 ###########################################################################
@@ -111,13 +113,10 @@ def set_up_directories(config) -> dict:
 
     outputDir: DirectoryPath = pathInfo["outputDir"]
     ## charge dir - acts as a topDir for all charge-related processes
-    chargeDir: DirectoryPath = p.join(outputDir, "03_charge_calculations")
+    chargeDir: DirectoryPath = p.join(outputDir, "04_charge_calculations")
     os.makedirs(chargeDir, exist_ok=True)
 
-    ## directory to store conformer PDB files
-    ## NOTE these do not interact with torsion scans at all!
-    conformerDir: DirectoryPath = p.join(chargeDir, "conformers")
-    os.makedirs(conformerDir, exist_ok=True)
+
     ## directory to run ORCA QM calculations
     orcaCalculationsDir: DirectoryPath = p.join(chargeDir, "orca_calculations")
     os.makedirs(orcaCalculationsDir, exist_ok=True)
@@ -128,7 +127,6 @@ def set_up_directories(config) -> dict:
     ## update config
     config["pathInfo"].update({
         "chargeDir": chargeDir,
-        "conformerDir": conformerDir,
         "chargeFittingDir": chargeFittingDir,
         "orcaCalculationsDir": orcaCalculationsDir
     })
@@ -180,82 +178,104 @@ def parse_multiwfn_output(rawMultiWfnOutputs):
     return chargesDf
 
 ###########################################################################
-def run_charge_fitting(pathInfo):
-    ## unpack pathInfo
+def run_charge_fitting(config):
+    ## Unpack pathInfo
+    pathInfo = config["pathInfo"]
     multiWfnDir = pathInfo["multiWfnDir"]
     chargeFittingDir = pathInfo["chargeFittingDir"]
     chargeConstraintsTxt = pathInfo["chargeConstraints"]
     conformerListTxt = pathInfo["conformerListForChargeFitting"]
 
-    ## change dir to MultiWFN build dir so it can find settings.ini
+    nConformers = config["chargeFittingInfo"]["nConformers"]
+
+    ## Change dir to MultiWFN build dir so it can find settings.ini
     os.chdir(multiWfnDir)
 
-    ## get MultoiWFN binary
+    ## Get MultiWFN binary
     multiWfnExe = p.join(multiWfnDir, "Multiwfn_noGUI")
     if not p.isfile(multiWfnExe):
-        raise(FileNotFoundError, "Multiwfn_noGUI not found")
+        raise FileNotFoundError("Multiwfn_noGUI not found")
 
-    ## get a molden file for the input command
-    moldenFile = glob.glob(p.join(chargeFittingDir,"*.molden.input"))[0]
+    ## Get a molden file for the input command
+    moldenFile = glob.glob(p.join(chargeFittingDir, "*.molden.input"))[0]
 
-    ## create a child with pexpect using a command
-    chargeFittingCommand = f"{multiWfnExe} {moldenFile}"
-    child = pexpect.spawn(chargeFittingCommand, encoding='utf-8')
-
-    # Capture all output until the expected prompt
-    output = ""
-
-    ####### GET TO RESP MAIN MENU #######
-
-    ## look for main menu, input "7" for charge calculations
-    child.expect(r'.*300.*\n?\r?')
-    child.sendline("7")
-
-    ## look for charge calculation menu, input "18" for RESP calculations
-    child.expect(r'.*20.*\n?\r?')
-    child.sendline("18")
-
-    ###### LOAD CONFORMERS #######
-
-    ## look for RESP main menu, input "-1" to load conformer file
-    child.expect(r'.*11.*\n?\r?')
-    child.sendline("-1")
-
-    ## look for directory input prompt, input directory
-    child.expect(r'.*Input.*\n?\r?')
-    child.sendline(conformerListTxt)
-
-    ####### LOAD CHARGE CONSTRAINTS #######
-    ## look for RESP main menu, input "6" to load charge constraint file
-    child.expect(r'.*11.*\n?\r?')
-    child.sendline("6")
-
-    ## look for conformation, input "1" to proceed
-    child.expect(r'.*1.*\n?\r?')
-    child.sendline("1")
-
-    ## look for directory input prompt, input directory
-    child.expect(r'.*Input.*\n?\r?')
-    child.sendline(chargeConstraintsTxt)
-
-    ####### RUN CALCULATIONS #######
-
-    ## look for RESP main menu, input "2" to run charge calculations
-    child.expect(r'.*11.*\n?\r?')
-    child.sendline("2")
-    output += child.after
-    ## look for Note at the end of calculation, input "q" to quit
-    child.expect(r'.*Note: Because.*\n?\r?', timeout=None)
-    child.sendline("q")
-    output += child.after
+    ## Define output file
     outputFile = p.join(chargeFittingDir, "MultiWfn_raw_outputs.txt")
 
-    # Write the output to the file
-    with open(outputFile, 'w') as file:
-        file.write(output)
+    ## Open a file object for continuous logging
+    with open(outputFile, 'w') as logFile:
+        # Clear file and write a starting message
+        logFile.write("Starting charge fitting process...\n")
+        logFile.flush()  # Ensure it’s written immediately
+
+        ## Spawn the child process with logfile enabled
+        chargeFittingCommand = f"{multiWfnExe} {moldenFile}"
+        child = pexpect.spawn(chargeFittingCommand, encoding='utf-8', logfile=logFile)
+
+
+        ####### GET TO RESP MAIN MENU #######
+        child.expect(r'.*300.*\n?\r?')
+        child.sendline("7")
+
+        child.expect(r'.*20.*\n?\r?')
+        child.sendline("18")
+
+        ###### LOAD CONFORMERS #######
+        child.expect(r'.*11.*\n?\r?')
+        child.sendline("-1")
+
+        child.expect(r'.*Input.*\n?\r?')
+        child.sendline(conformerListTxt)
+
+        ####### LOAD CHARGE CONSTRAINTS #######
+        child.expect(r'.*11.*\n?\r?')
+        child.sendline("6")
+
+        child.expect(r'.*1.*\n?\r?')
+        child.sendline("1")
+
+        child.expect(r'.*Input.*\n?\r?')
+        child.sendline(chargeConstraintsTxt)
+
+        ####### RUN CALCULATIONS #######
+        child.expect(r'.*11.*\n?\r?')
+        child.sendline("2")
+
+
+
+        # Monitor the output for progress updates
+
+        # Initialize tqdm progress bar
+        tqdmBarOptions = {
+        "desc": f"Performing Charge Fitting",
+        "ascii": "-ϟ",  
+        "colour": "yellow",
+        "unit":  "calculations",
+        "dynamic_ncols": True
+            }
+        totalTickProgress = nConformers * 100.00
+        progress_bar = tqdm(total=totalTickProgress, **tqdmBarOptions)
+        try:
+            while True:
+                # Expect either a progress line or the end of the process (EOF)
+                index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %", 
+                                      r" 11 Choose ESP type, current: Nuclear \+ Electronic[\n\r]?", pexpect.TIMEOUT], timeout=5)
+                if index == 0:  # Progress line matched
+                    progress_bar.update(1)  # Update the tqdm bar by 1 tick
+                
+                elif index == 1:  # (process finished)
+                    break
+                
+                elif index == 2:  # Timeout (no output for 5 seconds)
+                    continue
+
+        except pexpect.ExceptionPexpect as e:
+            raise e
+
+        # Close the child process
+        child.close()
 
     return outputFile
-
 
 ###########################################################################
 def generate_conformer_list_file(orcaCalculationsDir, chargeFittingDir):
@@ -304,19 +324,22 @@ def find_final_single_point_energy(outFilePath):
 
 
 ###########################################################################
-def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo, debug = False):
+def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittingInfo, config,  debug = False):
     ## unpack molecule info to get input pdb
-    inputPdb = moleculeInfo["cappedPdb"]
-    ## make a pre-set number of conformers
-    conformerPdbs = drTwist.gen_conformers(inputPdb, pathInfo["chargeFittingDir"], 1, chargeFittingInfo["nConformers"])
-    argsList = [(conformerPdb, pathInfo, chargeFittingInfo,  moleculeInfo) for conformerPdb in conformerPdbs]
+    
+    conformerXyzs = config["pathInfo"]["conformerXyzs"]
+
+    sampledConformerXyzs = conformerXyzs[:config["chargeFittingInfo"]["nConformers"]]
+
+
+    argsList = [(conformerXyz, pathInfo, chargeFittingInfo,  moleculeInfo) for conformerXyz in sampledConformerXyzs]
     
     
     tqdmBarOptions = {
         "desc": f"Running Charge Calculations",
-        "ascii": "-🗲",  # Use the character for the bar
+        "ascii": "-ϟ",  
         "colour": "yellow",
-        "unit":  "Calc",
+        "unit":  "scan",
         "dynamic_ncols": True
     }
     
@@ -335,13 +358,13 @@ def run_qm_calculations_for_charge_fitting(pathInfo,  moleculeInfo, chargeFittin
 
 ###########################################################################
 def process_conformer(args):
-    conformerPdb, pathInfo, chargeFittingInfo, moleculeInfo,  = args
-    conformerName = p.basename(conformerPdb).split(".")[0]
+    conformerXyz, pathInfo, chargeFittingInfo, moleculeInfo,  = args
+    conformerName = p.basename(conformerXyz).split(".")[0]
     
     conformerQmDir = p.join(pathInfo["orcaCalculationsDir"], conformerName)
     os.makedirs(conformerQmDir, exist_ok=True)
 
-    orcaOptInput = generate_orca_input_for_optimisation(conformerPdb,
+    orcaOptInput = generate_orca_input_for_optimisation(conformerXyz,
                                                             conformerQmDir,
                                                             moleculeInfo["charge"], 
                                                             moleculeInfo["multiplicity"],
@@ -351,7 +374,7 @@ def process_conformer(args):
     
     run_orca(pathInfo["orcaExe"], orcaOptInput, p.join(conformerQmDir, "orca_geom_opt.out"))
 
-    # orcaSolvateInput = generate_orca_input_for_solvation(conformerPdb,
+    # orcaSolvateInput = generate_orca_input_for_solvation(conformerXyz,
     #                                                         conformerQmDir,
     #                                                         moleculeInfo["charge"], 
     #                                                         moleculeInfo["multiplicity"],
@@ -379,7 +402,7 @@ def process_conformer(args):
 
     copy(singlePointMolden, destMolden)
 ###########################################################################
-def generate_orca_input_for_solvation(conformerPdb, conformerQmDir, charge, multiplicity, nWaters):
+def generate_orca_input_for_solvation(conformerXyz, conformerQmDir, charge, multiplicity, nWaters):
     ## create orca input file
     orcaInputFile = p.join(conformerQmDir, "orca_solvation.inp")
     with open(orcaInputFile, "w") as f:
@@ -395,26 +418,28 @@ def generate_orca_input_for_solvation(conformerPdb, conformerQmDir, charge, mult
         f.write("\tCLUSTERMODE STOCHASTIC\n")
         f.write("END\n")
         ## GEOMETRY
-        conformerDf = pdbUtils.pdb2df(conformerPdb)
-        f.write(f"*xyz {charge} {multiplicity}\n\n")
-        for index, row in conformerDf.iterrows():
-            geomLine = f"{row['ELEMENT']} {row['X']} {row['Y']} {row['Z']}\n"
-            f.write(geomLine)
-        f.write("*")
+        f.write(f"*xyz {charge} {multiplicity} {conformerXyz}\n")
+        f.write("END\n")
 
 
     return orcaInputFile
 
 ##########################################################
-def generate_charge_constraints_file(chargeGroupIndexes, charge, chargeFittingDir):
+def generate_charge_constraints_file(config):
+    chargeFittingDir = config["pathInfo"]["chargeFittingDir"]
+
+    chargeGroups: dict = config["moleculeInfo"]["chargeGroups"]
+
     chargeConstraintsTxt = p.join(chargeFittingDir, "charge_group_constraints.txt")
     with open(chargeConstraintsTxt, "w") as f:
-        for chargeGroup in ["N-Methyl", "Acyl", "Backbone"]:
-            formattedIndexes = ",".join(map(str, chargeGroupIndexes[chargeGroup]))
-            f.write(f"{formattedIndexes} 0\n")
+        for _, chargeGroupData in chargeGroups.items():
+            indexes = chargeGroupData["indexes"]
+            if len(indexes) == 0:
+                continue
+            charge = chargeGroupData["charge"]
+            formattedIndexes = ",".join(map(str, indexes))
+            f.write(f"{formattedIndexes} {str(charge)}\n")
           
-        formattedIndexes = ",".join(map(str, chargeGroupIndexes["Sidechain"]))
-        f.write(f"{formattedIndexes} {str(charge)}\n")
 
     return chargeConstraintsTxt
 ##########################################################
@@ -451,37 +476,58 @@ def enforce_carboxyl_bonding(mol):
     # Return the modified molecule
     return emol.GetMol()   
 ##########################################################
-def get_charge_group_indexes(pdbFile) -> dict:
+def get_charge_group_indexes(pdbFile, config) -> dict:
 
-    ##TODO: Implement fragmentation in sidechain C-C bonds so we can constrain charges nicely!
+    pdbDf = pdbUtils.pdb2df(pdbFile)
 
-    rdkitMol = Chem.MolFromPDBFile(pdbFile, removeHs = False)
-    rdkitMol = enforce_carboxyl_bonding(rdkitMol)
+    chargeGroups = config["moleculeInfo"]["chargeGroups"]
+    overallCharge = config["moleculeInfo"]["charge"]
 
-    backBoneAndCapsSmarts = "[C]([H])([H])([H])[N]([H])[C](=[O])[C@@]([H])[N]([H])[C](=[O])[C]([H])([H])([H])"
-    # Find the substructure match
-    backBoneAndCapsPattern = Chem.MolFromSmarts(backBoneAndCapsSmarts)
-    backBoneAndCapsMatches = rdkitMol.GetSubstructMatches(backBoneAndCapsPattern)
+    ## remove capping groups
+    uncappedDf = pdbDf[~pdbDf["RES_NAME"].isin(["NME", "ACE"])]
 
-    ## get caps and backbone using matching 
-    backBoneAndCapsIndexes = [list(match) for match in backBoneAndCapsMatches]
-    nMethylCapIndexes = backBoneAndCapsIndexes[0][0:6]
-    acylCapIndexes = backBoneAndCapsIndexes[0][-6:]
-    backBoneIndexes = backBoneAndCapsIndexes[0][6:-6]
+    ## deal with user-defined charge groups
+    userDefinedAtoms = []
+    userDefinedCharge = 0
+    for chargeGroupName, chargeGroupData in chargeGroups.items():
+        chargeGroupAtoms = chargeGroupData["atoms"]
+        chargeGroupIndexes = uncappedDf[uncappedDf["ATOM_NAME"].isin(chargeGroupAtoms)]["ATOM_ID"].to_list()
+        chargeGroups[chargeGroupName]["indexes"] = chargeGroupIndexes
+        userDefinedCharge += chargeGroupData["charge"]
+        userDefinedAtoms.extend(chargeGroupAtoms)
 
-
-    ## get sidechain indexes 
-    allAtomIndexes = set(range(rdkitMol.GetNumAtoms()))
-    sideChainIndexes = [index for index in allAtomIndexes if not index in backBoneAndCapsIndexes[0]]
-    chargeGroupIndexes = {
-        "N-Methyl": nMethylCapIndexes,
-        "Acyl": acylCapIndexes,
-        "Backbone": backBoneIndexes,
-        "Sidechain": sideChainIndexes
+    ## deal with left-over atoms, these will all go in one group
+    leftOverDf = uncappedDf[~uncappedDf["ATOM_NAME"].isin(userDefinedAtoms)]
+    leftOverAtoms = leftOverDf["ATOM_NAME"].to_list()
+    leftOverIndexes = leftOverDf["ATOM_ID"].to_list()
+    leftOverCharge = overallCharge - userDefinedCharge 
+    ## deal with left-over atoms, these will all go in one group
+    leftOverDf = uncappedDf[~uncappedDf["ATOM_NAME"].isin(userDefinedAtoms)]
+    leftOverAtoms = leftOverDf["ATOM_NAME"].to_list()
+    leftOverIndexes = leftOverDf["ATOM_ID"].to_list()
+    leftOverCharge = overallCharge - userDefinedCharge 
+    
+    chargeGroups["left-over-atoms"] = {
+        "atoms" : leftOverAtoms,
+        "charge" : leftOverCharge,
+        "indexes" : leftOverIndexes
     }
+    ## deal with Terminal Caps 
+    for capResName in ["NME", "ACE"]:
+        capDf = pdbDf[pdbDf["RES_NAME"]==capResName]
+        for capIndex, capResDf in capDf.groupby("RES_ID"):
+            chargeGroupAtoms = capResDf["ATOM_NAME"].to_list()
+            chargeGroupIndexes = capResDf["ATOM_ID"].to_list()
+            chargeGroupName = f"{capResName}_cap_{capIndex}"
+            chargeGroups[chargeGroupName] = {
+                "atoms": chargeGroupAtoms,
+                "charge": 0,
+                "indexes": chargeGroupIndexes
+            }
 
-    nAtoms = rdkitMol.GetNumAtoms()
-    return chargeGroupIndexes, nAtoms
+    config["moleculeInfo"]["chargeGroups"] = chargeGroups
+
+    return config
 ##########################################################
 def generate_orca_input_for_single_point(optXyz, conformerChargeDir, charge, multiplicity, qmMethod, solvationMethod, nCores):
     ## create orca input file
@@ -494,12 +540,13 @@ def generate_orca_input_for_single_point(optXyz, conformerChargeDir, charge, mul
         ## METHOD
         f.write(f"! {qmMethod} {solvationMethod}\n")
         f.write(f"! pal{str(nCores)}\n")
+        f.write("\n")
         ## GEOMETRY
-        f.write(f"*xyzfile {charge} {multiplicity} {optXyz}\n\n")
+        f.write(f"*xyzfile {charge} {multiplicity} {optXyz}\n")
 
     return orcaInputFile
 ##########################################################
-def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charge, multiplicity, qmMethod, solvationMethod, nCores):
+def generate_orca_input_for_optimisation(conformerXyz, conformerChargeDir, charge, multiplicity, qmMethod, solvationMethod, nCores):
     ## create orca input file
     orcaInputFile = p.join(conformerChargeDir, "orca_geom_opt.inp")
     with open(orcaInputFile, "w") as f:
@@ -509,14 +556,11 @@ def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charg
         f.write(" # --------------------------------- #\n")
         ## METHOD
         f.write(f"! {qmMethod} {solvationMethod} OPT\n")
-        f.write(f"! pal{str(nCores)}\n")
+        # f.write(f"! pal{str(nCores)}\n")
+        f.write("\n")
+
         ## GEOMETRY
-        conformerDf = pdbUtils.pdb2df(conformerPdb)
-        f.write(f"*xyz {charge} {multiplicity}\n\n")
-        for index, row in conformerDf.iterrows():
-            geomLine = f"{row['ELEMENT']} {row['X']} {row['Y']} {row['Z']}\n"
-            f.write(geomLine)
-        f.write("*")
+        f.write(f"*xyzfile {charge} {multiplicity} {conformerXyz}\n\n")
 
     return orcaInputFile
 
@@ -526,7 +570,10 @@ def generate_orca_input_for_optimisation(conformerPdb, conformerChargeDir, charg
 
 
 if __name__ == "__main__":
-    main()
+    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/02_NMH_outputs/drFrankenstein.yaml"
+    with open(configYaml, "r") as yamlFile:
+        config = yaml.safe_load(yamlFile)
+    charge_protocol(config, debug=False)
 
 
 

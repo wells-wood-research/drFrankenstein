@@ -2,9 +2,8 @@
 import os
 from os import path as p
 from pdbUtils import pdbUtils
-from subprocess import call, PIPE
+from subprocess import call
 import pandas as pd
-import yaml
 import matplotlib
 matplotlib.use('Agg')  # Set the Agg backend before importing pyplot
 import matplotlib.pyplot as plt
@@ -51,12 +50,11 @@ def twist_protocol(config):
     for rotatableBond in rotatableBonds:
         config = run_torsion_scanning(rotatableBond, config)
 
-    config["checkpointInfo"]["scanningComplete"] = True
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
-    # print(f"Running torsion scans for {rotatableBond['atoms']}")
+    print(f"Running torsion scans for {rotatableBond['atoms']}")
     ## make a top level dir for this torsion
     torsionTag: str = "-".join(map(str, rotatableBond["atoms"])) 
     torsionDir = p.join(config["pathInfo"]["torsionTopDir"], f"torsion_{torsionTag}" )
@@ -64,36 +62,77 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
     ## add to config
     config["pathInfo"]["torsionDirs"].append(torsionDir)
     config["torsionScanInfo"]["torsionTags"].append(torsionTag)
+    ## init some variables
+    meanAverageError = np.inf
+    batchIndex = 1
+    meanAverageErrors = []
+    scanRawDfs = {}
+    ## unpack torsionScanInfo
+    conversionTolerance = config["torsionScanInfo"]["convergenceTolerance"]
+    minScanBatches = config["torsionScanInfo"]["minScanBatches"]
+    maxScanBatches = config["torsionScanInfo"]["minScanBatches"]
+    ## INIT A WHILE LOOP - BREAK WHEN CONVERGENCE IS REACHED
+    while True:
+        if batchIndex > maxScanBatches:
+            break
+        if meanAverageError < conversionTolerance and batchIndex >= minScanBatches:
+            break
+    
+        torsionBatchDir = p.join(torsionDir, f"batch_{batchIndex}")
+        os.makedirs(torsionBatchDir, exist_ok=True)
+        ## generate a batch of conformers
+        conformerPdbs = gen_conformers(inputPdb=config["moleculeInfo"]["cappedPdb"],
+                                        batchDir=torsionBatchDir,
+                                        iteration=batchIndex,
+                                        nConformers=config["torsionScanInfo"]["scanBatchSize"])
+        
+        
+        ## CREATE A DIR FOR THIS TORSION ANGLE
+        torsionScanDir = p.join(torsionBatchDir, f"torsion_scans")
+        os.makedirs(torsionScanDir, exist_ok=True)
+        
+        ## INIT EMPTY LIST TO STORE SCAN DATA
+        scanDfs = []
+        if debug:
+            ## run in serial
+            scanDfs = scan_in_serial(scanDfs, torsionScanDir, conformerPdbs, rotatableBond["indices"], batchIndex, config)
+        else:
+            # run torsion scans in paralell
+            scanDfs = scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, rotatableBond["indices"], batchIndex, config)
 
- 
-    ## get conformer XYZ files
-    conformerXyzs = config["pathInfo"]["conformerXyzs"]
-    ## INIT EMPTY LIST TO STORE SCAN DATA
-    scanDfs = []
-    if debug:
-        ## run in serial
-        scanDfs = scan_in_serial(scanDfs, torsionDir, conformerXyzs, rotatableBond["indices"], config)
-    else:
-        # run torsion scans in paralell
-        scanDfs = scan_in_parallel(scanDfs, torsionDir, conformerXyzs, rotatableBond["indices"], torsionTag, config)
+        if not len(scanDfs) == 0:
+            ## Merge scan data, calculate averages, rolling averages and mean average errors
+            meanAverageError, mergedDf, scanAverageDf, rollingAverageDf = process_scan_data(scanDfs, torsionDir, batchIndex)
+            meanAverageErrors.append(meanAverageError)
+            scanRawDfs[batchIndex] = mergedDf
+        ## STEP BATCH INDEX
+        batchIndex += 1
 
-    ## Merge scan data, calculate averages, rolling averages and mean average errors
-    finalScanEnergiesCsv  = process_scan_data(scanDfs, torsionDir, torsionTag)
-
+    ## once convergence criteria has been met
+    ## create a dataframe containing final scan energies
+    finalScanEnergiesDf = pd.DataFrame()
+    finalScanEnergiesDf["Angle"] = rollingAverageDf["Angle"]
+    finalScanEnergiesDf[torsionTag] = rollingAverageDf.iloc[:, -1]
+    ## write to file
+    dataDir = p.join(torsionDir, "scan_data")
+    finalScanEnergiesCsv = p.join(dataDir, "final_scan_energies.csv")
+    finalScanEnergiesDf.to_csv(finalScanEnergiesCsv, index=False)
+    ## plot scan data
+    # drPlotter.plot_torsion_scans(torsionDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors)
     config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = finalScanEnergiesCsv   
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def set_up_directories(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
-    torsionTopDir = p.join(outputDir, "03_torsion_scanning")
+    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
     os.makedirs(torsionTopDir, exist_ok=True)
     config["pathInfo"]["torsionTopDir"] = torsionTopDir
 
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def scan_in_serial(scanDfs, torsionScanDir, conformerXyzs, torsionIndexes, config) -> List[pd.DataFrame]:
-    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
+def scan_in_serial(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batchIndex, config) -> List[pd.DataFrame]:
+    argsList = [(conformerPdb, torsionScanDir,  torsionIndexes, config) for  conformerPdb in conformerPdbs]
 
     for args in argsList:
         forwardsDf, backwardsDf = do_the_twist_worker(args)
@@ -105,20 +144,17 @@ def scan_in_serial(scanDfs, torsionScanDir, conformerXyzs, torsionIndexes, confi
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def scan_in_parallel(scanDfs, torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> List[pd.DataFrame]:
+def scan_in_parallel(scanDfs, torsionScanDir, conformerPdbs, torsionIndexes, batchIndex, config) -> List[pd.DataFrame]:
     tqdmBarOptions = {
-        "desc": f"\033[32mScanning Torsion {torsionTag}\033[0m",
+        "desc": f"\033[32mScanning Batch {batchIndex}\033[0m",
         "ascii": "-ϟ",  
         "colour": "yellow",
         "unit":  "scan",
         "dynamic_ncols": True
     }
-    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
+    argsList = [(conformerPdb, torsionScanDir,  torsionIndexes, config) for  conformerPdb in conformerPdbs]
 
-    ## save on cores 
-    nCores = min(len(argsList), config["hardwareInfo"]["nCores"])
-
-    with WorkerPool(n_jobs = nCores) as pool:
+    with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
         results = pool.map(do_the_twist_worker,
                             make_single_arguments(argsList),
                               progress_bar=True,
@@ -135,41 +171,82 @@ def scan_in_parallel(scanDfs, torsionScanDir, conformerXyzs, torsionIndexes, tor
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def process_scan_data(scanDfs: List[pd.DataFrame],
                        torsionTopDir: DirectoryPath,
-                       torsionTag: str):
-    ## make a dir to store output csv files
-    dataDir = p.join(torsionTopDir, "scan_data")
-    os.makedirs(dataDir, exist_ok=True)
-
+                         batchIndex: int):
+    
     ## merge scan dataframes
     scanDfs = [process_energy_outputs(scanDf) for scanDf in scanDfs]
     mergedDf = merge_scan_dfs(scanDfs)
-    print(mergedDf)
 
+    
     ## remove cols with large jumps in energy
     mergedDf = detect_jumps_in_data(mergedDf)
-
+    ## make a dir to store output csv files
+    dataDir = p.join(torsionTopDir, "scan_data")
+    os.makedirs(dataDir, exist_ok=True)
     ## write to csv
-    mergedScanCsv = p.join(dataDir, f"scan_energies.csv")
-    mergedDf.to_csv(mergedScanCsv, index=False)
+    batchCsv = p.join(dataDir, f"batch_{batchIndex}.csv")
+    mergedDf.to_csv(batchCsv, index=False)
+    averagesCsv = p.join(dataDir, "scan_averages.csv")
 
-    scanAverageDf = pd.DataFrame()
-    scanAverageDf["Angle"] = mergedDf["Angle"]
-
-
+    if batchIndex == 1:
+        ## init the location of the averages csv
+        scanAverageDf = pd.DataFrame()
+        scanAverageDf["Angle"] = mergedDf["Angle"]
+    else:   
+        ## read data from averages csv
+        scanAverageDf = pd.read_csv(averagesCsv, index_col=None)
     ## calculate averages
-    finalScanEnergiesCsv = p.join(dataDir, "final_scan_energies.csv")
-    scanAverageDf[torsionTag] = mergedDf.drop(columns="Angle").mean(axis=1)
-    scanAverageDf.to_csv(finalScanEnergiesCsv, index=False)
+    scanAverageDf[f"Batch {batchIndex}"] = mergedDf.drop(columns="Angle").mean(axis=1)
+    scanAverageDf.to_csv(averagesCsv, index=False)
 
-    return finalScanEnergiesCsv
+    if batchIndex >= 2:
+        rollingAveragesCsv = p.join(dataDir, "rolling_averages.csv")
+        if p.exists(rollingAveragesCsv):
+            rollingAverageDf = pd.read_csv(rollingAveragesCsv, index_col=None)
+        else:
+            rollingAverageDf = pd.DataFrame()
+            rollingAverageDf["Angle"] = mergedDf["Angle"]
+        rollingAverageDf[f"Batch {batchIndex}"] = scanAverageDf.drop(columns="Angle").mean(axis=1)
+        rollingAverageDf.to_csv(rollingAveragesCsv, index=False)
 
+    if batchIndex >= 3:
+        meanAverageError = (rollingAverageDf[f"Batch {batchIndex}"] - rollingAverageDf[f"Batch {batchIndex - 1}"]).abs().mean()
+        return meanAverageError, mergedDf, scanAverageDf, rollingAverageDf
+    
+    else:
+        return np.inf, mergedDf, None, None
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def gen_conformers(inputPdb: FilePath,
+                    batchDir: DirectoryPath,
+                      iteration: int,
+                        nConformers: int):
+    
+    ## make a new dir to store this batch of conformers
+    
+    conformerDir = p.join(batchDir, "conformers")
+    os.makedirs(conformerDir, exist_ok=True)
+    ## extract information for naming conformers
+    molName = p.basename(inputPdb).split(".")[0]
+
+    firstConformerIndex = (iteration) * nConformers - nConformers + 1
+
+    mol = Chem.MolFromPDBFile(inputPdb, removeHs=False)
+    confs = AllChem.EmbedMultipleConfs(mol, numConfs=nConformers, randomSeed=iteration)
+    conformerPdbs = []
+    for i in range(nConformers):    
+        mol.SetProp("_Name", f"Conformer_{i+firstConformerIndex}")
+        conformerPdb: FilePath = p.join(conformerDir, f"{molName}_conformer_{i+firstConformerIndex}.pdb")
+        MolToPDBFile(mol, conformerPdb, confId=i)
+        conformerPdbs.append(conformerPdb)
+    return conformerPdbs
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def do_the_twist_worker(args):
     ## unpack args tuple
-    conformerXyz, torsionScanDir,  torsionIndexes, config= args
+    conformerPdb, torsionScanDir,  torsionIndexes, config= args
     try:
-        forwardsDf, backwardsDf = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config)
+        forwardsDf, backwardsDf = do_the_twist(conformerPdb, torsionScanDir, torsionIndexes, config)
         return forwardsDf, backwardsDf
     except Exception as e:
         # ## delete scan dir
@@ -181,15 +258,15 @@ def do_the_twist_worker(args):
         
         
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def do_the_twist(conformerXyz: FilePath,
+def do_the_twist(conformerPdb: FilePath,
                  torsionScanDir: DirectoryPath,
                  torsionIndexes: List[int],
                  config: dict) -> Tuple[pd.DataFrame]:
 
-    conformerId = p.basename(conformerXyz).split(".")[0]
+    conformerId = p.basename(conformerPdb).split(".")[0]
 
-    conformerScanDir = p.join(torsionScanDir, f"scans_{conformerId}")
-    optXyz = run_optimisation_step(conformerXyz, torsionIndexes, conformerScanDir, conformerId, config)
+    conformerScanDir = p.join(torsionScanDir, f"scans_conformer{conformerId}")
+    optXyz = run_optimisation_step(conformerPdb, torsionIndexes, conformerScanDir, conformerId, config)
     ## get angle of torsion in this conformer
     initalTorsionAngle = measure_current_torsion_angle(optXyz, torsionIndexes)
 
@@ -199,12 +276,12 @@ def do_the_twist(conformerXyz: FilePath,
 
     return forwardsScanDf, backwardsScanDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_optimisation_step(conformerXyz, torsionIndexes, conformerScanDir, conformerId, config):
+def run_optimisation_step(conformerPdb, torsionIndexes, conformerScanDir, conformerId, config):
             ## XTB-GFN2 OPTIMISATION ##
     optDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_optimise")
     os.makedirs(optDir, exist_ok=True)
     ## make an ORCA input file for optimisation
-    optOrcaInput: FilePath = generate_orca_input(inputGeom=conformerXyz,
+    optOrcaInput: FilePath = generate_orca_input(inputGeom=conformerPdb,
                                                   torsionIndexes=torsionIndexes,
                                                    outDir = optDir,
                                                     charge = config["moleculeInfo"]["charge"],
@@ -479,7 +556,7 @@ def detect_jumps_in_data(df):
     diffDf = df.drop(columns='Angle').diff().abs()
     
     # Identify columns with any difference greater than the threshold
-    jumpyCols = diffDf.columns[((diffDf > 10).any())]
+    jumpyCols = diffDf.columns[((diffDf > 3).any())]
     
     # Drop these columns from the original DataFrame
     cleanDf = df.drop(columns=jumpyCols)
@@ -491,7 +568,4 @@ def calculate_means(df):
     return df.drop(columns='Angle').mean(axis=1)
 
 if __name__ == "__main__":
-    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/NMH_outputs/drFrankenstein.yaml"
-    with open(configYaml, "r") as yamlFile:
-        config = yaml.safe_load(yamlFile)
-    twist_protocol(config)
+    twist_protocol()

@@ -59,7 +59,10 @@ def capping_protocol(config: dict):
     write_pdb(cappedMol, cappedMolPdb)
 
     rename_capping_atoms(cappedMolPdb, capIndexNameMap)
-    return cappedMolPdb
+
+    config["moleculeInfo"]["cappedPdb"] = cappedMolPdb
+
+    return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def rename_capping_atoms(cappedMolPdb, capIndexNameMap):
     cappedDf = pdbUtils.pdb2df(cappedMolPdb)
@@ -87,21 +90,22 @@ def print_smarts(mol):
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def enforce_carboxyl_bonding(mol):
     # Define the initial and target SMARTS patterns
-    initial_smarts = '[#7]-[#6@](-[*]([#8])[#7])-[#6]'
+    initial_smarts = '[#7]-[#6@@H1](-[*])-[#6][#8]'
     
     # Find the substructure match
     initial_pattern = Chem.MolFromSmarts(initial_smarts)
     matches = mol.GetSubstructMatches(initial_pattern)
     
     if not matches:
+        return mol
         raise ValueError("No matching substructure found.")
     
     # Modify the first match found
     emol = Chem.EditableMol(mol)
     for match in matches:
         # Get the indices of the atoms in the match
-        carbon_idx = match[2]
-        oxygen_idx = match[3]
+        carbon_idx = match[-2]
+        oxygen_idx = match[-1]
         
         # Remove the single bond and add a double bond
         emol.RemoveBond(carbon_idx, oxygen_idx)
@@ -112,7 +116,7 @@ def enforce_carboxyl_bonding(mol):
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def add_capping_groups(mol):
     # Use SMARTS to identify the backbone N-terminal nitrogen atom
-    backbonePattern = Chem.MolFromSmarts('[#7]-[#6@](-[*]([#8])[#8])-[#6]')
+    backbonePattern = Chem.MolFromSmarts('[#7]-[#6@@H1](-[*])-[#6](=[#8])-[#8]')
     
     backboneMatches = mol.GetSubstructMatches(backbonePattern)
     if backboneMatches:
@@ -121,11 +125,47 @@ def add_capping_groups(mol):
     else:
         raise ValueError("No matching substructure found.")
     capIndexNameMap = {**acetylIndexNameMap, **nMethylIndexNameMap}
+
+    print_smarts(bothCappedMol)
     return bothCappedMol, capIndexNameMap
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def add_nMethyl_cap(mol, backboneMatches):
+
+    # Identify the C-terminal carbon and oxygen
+    c_terminal_oxygen_idx = backboneMatches[0][-1]
+    
+    # Create an editable molecule
+    emol = Chem.EditableMol(mol)
+    
+    # Remove the C-terminal oxygen
+    emol.RemoveAtom(c_terminal_oxygen_idx)
+    
+    # Add N-methyl group (NCH3)
+    nMethyl = Chem.MolFromSmiles('NC')
+    mol_with_nMethyl = Chem.CombineMols(emol.GetMol(), nMethyl)
+
+    backbonePattern = Chem.MolFromSmarts('[#7]-[#6@@H1](-[*])-[#6](=[#8])')
+    
+    backboneMatches = mol.GetSubstructMatches(backbonePattern)
+
+    c_terminal_carbon_idx = backboneMatches[0][-2] - 1
+
+    emol = Chem.EditableMol(mol_with_nMethyl)
+    
+    # Connect the N-methyl group to the C-terminal carbon
+    n_idx = mol_with_nMethyl.GetNumAtoms() - 2  # Assuming N-methyl is added at the end
+    emol.AddBond(c_terminal_carbon_idx, n_idx, Chem.BondType.SINGLE)
+    ## update mol
+    mol = emol.GetMol()
+    nAtoms = mol.GetNumAtoms()
+    nMethylIndexNameMap = {nAtoms : "CN", nAtoms - 1 : "NN"}
+
+    
+    return emol.GetMol(), nMethylIndexNameMap
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def add_acetyl_cap(mol, backboneMatches):
-    n_terminal_idx = backboneMatches[0][0]
+    n_terminal_idx = backboneMatches[0][0] - 1
     n_terminal = mol.GetAtomWithIdx(n_terminal_idx)
     
     if n_terminal is None:
@@ -151,32 +191,7 @@ def add_acetyl_cap(mol, backboneMatches):
     return emol.GetMol(), acetylIndexNameMap
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def add_nMethyl_cap(mol, backboneMatches):
-    # Identify the C-terminal carbon and oxygen
-    c_terminal_carbon_idx = backboneMatches[0][-4]
-    c_terminal_oxygen_idx = backboneMatches[0][-2]
-    
-    # Create an editable molecule
-    emol = Chem.EditableMol(mol)
-    
-    # Remove the C-terminal oxygen
-    emol.RemoveAtom(c_terminal_oxygen_idx)
-    
-    # Add N-methyl group (NCH3)
-    nMethyl = Chem.MolFromSmiles('NC')
-    mol_with_nMethyl = Chem.CombineMols(emol.GetMol(), nMethyl)
-    emol = Chem.EditableMol(mol_with_nMethyl)
-    
-    # Connect the N-methyl group to the C-terminal carbon
-    n_idx = mol_with_nMethyl.GetNumAtoms() - 2  # Assuming N-methyl is added at the end
-    emol.AddBond(c_terminal_carbon_idx, n_idx, Chem.BondType.SINGLE)
-    ## update mol
-    mol = emol.GetMol()
-    nAtoms = mol.GetNumAtoms()
-    nMethylIndexNameMap = {nAtoms : "CN", nAtoms - 1 : "NN"}
 
-    
-    return emol.GetMol(), nMethylIndexNameMap
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     capping_protocol()

@@ -1,44 +1,65 @@
 ## GENERAL PLAN
 
-[x] PDB input from conformational generation
+01 -> Cap PDB file 
+02 -> Generate conformers
+03 -> Torsion scanning
+05 -> Charge Calculations
+06 -> Parameter Fitting 
+07 -> Final Creation of Parameter files
 
-[] work out what torsions need to be scanned
 
-[x] Generate ORCA input files 
 
-## drCapper.py
-Protocol:
-1. Load into RDKit [x]
-2. Add NMe Ac groups [x]
-3. save back to pdb [x]
-4. fix pdb col names [x]
+## PROTOCOL IMPROVEMENTS
 
-## drTwist.py
-Protocol: 
-1. take pdb file as input [x]          
-2. identify torsions that need to be scanned [x]
-3. For each torsion that needs to be scanned: 
-    While convergence criteria not met:
-        a. generate nCpus conformer                                 [x]
-        b. perform an opt with xtb                                  [x]
-        c. perform a forward scan with xtb                          [x]
-        d. perform a backward scan with xtb                         [x]
-        e. add results of forwards and backwards scans to DataFrame [x]
-        f. calculate average                                        [x]
-        g. perform convergence check                                [x]
-4. plot results [x]
-5. return final scan results in a useful format []
+### config checker
 
-Things to do:
-[x] suppress orca errors
-[x] logging
-[x] implement while loop
-[x] on the fly conformer generation
+### pdb checker
+[] enforce that atom names need to be unique in inputPdb
+[] RES_NAME cannot be NME or ACE
+
+### drCapper
+[x] replace RDKIT with something else 
+[] different resIds for capping groups? (this will allow us to not rename atom names for staples etc)
+--> pdbUtils style
+
+[x] get N-termini and C-Termini from config["moleculeInfo"]
+[x] pre-make PDB files for NME and ACE caps
+[x] read inputPdb and acePDB and nmePDB into DataFrames
+[x] Delete unwanted atoms bound to N and C termini
+[x] align and place cap dfs geometrically - concat
+[x] write to cappedPdb
+
+
+### drTwist
+
+02_torsion_scanning
+                | --> conformers [MAKE WITH GOAT]
+                | --> torsion_X_Y_Z_A 
+                                | --> conformer_1_scans
+                                                    | --> optimisation
+                                                    | --> forwards_scan
+                                                    | --> backwards_scan
+
+
+
+[] add to completedScanDirs 
+[] look at implicit solvation for XTB scans
+[] implement single-point recalculation of All energies
+[] implement single-point recalculation of stationary point and mid-points
+
+### drCharge
+[] implement RESP2 charge fitting
+[] loading bars for multiwfn
+[] better regex for multiwfn handling
+[] implement user-defined charge groups
+
+
+## drHybrid
+[] in MM_torsion_protocol, antechamber does not like multiple residues
+
+## Miscalaneous tasks
 [] work out what the low-lying scans are (have they secretly exploded?)
 [] clean up output directories (more subdirs, delete failed dirs)
-[x] don't scan amide bonds?
-[x] don't scan non-polar hydrogens
-[x] suppress "[16:46:20] Molecule does not have explicit Hs. Consider calling AddHs()" warning
-[x] work out a way of doing (geom-opt) // single-point energy calculations on minima/maxima
 [] improper terms for Nitrogen centres (1 degree increments)
-[] /home/esp/anaconda3/envs/MD/lib/python3.10/site-packages/pandas/core/internals/blocks.py:2540: RuntimeWarning: invalid value encountered in cast values = values.astype(str) ERROR/WARNING??
+[] split up pathInfo into better subsections
+[] implement SYMMETRY

@@ -1,7 +1,0 @@
-HETATM    1 CC1  ACE A   3      -3.910   2.290  -0.856  0.00  0.00           C  
-HETATM    2 OC   ACE A   3      -3.497   2.520  -1.967  0.00  0.00           O  
-HETATM    3 CC2  ACE A   3      -5.206   2.903  -0.391  0.00  0.00           C  
-HETATM    4 HC1  ACE A   3      -5.125   3.990  -0.423  0.00  0.00           H  
-HETATM    5 HC2  ACE A   3      -6.016   2.580  -1.046  0.00  0.00           H  
-HETATM    6 HC3  ACE A   3      -5.415   2.584   0.630  0.00  0.00           H  
-TER

@@ -47,10 +47,6 @@ def fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy):
     os.makedirs(qmmmTorsionFittingDir,exist_ok=True)
 
     qmTotalEnergy = get_qm_scan_energies(config, torsionTag)
-    print(torsionTag)
-    print(qmTotalEnergy)
-    print(mmTotalEnergy)
-    print(mmTorsionEnergy)
 
     qmTorsionEnergy = qmTotalEnergy - mmTotalEnergy + mmTorsionEnergy
 
@@ -87,7 +83,6 @@ def plot_qmmm_energies(qmTotalEnergy, qmTorsionEnergy, mmTotalEnergy,
 ##############################################################################
 def get_qm_scan_energies(config: dict, torsionTag: str) -> np.array:
     qmScanEnergyCsv = config["torsionScanInfo"]["finalScanEnergies"][torsionTag]
-    print(qmScanEnergyCsv)
 
     qmScanEnergyDf = pd.read_csv(qmScanEnergyCsv)
     

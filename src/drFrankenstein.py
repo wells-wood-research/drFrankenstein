@@ -5,7 +5,7 @@ import yaml
 ## drFRANKENSTEIN LIBRARIES ##
 import drInputs
 import drCapper.capping_protocol as capping_protocol
-import drTwist
+import drTwist.Doctor
 import drCharge
 from drHybrid import parameter_fitting_protocol
 import drSplash
@@ -49,7 +49,7 @@ def main():
 
     if not checkpointInfo["scanningComplete"]:
         print("Running Twist Protocol")
-        config = drTwist.twist_protocol(config)
+        config = drTwist.Doctor.twist_protocol(config)
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["chargesComplete"]:

@@ -18,7 +18,6 @@ sys.path.append(srcDir)
 
 ## drFRANKENSTEIN LIBRARIES ##
 import drInputs
-import drFourier
 from drHelper import print_dict
 from drHybrid import MM_torsion_protocol, MM_total_protocol, QMMM_fitting_protocol, shared_utils
 

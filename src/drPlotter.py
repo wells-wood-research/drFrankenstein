@@ -3,11 +3,42 @@ from os import path as p
 import pandas as pd
 import numpy as np
 ## PLOTTING LIBRARIES ##
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
+def _debug_plot_array(data, outDir):
+    plt.figure(figsize=(12, 8))
+    plt.plot(data)
+    plt.savefig(p.join(outDir, "debug.png"))
+    plt.close()
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def plot_scan_singlepoint_comparison(scanDf, spDf, outDir, tag):
+
+    plt.figure(figsize=(12, 8))
+    
+    # Plot the first DataFrame
+    plt.plot(scanDf['Angle'], scanDf[tag], 
+             label='Scan Data', color='blue')
+    
+    # Plot the second DataFrame
+    plt.plot(spDf['Angle'], spDf[tag], 
+             label='Single Point Data', color='red')
+    
+    # Add labels and legend
+    plt.xlabel('Angle (degrees)')
+    plt.ylabel('Energy')
+    plt.title('Scan vs Single Point Energy Comparison')
+    plt.legend()
+    
+    # Save the plot to the specified directory
+    plt.savefig(p.join(outDir,f"singlepoint_comparison_{tag}.png"))
+    plt.close()
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 
 def plot_torsion_scans(torsionTopDir, scanRawDfs, scanAverageDf, rollingAverageDf, meanAverageErrors):
     plotDir = p.join(torsionTopDir, "plots")

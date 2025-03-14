@@ -2,7 +2,6 @@ import os
 from os import path as p
 from subprocess import call
 ###################################################################################
-
 def run_orca(orcaInput, orcaOutput):
     orcaCommand = ["orca", orcaInput]
     with open(orcaOutput, 'w') as output_file:
@@ -11,7 +10,6 @@ def run_orca(orcaInput, orcaOutput):
         except Exception as e:
             raise(e)
 ###################################################################################
-
 def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
@@ -19,6 +17,9 @@ def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationM
     ## create orca input file
     orcaInputFile = p.join(outDir, "orca_opt.inp")
     with open(orcaInputFile, "w") as f:
+        f.write(" # --------------------------------- #\n")
+        f.write(" #  Geometry Optimisation            #\n")
+        f.write(" # --------------------------------- #\n")
         ## METHOD
         if solvationMethod is None:
             f.write(f"! {qmMethod} Opt\n")
@@ -30,7 +31,6 @@ def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationM
     return orcaInputFile
 
 ###################################################################################
-
 def  make_orca_input_for_scan(inputXyz,
                                outDir,
                                  moleculeInfo,
@@ -44,6 +44,9 @@ def  make_orca_input_for_scan(inputXyz,
     ## create orca input file
     orcaInputFile = p.join(outDir, "orca_scan.inp")
     with open(orcaInputFile, "w") as f:
+        f.write(" # --------------------------------- #\n")
+        f.write(" #  Torsion Scan                     #\n")
+        f.write(" # --------------------------------- #\n")
         ## METHOD
         if solvationMethod is None:
             f.write(f"! {qmMethod} Opt\n")
@@ -69,6 +72,9 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
     ## create orca input file
     orcaInputFile = p.join(outDir, "orca_sp.inp")
     with open(orcaInputFile, "w") as f:
+        f.write(" # --------------------------------- #\n")
+        f.write(" #  Single Point Calculation         #\n")
+        f.write(" # --------------------------------- #\n")
         ## METHOD
         if solvationMethod is None:
             f.write(f"! {qmMethod} SP\n")

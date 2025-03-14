@@ -29,11 +29,10 @@ def get_MM_total_energies(config, torsionTag, debug=False):
     cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
     completedTorsionScanDirs: list = shared_utils.get_completed_torsion_scan_dirs(config, torsionTag)
 
-
     moleculeFrcmod: FilePath = config["pathInfo"]["moleculeFrcmod"]
 
     ## read calculated partial charges
-    chargesCsv: FilePath = p.join(config["pathInfo"]["chargeFittingDir"], "charges.csv")
+    chargesCsv: FilePath = config["chargeFittingInfo"]["chargesCsv"]
     chargesDf: pd.DataFrame = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
     ## round charge to 4 decimal places
     chargesDf["Charge"] = chargesDf["Charge"].round(4)
@@ -43,6 +42,7 @@ def get_MM_total_energies(config, torsionTag, debug=False):
 
     torsionFittingDir = p.join(torsionTotalDir, "fitting_data")
     os.makedirs(torsionFittingDir, exist_ok=True)
+
 
     if debug:
         singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod)
@@ -60,10 +60,8 @@ def get_MM_total_energies(config, torsionTag, debug=False):
     finalScanEnergiesDf = pd.DataFrame()
     finalScanEnergiesDf["Angle"] = mergedEnergyDf["Angle"]
     finalScanEnergiesDf[torsionTag] = mergedEnergyDf["Mean_Energy"]
-
-
+    
     finalScanEnergiesDf[torsionTag] = finalScanEnergiesDf[torsionTag] - finalScanEnergiesDf[torsionTag].min()
-
 
     finalScanEnergiesDf["smoothedEnergy"] = savgol_filter(finalScanEnergiesDf[torsionTag], window_length=5, polyorder=2)
     finalScanEnergiesDf.to_csv(p.join(torsionFittingDir, "final_scan_energies.csv"), index=False)
@@ -108,16 +106,19 @@ def single_point_worker(args):
         return singlePointEnergyDf
 
     except Exception as e:
-        print(e)
+        raise(e)
         return None
 #######################################################################
 def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, debug=False):
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
     os.makedirs(fittingRoundDir, exist_ok=True)
 
+
     trajXyzs = sorted([p.join(scanDir, file) 
                         for file in os.listdir(scanDir) 
-                        if re.match(r'^orca\.\d\d\d\.xyz$', file)])
+                        if re.match(r'^orca_scan\.\d\d\d\.xyz$', file)])
+    
+
 
     prmtop, inpcrd = make_prmtop_inpcrd(trajXyzs[0], fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug)
 

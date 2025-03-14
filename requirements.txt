@@ -6,3 +6,4 @@ mpire
 pyyaml
 argpass
 plotly
+imageio

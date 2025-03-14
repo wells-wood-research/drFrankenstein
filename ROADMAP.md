@@ -7,7 +7,8 @@
 [] Clean code
 [x] Split into dir/modules
 [] add plotting 
-[>] return singlePointDfs and scanDfs when running single points on scans
+[x] return singlePointDfs and scanDfs when running single points on scans
+[>] write scanDfs, singlePointDfs, scanAverageDf, singlePointAverageDf to csv
 
 ## drCharge 
 [] implement RESP2

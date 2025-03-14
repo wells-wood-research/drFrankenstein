@@ -39,7 +39,7 @@ def get_generate_initial_frcmod(config: dict) -> dict:
     config["pathInfo"]["cappedMol2"] = cappedMol2
 
     ## read calculated partial charges
-    chargesCsv = p.join(config["pathInfo"]["chargeFittingDir"], "charges.csv")
+    chargesCsv = config["chargeFittingInfo"]["chargesCsv"]
     chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
     chargesDf["Charge"] = chargesDf["Charge"].round(4)
 
@@ -66,8 +66,8 @@ def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:
     mmTorsionParameters = shared_utils.extract_torsion_parameters(config, torsionTag)
 
     ## reconstruct torsion energies from parameters
-    mmTorsionEnergies = shared_utils.construct_MM_torsion_energies(mmTorsionParameters)
+    mmTorsionEnergies, mmCosineComponents = shared_utils.construct_MM_torsion_energies(mmTorsionParameters)
 
-    return  mmTorsionEnergies 
+    return  mmTorsionEnergies, mmCosineComponents
 
 #######################

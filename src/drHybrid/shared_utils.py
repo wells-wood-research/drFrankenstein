@@ -407,6 +407,7 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
     ## init empty array
     mmTorsionEnergy = np.zeros_like(angle)
     ## loop through terms for torsion parameter
+    mmCosineComponents = {}
     for parameter in mmTorsionParameters:
         ## extract params from dict
         potentialConstant = float(parameter["k"])
@@ -417,8 +418,9 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
         cosineComponent: np.array = (potentialConstant / inverseDivisionFactor) * (1 + np.cos(periodicityNumber * angle - phase)) 
         ## add to torsion energy
         mmTorsionEnergy += cosineComponent
-
-    return mmTorsionEnergy
+        mmCosineComponents[periodicityNumber] = cosineComponent
+        
+    return mmTorsionEnergy, mmCosineComponents
 
 ################################################################
 
@@ -448,6 +450,10 @@ def sort_out_directories(config) -> dict:
     os.makedirs(mmTotalCalculationDir, exist_ok=True)
     config["pathInfo"]["mmTotalCalculationDir"] = mmTotalCalculationDir
 
+    qmmmFittingDir = p.join(config["pathInfo"]["parameterFittingTopDir"], "qm-mm_parameter_fitting")
+    config["pathInfo"]["qmmmParameterFittingDir"] = qmmmFittingDir
+    os.makedirs(qmmmFittingDir,exist_ok=True)
+    
     return config
 ################################################################
 def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
@@ -482,10 +488,19 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
             ## get calculation dir (forwards and backwards)
             calculationDir: DirectoryPath = p.join(conformerDir, calculationName)
             if  calculationName.endswith("forwards") or calculationName.endswith("backwards"):
-                ## scan is completed if orca_trj.xyz exists - add to list
-                if p.isfile(p.join(calculationDir, "orca_trj.xyz")):
+                orcaOut = p.join(calculationDir, "orca_scan.out")
+                if did_orca_finish_normallly(orcaOut):
                     completedTorsionScanDirs.append(calculationDir)
+
     return completedTorsionScanDirs
+
+def did_orca_finish_normallly(orcaOut):
+    with open(orcaOut, "r") as f:
+        lines = f.readlines()
+        for line in reversed(lines):
+            if "****ORCA TERMINATED NORMALLY****" in line:
+                return True
+    return False
 ################################################################
 def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     """
@@ -493,15 +508,15 @@ def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     Creates a range between these
 
     Args:
-        scanDir (DirectoryPath): location of orca.inp
+        scanDir (DirectoryPath): location of orca_.inp
 
     Returns:
         angleRange (list): list of angles between start and end angles
     """
     ## find orca input
-    orcaInp = p.join(scanDir, "orca.inp")
+    orcaInp = p.join(scanDir, "orca_scan.inp")
     if not p.isfile(orcaInp):
-        raise FileNotFoundError(f"orca.inp not found in {scanDir}")
+        raise FileNotFoundError(f"orca_scan.inp not found in {scanDir}")
     ## open orca input for reading
     with open(orcaInp, "r") as f:
         for line in f:

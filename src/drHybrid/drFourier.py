@@ -36,12 +36,12 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     ## construct cosine components from parameters
     reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components(amberParamDf, angle, maxFunctions)
     ## plot signal and components
-    plot_signal_and_components(angle, qmTorsionEnergy, reconstructedSignal, cosineComponents, torsionFittingDir , torsionTag)
+    # plot_signal_and_components(angle, qmTorsionEnergy, reconstructedSignal, cosineComponents, torsionFittingDir , torsionTag)
     ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
     amberParamDf.iloc[:nFunctionsUsed].to_csv(outCsv)
 
-    return amberParamDf.iloc[:nFunctionsUsed]   
+    return amberParamDf.iloc[:nFunctionsUsed], cosineComponents   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
@@ -108,52 +108,6 @@ def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:
     return np.sqrt(np.mean((signal1 - signal2) ** 2))
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def plot_array(x: np.array, y:np.array ):
-
-    fig, ax = plt.subplots()
-    ax.plot(x,y)
-
-    plt.savefig("test.png")
-    plt.close()
-
-
-
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def plot_signal_and_components(angle: np.array,
-                                signal: np.array,
-                                reconstructed_signal: np.array,
-                                cosine_components: List[Tuple[float, np.array]],
-                                out_dir: DirPath,
-                                tag: str):
-    ########
-    plt.figure(figsize=(12, 6))
-
-    angle = range(0,360, 10)
-    ########
-
-    plt.plot(angle, signal, label='QM Scan Energy', color='black',linewidth=2)
-    ########
-    for freq, cosine_component in cosine_components:
-        plt.plot(angle, cosine_component, linestyle='--',
-                 label=f'Cosine Component {freq:.2f}')
-    ########
-    plt.plot(angle, reconstructed_signal, label='Reconstructed Signal',
-             color='red', linewidth=2, alpha=0.7)
-    ########
-    plt.xticks(np.arange(min(angle), max(angle) + 1, 60))
-    plt.xlabel('Torsion Angle (Degrees)')
-    plt.ylabel('Torsion Energy (kJ / mol)')
-    plt.title(f'Fourier Tranform for {tag} Scan')
-    plt.legend()
-    plt.grid(True)
-    ########
-    save_png = p.join(out_dir, f"{tag}.png")
-    plt.savefig(save_png)
-    plt.close()
-    ########
-
-
-##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_energy_data(energyData: np.array, paddingFactor: int) -> np.array:
     return np.tile(energyData, paddingFactor)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

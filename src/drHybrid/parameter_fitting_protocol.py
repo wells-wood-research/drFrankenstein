@@ -19,7 +19,7 @@ sys.path.append(srcDir)
 ## drFRANKENSTEIN LIBRARIES ##
 import drInputs
 from drHelper import print_dict
-from drHybrid import MM_torsion_protocol, MM_total_protocol, QMMM_fitting_protocol, shared_utils
+from drHybrid import MM_torsion_protocol, MM_total_protocol, QMMM_fitting_protocol, shared_utils, Plotter
 
 ####################################################################
 def dummy_inputs():
@@ -67,9 +67,14 @@ def torsion_fitting_protocol(config):
         shuffledTorsionTags = shared_utils.shuffle_torsion_tags(torsionTags)
         for torsionTag in shuffledTorsionTags:
             mmTotalEnergy = MM_total_protocol.get_MM_total_energies(config, torsionTag)
-            mmTorsionEnergy = MM_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
-            torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy)
+            mmTorsionEnergy, mmCosineComponents = MM_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
+            torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
             config = shared_utils.update_frcmod(config, torsionTag, torsionParameterDf)
+
+    for torsionTag in torsionTags:
+        fittingGif = p.join(config["pathInfo"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
+        torsionFittingDir = p.join(config["pathInfo"]["qmmmParameterFittingDir"], torsionTag)
+        Plotter.make_gif(torsionFittingDir, fittingGif)
     
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config

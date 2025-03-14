@@ -30,8 +30,7 @@ currentDir: DirectoryPath = os.path.dirname(currentFilePath)
 srcDir: DirectoryPath = os.path.dirname(currentDir)
 sys.path.append(srcDir)
 
-from drTwist import Assistant, Monster
-import drPlotter
+from drTwist import Assistant, Monster, Plotter
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -75,10 +74,16 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
 
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
-    singlePointEnergiesCsv, singlePointAveragesDf = Assistant.process_scan_data(singlePointDfs, torsionDir, torsionTag)
+    if  config["torsionScanInfo"]["singlePointMethod"] is None:
+        config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = scanEnergiesCsv
+        singlePointAveragesDf = None
+    else:
+        singlePointEnergiesCsv, singlePointAveragesDf = Assistant.process_scan_data(singlePointDfs, torsionDir, torsionTag)
+        config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = singlePointEnergiesCsv   
 
-    drPlotter.plot_scan_singlepoint_comparison(scanAveragesDf, singlePointAveragesDf, torsionDir, torsionTag)
-    config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = singlePointEnergiesCsv   
+
+    ## Plotting
+    Plotter.twist_plotting_protocol(scanDfs, scanAveragesDf, singlePointDfs, singlePointAveragesDf, torsionDir, torsionTag, config)
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> List[pd.DataFrame]:
@@ -132,12 +137,12 @@ def do_the_twist_worker(args):
     try:
         scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config)
         return scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf 
-    except Exception as e:
-        ## an exception can come from a NaN type error in a scan, this is to be expected
-        ## TODO: write a check for this, if this isn't the problem, raise(e)
-        raise(e)
-        pass
+    except FileNotFoundError as e:
+        ## this is fine
         return None, None, None, None
+    except Exception as e:
+        ## for all other exceptions, raise them, this will be caught by the debugger in drFrankenstein.py
+        raise(e)
     
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def do_the_twist(conformerXyz: FilePath,

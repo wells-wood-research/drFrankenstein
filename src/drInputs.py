@@ -1,6 +1,6 @@
 
 import argpass
-import yaml
+import ruamel.yaml as ruamel
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -8,6 +8,7 @@ class DirectoryPath:
     pass
 
 
+####################################################################################
 
 def get_config_input_arg() -> FilePath:
     """
@@ -25,7 +26,7 @@ def get_config_input_arg() -> FilePath:
     configFile: FilePath = args.config
 
     return configFile
-
+####################################################################################
 
 def read_input_yaml(configFile: FilePath) -> dict:
     """
@@ -41,13 +42,16 @@ def read_input_yaml(configFile: FilePath) -> dict:
     reset = "\033[0m"
     teal = "\033[38;5;37m"
     try:
+        ruamelParser = ruamel.YAML()
         with open(configFile, "r") as yamlFile:
-            config: dict = yaml.safe_load(yamlFile)
+            config: dict = ruamelParser.load(yamlFile)
             return config
+        
+
     except FileNotFoundError:
         print(f"-->{' '*4}Config file {configFile} not found.")
         exit(1)
-    except yaml.YAMLError as exc:
+    except ruamel.YAMLError as exc:
         print(f"-->{' '*4}{yellow}Error while parsing YAML file:{reset}")
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark

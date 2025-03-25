@@ -1,7 +1,6 @@
 ## BASIC IMPORTS ##
 import os
 from os import path as p
-import yaml
 import numpy as np
 import pandas as pd
 
@@ -19,7 +18,7 @@ def capping_protocol(config: dict):
     os.makedirs(cappingDir, exist_ok=True)
     config["pathInfo"]["cappingDir"] = outputDir
 
-    
+
     molDf = pdbUtils.pdb2df(molPdb)
 
     molDf = trim_termini(molDf, config)
@@ -40,23 +39,22 @@ def capping_protocol(config: dict):
     config["checkpointInfo"]["cappingComplete"] = True
 
     return config
-
+    
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def add_acetyl_caps(molDf, acePdb, config):
-    tmpDf = molDf.copy()
+    cappedDf = molDf.copy()
     nTerminalAtoms = config["moleculeInfo"]["nTermini"]
     aceDf = pdbUtils.pdb2df(acePdb)
 
     dfsToConcat = [molDf]
 
     maxResId = molDf["RES_ID"].max()
-
     for i, nTerminalAtom in enumerate(nTerminalAtoms):
-        target_aceDf = place_CC1(tmpDf, nTerminalAtom, aceDf)
+        target_aceDf = place_CC1(cappedDf, nTerminalAtom, aceDf)
         pdbUtils.df2pdb(target_aceDf,"cc1.pdb")
-        target_aceDf = place_OC(tmpDf, nTerminalAtom, aceDf)
+        target_aceDf = place_OC(cappedDf, nTerminalAtom, aceDf)
         pdbUtils.df2pdb(target_aceDf,"oc.pdb")
-        target_aceDf = place_CC2(tmpDf, nTerminalAtom, aceDf)
+        target_aceDf = place_CC2(cappedDf, nTerminalAtom, aceDf)
         pdbUtils.df2pdb(target_aceDf, "cc2.pdb")
         pdbUtils.df2pdb(aceDf, "original.pd")
         aceDf = pdbUtils.pdb2df(acePdb)
@@ -71,18 +69,18 @@ def add_acetyl_caps(molDf, acePdb, config):
     return aceCappedDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def place_OC(tmpDf, nTerminalAtom, aceDf):
+def place_OC(cappedDf, nTerminalAtom, aceDf):
     ## get coords
-    nTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+    nTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
 
-    bondedAtoms = find_bonded_atoms(tmpDf, nTerminalAtom)
+    bondedAtoms = find_bonded_atoms(cappedDf, nTerminalAtom)
     hAtomNames = [atom for atom in bondedAtoms if atom.startswith("H")]
     if len(hAtomNames)  == 0:
         hAtomName = [atom for atom in bondedAtoms if atom.startswith("C") and not atom == "CA"][0]
     else:
         hAtomName = hAtomNames[0]
 
-    hCoords = tmpDf[tmpDf["ATOM_NAME"] == hAtomName].loc[:, ["X", "Y", "Z"]].values[0]
+    hCoords = cappedDf[cappedDf["ATOM_NAME"] == hAtomName].loc[:, ["X", "Y", "Z"]].values[0]
     cc1Coords = aceDf[aceDf["ATOM_NAME"] == "CC1"].loc[:, ["X", "Y", "Z"]].values[0]
 
     vectorHtoN = get_vector(hCoords, nTerminalCoords)
@@ -98,8 +96,8 @@ def place_OC(tmpDf, nTerminalAtom, aceDf):
     return aceDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_CC2(tmpDf, nTerminalAtom, aceDf):
-    nTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+def place_CC2(cappedDf, nTerminalAtom, aceDf):
+    nTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
     cc1Coords = aceDf[aceDf["ATOM_NAME"] == "CC1"].loc[:, ["X", "Y", "Z"]].values[0]
     ocCoords = aceDf[aceDf["ATOM_NAME"] == "OC"].loc[:, ["X", "Y", "Z"]].values[0]
 
@@ -123,11 +121,11 @@ def place_CC2(tmpDf, nTerminalAtom, aceDf):
     return aceDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def place_CC1(tmpDf, nTerminalAtom, aceDf):
+def place_CC1(cappedDf, nTerminalAtom, aceDf):
     ## get coords
-    nTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+    nTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
 
-    bondedAtoms = find_bonded_atoms(tmpDf, nTerminalAtom)
+    bondedAtoms = find_bonded_atoms(cappedDf, nTerminalAtom)
     hAtomNames = [atom for atom in bondedAtoms if atom.startswith("H")]
     if len(hAtomNames)  == 0:
         hAtomName = [atom for atom in bondedAtoms if atom.startswith("C") and not atom == "CA"][0]
@@ -135,9 +133,9 @@ def place_CC1(tmpDf, nTerminalAtom, aceDf):
         hAtomName = hAtomNames[0]
 
     
-    hCoords = tmpDf[tmpDf["ATOM_NAME"] == hAtomName].loc[:, ["X", "Y", "Z"]].values[0]
+    hCoords = cappedDf[cappedDf["ATOM_NAME"] == hAtomName].loc[:, ["X", "Y", "Z"]].values[0]
     caName = [atom for atom in bondedAtoms if atom.startswith("CA")][0]
-    caCoords = tmpDf[tmpDf["ATOM_NAME"] == caName].loc[:, ["X", "Y", "Z"]].values[0]
+    caCoords = cappedDf[cappedDf["ATOM_NAME"] == caName].loc[:, ["X", "Y", "Z"]].values[0]
 
     # Define vectors
     vectorCAtoN = caCoords - nTerminalCoords
@@ -161,7 +159,7 @@ def place_CC1(tmpDf, nTerminalAtom, aceDf):
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def add_nMethyl_caps(molDf, nmePdb, config):
-    tmpDf = molDf.copy()
+    cappedDf = molDf.copy()
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
     nmeDf = pdbUtils.pdb2df(nmePdb)
 
@@ -170,9 +168,9 @@ def add_nMethyl_caps(molDf, nmePdb, config):
     dfsToConcat = [molDf]
 
     for i, cTerminalAtom in enumerate(cTerminalAtoms):
-        target_nmeDf = place_NN(tmpDf, cTerminalAtom, nmeDf)
-        target_nmeDf = place_HNN1(tmpDf, cTerminalAtom, target_nmeDf)
-        target_nmeDf= place_CN(tmpDf, cTerminalAtom, target_nmeDf)
+        target_nmeDf = place_NN(cappedDf, cTerminalAtom, nmeDf)
+        target_nmeDf = place_HNN1(cappedDf, cTerminalAtom, target_nmeDf)
+        target_nmeDf= place_CN(cappedDf, cTerminalAtom, target_nmeDf)
         transformed_nmeDf = transform_whole(nmeDf, target_nmeDf, atomNames=["NN", "HNN1", "CN"])
         ## fix resID (cope with 0 indexing)
         transformed_nmeDf["RES_ID"] = maxResId + i + 1
@@ -232,9 +230,9 @@ def apply_transformation(df, rotation_matrix, translation_vector):
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def place_CN(tmpDf, cTerminalAtom, nmeDf):
+def place_CN(cappedDf, cTerminalAtom, nmeDf):
     ## get coords
-    cTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+    cTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
     nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "NN"].loc[:, ["X", "Y", "Z"]].values[0]
     hnnCoords = nmeDf[nmeDf["ATOM_NAME"] == "HNN1"].loc[:, ["X", "Y", "Z"]].values[0]
 
@@ -259,14 +257,14 @@ def place_CN(tmpDf, cTerminalAtom, nmeDf):
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 
-def place_HNN1(tmpDf, cTerminalAtom, nmeDf):
+def place_HNN1(cappedDf, cTerminalAtom, nmeDf):
     # Get coordinates from protein
-    bondedAtoms = find_bonded_atoms(tmpDf, cTerminalAtom)
-    if "CA" not in bondedAtoms or "O" not in tmpDf["ATOM_NAME"].values:
-        raise ValueError("Missing CA or O bonded to C-Terminus!")
+    bondedAtoms = find_bonded_atoms(cappedDf, cTerminalAtom)
+
+    oEquivalentName = [atomName for atomName in bondedAtoms if atomName.startswith("O")][0]
     
-    cTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
-    oCoords = tmpDf[tmpDf["ATOM_NAME"] == "O"].loc[:, ["X", "Y", "Z"]].values[0]
+    cTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+    oCoords = cappedDf[cappedDf["ATOM_NAME"] == oEquivalentName].loc[:, ["X", "Y", "Z"]].values[0]
     
     # Get original NN coordinates
     nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "NN"].loc[:, ["X", "Y", "Z"]].values[0]
@@ -284,15 +282,18 @@ def place_HNN1(tmpDf, cTerminalAtom, nmeDf):
 
     return nmeDf
 ###################################################################
-def place_NN(tmpDf, cTerminalAtom, nmeDf):
+def place_NN(cappedDf, cTerminalAtom, nmeDf):
     # Get coordinates from protein
-    bondedAtoms = find_bonded_atoms(tmpDf, cTerminalAtom)
+    bondedAtoms = find_bonded_atoms(cappedDf, cTerminalAtom)
+
+    caEquivalentName = [atomName for atomName in bondedAtoms if atomName.startswith("C")][0]
+    oEquivalentName = [atomName for atomName in bondedAtoms if atomName.startswith("O")][0]
     if not any([item.startswith("CA") for item in bondedAtoms]):
         raise ValueError("Missing CA C-Terminus!")
     
-    cTerminalCoords = tmpDf[tmpDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
-    caCoords = tmpDf[tmpDf["ATOM_NAME"] == "CA"].loc[:, ["X", "Y", "Z"]].values[0]
-    oCoords = tmpDf[tmpDf["ATOM_NAME"] == "O"].loc[:, ["X", "Y", "Z"]].values[0]
+    cTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
+    caCoords = cappedDf[cappedDf["ATOM_NAME"] == caEquivalentName].loc[:, ["X", "Y", "Z"]].values[0]
+    oCoords = cappedDf[cappedDf["ATOM_NAME"] == oEquivalentName].loc[:, ["X", "Y", "Z"]].values[0]
     
     # Get original NN coordinates
     nnCoords_orig = nmeDf[nmeDf["ATOM_NAME"] == "NN"].loc[:, ["X", "Y", "Z"]].values[0]
@@ -357,42 +358,59 @@ def get_vector(coordsA, coordsB):
 def trim_termini(molDf, config):
     nTerminalAtoms = config["moleculeInfo"]["nTermini"]
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
-
+    ## get the proton (or equivalent) atoms bound to N-Terminus
     allAtomsToDelete = []
     for nTerminalAtom in nTerminalAtoms:
         bondedAtoms = find_bonded_atoms(molDf, nTerminalAtom)
-        atomToDelete = decide_atom_to_delete_N_termini(bondedAtoms)
-        allAtomsToDelete.append(atomToDelete)
-        bondedAtoms = find_bonded_atoms(molDf, atomToDelete)
-        bondedAtoms.remove(nTerminalAtom)
-        allAtomsToDelete.extend(bondedAtoms)
+        nTerminalProton = decide_atom_to_delete_N_termini(bondedAtoms)
+        allAtomsToDelete.append(nTerminalProton)
 
+    ## get the oxygen (or equivalent) atoms bound to C-Terminus, and anything bound to that oxygen
     for cTerminalAtom in cTerminalAtoms:
         bondedAtoms = find_bonded_atoms(molDf, cTerminalAtom)
-        atomToDelete = decide_atom_to_delete_C_termini(bondedAtoms)
-        bondedAtoms = find_bonded_atoms(molDf, atomToDelete)
-        bondedAtoms.remove(cTerminalAtom)
-        allAtomsToDelete.extend(bondedAtoms)
+        cTerminalOxygen = decide_atom_to_delete_C_termini(bondedAtoms)
+        allAtomsToDelete.append(cTerminalOxygen)
+        bondedAtoms = find_bonded_atoms(molDf, cTerminalOxygen)
+        print(bondedAtoms)
+        cTerminalProton = decide_atom_to_delete_C_terminal_proton(bondedAtoms)
+        allAtomsToDelete.append(cTerminalProton)
 
     molDf = molDf[~molDf["ATOM_NAME"].isin(allAtomsToDelete)]
 
     return molDf
+
+#####################################################################
+def  decide_atom_to_delete_C_terminal_proton(atomNames):
+    atomNames = sorted([atomName for atomName in atomNames if atomName.startswith("H")])
+    if len(atomNames) == 1:
+        atomToDelete = atomNames[0]
+    elif len(atomNames) == 2:
+        atomToDelete = atomNames[-1]
+    else: 
+        atomToDelete = "None"
+
+    return atomToDelete
 #####################################################################
 def decide_atom_to_delete_C_termini(atomNames):
     atomNames = sorted([atomName for atomName in atomNames if atomName.startswith("O")])
-    atomToDelete = atomNames[-1]
+    if len(atomNames) == 2:
+        atomToDelete = atomNames[-1]
+    else: 
+        atomToDelete = "None"
 
     return atomToDelete
 #####################################################################
 def decide_atom_to_delete_N_termini(atomNames):
     atomNames = sorted([atomName for atomName in atomNames if atomName.startswith("H")])
-    atomToDelete = atomNames[-1]
+    if len(atomNames) > 1:
+        atomToDelete = atomNames[-1]
+    else:
+        atomToDelete = "None"
     return atomToDelete
 
 #####################################################################
 def find_bonded_atoms(molDf, atomName, distanceCutoff=1.6):
     tmpDf = molDf.copy()
-
     atomDf = molDf[molDf["ATOM_NAME"] == atomName]
     atomX, atomY, atomZ = atomDf.loc[:,['X', 'Y', 'Z']].astype(float).iloc[0]
 
@@ -401,7 +419,7 @@ def find_bonded_atoms(molDf, atomName, distanceCutoff=1.6):
 
     bondedDf = tmpDf[tmpDf['distance_to_atom'] < distanceCutoff]
     bondedAtoms = bondedDf["ATOM_NAME"].to_list()
-
+    bondedAtoms = [atom for atom in bondedAtoms if atom != atomName]
     return bondedAtoms
 
 #####################################################################
@@ -427,8 +445,4 @@ def find_capping_pdbs():
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
-    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/02_NMH_outputs/drFrankenstein.yaml"
-    with open(configYaml, "r") as yamlFile:
-        config = yaml.safe_load(yamlFile)
-
-    capping_protocol(config)
+    raise NotImplementedError

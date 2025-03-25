@@ -19,6 +19,9 @@ class FilePath:
 class DirectoryPath:
     pass
 
+
+import drOrca
+##################################################################
 def shuffle_torsion_tags(torsionTags: list) -> list:
     shuffledTorsionTags = torsionTags
     random.shuffle(shuffledTorsionTags)
@@ -31,8 +34,7 @@ def update_frcmod(config, torsionTag, torsionParamDf):
     tmpFrcmod = p.splitext(inFrcmod)[0] + "_tmp.frcmod"
 
     ##TODO: sort out multiplicities
-    multiplicity = 1
-
+    multiplicity = config["moleculeInfo"]["multiplicity"]
 
     atomTypeMap = config["moleculeInfo"]["atomTypeMap"]
     atomNames = torsionTag.split("-")
@@ -486,21 +488,13 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
         conformerDir: DirectoryPath = p.join(torsionDir, conformerName)
         for calculationName in os.listdir(conformerDir):
             ## get calculation dir (forwards and backwards)
-            calculationDir: DirectoryPath = p.join(conformerDir, calculationName)
             if  calculationName.endswith("forwards") or calculationName.endswith("backwards"):
-                orcaOut = p.join(calculationDir, "orca_scan.out")
-                if did_orca_finish_normallly(orcaOut):
+                calculationDir: DirectoryPath = p.join(conformerDir, calculationName)
+                orcaFinishedNormally = p.join(calculationDir, "ORCA_FINISHED_NORMALLY")
+                if p.isfile(orcaFinishedNormally):
                     completedTorsionScanDirs.append(calculationDir)
-
     return completedTorsionScanDirs
 
-def did_orca_finish_normallly(orcaOut):
-    with open(orcaOut, "r") as f:
-        lines = f.readlines()
-        for line in reversed(lines):
-            if "****ORCA TERMINATED NORMALLY****" in line:
-                return True
-    return False
 ################################################################
 def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     """

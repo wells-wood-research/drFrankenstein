@@ -21,34 +21,7 @@ import drInputs
 from drHelper import print_dict
 from drHybrid import MM_torsion_protocol, MM_total_protocol, QMMM_fitting_protocol, shared_utils, Plotter
 
-####################################################################
-def dummy_inputs():
 
-    ## get config yaml file from argpass command-line-argument
-    configYaml = drInputs.get_config_input_arg()
-    ## load into dict, check for bad formatting
-    ## TODO: write config_checker for bad args
-    config = drInputs.read_input_yaml(configYaml)
-
-    moleculeName = "_".join(p.basename(config['moleculeInfo']['moleculePdb']).split(".")[0].split("_"))
-
-    config["pathInfo"]["cappedPdb"] = p.join(config["pathInfo"]["outputDir"], "01_capped_amino_acids", f"{moleculeName}_capped.pdb")
-
-    config["pathInfo"]["chargeFittingDir"] = p.join(config["pathInfo"]["outputDir"], "03_charge_calculations", "charge_fitting")
-    config["pathInfo"]["torsionScanningDir"] = p.join(config["pathInfo"]["outputDir"], "02_torsion_scanning")
-
-    ## TODO: get torsion scanning protocol to add this
-    torsionTags = []
-    for dirName in os.listdir(config["pathInfo"]["torsionScanningDir"]):
-        if not dirName.startswith("torsion"):
-            continue
-        torsionTags.append(dirName.split("_")[1])
-
-    config["torsionScanInfo"]["torsionTags"] = torsionTags
-
-    config["pathInfo"]["gaff2Dat"] = "/home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat"
-
-    return config
 
 ####################################################################
 def torsion_fitting_protocol(config):
@@ -81,5 +54,4 @@ def torsion_fitting_protocol(config):
 
 ####################################################################
 if __name__ == "__main__":
-    config = dummy_inputs()
-    torsion_fitting_protocol(config)
+    raise NotImplementedError

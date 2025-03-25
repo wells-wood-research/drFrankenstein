@@ -84,3 +84,14 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
 
     return orcaInputFile
+
+
+###################################################################################
+def did_orca_finish_normallly(orcaOut):
+    with open(orcaOut, "r") as f:
+        lines = f.readlines()
+        for line in reversed(lines):
+            if "****ORCA TERMINATED NORMALLY****" in line or "* finished run" in line:
+                return True
+    return False
+###################################################################################

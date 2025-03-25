@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import glob
 import re
+from shutil import rmtree
 from scipy.signal import argrelextrema
 
 ## CLEAN CODE CLASSES ##
@@ -32,6 +33,18 @@ from rdkit import Chem, RDLogger
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdmolfiles import MolToPDBFile
 RDLogger.DisableLog('rdApp.warning')
+
+import drOrca
+
+def create_orca_terminated_flag(orcaDir, orcaOut):
+
+    if drOrca.did_orca_finish_normallly(orcaOut):
+        with open(p.join(orcaDir, "ORCA_FINISHED_NORMALLY"), "w") as f:
+            f.write("ORCA FINISHED NORMALLY")
+    else:
+        with open(p.join(orcaDir, "ORCA_CRASHED"), "w") as f:
+            f.write("ORCA CRASHED")
+
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def read_singlepoint_energy(spOrcaOutput):
@@ -292,3 +305,66 @@ def detect_jumps_in_data(df):
     
     return cleanDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def clean_up_opt_dir(optDir, cleanUpLevel):
+    """
+    For an opt dir:
+    vital = orca_opt.xyz (for use in forwards)
+    nice2have = orca_opt.out (for debugging)
+    
+    OPTIONS: off, basic, full
+ 
+    """
+    if cleanUpLevel == "off":
+        return
+    
+    keepFiles = ["orca_opt.xyz", "ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]
+
+    for file in os.listdir(optDir):
+        if file in keepFiles:
+            continue
+        elif cleanUpLevel in ["basic", "full"]:
+            os.remove(p.join(optDir, file))
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def clean_up_scan_dir(scanDir, cleanUpLevel):
+    """
+    For a scan dir
+    vital = orca_scan_XYZ.xyz, orca_scan.relaxscanact.dat, orca_scan.out
+    """
+    if cleanUpLevel == "off":
+        return
+
+    scanXyzs = [file for file in os.listdir(scanDir) if re.match(r'orca_scan\.\d\d\d\.xyz$', file)]
+
+    keepFiles = ["orca_scan.relaxscanact.dat","orca_scan.inp" "ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]
+
+    for file in os.listdir(scanDir):
+        if file in scanXyzs:
+            continue
+        elif file in keepFiles:
+            continue
+        elif cleanUpLevel in ["basic", "full"]:
+            os.remove(p.join(scanDir, file))
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+def clean_up_singlepoint_dir(spDir, cleanUpLevel):
+    """
+    For a singlepoint dir
+    vital = None
+    nice2have = orca_singlepoint.out
+    """
+
+    keepFiles = ["orca_opt.xyz", "ORCA_FINISHED_NORMALLY", "ORCA)CRASHED"]
+
+    if cleanUpLevel == "off":
+        return
+    if cleanUpLevel == "basic":
+        for file in os.listdir(spDir):
+            if file in keepFiles:
+                continue
+            else:
+                os.remove(p.join(spDir, file))
+
+    elif cleanUpLevel == "full":
+        rmtree(spDir)
+
+

@@ -9,13 +9,12 @@ from pdbUtils import pdbUtils
 import pandas as pd
 import numpy as np
 import pexpect
-import yaml
 import re
 
 from tqdm import tqdm
 ## drFrankenstein LIBRARIES ##
 import drOrca
-
+from drCapper.capping_protocol import find_bonded_atoms
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##c
 from mpire import WorkerPool
 from mpire.utils import make_single_arguments
@@ -48,33 +47,7 @@ class DirectoryPath:
 7. save converged charges  to file
 """
 
-def dummy_inputs():
 
-    config = {
-
-        "moleculeInfo" : {
-        "charge": 0,
-        "multiplicity": 1,
-        "moleculePdb": "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/capped_amino_acids/ALA_capped.pdb"
-        },
-
-        "pathInfo" : {
-        "outputDir" : "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs",
-        "orcaExe": "/home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca",
-        "multiWfnDir":  "/home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/"
-    },
-
-        "chargeFittingInfo" : {
-        "optMethod": "! HF 6-31G(d)",
-        # "singlePointMethod": "! revPBE def2-TZVP D3BJ SP CPCM(water)"
-        "singlePointMethod": "! HF 6-31G(d)",
-        "nCoresPerCalculation": 8,
-        "nConformers": 4
-    }
-
-    }
-
-    return config
 
 ###########################################################################
 ###########################################################################
@@ -536,7 +509,15 @@ def get_charge_group_indexes(pdbFile, config) -> dict:
     userDefinedAtoms = []
     userDefinedCharge = 0
     for chargeGroupName, chargeGroupData in chargeGroups.items():
-        chargeGroupAtoms = chargeGroupData["atoms"]
+        ## get heavy atom names
+        heavyChargeGroupAtoms = chargeGroupData["atoms"]
+        ## fill in hydrogen atom names
+        protonNames = []
+        for heavyAtom in heavyChargeGroupAtoms:
+            boundProtons = find_bonded_atoms(pdbDf, heavyAtom)
+            protonNames.extend(boundProtons)
+        protonNames = [atomName for atomName in protonNames if atomName.startswith("H")] ##TODO: make this nicer
+        chargeGroupAtoms = heavyChargeGroupAtoms + protonNames
         chargeGroupIndexes = uncappedDf[uncappedDf["ATOM_NAME"].isin(chargeGroupAtoms)]["ATOM_ID"].to_list()
         chargeGroups[chargeGroupName]["indexes"] = chargeGroupIndexes
         userDefinedCharge += chargeGroupData["charge"]
@@ -582,11 +563,7 @@ def get_charge_group_indexes(pdbFile, config) -> dict:
 
 
 if __name__ == "__main__":
-    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/02_NMH_outputs/drFrankenstein.yaml"
-    with open(configYaml, "r") as yamlFile:
-        config = yaml.safe_load(yamlFile)
-    charge_protocol(config, debug=False)
-
+    raise NotImplementedError
 
 
 

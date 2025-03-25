@@ -1,0 +1,50 @@
+## Tell me about your directory structures and install locations
+pathInfo:
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/03_CRO_outputs
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
+  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
+  gaff2Dat: /home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat
+## Tell me about your moleucle
+moleculeInfo:
+  charge: 0
+  multiplicity: 1
+  moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/CRO_h.pdb
+  moleculeName: NMH
+  nTermini: [N1]
+  cTermini: [C3]
+  chargeGroups:
+    nTerminusAndThr:
+      charge: 0
+      atoms: [N1,HN11,CA1,HA1, CB1, HB1, OG1, HOG1, CG1, HCG1, HCG2, HCG3]
+    cTerminusAndHis:
+      charge: 0
+      atoms: [C1, N2, CA2, C2, O2, N3, CA3, HA31, HA32, C3, O3]
+##  tell me about your conformer info
+conformerInfo:
+  maxConformers: 10
+## tell me about your torsion scan
+torsionScanInfo:
+  nScanSteps: 37
+  convergenceTolerance: 0.1
+  minScanBatches: 3 ## must be at least 3!
+  maxScanBatches: 4
+  ## not implemented yet
+  scanBatchSize: 30
+  scanSinglePointsOn: all
+  scanMethod: XTB2
+  scanSolvationMethod : ALPB(water)
+  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointSolvationMethod: CPCM(water)
+## tell me about your charge fitting
+chargeFittingInfo:
+  nConformers: 4
+  nCoresPerCalculation: 8
+  optMethod: XTB2
+  optSolvationMethod: ALPB(water)
+  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointSolvationMethod: CPCM(water)
+## tell me about your system
+hardwareInfo:
+  nCores: 30
+

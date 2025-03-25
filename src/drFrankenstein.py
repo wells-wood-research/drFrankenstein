@@ -1,7 +1,7 @@
 import os
 from os import path as p
 import traceback
-import yaml
+import ruamel.yaml as ruamel
 ## drFRANKENSTEIN LIBRARIES ##
 import drInputs
 import drCapper.capping_protocol as capping_protocol
@@ -74,9 +74,11 @@ def main():
 
 def read_config_with_checkpoints(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+    ruamelParser = ruamel.YAML()
+
     if p.isfile(drFrankensteinYaml):
         with open(drFrankensteinYaml, "r") as f:
-            config = yaml.safe_load(f)
+            config = ruamelParser.load(f)
     return config
 
 def init_config_checkpoints(config, outDir):
@@ -98,8 +100,9 @@ def init_config_checkpoints(config, outDir):
 
 def write_config_to_yaml(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+    ruamelParser = ruamel.YAML()
     with open(drFrankensteinYaml, "w") as f:
-        yaml.dump(config, f, default_flow_style=False)
+        ruamelParser.dump(config, f)
 
 def handle_exceptions(e, pdbName):
     tb = traceback.extract_tb(e.__traceback__)

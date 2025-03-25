@@ -1,28 +1,10 @@
-import yaml
 import os
 from os import path as p
 import pandas as pd
 from subprocess import call, PIPE
 from shutil import copy
 
-################################################################################
 
-
-def dummy_inputs():
-    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/drFrankenstein.yaml"
-    with open(configYaml, "r") as f:
-        config = yaml.safe_load(f)
-
-    ## TODO: add cappedMol2 to config
-    mmTorsionCalculationDir = config["pathInfo"]["mmTorsionCalculationDir"]
-
-    cappedMol2 = p.join(mmTorsionCalculationDir, "ALA_charges.mol2")
-
-    config["pathInfo"]["cappedMol2"] = cappedMol2
-
-    config["moleculeInfo"]["moleculeName"] = "ALA"
-
-    return config
 ################################################################################
 
 def create_the_monster(config):
@@ -147,5 +129,4 @@ def parse_mol2(mol2File):
 ################################################################################
 
 if __name__ == "__main__":
-    config = dummy_inputs()
-    create_the_monster(config)
+    raise NotImplementedError

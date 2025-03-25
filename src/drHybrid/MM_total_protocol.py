@@ -24,11 +24,11 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config, torsionTag, debug=False):
+def get_MM_total_energies(config, torsionTag, debug=True):
     mmTotalDir: DirectoryPath = config["pathInfo"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
     completedTorsionScanDirs: list = shared_utils.get_completed_torsion_scan_dirs(config, torsionTag)
-
+    
     moleculeFrcmod: FilePath = config["pathInfo"]["moleculeFrcmod"]
 
     ## read calculated partial charges
@@ -42,7 +42,6 @@ def get_MM_total_energies(config, torsionTag, debug=False):
 
     torsionFittingDir = p.join(torsionTotalDir, "fitting_data")
     os.makedirs(torsionFittingDir, exist_ok=True)
-
 
     if debug:
         singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod)

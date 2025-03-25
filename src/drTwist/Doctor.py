@@ -47,7 +47,6 @@ def twist_protocol(config):
     config["torsionScanInfo"]["finalScanEnergies"] = {}
     for rotatableBond in rotatableBonds:
         config = run_torsion_scanning(rotatableBond, config)
-
     config["checkpointInfo"]["scanningComplete"] = True
     return config
 
@@ -67,11 +66,18 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
 
     if debug:
         ## run in serial
-        scanDfs, singlePointDfs = scan_in_serial(torsionDir, conformerXyzs, rotatableBond["indices"], config)
+        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, rotatableBond["indices"], config)
+        if config["torsionScanInfo"]["scanSinglePointsOn"] is None:
+            singlePointDfs = None
+        else:
+            singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag)
     else:
-        # run torsion scans in paralell
-        scanDfs, singlePointDfs = scan_in_parallel(torsionDir, conformerXyzs, rotatableBond["indices"], torsionTag, config)
-
+        # run torsion scans in parallel
+        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, rotatableBond["indices"], torsionTag, config)
+        if config["torsionScanInfo"]["scanSinglePointsOn"] is None:
+            singlePointDfs = None
+        else:
+            singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, config, torsionTag)
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
     if  config["torsionScanInfo"]["singlePointMethod"] is None:
@@ -85,23 +91,57 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
     ## Plotting
     Plotter.twist_plotting_protocol(scanDfs, scanAveragesDf, singlePointDfs, singlePointAveragesDf, torsionDir, torsionTag, config)
     return config
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> List[pd.DataFrame]:
-    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
-    scanDfs = []
+def single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag):
+    argsList = [(scanDir, scanDf, torsionDir, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
     singlePointDfs = []
     for args in argsList:
-        scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf = do_the_twist_worker(args)
+        singlePointDf = do_the_single_point_worker(args)
+        if singlePointDf is not None:
+            singlePointDfs.append(singlePointDf)
+    return singlePointDfs
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tuple[pd.DataFrame, DirectoryPath]:
+    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
+    scanDfs = []
+    scanDirs = []
+    for args in argsList:
+        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir= do_the_twist_worker(args)
         if scanForwardsDf is not None and scanBackwardsDf is not None:
             scanDfs.append(scanForwardsDf)
             scanDfs.append(scanBackwardsDf)
-        if singlePointForwardsDf is not None and singlePointBackwardsDf is not None:
-            singlePointDfs.append(singlePointForwardsDf)
-            singlePointDfs.append(singlePointBackwardsDf)
+            scanDirs.append(forwardsDir)
+            scanDirs.append(backwardsDir)
 
-    return scanDfs, singlePointDfs
+    return scanDfs, scanDirs
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> List[pd.DataFrame]:
+
+def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
+    argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
+    tqdmBarOptions = {
+        "desc": f"\033[32mSingle-Points For Torsion {torsionTag}\033[0m",
+        "ascii": "-ϟ",  
+        "colour": "cyan",
+        "unit":  "scan",
+        "dynamic_ncols": True
+    }
+    with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
+        results = pool.map(do_the_single_point_worker,
+                            make_single_arguments(argsList),
+                              progress_bar=True,
+                              iterable_len = len(argsList),
+                              progress_bar_options=tqdmBarOptions)
+
+    singlePointDfs = []
+    for result in results:
+        if result is not None:
+            singlePointDfs.append(result)
+    return singlePointDfs
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
     tqdmBarOptions = {
         "desc": f"\033[32mScanning Torsion {torsionTag}\033[0m",
         "ascii": "-ϟ",  
@@ -109,6 +149,8 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
         "unit":  "scan",
         "dynamic_ncols": True
     }
+
+
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
 
     ## save on cores 
@@ -120,25 +162,41 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
                               progress_bar=True,
                               iterable_len = len(argsList),
                               progress_bar_options=tqdmBarOptions)
+    ## combine all dataframes into a big list
     scanDfs = []
-    singlePointDfs = []
-    for scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf  in results:
+    scanDirs = []
+    for scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir in results:
         if scanForwardsDf is not None and scanBackwardsDf is not None:
             scanDfs.append(scanForwardsDf)
             scanDfs.append(scanBackwardsDf)
-        if singlePointForwardsDf is not None and singlePointBackwardsDf is not None:
-            singlePointDfs.append(singlePointForwardsDf)
-            singlePointDfs.append(singlePointBackwardsDf)
-    return scanDfs, singlePointDfs
+            scanDirs.append(forwardsDir)
+            scanDirs.append(backwardsDir)
+
+    return scanDfs, scanDirs
+
+  
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def do_the_single_point_worker(args):
+    scanDir, scanDf, torsionTag, config = args
+    try:
+        singlePointDf = Monster.run_singlepoints_on_scans(scanDir=scanDir,
+                                  scanDf = scanDf, 
+                                  conformerId=torsionTag,
+                                  config = config)
+        return singlePointDf
+    except Exception as e:
+        print(e)
+        return None
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def do_the_twist_worker(args):
     ## unpack args tuple
     conformerXyz, torsionScanDir,  torsionIndexes, config= args
     try:
-        scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config)
-        return scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf 
+        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config)
+        return scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir
     except FileNotFoundError as e:
-        ## this is fine
+        ## this is fine TODO: make a custom error to look for - this is when a scan crashes
         return None, None, None, None
     except Exception as e:
         ## for all other exceptions, raise them, this will be caught by the debugger in drFrankenstein.py
@@ -149,8 +207,6 @@ def do_the_twist(conformerXyz: FilePath,
                  torsionScanDir: DirectoryPath,
                  torsionIndexes: List[int],
                  config: dict) -> Tuple[pd.DataFrame]:
-    
-
 
     conformerId = p.basename(conformerXyz).split(".")[0]
 
@@ -163,32 +219,8 @@ def do_the_twist(conformerXyz: FilePath,
 
     scanBackwardsDf, backwardsDir = Monster.run_backwards_scan_step(forwardsXyz, initialTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config)
 
-    ## if no QM method has been specified, return data as-is
-    if config["torsionScanInfo"]["singlePointMethod"] is None:
-        scanForwardsDf = Assistant.process_energy_outputs(scanForwardsDf)
-        scanBackwardsDf = Assistant.process_energy_outputs(scanBackwardsDf)
-        return scanForwardsDf, scanBackwardsDf, None, None
-    
-    ## otherwise apply the single-point protocol
-    singlePointForwardsDf = Monster.run_singlepoints_on_scans(scanDir=forwardsDir,
-                              scanDf = scanForwardsDf, 
-                              outDir=conformerScanDir,
-                              conformerId=conformerId,
-                              config = config,
-                              tag = "forwards")
-    
-
-    singlePointBackwardsDf = Monster.run_singlepoints_on_scans(scanDir=backwardsDir,
-                              scanDf = scanBackwardsDf,
-                              outDir=conformerScanDir,
-                              conformerId=conformerId,
-                              config = config,
-                              tag = "backwards")
-    
     scanForwardsDf = Assistant.process_energy_outputs(scanForwardsDf)
     scanBackwardsDf = Assistant.process_energy_outputs(scanBackwardsDf)
 
-    singlePointForwardsDf = Assistant.process_energy_outputs(singlePointForwardsDf)
-    singlePointBackwardsDf = Assistant.process_energy_outputs(singlePointBackwardsDf)
-
-    return scanForwardsDf, scanBackwardsDf, singlePointForwardsDf, singlePointBackwardsDf
+    return  scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

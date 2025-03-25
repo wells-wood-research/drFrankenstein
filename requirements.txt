@@ -1,9 +1,0 @@
-pdbUtils
-pandas
-rdkit
-matplotlib
-mpire
-pyyaml
-argpass
-plotly
-imageio

@@ -10,6 +10,12 @@ moleculeInfo:
   multiplicity: 1
   moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/ALA.pdb
   moleculeName: ALA
+  nTermini: [N]
+  cTermini: [C]
+  chargeGroups:
+    backbone: 
+      atoms: [N, CA, C, O]
+      charge: 0
 torsionScanInfo:
   nScanSteps: 37
   convergenceTolerance: 0.1
@@ -18,9 +24,10 @@ torsionScanInfo:
   ## not implemented yet
   scanBatchSize: 10
   scanMethod: XTB2
-  scanSolvationMethod : ALPB(water)
-  singlePointMethod: revPBE def2-SVP D3BJ
-  singlePointsolvationMehod: CPCM(water)
+  scanSolvationMethod : Null 
+  singlePointMethod: XTB2  #revPBE def2-SVP D3BJ
+  singlePointSolvationMethod: ALPB(water) #CPCM(water)
+  scanSinglePointsOn: all
 
 chargeFittingInfo:
   nConformers: 4
@@ -29,8 +36,13 @@ chargeFittingInfo:
   optSolvationMethod: ALPB(water)
   singlePointMethod: revPBE def2-SVP D3BJ
   singlePointSolvationMethod: CPCM(water)
+  chargeFittingProtocol: RESP2
+
+conformerInfo:
+  maxConformers: -1
 
 hardwareInfo:
   nCores: 30
 
 
+cleanUpLevel: basic

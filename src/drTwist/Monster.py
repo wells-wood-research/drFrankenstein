@@ -27,11 +27,16 @@ def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
                                                    outDir = optDir,moleculeInfo=config["moleculeInfo"],
                                                    qmMethod=config["torsionScanInfo"]["scanMethod"],
                                                     solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"])
-                                                    
-    optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
-    if not p.isfile(optOrcaOutput):
+    flags = [p.join(optOrcaInput, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+                        
+    if not any ([p.isfile(flag) for flag in flags]):
+        optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
         drOrca.run_orca(optOrcaInput, optOrcaOutput)
+        Assistant.create_orca_terminated_flag(optDir, optOrcaOutput)
+
     optXyz = p.join(optDir, "orca_opt.xyz")
+
+    Assistant.clean_up_opt_dir(optDir, config["cleanUpLevel"])
     return optXyz
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -51,10 +56,16 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
                                                         solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
                                                         torsionIndexes=torsionIndexes,
                                                         scanAngles = forwardsScanText)
-    forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca_scan.out")
-    if not p.isfile(forwardsOrcaOutput):
+
+    
+    flags = [p.join(forwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+
+    if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(forwardsDir)
+        forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca_scan.out")
         drOrca.run_orca(forwardsOrcaInput, forwardsOrcaOutput)
+        Assistant.create_orca_terminated_flag(forwardsDir, forwardsOrcaOutput)
+    
     forwardsXyz = Assistant.find_final_xyz(forwardsDir)
     forwardsScanDf = Assistant.read_scan_energy_data(forwardsDir)
     forwardsScanDf.columns = ["Angle", "Energy"]
@@ -62,6 +73,7 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     forwardsScanDf["scan_index"] = [f"{i:03}" for i in range(1, 38)]
 
     forwardsScanDf = Assistant.take_min_duplicate_angles(forwardsScanDf)
+    Assistant.clean_up_scan_dir(forwardsDir, config["cleanUpLevel"])
 
     ## find scan xyzFiles,
     return forwardsScanDf, forwardsXyz, forwardsDir
@@ -84,24 +96,28 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
                                                         scanAngles = backwardsScanText)
 
 
-    backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca_scan.out")
-    if not p.isfile(backwardsOrcaOutput):
+    flags = [p.join(backwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+
+    if not any ([p.isfile(flag) for flag in flags]):
+        os.chdir(backwardsDir)
+        backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca_scan.out")
         drOrca.run_orca(backwardsOrcaInput, backwardsOrcaOutput)
+        Assistant.create_orca_terminated_flag(backwardsDir, backwardsOrcaOutput)
+
     backwardsScanDf = Assistant.read_scan_energy_data(backwardsDir)
     backwardsScanDf.columns = ["Angle", "Energy"]
 
     backwardsScanDf["scan_index"] = [f"{i:03}" for i in range(1, 38)]
 
-
     backwardsScanDf = Assistant.take_min_duplicate_angles(backwardsScanDf)
 
+    Assistant.clean_up_scan_dir(backwardsDir, config["cleanUpLevel"])
 
     return backwardsScanDf, backwardsDir  
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_singlepoints_on_scans(scanDir, scanDf, outDir, conformerId,  config, tag):
+def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
 
     scanXyzs = Assistant.find_scan_xyz_files(scanDir, expectedNumberOfFiles=config["torsionScanInfo"]["nScanSteps"])
-
     singlePointsOn = config["torsionScanInfo"]["scanSinglePointsOn"]
     if singlePointsOn == "all":
         stationaryPointScanIndexes = scanDf["scan_index"].to_list()
@@ -117,17 +133,24 @@ def run_singlepoints_on_scans(scanDir, scanDf, outDir, conformerId,  config, tag
         stationaryPointScanIndexes = scanDf.loc[stationaryAndMidPointIndexes, "scan_index"].to_list()
         scanXyzs = [scanXyz for scanXyz in scanXyzs if scanXyz.split(".")[1] in stationaryPointScanIndexes]
 
+
+    conformerScanDir = p.dirname(scanDir)
+    tag = scanDir.split("_")[-1]
+    spTopDir = p.join(conformerScanDir, f"SP_{tag}_{conformerId}")
+    os.makedirs(spTopDir, exist_ok=True)
+
+
     singlePointEnergies = {}
     for scanXyz in scanXyzs:
         scanId = scanXyz.split(".")[1]
-        scanDir = p.join(outDir, f"SP_{conformerId}_{tag}_{scanId}")
-        os.makedirs(scanDir, exist_ok=True)
+        spDir = p.join(spTopDir, f"SP_{conformerId}_{tag}_{scanId}")
+        os.makedirs(spDir, exist_ok=True)
         spOrcaInput: FilePath = drOrca.make_orca_input_for_singlepoint(inputXyz=scanXyz,
-                                                                       outDir= scanDir,
+                                                                       outDir= spDir,
                                                                        moleculeInfo=config["moleculeInfo"],
                                                                        qmMethod=config["torsionScanInfo"]["singlePointMethod"],
                                                                        solvationMethod=config["torsionScanInfo"]["singlePointSolvationMethod"])
-        spOrcaOutput : FilePath = p.join(scanDir, "orca_sp.out")
+        spOrcaOutput : FilePath = p.join(spDir, "orca_sp.out")
         if not p.isfile(spOrcaOutput):
             drOrca.run_orca(spOrcaInput, spOrcaOutput)
         singlePointEnergy = Assistant.read_singlepoint_energy(spOrcaOutput)
@@ -136,5 +159,6 @@ def run_singlepoints_on_scans(scanDir, scanDf, outDir, conformerId,  config, tag
 
     singlePointEnergyDf = singlePointEnergyDf.merge(
         scanDf[["scan_index", "Angle"]], on="scan_index", how="left")
-
+    singlePointEnergyDf = Assistant.process_energy_outputs(singlePointEnergyDf)
+    singlePointEnergyDf.to_csv(p.join(spTopDir, f"SP_{conformerId}_{tag}.csv"), index=False)
     return singlePointEnergyDf

@@ -2,8 +2,7 @@
 import os
 from os import path as p
 from subprocess import call, PIPE
-import yaml
-
+###################################################################################
 def  conformer_generation_protocol(config):
     print("--> GENERATING CONFORMERS WITH GOAT")
 
@@ -17,14 +16,14 @@ def  conformer_generation_protocol(config):
 
     run_goat_conformer_generation(goatOrcaInput, conformerDir, config)
 
-    conformerXyzs = split_conformers(conformerDir, moleculeName)
+    conformerXyzs = split_conformers(conformerDir, moleculeName, config)
     config["pathInfo"]["conformerXyzs"] = conformerXyzs
 
     clean_up(conformerDir)
 
     config["checkpointInfo"]["conformersComplete"] = True
     return config
-
+###################################################################################
 def  sort_out_directories(config):
     ## sort out directories
     outputDir = config["pathInfo"]["outputDir"]
@@ -33,6 +32,7 @@ def  sort_out_directories(config):
     config["pathInfo"]["conformerDir"] = conformerDir
 
     return config   
+###################################################################################
 
 def write_goat_input(conformerDir, cappedXyz, config):
     ## write GOAT orca input file
@@ -55,12 +55,15 @@ def run_goat_conformer_generation(goatOrcaInput, conformerDir, config):
     os.chdir(conformerDir)
     orcaExe = config["pathInfo"]["orcaExe"]
     goatOrcaOutput = p.join(conformerDir, f"GOAT_orca.out")
+    if  p.isfile(goatOrcaOutput):
+        return
     with open(goatOrcaOutput, 'w') as goatOrcaOutputFile:
             goatOrcaCommand = [orcaExe, goatOrcaInput]
             call(goatOrcaCommand, stdout=goatOrcaOutputFile, 
                 stderr=goatOrcaOutputFile)
-            
-def split_conformers(conformerDir, moleculeName):
+###################################################################################
+
+def split_conformers(conformerDir, moleculeName, config):
     ## split GOAT output into individual conformers
     goatFinalXyz = p.join(conformerDir, "GOAT_orca.finalensemble.xyz")
     os.chmod(goatFinalXyz, 0o755)
@@ -69,20 +72,29 @@ def split_conformers(conformerDir, moleculeName):
     call(obabelCommand, stdout=PIPE, stderr=PIPE)
 
     conformerXyzs = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith(f"{moleculeName}_conformer_")]
+
+
+    maxConformers = config["conformerInfo"]["maxConformers"]
+
+    if maxConformers == -1:
+        pass
+    elif len(conformerXyzs) > maxConformers:
+        conformerXyzs = conformerXyzs[:maxConformers]
+
     return conformerXyzs
 
+###################################################################################
 
 def pdb_to_xyz(inPdb, outXyz):
     obabelCommand = ["obabel", "-i", "pdb", inPdb, "-o", "xyz", "-O", outXyz]
     call(obabelCommand, stdout=PIPE, stderr=PIPE)
+###################################################################################
 
 def clean_up(conformerDir):
     filesToRemove = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith("GOAT")]
     for f in filesToRemove:
         os.remove(f)
+###################################################################################
 
 if __name__ == "__main__":
-    configYaml = "/home/esp/scriptDevelopment/drFrankenstein/NMH_outputs/drFrankenstein.yaml"
-    with open(configYaml, "r") as yamlFile:
-        config = yaml.safe_load(yamlFile)
-    conformer_generation_protocol(config)
+    raise NotImplementedError

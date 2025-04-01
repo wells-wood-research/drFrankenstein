@@ -1,7 +1,0 @@
-HETATM    1 CN   NME A   1       0.352   0.048  -3.297  1.00  0.00           C  
-HETATM    2 NN   NME A   1       0.526   0.319  -1.934  1.00  0.00           N  
-HETATM    3 HNN1 NME A   1       1.323   0.898  -1.763  1.00  0.00           H  
-HETATM    4 HCN1 NME A   1      -1.501   2.956  -2.394  1.00  0.00           H  
-HETATM    5 HCN2 NME A   1      -2.521   3.668  -1.061  1.00  0.00           H  
-HETATM    6 HCN3 NME A   1      -0.850   4.232  -1.262  1.00  0.00           H  
-TER

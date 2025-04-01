@@ -370,10 +370,10 @@ def trim_termini(molDf, config):
         bondedAtoms = find_bonded_atoms(molDf, cTerminalAtom)
         cTerminalOxygen = decide_atom_to_delete_C_termini(bondedAtoms)
         allAtomsToDelete.append(cTerminalOxygen)
-        bondedAtoms = find_bonded_atoms(molDf, cTerminalOxygen)
-        print(bondedAtoms)
-        cTerminalProton = decide_atom_to_delete_C_terminal_proton(bondedAtoms)
-        allAtomsToDelete.append(cTerminalProton)
+        if not cTerminalOxygen == "None":
+            bondedAtoms = find_bonded_atoms(molDf, cTerminalOxygen)
+            cTerminalProton = decide_atom_to_delete_C_terminal_proton(bondedAtoms)
+            allAtomsToDelete.append(cTerminalProton)
 
     molDf = molDf[~molDf["ATOM_NAME"].isin(allAtomsToDelete)]
 
@@ -412,6 +412,7 @@ def decide_atom_to_delete_N_termini(atomNames):
 def find_bonded_atoms(molDf, atomName, distanceCutoff=1.6):
     tmpDf = molDf.copy()
     atomDf = molDf[molDf["ATOM_NAME"] == atomName]
+
     atomX, atomY, atomZ = atomDf.loc[:,['X', 'Y', 'Z']].astype(float).iloc[0]
 
     tmpDf['distance_to_atom'] = tmpDf.apply(calculate_distance,

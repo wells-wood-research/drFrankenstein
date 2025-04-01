@@ -10,7 +10,7 @@ moleculeInfo:
   charge: 0
   multiplicity: 1
   moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/CRO_h.pdb
-  moleculeName: NMH
+  moleculeName: CRO
   nTermini: [N1]
   cTermini: [C3]
   chargeGroups:
@@ -33,7 +33,7 @@ torsionScanInfo:
   scanBatchSize: 30
   scanSinglePointsOn: all
   scanMethod: XTB2
-  scanSolvationMethod : ALPB(water)
+  scanSolvationMethod : Null
   singlePointMethod: XTB2
   singlePointSolvationMethod: ALPB(water)
 ## tell me about your charge fitting
@@ -48,5 +48,5 @@ chargeFittingInfo:
 hardwareInfo:
   nCores: 32
 
-cleanUpLevel: basic
+cleanUpLevel: off
 

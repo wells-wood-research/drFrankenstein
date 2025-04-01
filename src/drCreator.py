@@ -33,7 +33,7 @@ def copy_final_frcmod(config):
     
 ################################################################################
 def get_capping_atom_ids(config):
-    cappedMol2 = config["pathInfo"]["cappedMol2"]
+    cappedMol2 = config["pathInfo"]["finalMol2"]
 
     cappingHeteroAtomNames = ["NN", "CN", "CC1", "OC", "CC2"]
     atomDf, bondDf  = parse_mol2(cappedMol2)
@@ -46,7 +46,7 @@ def get_capping_atom_ids(config):
 ################################################################################
 
 def create_final_lib_and_mol2(cappingAtomIds, config):
-    cappedMol2 = config["pathInfo"]["cappedMol2"]
+    cappedMol2 = config["pathInfo"]["finalMol2"]
 
     finalCreationDir = config["pathInfo"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]

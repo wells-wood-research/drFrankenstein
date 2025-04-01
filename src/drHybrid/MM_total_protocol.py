@@ -24,7 +24,7 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config, torsionTag, debug=True):
+def get_MM_total_energies(config, torsionTag, debug=False):
     mmTotalDir: DirectoryPath = config["pathInfo"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
     completedTorsionScanDirs: list = shared_utils.get_completed_torsion_scan_dirs(config, torsionTag)

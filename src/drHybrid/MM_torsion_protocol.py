@@ -50,6 +50,7 @@ def get_generate_initial_frcmod(config: dict) -> dict:
     ## fix atom types in MOL2 file
     fixedAtomMol2 = p.join(mmTorsionDir, f"{moleculeName}_fixed_atoms.mol2")
     shared_utils.edit_mo2_atom_types(chargesMol2, fixedAtomMol2)
+    config["pathInfo"]["finalMol2"] = fixedAtomMol2
 
     ## get a map of atomName -> atomType
     atomTypeMap = shared_utils.create_atom_type_map(fixedAtomMol2)

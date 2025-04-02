@@ -1,11 +1,29 @@
-## Tell me about your directory structures and install locations
+##########################################################################################################################
+#                         _     _       ___            __                                                                #
+#        _ __     __ _  | |_  | |__   |_ _|  _ __    / _|   ___                                                          #
+#       | '_ \   / _` | | __| | '_ \   | |  | '_ \  | |_   / _ \                                                         #
+#       | |_) | | (_| | | |_  | | | |  | |  | | | | |  _| | (_) |                                                        #
+#       | .__/   \__,_|  \__| |_| |_| |___| |_| |_| |_|    \___/                                                         #
+#       |_|                                                                                                              #
+#                                                                                                                        #
+#        Where are your files?                                                                                           #   
+##########################################################################################################################
 pathInfo:
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
   outputDir: /home/esp/scriptDevelopment/drFrankenstein/03_CRO_outputs
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
   gaff2Dat: /home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat
-## Tell me about your moleucle
+
+##########################################################################################################################
+#                       _                         _          ___            __                                           #
+#   _ __ ___     ___   | |   ___    ___   _   _  | |   ___  |_ _|  _ __    / _|   ___                                    #
+#  | '_ ` _ \   / _ \  | |  / _ \  / __| | | | | | |  / _ \  | |  | '_ \  | |_   / _ \                                   #
+#  | | | | | | | (_) | | | |  __/ | (__  | |_| | | | |  __/  | |  | | | | |  _| | (_) |                                  #
+#  |_| |_| |_|  \___/  |_|  \___|  \___|  \__,_| |_|  \___| |___| |_| |_| |_|    \___/                                   #
+#                                                                                                                        #                                                              
+#        What is your molecule?                                                                                          #
+##########################################################################################################################
 moleculeInfo:
   charge: 0
   multiplicity: 1
@@ -16,37 +34,60 @@ moleculeInfo:
   chargeGroups:
     nTerminusAndThr:
       charge: 0
-      atoms: [N1,HN11,CA1,HA1, CB1, HB1, OG1, HOG1, CG1, HCG1, HCG2, HCG3]
+      atoms: [N1,CA1, CB1, OG1, CG1]
     cTerminusAndHis:
       charge: 0
-      atoms: [C1, N2, CA2, C2, O2, N3, CA3, HA31, HA32, C3, O3]
-##  tell me about your conformer info
-conformerInfo:
-  maxConformers: 10
-## tell me about your torsion scan
+      atoms: [C1, N2, CA2, C2, O2, N3, CA3, C3, O3]
+
+##########################################################################################################################
+#   _                          _                   ____                           ___            __                      #
+#  | |_    ___    _ __   ___  (_)   ___    _ __   / ___|    ___    __ _   _ __   |_ _|  _ __    / _|   ___               #
+#  | __|  / _ \  | '__| / __| | |  / _ \  | '_ \  \___ \   / __|  / _` | | '_ \   | |  | '_ \  | |_   / _ \              #
+#  | |_  | (_) | | |    \__ \ | | | (_) | | | | |  ___) | | (__  | (_| | | | | |  | |  | | | | |  _| | (_) |             #
+#   \__|  \___/  |_|    |___/ |_|  \___/  |_| |_| |____/   \___|  \__,_| |_| |_| |___| |_| |_| |_|    \___/              #
+#                                                                                                                        #
+#     How do you want to run torsion scanning?                                                                           #                                          
+##########################################################################################################################
 torsionScanInfo:
+  nConformers: 2
   nScanSteps: 37
-  convergenceTolerance: 0.1
-  minScanBatches: 3 ## must be at least 3!
-  maxScanBatches: 4
-  ## not implemented yet
-  scanBatchSize: 30
   scanSinglePointsOn: all
   scanMethod: XTB2
   scanSolvationMethod : Null
   singlePointMethod: XTB2
   singlePointSolvationMethod: ALPB(water)
-## tell me about your charge fitting
+
+##########################################################################################################################
+#          _                                     _____   _   _     _     _                   ___            __           #
+#    ___  | |__     __ _   _ __    __ _    ___  |  ___| (_) | |_  | |_  (_)  _ __     __ _  |_ _|  _ __    / _|   ___    #
+#   / __| | '_ \   / _` | | '__|  / _` |  / _ \ | |_    | | | __| | __| | | | '_ \   / _` |  | |  | '_ \  | |_   / _ \   #
+#  | (__  | | | | | (_| | | |    | (_| | |  __/ |  _|   | | | |_  | |_  | | | | | | | (_| |  | |  | | | | |  _| | (_) |  #
+#   \___| |_| |_|  \__,_| |_|     \__, |  \___| |_|     |_|  \__|  \__| |_| |_| |_|  \__, | |___| |_| |_| |_|    \___/   #
+#                                 |___/                                              |___/                               #
+#                                                                                                                        #
+#     How do you want to run charge fitting?                                                                             #
+##########################################################################################################################
 chargeFittingInfo:
-  chargeFittingProtocol: 
-  nConformers: -1
+  chargeFittingProtocol: RESP2
+  nConformers: 2
   optMethod: XTB2
   optSolvationMethod: ALPB(water)
   singlePointMethod: revPBE def2-SVP D3BJ
   singlePointSolvationMethod: CPCM(water)
-## tell me about your system
+
+##########################################################################################################################
+#   _                          _                                    ___            __                                    #
+#  | |__     __ _   _ __    __| | __      __   __ _   _ __    ___  |_ _|  _ __    / _|   ___                             #
+#  | '_ \   / _` | | '__|  / _` | \ \ /\ / /  / _` | | '__|  / _ \  | |  | '_ \  | |_   / _ \                            #
+#  | | | | | (_| | | |    | (_| |  \ V  V /  | (_| | | |    |  __/  | |  | | | | |  _| | (_) |                           #
+#  |_| |_|  \__,_| |_|     \__,_|   \_/\_/    \__,_| |_|     \___| |___| |_| |_| |_|    \___/                            #
+#                                                                                                                        #
+#        How many cores do you want to use?                                                                              #
+##########################################################################################################################
+
 hardwareInfo:
   nCores: 32
+
 
 cleanUpLevel: off
 

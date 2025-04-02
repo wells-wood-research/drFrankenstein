@@ -22,7 +22,7 @@ moleculeInfo:
       atoms: [C1, N2, CA2, C2, O2, N3, CA3, HA31, HA32, C3, O3]
 ##  tell me about your conformer info
 conformerInfo:
-  maxConformers: 10
+  nConformers: 10
 ## tell me about your torsion scan
 torsionScanInfo:
   nScanSteps: 37

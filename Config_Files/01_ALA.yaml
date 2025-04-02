@@ -39,7 +39,7 @@ chargeFittingInfo:
   chargeFittingProtocol: RESP2
 
 conformerInfo:
-  maxConformers: -1
+  nConformers: -1
 
 hardwareInfo:
   nCores: 30

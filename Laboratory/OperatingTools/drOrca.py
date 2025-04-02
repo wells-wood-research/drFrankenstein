@@ -1,7 +1,9 @@
 import os
 from os import path as p
 from subprocess import call
-###################################################################################
+
+
+########################################
 def run_orca(orcaInput, orcaOutput):
     orcaCommand = ["orca", orcaInput]
     with open(orcaOutput, 'w') as output_file:
@@ -9,7 +11,25 @@ def run_orca(orcaInput, orcaOutput):
             call(orcaCommand, stdout=output_file, stderr=output_file)
         except Exception as e:
             raise(e)
-###################################################################################
+
+########################################
+def write_goat_input(conformerDir, cappedXyz, config):
+    ## write GOAT orca input file
+    charge = config["moleculeInfo"]["charge"]
+    multiplicity = config["moleculeInfo"]["multiplicity"]
+    goatOrcaInput = p.join(conformerDir, f"GOAT_orca.inp")
+    with open(goatOrcaInput, "w") as f:
+        f.write("!XTB2 GOAT\n")
+        f.write("%PAL NPROCS 16 END\n")  ##TODO: work out how to use more cores or have a stable way of inputting this
+        f.write("%GOAT\n")
+        f.write("\tMAXITERMULT 1\n")            ## only do one round (save some time)
+        f.write("\tFREEZEAMIDES TRUE\n")           ## freeze amides
+        f.write("\tFREEZECISTRANS TRUE\n ")         ## freeze cis-trans bonds
+        f.write("END\n")
+        f.write(f"*xyzfile {charge} {multiplicity} {cappedXyz}\n")
+    return goatOrcaInput
+
+########################################
 def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]

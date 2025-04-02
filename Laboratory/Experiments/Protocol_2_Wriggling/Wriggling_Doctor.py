@@ -40,7 +40,7 @@ def conformer_generation_protocol(config: dict) -> dict:
     goatOrcaInput = drOrca.write_goat_input(conformerDir, cappedXyz, config)
     goatOrcaOutput = p.join(conformerDir, f"GOAT_orca.out")
     if not p.isfile(goatOrcaOutput):
-        drOrca.run_orca(goatOrcaInput, goatOrcaOutput)
+        drOrca.run_orca(goatOrcaInput, goatOrcaOutput, config)
 
     ## Split output XYZ file into multiple separate conformers
     conformerXyzs = split_conformers(conformerDir, moleculeName)

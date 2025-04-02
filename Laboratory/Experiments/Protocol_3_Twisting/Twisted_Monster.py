@@ -27,7 +27,7 @@ def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
                         
     if not any ([p.isfile(flag) for flag in flags]):
         optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
-        drOrca.run_orca(optOrcaInput, optOrcaOutput)
+        drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(optDir, optOrcaOutput)
 
     optXyz = p.join(optDir, "orca_opt.xyz")
@@ -59,7 +59,7 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(forwardsDir)
         forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca_scan.out")
-        drOrca.run_orca(forwardsOrcaInput, forwardsOrcaOutput)
+        drOrca.run_orca(forwardsOrcaInput, forwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(forwardsDir, forwardsOrcaOutput)
     
     forwardsXyz = Twisted_Assistant.find_final_xyz(forwardsDir)
@@ -97,7 +97,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(backwardsDir)
         backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca_scan.out")
-        drOrca.run_orca(backwardsOrcaInput, backwardsOrcaOutput)
+        drOrca.run_orca(backwardsOrcaInput, backwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(backwardsDir, backwardsOrcaOutput)
 
     backwardsScanDf = Twisted_Assistant.read_scan_energy_data(backwardsDir)
@@ -148,7 +148,7 @@ def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
                                                                        solvationMethod=config["torsionScanInfo"]["singlePointSolvationMethod"])
         spOrcaOutput : FilePath = p.join(spDir, "orca_sp.out")
         if not p.isfile(spOrcaOutput):
-            drOrca.run_orca(spOrcaInput, spOrcaOutput)
+            drOrca.run_orca(spOrcaInput, spOrcaOutput, config)
         singlePointEnergy = Twisted_Assistant.read_singlepoint_energy(spOrcaOutput)
         singlePointEnergies[scanId] = singlePointEnergy
     singlePointEnergyDf = pd.DataFrame(list(singlePointEnergies.items()), columns = ["scan_index", "Energy"])

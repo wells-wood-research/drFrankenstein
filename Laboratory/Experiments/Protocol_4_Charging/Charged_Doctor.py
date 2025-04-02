@@ -149,7 +149,7 @@ def run_qm_calculations_for_charge_fitting(orcaDir: DirectoryPath,
         sampledConformerXyzs = conformerXyzs[:nConformers]
 
     ## create an argument list for running charge calculations
-    argsList = [(conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation) for conformerXyz in sampledConformerXyzs]
+    argsList = [(conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config) for conformerXyz in sampledConformerXyzs]
     
     ## set up progress bar
     tqdmBarOptions = {

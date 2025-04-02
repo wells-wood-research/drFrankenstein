@@ -348,7 +348,10 @@ def clean_up_scan_dir(scanDir, cleanUpLevel):
 
     scanXyzs = [file for file in os.listdir(scanDir) if re.match(r'orca_scan\.\d\d\d\.xyz$', file)]
 
-    keepFiles = ["orca_scan.relaxscanact.dat","orca_scan.inp" "ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]
+    keepFiles = ["orca_scan.relaxscanact.dat",  ## need for getting energies
+                 "orca_scan.inp",               ## need for getting angles
+                 "ORCA_FINISHED_NORMALLY",      ## need as a positive flag for charge fitting later
+                 "ORCA_CRASHED"]                ## need as a negative flag for charge fitting later
 
     for file in os.listdir(scanDir):
         if file in scanXyzs:

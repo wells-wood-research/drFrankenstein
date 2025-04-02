@@ -24,20 +24,16 @@ class DirectoryPath:
     pass
 from typing import Dict, List, Tuple
 
-## ADD SRC TO PATH ##
-currentFilePath: FilePath = os.path.abspath(__file__)
-currentDir: DirectoryPath = os.path.dirname(currentFilePath)
-srcDir: DirectoryPath = os.path.dirname(currentDir)
-sys.path.append(srcDir)
 
+## drFRANKENSTEIN MODULES ##
 from . import Twisted_Assistant
 from . import Twisted_Monster
 from . import Twisted_Plotter
+from OperatingTools import drSplash
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def twist_protocol(config):
-
     config = Twisted_Assistant.set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
@@ -47,13 +43,16 @@ def twist_protocol(config):
     config["pathInfo"]["torsionDirs"] = []
     config["torsionScanInfo"]["torsionTags"] = []
     config["torsionScanInfo"]["finalScanEnergies"] = {}
-    for rotatableBond in rotatableBonds:
-        config = run_torsion_scanning(rotatableBond, config)
-    config["checkpointInfo"]["scanningComplete"] = True
+
+    nRotatableBonds = len(rotatableBonds)
+    for torsionIndex, rotatableBond in enumerate(rotatableBonds):
+        config = run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config)
+    # config["checkpointInfo"]["scanningComplete"] = True
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
+def run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config, debug=False) -> dict:
+
     ## make a top level dir for this torsion
     torsionTag: str = "-".join(map(str, rotatableBond["atoms"])) 
     torsionDir = p.join(config["pathInfo"]["torsionTopDir"], f"torsion_{torsionTag}" )
@@ -62,11 +61,8 @@ def run_torsion_scanning(rotatableBond, config, debug=False) -> dict:
     config["pathInfo"]["torsionDirs"].append(torsionDir)
     config["torsionScanInfo"]["torsionTags"].append(torsionTag)
 
- 
-
     conformerXyzs = Twisted_Assistant.get_conformer_xyzs(config)
-
-
+    drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
     if debug:
         ## run in serial
         scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, rotatableBond["indices"], config)
@@ -125,9 +121,9 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
 def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
     argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
     tqdmBarOptions = {
-        "desc": f"\033[32mSingle-Points For Torsion {torsionTag}\033[0m",
-        "ascii": "-ϟ",  
-        "colour": "cyan",
+        "desc": f"\033[32mRunning Single-Points \033[0m",
+        "ascii": "-▒",  
+        "colour": "magenta",
         "unit":  "scan",
         "dynamic_ncols": True
     }
@@ -146,9 +142,9 @@ def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
     tqdmBarOptions = {
-        "desc": f"\033[32mScanning Torsion {torsionTag}\033[0m",
-        "ascii": "-ϟ",  
-        "colour": "yellow",
+        "desc": f"\033[32mScanning Torsion Angle\033[0m",
+        "ascii": "-▒",  
+        "colour": "green",
         "unit":  "scan",
         "dynamic_ncols": True
     }

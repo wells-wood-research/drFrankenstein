@@ -17,7 +17,7 @@ sys.path.append(srcDir)
 
 ## drFRANKENSTEIN LIBRARIES ##
 from . import drFourier
-from . import Plotter
+from . import Stitching_Plotter
 
 ##############################################################################
 def fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents):
@@ -34,7 +34,7 @@ def fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, s
     qmTorsionEnergy = qmTorsionEnergy - qmTorsionEnergy.min()
 
 
-    Plotter.plot_qmmm_energies(qmTotalEnergy, qmTorsionEnergy, mmTotalEnergy, mmTorsionEnergy, mmCosineComponents, qmmmTorsionFittingDir, shuffleIndex)
+    Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy, qmTorsionEnergy, mmTotalEnergy, mmTorsionEnergy, mmCosineComponents, qmmmTorsionFittingDir, shuffleIndex)
 
     torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy, torsionTag, qmmmTorsionFittingDir)
 

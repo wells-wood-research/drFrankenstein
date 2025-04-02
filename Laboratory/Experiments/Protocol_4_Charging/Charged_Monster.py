@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import drOrca
-from Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
+from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
 
 ## CLEAN CODE ##
 class FilePath:
@@ -22,7 +22,7 @@ class DirectoryPath:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_orca_singlepoint_for_charge_calculations(args) -> None:
-    conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation = args
+    conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config = args
     conformerName = p.basename(conformerXyz).split(".")[0]
     
     conformerQmDir = p.join(orcaDir, conformerName)
@@ -43,7 +43,7 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
     
     orcaOptOutput = p.join(conformerQmDir, "orca_opt.out")
     if not p.isfile(orcaOptOutput):
-        drOrca.run_orca(orcaOptInput, orcaOptOutput)
+        drOrca.run_orca(orcaOptInput, orcaOptOutput, config)
 
     optXyz = p.join(conformerQmDir, "orca_opt.xyz")
     orcaSinglePointInput = drOrca.make_orca_input_for_singlepoint(inputXyz = optXyz,
@@ -54,7 +54,7 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
     
     orcaSinglePointOutput = p.join(conformerQmDir, "orca_sp.out")
     if not p.isfile(orcaSinglePointOutput):
-        drOrca.run_orca(orcaSinglePointInput, orcaSinglePointOutput)
+        drOrca.run_orca(orcaSinglePointInput, orcaSinglePointOutput, config)
 
     singlePointName = p.splitext(p.basename(orcaSinglePointInput))[0]
     call(["orca_2mkl", p.join(conformerQmDir,singlePointName), "-molden"], stdout=DEVNULL)

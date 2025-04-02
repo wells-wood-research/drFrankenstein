@@ -19,31 +19,51 @@ class FilePath:
 class DirectoryPath:
     pass
 
-##################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def shuffle_torsion_tags(torsionTags: list) -> list:
+    """
+    Re-orders the torsion tags in a random order
+    
+    Args:
+        torsionTags (list): the torsion tags associated with our torsions
+    Returns:
+        shuffledTorsionTags: torsionTags re-ordered
+    """
     shuffledTorsionTags = torsionTags
     random.shuffle(shuffledTorsionTags)
 
     return shuffledTorsionTags
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_frcmod(config, torsionTag, torsionParamDf):
+    """
+    Updates a frcmod file with a torsion parameter block
+    
+    Args:
+        config (dict): the drFrankenstein config containing all run information
+        torsionTag (str): the torsion tag for the torsion we are updating
+        torsionParamDf (pd.DataFrame): the torsion parameters for the torsion we are updating
+    Returns:    
+        config (dict): updated config
+    """
+    ## unpack config ##
     inFrcmod = config["pathInfo"]["moleculeFrcmod"]
     tmpFrcmod = p.splitext(inFrcmod)[0] + "_tmp.frcmod"
-
-    ##TODO: sort out multiplicities
     multiplicity = config["moleculeInfo"]["multiplicity"]
-
     atomTypeMap = config["moleculeInfo"]["atomTypeMap"]
+    
+    ## construct torsion identifier forwards and reversed for finding line in frcmod ##
     atomNames = torsionTag.split("-")
     atomTypes = [atomTypeMap[name] for name in atomNames]
     atomTypesReversed = atomTypes[::-1]
     torsionIdentifier = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypes])
     torsionIdentifierReversed = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypesReversed])
 
+    ## init a bool to determine whether to write lines to frcmod
     writeLines = False
-
+    ## init new torsion block as an empty string
     newTorsionBlock = ""
+    ## read through torsionParamDf and write new torsion block to add to frcmod
     for _, row in torsionParamDf.iloc[:-1].iterrows():
         amplitude = f"{row['Amplitude']:.3f}"
         phase = f"{row['Phase']:.3f}"
@@ -51,6 +71,7 @@ def update_frcmod(config, torsionTag, torsionParamDf):
         newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
                             f"{amplitude:>5}{phase:>14}{period:>16}"
                             f"\t\tMADE BY drFRANKENSTEIN\n")
+    ## write last row TODO: (why is this separate????)
     lastRow = torsionParamDf.iloc[-1]
     amplitude = f"{lastRow['Amplitude']:.3f}"
     phase = f"{lastRow['Phase']:.3f}"
@@ -58,8 +79,10 @@ def update_frcmod(config, torsionTag, torsionParamDf):
     newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
                         f"{amplitude:>5}{phase:>14}{period:>16}"
                         f"\t\tMADE BY drFRANKENSTEIN\n")
-
+    
+    ## init a bool to determine whether to write lines to frcmod
     writeLines = False
+    ## read through frcmod and write to tmp frcmod
     with open(inFrcmod, "r") as f, open(tmpFrcmod, "w") as tmp:
         for line in f:
             ## dont copy params for this torsion
@@ -74,9 +97,10 @@ def update_frcmod(config, torsionTag, torsionParamDf):
                 tmp.write(line)
             else:
                 tmp.write(line)
+    ## owerwrite frcmod
     move(tmpFrcmod, inFrcmod)
     return config
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pdb2mol2(inPdb: FilePath,
               outMol2: FilePath,
                 workingDir: DirectoryPath) -> None:
@@ -111,7 +135,7 @@ def pdb2mol2(inPdb: FilePath,
     ]
     with open(antechamberOut, 'w') as outfile:
         run(antechamberCommand, stdout=outfile, stderr=STDOUT)
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def edit_mol2_partial_charges(inMol2: FilePath,
                                chargesDf: pd.DataFrame,
                                  outMol2: FilePath) -> None:
@@ -155,7 +179,7 @@ def edit_mol2_partial_charges(inMol2: FilePath,
             ## write to outMol2
             writeMol2.write(line)
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def edit_mo2_atom_types(inMol2: FilePath,
                          outMol2: FilePath) -> None:
     
@@ -196,7 +220,7 @@ def edit_mo2_atom_types(inMol2: FilePath,
                 line = re.sub(r'(\s)h1(\s)', r'\1hc\2', line)
             outMol2.write(line)
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def create_atom_type_map(inMol2: FilePath) -> dict:
     """
     Creates a dict that maps atom names to atom types
@@ -227,7 +251,7 @@ def create_atom_type_map(inMol2: FilePath) -> dict:
                 atomTypeMap[atomData[1]] = atomData[5]
     return atomTypeMap
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def create_frcmod_file(chargesMol2: FilePath,
                         moleculeName: str,
                           config: dict) -> FilePath:
@@ -253,7 +277,7 @@ def create_frcmod_file(chargesMol2: FilePath,
 
     return molFrcmod
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def extract_torsion_parameters(config: dict, torsionTag: str) -> dict:
     """
     Reads through a frcmod file 
@@ -289,7 +313,7 @@ def extract_torsion_parameters(config: dict, torsionTag: str) -> dict:
     ## add torsion parameters to dict
 
     return torsionParameters
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def parse_frcmod(molFrcmod: FilePath) -> dict:
     """
     Reads through a FRCMOD file and returns a dict with the contents of the file
@@ -374,7 +398,7 @@ def parse_frcmod(molFrcmod: FilePath) -> dict:
                     lineParsed = {"atoms": atomData, "vdw-radius": paramData[0], "well-depth": paramData[1]}
                     parsedFrcmod["NONBONDED"].append(lineParsed)
     return parsedFrcmod
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_frcmod_atom_data(line: str, indexes: list) -> list:
     """
     Small function for getting atom names from FRCMOD file lines
@@ -388,7 +412,7 @@ def get_frcmod_atom_data(line: str, indexes: list) -> list:
     """
 
     return [line[start:end].strip() for start, end in indexes]
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
     """
     Constructs MM energies from mmTorsionParameters using:
@@ -422,7 +446,7 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
         
     return mmTorsionEnergy, mmCosineComponents
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def sort_out_directories(config) -> dict:
     """
@@ -455,7 +479,7 @@ def sort_out_directories(config) -> dict:
     os.makedirs(qmmmFittingDir,exist_ok=True)
     
     return config
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
     """
     Looks through ORCA scan directories 
@@ -493,7 +517,7 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
                     completedTorsionScanDirs.append(calculationDir)
     return completedTorsionScanDirs
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     """
     Read through an ORCA input file and find start and end angles of a dihedral scan
@@ -526,7 +550,7 @@ def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     angleRange = np.arange(startAngle, endAngle + stepSize, stepSize)
     
     return angleRange
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def rescale_angles_0_360(angle: np.array) -> np.array:
     """
     puts angles on a -180 to +180 scale
@@ -535,7 +559,7 @@ def rescale_angles_0_360(angle: np.array) -> np.array:
     # if angle > 180:
     #     angle -= 360  # Shift angles greater than 180 to the negative side
     return angle
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
     """
     merges energy DataFrames on the Angle column
@@ -563,7 +587,7 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
     mergedDf = mergedDf.groupby('Angle', as_index=False).first()
 
     return mergedDf
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
     """
     updates PDB file with XYZ coords
@@ -585,7 +609,7 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
     inDf["Z"] = xyzDf["z"]
 
     pdbUtils.df2pdb(inDf, outPdb)
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
     """
     converts an xyz file to a pd.DataFrame
@@ -610,7 +634,7 @@ def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
                               "y": float(lineData[2]),
                                 "z": float(lineData[3])})
     return pd.DataFrame(xyzData)
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def make_prmtop_and_inpcrd(inMol2: FilePath,
                             molFrcmod: FilePath,
@@ -650,7 +674,7 @@ def make_prmtop_and_inpcrd(inMol2: FilePath,
 
     return prmtop, inpcrd
 
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd: FilePath) -> float:
     """
     Runs a singlepoint energy calculation at the MM level 
@@ -688,4 +712,4 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd
         singlePointEnergies.append((trajIndex,singlePointEnergy))
 
     return singlePointEnergies
-################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

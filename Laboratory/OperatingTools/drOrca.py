@@ -4,8 +4,9 @@ from subprocess import call
 
 
 ########################################
-def run_orca(orcaInput, orcaOutput):
-    orcaCommand = ["orca", orcaInput]
+def run_orca(orcaInput, orcaOutput, config):
+    orcaExe = config["pathInfo"]["orcaExe"]
+    orcaCommand = [orcaExe, orcaInput]
     with open(orcaOutput, 'w') as output_file:
         try:
             call(orcaCommand, stdout=output_file, stderr=output_file)

@@ -7,7 +7,7 @@ from Experiments.Protocol_1_Capping import Capping_Doctor
 from Experiments.Protocol_2_Wriggling import Wriggling_Doctor
 from Experiments.Protocol_3_Twisting import Twisted_Doctor
 from Experiments.Protocol_4_Charging import Charged_Doctor
-from Experiments.Protocol_5_Stitching import parameter_fitting_protocol
+from Experiments.Protocol_5_Stitching import Stitching_Doctor
 from Experiments.Protocol_6_Creation import drCreator
 
 from OperatingTools import drYaml
@@ -20,7 +20,8 @@ class FilePath:
 class DirectoryPath:
     pass
 
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def main():
     ## get config yaml file from argpass command-line-argument
     configYaml = drYaml.get_config_input_arg()
@@ -41,7 +42,7 @@ def main():
     checkpointInfo = config["checkpointInfo"]
     if not checkpointInfo["cappingComplete"]:
         print("Running Capping Protocol")
-        config = Capping_Doctor.capping_protocol.capping_protocol(config)
+        config = Capping_Doctor.capping_protocol(config)
         write_config_to_yaml(config, outputDir)
 
     ## run conformer generation protocol
@@ -51,7 +52,7 @@ def main():
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["scanningComplete"]:
-        print("Running Twist Protocol")
+        drSplash.show_twist_splash()
         config = Twisted_Doctor.twist_protocol(config)
         write_config_to_yaml(config, outputDir)
 
@@ -62,7 +63,7 @@ def main():
 
     if not checkpointInfo["torsionFittingComplete"]:
         print("Running Parameter Fitting Protocol")
-        config = parameter_fitting_protocol.torsion_fitting_protocol(config)
+        config = Stitching_Doctor.torsion_fitting_protocol(config)
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["finalCreationComplete"]:
@@ -73,8 +74,8 @@ def main():
     print("")
     print("Parameters for your non-natural amino acid")
 
-
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def read_config_with_checkpoints(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
@@ -83,7 +84,7 @@ def read_config_with_checkpoints(config, outDir):
         with open(drFrankensteinYaml, "r") as f:
             config = ruamelParser.load(f)
     return config
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def init_config_checkpoints(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
 
@@ -99,8 +100,7 @@ def init_config_checkpoints(config, outDir):
         return config
     else:
         return config
-
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def write_config_to_yaml(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
@@ -108,7 +108,7 @@ def write_config_to_yaml(config, outDir):
     ruamelParser.top_comment = True
     with open(drFrankensteinYaml, "w") as f:
         ruamelParser.dump(config, f)
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def handle_exceptions(e, pdbName):
     tb = traceback.extract_tb(e.__traceback__)
     if tb:
@@ -137,10 +137,10 @@ def handle_exceptions(e, pdbName):
     }
     return errorData
 
-
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        errorReport = handle_exceptions(e, "drFrankestein")
+        errorReport = handle_exceptions(e, "drFrankenstein")
         drSplash.print_botched(errorReport)

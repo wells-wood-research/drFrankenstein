@@ -57,14 +57,13 @@ def capping_protocol(config: dict) -> dict:
     cappedPdb = p.join(cappingDir, f"{moleculeName}_capped.pdb")
     pdbUtils.df2pdb(cappedDf, cappedPdb)
     config["moleculeInfo"]["cappedPdb"] = cappedPdb
-    exit()
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
 
     return config
 
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def add_nMethyl_caps(molDf: pd.DataFrame,
                       nmePdb: FilePath,
                         config: dict) -> pd.DataFrame:

@@ -47,7 +47,7 @@ def main():
 
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
-        print("Running Conformer Generation Protocol")
+        drSplash.show_wriggle_splash()
         config = Wriggling_Doctor.conformer_generation_protocol(config)
         write_config_to_yaml(config, outputDir)
 
@@ -57,22 +57,21 @@ def main():
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["chargesComplete"]:
-        print("Running Charge Protocol")
+        drSplash.show_charge_splash()
         config = Charged_Doctor.charge_protocol(config)
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["torsionFittingComplete"]:
-        print("Running Parameter Fitting Protocol")
+        drSplash.show_stitch_splash()
         config = Stitching_Doctor.torsion_fitting_protocol(config)
         write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["finalCreationComplete"]:
+        drSplash.show_creation_splash()
         drCreator.create_the_monster(config)
     
-    print("WHAT HAVE WE DONE??")
-    print("WHAT HAVE WE CREATED???")
-    print("")
-    print("Parameters for your non-natural amino acid")
+    
+    drSplash.show_what_have_we_created(config["moleculeInfo"]["moleculeName"])
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

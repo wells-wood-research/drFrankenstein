@@ -47,7 +47,7 @@ def twist_protocol(config):
     nRotatableBonds = len(rotatableBonds)
     for torsionIndex, rotatableBond in enumerate(rotatableBonds):
         config = run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config)
-    # config["checkpointInfo"]["scanningComplete"] = True
+    config["checkpointInfo"]["scanningComplete"] = True
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

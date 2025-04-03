@@ -112,7 +112,9 @@ def did_orca_finish_normallly(orcaOut):
     with open(orcaOut, "r") as f:
         lines = f.readlines()
         for line in reversed(lines):
-            if "****ORCA TERMINATED NORMALLY****" in line or "* finished run" in line:
+            if "****ORCA TERMINATED NORMALLY****" in line:
                 return True
+            elif "ORCA finished with an error in the energy calculation" in line:
+                return False
     return False
 ###################################################################################

@@ -24,7 +24,7 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config, torsionTag, debug=False):
+def get_MM_total_energies(config, torsionTag, debug=True):
     mmTotalDir: DirectoryPath = config["pathInfo"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
@@ -124,7 +124,12 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
 
 
     singlePointEnergyDf = pd.DataFrame(singlePointEnergies, columns=["TrajIndex", "Energy"])
-    singlePointEnergyDf["Angle"] = Stitching_Assistant.get_scan_angles_from_orca_inp(scanDir)
+
+    scanAngles = Stitching_Assistant.get_scan_angles_from_orca_inp(scanDir)
+    if len(scanAngles) != len(singlePointEnergyDf):
+        raise(ValueError(f"Number of scan angles ({len(scanAngles)}) does not match number of single point energies ({len(singlePointEnergyDf)})"))
+    singlePointEnergyDf["Angle"] = scanAngles
+
     singlePointEnergyDf["Angle"] = singlePointEnergyDf["Angle"].apply(Stitching_Assistant.rescale_angles_0_360)
 
     if not debug:

@@ -30,9 +30,10 @@ from . import Twisted_Assistant
 from . import Twisted_Monster
 from . import Twisted_Plotter
 from OperatingTools import drSplash
-
+from OperatingTools import Timer
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def twist_protocol(config):
     config = Twisted_Assistant.set_up_directories(config)
 

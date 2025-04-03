@@ -17,9 +17,11 @@ class FilePath:
 class DirectoryPath:
     pass
 
-
+## drFRANKENSTEIN LIBRARIES ##
+from OperatingTools import Timer
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def charge_protocol(config: dict, debug: bool = False) -> dict:
     """
     Main protocol for charge fitting

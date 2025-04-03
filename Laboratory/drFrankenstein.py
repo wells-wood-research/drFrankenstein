@@ -12,7 +12,7 @@ from Experiments.Protocol_6_Creation import drCreator
 
 from OperatingTools import drYaml
 from OperatingTools import drSplash
-
+from OperatingTools import Timer 
 
 ## CLEAN CODE ##
 class FilePath:
@@ -28,14 +28,18 @@ def main():
     ## load into dict, check for bad formatting
     ## TODO: write config_checker for bad args
     config = drYaml.read_input_yaml(configYaml)
+
     ## unpack config to find outputDir, make directory
     outputDir = config["pathInfo"]["outputDir"]
     os.makedirs(outputDir,exist_ok=True)
-
+    ## deal with checkpointing, lets us skip steps if already done
     config = read_config_with_checkpoints(config, outputDir)
     config = init_config_checkpoints(config, outputDir)
-
+    ## set up function timers
+    config = Timer.sort_output_directory(config)
+    ## save config back to yaml
     write_config_to_yaml(config, outputDir)
+    
 
     ## add capping groups to input molecule
     ## TODO: cope with staples etc. that need 2 or more capping groups
@@ -43,8 +47,7 @@ def main():
     if not checkpointInfo["cappingComplete"]:
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config)
-        write_config_to_yaml(config, outputDir)
-
+        # write_config_to_yaml(config, outputDir)
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()

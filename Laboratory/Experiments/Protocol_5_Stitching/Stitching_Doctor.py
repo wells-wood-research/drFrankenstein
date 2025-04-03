@@ -17,10 +17,11 @@ from . import MM_total_protocol
 from . import QMMM_fitting_protocol
 from . import Stitching_Assistant
 from . import Stitching_Plotter
-
+from OperatingTools import Timer
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def torsion_fitting_protocol(config: dict) -> dict:
     """
     Main protocol for torsion fitting

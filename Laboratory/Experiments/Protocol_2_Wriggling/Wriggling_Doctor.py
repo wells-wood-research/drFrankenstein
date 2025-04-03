@@ -12,7 +12,9 @@ from typing import List, Tuple
 
 ## drFRANKESTEN IMPORTS ##
 from OperatingTools import drOrca
+from OperatingTools import Timer
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def conformer_generation_protocol(config: dict) -> dict:
     """
     Runs conformer generation protocol using ORCA's GOAT program
@@ -23,7 +25,6 @@ def conformer_generation_protocol(config: dict) -> dict:
     Returns:
         config (dict): updated config
     """
-    print("--> GENERATING CONFORMERS WITH GOAT") #TODO: add progress bar and better SPLASH
     ## make new dirs and add to config ##
     config = sort_out_directories(config)
 

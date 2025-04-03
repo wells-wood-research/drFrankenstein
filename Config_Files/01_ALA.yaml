@@ -10,7 +10,7 @@
 ##########################################################################################################################
 pathInfo:
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/ALA_outputs
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/01_ALA_outputs
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
   gaff2Dat: /home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat
@@ -46,17 +46,14 @@ moleculeInfo:
 #     How do you want to run torsion scanning?                                                                           #                                          
 ##########################################################################################################################
 torsionScanInfo:
+  nConformers: 10
   nScanSteps: 37
-  convergenceTolerance: 0.1
-  minScanBatches: 3 ## must be at least 3!
-  maxScanBatches: 4
-  ## not implemented yet
-  scanBatchSize: 10
   scanMethod: XTB2
   scanSolvationMethod : Null 
   singlePointMethod: XTB2  #revPBE def2-SVP D3BJ
   singlePointSolvationMethod: ALPB(water) #CPCM(water)
   scanSinglePointsOn: all
+  
   
 ##########################################################################################################################
 #          _                                     _____   _   _     _     _                   ___            __           #

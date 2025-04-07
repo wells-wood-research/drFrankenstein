@@ -33,12 +33,12 @@ def main():
     outputDir = config["pathInfo"]["outputDir"]
     os.makedirs(outputDir,exist_ok=True)
     ## deal with checkpointing, lets us skip steps if already done
-    config = read_config_with_checkpoints(config, outputDir)
-    config = init_config_checkpoints(config, outputDir)
+    config = drYaml.read_config_with_checkpoints(config, outputDir)
+    config = drYaml.init_config_checkpoints(config, outputDir)
     ## set up function timers
     config = Timer.sort_output_directory(config)
     ## save config back to yaml
-    write_config_to_yaml(config, outputDir)
+    drYaml.write_config_to_yaml(config, outputDir)
     
 
     ## add capping groups to input molecule
@@ -52,22 +52,22 @@ def main():
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
         config = Wriggling_Doctor.conformer_generation_protocol(config)
-        write_config_to_yaml(config, outputDir)
+        drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["scanningComplete"]:
         drSplash.show_twist_splash()
         config = Twisted_Doctor.twist_protocol(config)
-        write_config_to_yaml(config, outputDir)
+        drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["chargesComplete"]:
         drSplash.show_charge_splash()
         config = Charged_Doctor.charge_protocol(config)
-        write_config_to_yaml(config, outputDir)
+        drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
         config = Stitching_Doctor.torsion_fitting_protocol(config)
-        write_config_to_yaml(config, outputDir)
+        drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["finalCreationComplete"]:
         drSplash.show_creation_splash()
@@ -78,38 +78,7 @@ def main():
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_config_with_checkpoints(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
-    ruamelParser = ruamel.YAML()
 
-    if p.isfile(drFrankensteinYaml):
-        with open(drFrankensteinYaml, "r") as f:
-            config = ruamelParser.load(f)
-    return config
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def init_config_checkpoints(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
-
-    if not p.exists(drFrankensteinYaml):
-        config["checkpointInfo"] = {
-            "cappingComplete": False,
-            "conformersComplete": False,
-            "scanningComplete": False,
-            "chargesComplete": False,
-            "torsionFittingComplete": False,
-            "finalCreationComplete": False
-        }
-        return config
-    else:
-        return config
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def write_config_to_yaml(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
-    ruamelParser = ruamel.YAML()
-    ruamelParser.indent(mapping=2, sequence=4, offset=2)
-    ruamelParser.top_comment = True
-    with open(drFrankensteinYaml, "w") as f:
-        ruamelParser.dump(config, f)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def handle_exceptions(e, pdbName):
     tb = traceback.extract_tb(e.__traceback__)

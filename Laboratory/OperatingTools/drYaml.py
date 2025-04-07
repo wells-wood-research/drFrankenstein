@@ -8,7 +8,39 @@ class DirectoryPath:
     pass
 
 
-####################################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def read_config_with_checkpoints(config, outDir):
+    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+    ruamelParser = ruamel.YAML()
+
+    if p.isfile(drFrankensteinYaml):
+        with open(drFrankensteinYaml, "r") as f:
+            config = ruamelParser.load(f)
+    return config
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def init_config_checkpoints(config, outDir):
+    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+
+    if not p.exists(drFrankensteinYaml):
+        config["checkpointInfo"] = {
+            "cappingComplete": False,
+            "conformersComplete": False,
+            "scanningComplete": False,
+            "chargesComplete": False,
+            "torsionFittingComplete": False,
+            "finalCreationComplete": False
+        }
+        return config
+    else:
+        return config
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def write_config_to_yaml(config, outDir):
+    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+    ruamelParser = ruamel.YAML()
+    ruamelParser.indent(mapping=2, sequence=4, offset=2)
+    ruamelParser.top_comment = True
+    with open(drFrankensteinYaml, "w") as f:
+        ruamelParser.dump(config, f)
 
 def get_config_input_arg() -> FilePath:
     """
@@ -26,7 +58,7 @@ def get_config_input_arg() -> FilePath:
     configFile: FilePath = args.config
 
     return configFile
-####################################################################################
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def read_input_yaml(configFile: FilePath) -> dict:
     """

@@ -25,13 +25,16 @@ def conformer_generation_protocol(config: dict) -> dict:
     Returns:
         config (dict): updated config
     """
+    ## create an entry in runtimeInfo for conformers
+    config["runtimeInfo"]["madeByConformers"] = {}
+
     ## make new dirs and add to config ##
     config = sort_out_directories(config)
 
     ## unpack config ##
-    cappedPdb = config["moleculeInfo"]["cappedPdb"]
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    conformerDir = config["pathInfo"]["conformerDir"]
+    conformerDir = config["runtimeInfo"]["madeByConformers"]["conformerDir"]
 
     ## convert capped PDB file to XYZ format
     cappedXyz = p.join(conformerDir, f"{moleculeName}_capped.xyz")
@@ -45,7 +48,7 @@ def conformer_generation_protocol(config: dict) -> dict:
 
     ## Split output XYZ file into multiple separate conformers
     conformerXyzs = split_conformers(conformerDir, moleculeName)
-    config["pathInfo"]["conformerXyzs"] = conformerXyzs
+    config["runtimeInfo"]["madeByConformers"]["conformerXyzs"] = conformerXyzs
 
     ## delete unnecessary files
     clean_up(conformerDir, config)
@@ -68,7 +71,7 @@ def  sort_out_directories(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
     conformerDir = p.join(outputDir, "02_GOAT_conformers")
     os.makedirs(conformerDir, exist_ok=True) 
-    config["pathInfo"]["conformerDir"] = conformerDir
+    config["runtimeInfo"]["madeByConformers"]["conformerDir"] = conformerDir
 
     return config   
 

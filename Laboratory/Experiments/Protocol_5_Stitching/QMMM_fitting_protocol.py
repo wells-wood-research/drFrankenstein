@@ -21,7 +21,7 @@ from . import Stitching_Plotter
 
 ##############################################################################
 def fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents):
-    qmmmFittingDir = config["pathInfo"]["qmmmParameterFittingDir"] 
+    qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
     qmmmTorsionFittingDir = p.join(qmmmFittingDir, torsionTag)
     os.makedirs(qmmmTorsionFittingDir,exist_ok=True)
 
@@ -42,7 +42,7 @@ def fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, s
 
 ##############################################################################
 def get_qm_scan_energies(config: dict, torsionTag: str) -> np.array:
-    qmScanEnergyCsv = config["torsionScanInfo"]["finalScanEnergies"][torsionTag]
+    qmScanEnergyCsv = config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag]
 
     qmScanEnergyDf = pd.read_csv(qmScanEnergyCsv)
     

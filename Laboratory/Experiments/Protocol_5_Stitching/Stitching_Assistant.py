@@ -47,10 +47,9 @@ def update_frcmod(config, torsionTag, torsionParamDf):
         config (dict): updated config
     """
     ## unpack config ##
-    inFrcmod = config["pathInfo"]["moleculeFrcmod"]
+    inFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     tmpFrcmod = p.splitext(inFrcmod)[0] + "_tmp.frcmod"
-    multiplicity = config["moleculeInfo"]["multiplicity"]
-    atomTypeMap = config["moleculeInfo"]["atomTypeMap"]
+    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
     
     ## construct torsion identifier forwards and reversed for finding line in frcmod ##
     atomNames = torsionTag.split("-")
@@ -63,6 +62,10 @@ def update_frcmod(config, torsionTag, torsionParamDf):
     writeLines = False
     ## init new torsion block as an empty string
     newTorsionBlock = ""
+
+    ##TODO: multiplicity from symmetry
+    multiplicity = 1
+
     ## read through torsionParamDf and write new torsion block to add to frcmod
     for _, row in torsionParamDf.iloc[:-1].iterrows():
         amplitude = f"{row['Amplitude']:.3f}"
@@ -270,7 +273,7 @@ def create_frcmod_file(chargesMol2: FilePath,
     ## get path to gaff2.dat fom config file
     gaff2Dat: FilePath = config["pathInfo"]["gaff2Dat"]
     ## init molFrcmod output file
-    molFrcmod = p.join(config["pathInfo"]["mmTorsionCalculationDir"], f"{moleculeName}.frcmod")
+    molFrcmod = p.join(config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"], f"{moleculeName}.frcmod")
     ## run run parmchk2
     parmchk2Command = ["parmchk2", "-i", chargesMol2, "-f", "mol2", "-o", molFrcmod, "-a", "-Y", "-p", gaff2Dat]
     call(parmchk2Command)
@@ -293,10 +296,10 @@ def extract_torsion_parameters(config: dict, torsionTag: str) -> dict:
         mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
     """
 
-    molFrcmod = config["pathInfo"]["moleculeFrcmod"]
+    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     parsedFrcmod: dict = parse_frcmod(molFrcmod)
 
-    atomTypeMap = config["moleculeInfo"]["atomTypeMap"]
+    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
 
     ## get torsion atom names
     torsionAtoms: list = torsionTag.split("-")
@@ -310,7 +313,6 @@ def extract_torsion_parameters(config: dict, torsionTag: str) -> dict:
 
     except:
         raise Exception(f"Torsion {torsionTag} not found in frcmod file")
-    ## add torsion parameters to dict
 
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -464,18 +466,18 @@ def sort_out_directories(config) -> dict:
 
     parameterFittingTopDir: DirectoryPath = p.join(outputDir, "05_parameter_fitting")
     os.makedirs(parameterFittingTopDir, exist_ok=True)
-    config["pathInfo"]["parameterFittingTopDir"] = parameterFittingTopDir
+    config["runtimeInfo"]["madeByStitching"]["parameterFittingTopDir"] = parameterFittingTopDir
 
     mmTorsionCalculationDir: DirectoryPath = p.join(parameterFittingTopDir, "mm_torsion_energies")
     os.makedirs(mmTorsionCalculationDir, exist_ok=True)
-    config["pathInfo"]["mmTorsionCalculationDir"] = mmTorsionCalculationDir
+    config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"] = mmTorsionCalculationDir
 
     mmTotalCalculationDir: DirectoryPath = p.join(parameterFittingTopDir, "mm_total_energies")
     os.makedirs(mmTotalCalculationDir, exist_ok=True)
-    config["pathInfo"]["mmTotalCalculationDir"] = mmTotalCalculationDir
+    config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"] = mmTotalCalculationDir
 
-    qmmmFittingDir = p.join(config["pathInfo"]["parameterFittingTopDir"], "qm-mm_parameter_fitting")
-    config["pathInfo"]["qmmmParameterFittingDir"] = qmmmFittingDir
+    qmmmFittingDir = p.join(parameterFittingTopDir, "qm-mm_parameter_fitting")
+    config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] = qmmmFittingDir
     os.makedirs(qmmmFittingDir,exist_ok=True)
     
     return config
@@ -498,7 +500,7 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
     completedTorsionScanDirs: list = []
 
     ## find dir where ORCA torsion scans were performed
-    torsionTopDir: DirectoryPath = config["pathInfo"]["torsionTopDir"]
+    torsionTopDir: DirectoryPath = config["runtimeInfo"]["madeByTwisting"]["torsionDir"]
 
     torsionDir: DirectoryPath = p.join(torsionTopDir, f"torsion_{torsionTag}")
 

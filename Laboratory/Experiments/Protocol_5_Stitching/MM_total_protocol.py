@@ -25,14 +25,14 @@ class DirectoryPath:
 
 
 def get_MM_total_energies(config, torsionTag, debug=False):
-    mmTotalDir: DirectoryPath = config["pathInfo"]["mmTotalCalculationDir"]
-    cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
+    mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
+    cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
     
-    moleculeFrcmod: FilePath = config["pathInfo"]["moleculeFrcmod"]
+    moleculeFrcmod: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
 
     ## read calculated partial charges
-    chargesCsv: FilePath = config["chargeFittingInfo"]["chargesCsv"]
+    chargesCsv: FilePath = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
     chargesDf: pd.DataFrame = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
     ## round charge to 4 decimal places
     chargesDf["Charge"] = chargesDf["Charge"].round(4)

@@ -1,6 +1,9 @@
-
+import os
+from os import path as p
 import argpass
 import ruamel.yaml as ruamel
+from ruamel.yaml.comments import CommentedMap
+
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -8,10 +11,34 @@ class DirectoryPath:
     pass
 
 
+def initialise_runtime_info(config):
+    runtimeBanner = '\n'.join([
+        "##########################################################################################################################",                                     
+        "                                    _     _                      ___            __                                       #",         
+        "             _ __   _   _   _ __   | |_  (_)  _ __ ___     ___  |_ _|  _ __    / _|   ___                                #",     
+        "            | '__| | | | | | '_ \  | __| | | | '_ ` _ \   / _ \  | |  | '_ \  | |_   / _ \                               #",     
+        "            | |    | |_| | | | | | | |_  | | | | | | | | |  __/  | |  | | | | |  _| | (_) |                              #",     
+        "            |_|     \__,_| |_| |_|  \__| |_| |_| |_| |_|  \___| |___| |_| |_| |_|    \___/                               #",     
+        "                                                                                                                         #",     
+        "##########################################################################################################################"                                     
+    ])
+
+
+    runtimeInfo = config.get("runtimeInfo", None)
+    if runtimeInfo is None:
+        config["runtimeInfo"] = {}
+        # Use the banner variable for the comment
+        config.yaml_set_comment_before_after_key("runtimeInfo", before=runtimeBanner)
+
+    return config
+
+
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def read_config_with_checkpoints(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
+    ruamelParser.preserve_quotes = True  # Ensure quotes are preserved
 
     if p.isfile(drFrankensteinYaml):
         with open(drFrankensteinYaml, "r") as f:
@@ -20,6 +47,19 @@ def read_config_with_checkpoints(config, outDir):
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def init_config_checkpoints(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+    checkpointBanner = '\n'.join([
+        "##########################################################################################################################",                                     
+        "                                                                                                                         #",
+        "               _                     _                      _           _     ___            __                          #",
+        "         ___  | |__     ___    ___  | | __  _ __     ___   (_)  _ __   | |_  |_ _|  _ __    / _|   ___                   #",
+        "        / __| | '_ \   / _ \  / __| | |/ / | '_ \   / _ \  | | | '_ \  | __|  | |  | '_ \  | |_   / _ \                  #",
+        "       | (__  | | | | |  __/ | (__  |   <  | |_) | | (_) | | | | | | | | |_   | |  | | | | |  _| | (_) |                 #",
+        "        \___| |_| |_|  \___|  \___| |_|\_\ | .__/   \___/  |_| |_| |_|  \__| |___| |_| |_| |_|    \___/                  #",
+        "                                           |_|                                                                           #",
+        "                                                                                                                         #",
+        "##########################################################################################################################"                                      
+    ])                             
+
 
     if not p.exists(drFrankensteinYaml):
         config["checkpointInfo"] = {
@@ -30,6 +70,8 @@ def init_config_checkpoints(config, outDir):
             "torsionFittingComplete": False,
             "finalCreationComplete": False
         }
+        config.yaml_set_comment_before_after_key("checkpointInfo", before=checkpointBanner)
+
         return config
     else:
         return config
@@ -38,9 +80,16 @@ def write_config_to_yaml(config, outDir):
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
     ruamelParser.indent(mapping=2, sequence=4, offset=2)
-    ruamelParser.top_comment = True
+    ruamelParser.default_flow_style = None
+    ruamelParser.allow_unicode = True
+    ruamelParser.preserve_quotes = True
+
+    # monkey patch:
+    ruamelParser.representer.ignore_aliases = lambda x: True
+
     with open(drFrankensteinYaml, "w") as f:
         ruamelParser.dump(config, f)
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def get_config_input_arg() -> FilePath:
     """
@@ -75,6 +124,7 @@ def read_input_yaml(configFile: FilePath) -> dict:
     teal = "\033[38;5;37m"
     try:
         ruamelParser = ruamel.YAML()
+        ruamelParser.preserve_quotes = True  # Ensure quotes are preserved
         with open(configFile, "r") as yamlFile:
             config: dict = ruamelParser.load(yamlFile)
             return config

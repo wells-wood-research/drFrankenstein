@@ -9,7 +9,7 @@ from pdbUtils import pdbUtils
 import pandas as pd
 import pexpect
 from tqdm import tqdm
-
+from copy import deepcopy
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import drOrca
 from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
@@ -125,7 +125,8 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 
     pdbDf = pdbUtils.pdb2df(pdbFile)
 
-    chargeGroups = config["moleculeInfo"]["chargeGroups"]
+    chargeGroupsInput = config["moleculeInfo"]["chargeGroups"]
+    chargeGroups = deepcopy(chargeGroupsInput)  # Use deepcopy to avoid modifying the original
     overallCharge = config["moleculeInfo"]["charge"]
 
     ## remove capping groups
@@ -134,7 +135,7 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
     ## deal with user-defined charge groups
     userDefinedAtoms = []
     userDefinedCharge = 0
-    for chargeGroupName, chargeGroupData in chargeGroups.items():
+    for chargeGroupName, chargeGroupData in chargeGroupsInput.items():
         ## get heavy atom names
         heavyChargeGroupAtoms = chargeGroupData["atoms"]
         ## fill in hydrogen atom names
@@ -154,17 +155,13 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
     leftOverAtoms = leftOverDf["ATOM_NAME"].to_list()
     leftOverIndexes = leftOverDf["ATOM_ID"].to_list()
     leftOverCharge = overallCharge - userDefinedCharge 
-    ## deal with left-over atoms, these will all go in one group
-    leftOverDf = uncappedDf[~uncappedDf["ATOM_NAME"].isin(userDefinedAtoms)]
-    leftOverAtoms = leftOverDf["ATOM_NAME"].to_list()
-    leftOverIndexes = leftOverDf["ATOM_ID"].to_list()
-    leftOverCharge = overallCharge - userDefinedCharge 
     
-    chargeGroups["left-over-atoms"] = {
-        "atoms" : leftOverAtoms,
-        "charge" : leftOverCharge,
-        "indexes" : leftOverIndexes
-    }
+    if len(leftOverAtoms) > 0:
+        chargeGroups["left-over-atoms"] = {
+            "atoms" : leftOverAtoms,
+            "charge" : leftOverCharge,
+            "indexes" : leftOverIndexes
+        }
     ## deal with Terminal Caps 
     for capResName in ["NME", "ACE"]:
         capDf = pdbDf[pdbDf["RES_NAME"]==capResName]
@@ -177,11 +174,9 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
                 "charge": 0,
                 "indexes": chargeGroupIndexes
             }
-
-    config["moleculeInfo"]["chargeGroups"] = chargeGroups
+    config["runtimeInfo"]["madeByCharges"]["chargeGroups"] = chargeGroups
 
     return config
-
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_charge_fitting(config: dict,
                         conformerListTxt: FilePath,

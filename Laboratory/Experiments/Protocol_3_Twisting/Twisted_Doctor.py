@@ -35,15 +35,16 @@ from OperatingTools import Timer
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()
 def twist_protocol(config):
+    ## create an entry in runtimeInfo for twist
+    config["runtimeInfo"]["madeByTwisting"] = {}
+    config["runtimeInfo"]["madeByTwisting"]["torsionDirs"] = []
+    config["runtimeInfo"]["madeByTwisting"]["torsionTags"] = []
+    config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"] = {}
+
     config = Twisted_Assistant.set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
-    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config["moleculeInfo"]["cappedPdb"])
-
-    ## loop over torsions that need to be scanned
-    config["pathInfo"]["torsionDirs"] = []
-    config["torsionScanInfo"]["torsionTags"] = []
-    config["torsionScanInfo"]["finalScanEnergies"] = {}
+    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config["runtimeInfo"]["madeByCapping"]["cappedPdb"])
 
     nRotatableBonds = len(rotatableBonds)
     for torsionIndex, rotatableBond in enumerate(rotatableBonds):
@@ -56,11 +57,11 @@ def run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config, d
 
     ## make a top level dir for this torsion
     torsionTag: str = "-".join(map(str, rotatableBond["atoms"])) 
-    torsionDir = p.join(config["pathInfo"]["torsionTopDir"], f"torsion_{torsionTag}" )
+    torsionDir = p.join(config["runtimeInfo"]["madeByTwisting"]["torsionDir"], f"torsion_{torsionTag}" )
     os.makedirs(torsionDir, exist_ok=True)
     ## add to config
-    config["pathInfo"]["torsionDirs"].append(torsionDir)
-    config["torsionScanInfo"]["torsionTags"].append(torsionTag)
+    config["runtimeInfo"]["madeByTwisting"]["torsionDirs"].append(torsionDir)
+    config["runtimeInfo"]["madeByTwisting"]["torsionTags"].append(torsionTag)
 
     conformerXyzs = Twisted_Assistant.get_conformer_xyzs(config)
     drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
@@ -81,11 +82,11 @@ def run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config, d
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Twisted_Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
     if  config["torsionScanInfo"]["singlePointMethod"] is None:
-        config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = scanEnergiesCsv
+        config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag] = scanEnergiesCsv
         singlePointAveragesDf = None
     else:
         singlePointEnergiesCsv, singlePointAveragesDf = Twisted_Assistant.process_scan_data(singlePointDfs, torsionDir, torsionTag)
-        config["torsionScanInfo"]["finalScanEnergies"][torsionTag] = singlePointEnergiesCsv   
+        config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag] = singlePointEnergiesCsv   
 
 
     ## Plotting

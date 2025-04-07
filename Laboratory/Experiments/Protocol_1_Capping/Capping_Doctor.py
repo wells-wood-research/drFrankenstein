@@ -38,10 +38,13 @@ def capping_protocol(config: dict) -> dict:
     molPdb = config["moleculeInfo"]["moleculePdb"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
+    ## create an entry in runtimeInfo for capping
+    config["runtimeInfo"]["madeByCapping"] = {}
+
     ## make a dir for capping, update config ##
     cappingDir = p.join(outputDir, "01_termini_capping")
     os.makedirs(cappingDir, exist_ok=True)
-    config["pathInfo"]["cappingDir"] = outputDir
+    config["runtimeInfo"]["madeByCapping"]["cappingDir"] = outputDir
 
     ## load pdb file into a dataframe
     molDf = pdbUtils.pdb2df(molPdb)
@@ -58,7 +61,7 @@ def capping_protocol(config: dict) -> dict:
     ## write to PDB file, update config
     cappedPdb = p.join(cappingDir, f"{moleculeName}_capped.pdb")
     pdbUtils.df2pdb(cappedDf, cappedPdb)
-    config["moleculeInfo"]["cappedPdb"] = cappedPdb
+    config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = cappedPdb
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
 

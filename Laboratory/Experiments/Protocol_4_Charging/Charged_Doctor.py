@@ -35,11 +35,16 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     Returns:
         config (dict): updated config
     """
+    ## create an entry in runtimeInfo for conformers
+    config["runtimeInfo"]["madeByCharges"] = {}
+
+
     ## unpack config ##
     protocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
 
     ## get indexes of charge groups (doesn't change so out of if block)
-    config = Charged_Monster.get_charge_group_indexes(config["moleculeInfo"]["cappedPdb"], config)
+    config = Charged_Monster.get_charge_group_indexes(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], config)
+
     ## set up directories for either RESP or RESP2 calculations
     config = Charged_Assistant.set_up_directories(config, protocol)
 
@@ -49,26 +54,26 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
                                 useSolvation = True,
                                  config = config,
                                   debug = debug)
-        config["chargeFittingInfo"]["chargesCsv"] = chargesCsv
+        config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
         
     ## for RESP2 protocol, run charge fitting twice - once with solvation and once without
     elif protocol == "RESP2":
         print("RESP2: with solvation")
-        solvatedDf, _ = calculate_partial_charges(outDir = config["pathInfo"]["solvatedDir"],
+        solvatedDf, _ = calculate_partial_charges(outDir = config["runtimeInfo"]["madeByCharges"]["solvatedDir"],
                                 useSolvation = True,
                                  config = config,
                                   debug = debug)
         print("RESP2: gas phase")
-        gasPhaseDf, _ = calculate_partial_charges(outDir = config["pathInfo"]["gasPhaseDir"],
+        gasPhaseDf, _ = calculate_partial_charges(outDir = config["runtimeInfo"]["madeByCharges"]["gasPhaseDir"],
                                 useSolvation = False,
                                  config = config,
                                   debug = debug)
         
 
         resp2Df = Charged_Assistant.apply_resp2_weighted_average(solvatedDf, gasPhaseDf)
-        resp2Csv = p.join(config["pathInfo"]["chargeDir"], "resp2_charges.csv")
+        resp2Csv = p.join(config["runtimeInfo"]["madeByCharges"]["chargeDir"], "resp2_charges.csv")
         resp2Df.to_csv(resp2Csv)
-        config["chargeFittingInfo"]["chargesCsv"] = resp2Csv
+        config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = resp2Csv
 
     ## update config with checkpoint flag
     config["checkpointInfo"]["chargesComplete"] = True
@@ -139,9 +144,9 @@ def run_qm_calculations_for_charge_fitting(orcaDir: DirectoryPath,
     
     ## unpack config ##
     moleculeInfo = config["moleculeInfo"]
-    chargeFittingInfo = config["chargeFittingInfo"]
-    conformerXyzs = config["pathInfo"]["conformerXyzs"]
+    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
+    chargeFittingInfo = config["chargeFittingInfo"]
 
     ## decide how many conformers to sample
     if nConformers == -1 or nConformers > len(conformerXyzs):

@@ -27,38 +27,38 @@ def get_generate_initial_frcmod(config: dict) -> dict:
     """
 
     ## get dir to write files to
-    mmTorsionDir: DirectoryPath = config["pathInfo"]["mmTorsionCalculationDir"]
+    mmTorsionDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
     ## get capped pdb file as input
-    cappedPdb: FilePath = config["moleculeInfo"]["cappedPdb"]
+    cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     ## get molecule name from filepath
-    moleculeName: str = "_".join(p.basename(config['moleculeInfo']['moleculePdb']).split(".")[0].split("_"))
+    moleculeName: str = config["moleculeInfo"]["moleculeName"]
 
     ## convert capped PDB to MOL2
     cappedMol2: FilePath = p.join(mmTorsionDir, f"{moleculeName}_capped.mol2")
     Stitching_Assistant.pdb2mol2(cappedPdb, cappedMol2, mmTorsionDir)
-    config["pathInfo"]["cappedMol2"] = cappedMol2
+    config["runtimeInfo"]["madeByStitching"]["cappedMol2"] = cappedMol2
 
     ## read calculated partial charges
-    chargesCsv = config["chargeFittingInfo"]["chargesCsv"]
+    chargesCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
     chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
     chargesDf["Charge"] = chargesDf["Charge"].round(4)
 
     ## paste charges from prior QM calculations into MOL2 file
-    chargesMol2 = p.join(config["pathInfo"]["mmTorsionCalculationDir"], f"{moleculeName}_charges.mol2")
+    chargesMol2 = p.join(config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"], f"{moleculeName}_charges.mol2")
     Stitching_Assistant.edit_mol2_partial_charges(cappedMol2, chargesDf, chargesMol2)
 
     ## fix atom types in MOL2 file
     fixedAtomMol2 = p.join(mmTorsionDir, f"{moleculeName}_fixed_atoms.mol2")
     Stitching_Assistant.edit_mo2_atom_types(chargesMol2, fixedAtomMol2)
-    config["pathInfo"]["finalMol2"] = fixedAtomMol2
+    config["runtimeInfo"]["madeByStitching"]["finalMol2"] = fixedAtomMol2
 
     ## get a map of atomName -> atomType
     atomTypeMap = Stitching_Assistant.create_atom_type_map(fixedAtomMol2)
-    config["moleculeInfo"]["atomTypeMap"] = atomTypeMap
+    config["runtimeInfo"]["madeByStitching"]["atomTypeMap"] = atomTypeMap
     ## create a FRCMOD file from MOL2 file
     molFrcmod = Stitching_Assistant.create_frcmod_file(fixedAtomMol2, moleculeName, config)
     ## update config 
-    config["pathInfo"]["moleculeFrcmod"] = molFrcmod
+    config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = molFrcmod
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

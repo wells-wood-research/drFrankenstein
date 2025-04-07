@@ -8,11 +8,14 @@ from shutil import copy
 ################################################################################
 
 def create_the_monster(config):
+    ## create a runtimeInfo 
+    config["runtimeInfo"]["madeByCreator"] = {}
+
     ## make a dir
     outputDir = config["pathInfo"]["outputDir"]
     finalCreationDir = p.join(outputDir, "06_final_creation")
     os.makedirs(finalCreationDir, exist_ok=True)
-    config["pathInfo"]["finalCreationDir"] = finalCreationDir
+    config["runtimeInfo"]["madeByCreator"]["finalCreationDir"] = finalCreationDir
 
     ##TODO: this could be done during the capping step instead
     cappingAtomIds = get_capping_atom_ids(config)
@@ -22,8 +25,8 @@ def create_the_monster(config):
 
 ################################################################################
 def copy_final_frcmod(config):
-    finalCreationDir = config["pathInfo"]["finalCreationDir"]
-    mmTorsionCalculationDir = config["pathInfo"]["mmTorsionCalculationDir"]
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     frcmodFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.frcmod")
@@ -33,7 +36,7 @@ def copy_final_frcmod(config):
     
 ################################################################################
 def get_capping_atom_ids(config):
-    cappedMol2 = config["pathInfo"]["finalMol2"]
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
 
     cappingHeteroAtomNames = ["NN", "CN", "CC1", "OC", "CC2"]
     atomDf, bondDf  = parse_mol2(cappedMol2)
@@ -46,9 +49,9 @@ def get_capping_atom_ids(config):
 ################################################################################
 
 def create_final_lib_and_mol2(cappingAtomIds, config):
-    cappedMol2 = config["pathInfo"]["finalMol2"]
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
 
-    finalCreationDir = config["pathInfo"]["finalCreationDir"]
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     finalMol2 = p.join(finalCreationDir, f"{moleculeName}.mol2")
     finalLib= p.join(finalCreationDir, f"{moleculeName}.lib")

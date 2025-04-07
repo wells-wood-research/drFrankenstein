@@ -30,7 +30,7 @@ def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> Fil
     
     """
     ## unpack config
-    chargeGroups: dict = config["moleculeInfo"]["chargeGroups"]
+    chargeGroups: dict = config["runtimeInfo"]["madeByCharges"]["chargeGroups"]
 
 
     chargeConstraintsTxt = p.join(outDir, "charge_group_constraints.txt")
@@ -153,11 +153,8 @@ def set_up_directories(config: dict, protocol: str) -> dict:
         os.makedirs(orcaCalculationsDir, exist_ok=True)
         chargeFittingDir: DirectoryPath = p.join(chargeDir, "charge_fitting")
         os.makedirs(chargeFittingDir, exist_ok=True)
-        ## update config
-        config["pathInfo"].update({
-            "chargeDir": chargeDir,
-        })
-
+        config["runtimeInfo"]["madeByCharges"]["chargeDir"] = chargeFittingDir
+   
         return config
     
     elif protocol == "RESP2":
@@ -167,7 +164,7 @@ def set_up_directories(config: dict, protocol: str) -> dict:
         gasPhaseDir: DirectoryPath = p.join(chargeDir, "RESP2_gas_phase")
 
         ## update config
-        config["pathInfo"].update({
+        config["runtimeInfo"]["madeByCharges"].update({
             "chargeDir": chargeDir,
             "solvatedDir": solvatedDir,
             "gasPhaseDir": gasPhaseDir,

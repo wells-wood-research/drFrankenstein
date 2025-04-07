@@ -35,6 +35,9 @@ def main():
     ## deal with checkpointing, lets us skip steps if already done
     config = drYaml.read_config_with_checkpoints(config, outputDir)
     config = drYaml.init_config_checkpoints(config, outputDir)
+
+    ## initialise runtimeInfo
+    config = drYaml.initialise_runtime_info(config)
     ## set up function timers
     config = Timer.sort_output_directory(config)
     ## save config back to yaml
@@ -47,23 +50,25 @@ def main():
     if not checkpointInfo["cappingComplete"]:
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config)
-        # write_config_to_yaml(config, outputDir)
+        drYaml.write_config_to_yaml(config, outputDir)
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
         config = Wriggling_Doctor.conformer_generation_protocol(config)
         drYaml.write_config_to_yaml(config, outputDir)
-
+    ## run torsion scanning
     if not checkpointInfo["scanningComplete"]:
         drSplash.show_twist_splash()
         config = Twisted_Doctor.twist_protocol(config)
         drYaml.write_config_to_yaml(config, outputDir)
 
+    ## run charge calculations
     if not checkpointInfo["chargesComplete"]:
         drSplash.show_charge_splash()
         config = Charged_Doctor.charge_protocol(config)
         drYaml.write_config_to_yaml(config, outputDir)
 
+    ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
         config = Stitching_Doctor.torsion_fitting_protocol(config)

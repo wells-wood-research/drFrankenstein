@@ -36,7 +36,7 @@ from OperatingTools import drOrca
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_conformer_xyzs(config, seed = 1818):
     ## get conformer XYZ files
-    conformerXyzs = config["pathInfo"]["conformerXyzs"]
+    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     nConformers = config["torsionScanInfo"]["nConformers"]
 
     if nConformers == -1 or nConformers > len(conformerXyzs):
@@ -210,7 +210,7 @@ def set_up_directories(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
     torsionTopDir = p.join(outputDir, "03_torsion_scanning")
     os.makedirs(torsionTopDir, exist_ok=True)
-    config["pathInfo"]["torsionTopDir"] = torsionTopDir
+    config["runtimeInfo"]["madeByTwisting"]["torsionDir"] = torsionTopDir
 
     return config
 

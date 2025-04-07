@@ -40,14 +40,17 @@ def torsion_fitting_protocol(config: dict) -> dict:
         config (dict): updated config
     
     """
+    ## create runtimeInfo entry for stitching
+    config["runtimeInfo"]["madeByStitching"] = {}
+
     ## create output directories
     config = Stitching_Assistant.sort_out_directories(config)
     ## create a basic frcmod using antechamber
     config = MM_torsion_protocol.get_generate_initial_frcmod(config)
     ## get torsion tags from config
-    torsionTags = config["torsionScanInfo"]["torsionTags"]
+    torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     
-    nShuffles = 10   ## TODO: put in config
+    nShuffles = 3   ## TODO: put in config
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for shuffleIndex in range(nShuffles):
         print(f"Shuffle round {shuffleIndex+1}") ## TODO: SPLASH
@@ -61,8 +64,8 @@ def torsion_fitting_protocol(config: dict) -> dict:
             config = Stitching_Assistant.update_frcmod(config, torsionTag, torsionParameterDf)
     ## make a gif for each torsion being fitted - so satisfying!
     for torsionTag in torsionTags:
-        fittingGif = p.join(config["pathInfo"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
-        torsionFittingDir = p.join(config["pathInfo"]["qmmmParameterFittingDir"], torsionTag)
+        fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
+        torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True

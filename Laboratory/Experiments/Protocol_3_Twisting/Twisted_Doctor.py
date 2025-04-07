@@ -150,7 +150,6 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
         "dynamic_ncols": True
     }
 
-
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
 
     ## save on cores 

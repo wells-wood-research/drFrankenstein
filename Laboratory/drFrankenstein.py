@@ -42,7 +42,6 @@ def main():
     config = Timer.sort_output_directory(config)
     ## save config back to yaml
     drYaml.write_config_to_yaml(config, outputDir)
-    
 
     ## add capping groups to input molecule
     ## TODO: cope with staples etc. that need 2 or more capping groups
@@ -61,7 +60,6 @@ def main():
         drSplash.show_twist_splash()
         config = Twisted_Doctor.twist_protocol(config)
         drYaml.write_config_to_yaml(config, outputDir)
-
     ## run charge calculations
     if not checkpointInfo["chargesComplete"]:
         drSplash.show_charge_splash()

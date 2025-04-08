@@ -17,7 +17,7 @@ from typing import List, Tuple
 ## drFRANKENSTIEN LIBRARIES ##
 from . import Capping_Monster
 from . import Capping_Assistant
-from OperatingTools import Timer
+from OperatingTools import Timer, symmetry_tool
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()
@@ -62,6 +62,8 @@ def capping_protocol(config: dict) -> dict:
     cappedPdb = p.join(cappingDir, f"{moleculeName}_capped.pdb")
     pdbUtils.df2pdb(cappedDf, cappedPdb)
     config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = cappedPdb
+    symmetryData = symmetry_tool.symmetry_protocol(cappedPdb)
+    config["runtimeInfo"]["madeByCapping"]["symmetryData"] = symmetryData
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
 

@@ -136,16 +136,4 @@ def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     
-    outputDir = "/home/esp/scriptDevelopment/drFrankenstein/ALA_outputs/"
-    torsionTopDir = p.join(outputDir, "02_torsion_scanning")
-    torsionTag = 'O-C-CA-N'
-    torsionDir = p.join(torsionTopDir, f"torsion_{torsionTag}")
-    scanDir = p.join(torsionDir, "scan_data")
-    energyCsv = p.join(scanDir, "final_scan_energies.csv")
-    energyDf = pd.read_csv(energyCsv)
-
-    fittingDir = p.join(torsionDir, "fitting")
-
-    ##TODO: maxFunctions = 4
-    
-    fourier_transform_protocol(energyDf[torsionTag], torsionTag, fittingDir)
+    raise NotImplementedError

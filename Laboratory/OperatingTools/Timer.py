@@ -19,8 +19,6 @@ def time_function():
     Simple decorator to time the execution of a function
     Writes results to a csv, location is found in config
     """
-
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

@@ -16,7 +16,7 @@ import re
 from shutil import rmtree
 from scipy.signal import argrelextrema
 import random
-
+from pdbUtils import pdbUtils
 ## RDKIT IMPORTS ##
 from rdkit import Chem, RDLogger
 from rdkit.Chem import AllChem
@@ -216,11 +216,55 @@ def set_up_directories(config: dict) -> dict:
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def identify_rotatable_bonds(inputPdb) -> List[Tuple[int,int,int,int]]:
+def get_non_symmetric_rotatable_bonds(rotatableBonds, config):
+    ## unpack config
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
+    symmetryData = config["runtimeInfo"]["madeByCapping"]["symmetryData"]
+
+    ## get groups of atoms that are symmetrically equivalent
+    symmetricAtoms = [symmetryGroup for symmetryGroup in symmetryData if len(symmetryGroup) > 1]
+    ## create a dict that assigns an int to each group of symmetrical atoms
+    enumeratedSymmetryGroups = {i: atoms for i, atoms in enumerate(symmetricAtoms)}
+    ## create a dict that maps each atom to its assigned int
+    atomToSymmetryGroupIndex = {}
+    for key, atoms in enumeratedSymmetryGroups.items():
+        for atom in atoms:
+            atomToSymmetryGroupIndex[atom] = key
+
+    ## Replace atom names with assigned int
+    for bond in rotatableBonds:
+        bond['atoms'] = tuple(atomToSymmetryGroupIndex.get(atom, atom) for atom in bond['atoms'])
+
+    ## get unique rotatable  bonds
+    uniqueBonds = []
+    seenAtoms = set()
+    for bond in rotatableBonds:
+        atoms = bond['atoms']
+        if atoms not in seenAtoms:
+            seenAtoms.add(atoms)
+            uniqueBonds.append(bond)
+
+    ## made a dict that maps assigned int back to the first atom name in each group
+    symmetryGroupIndexToFirstAtom = {}
+    for key, atoms in enumeratedSymmetryGroups.items():
+        firstAtom = sorted(atoms)[0]
+        for atom in atoms:
+            symmetryGroupIndexToFirstAtom[key] = firstAtom
+    ## replace assigned int with first atom in each group
+    for bond in uniqueBonds:
+        bond['atoms'] = tuple(symmetryGroupIndexToFirstAtom.get(atom,atom) for atom in bond['atoms'])
+
+    return uniqueBonds
+
+
+
+def identify_rotatable_bonds(config) -> List[Tuple[int,int,int,int]]:
+    ## unpack config
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     # Load the molecule from a PDB file
-    mol = Chem.MolFromPDBFile(inputPdb, removeHs=False)
+    mol = Chem.MolFromPDBFile(cappedPdb, removeHs=False)
     # Identify torsion angles for rotatable bonds
-    torsionAngles = []
+    rotatableBonds = []
     for bond in mol.GetBonds():
         if bond.IsInRing():
             continue
@@ -233,11 +277,14 @@ def identify_rotatable_bonds(inputPdb) -> List[Tuple[int,int,int,int]]:
             atom3Name = atom3.GetPDBResidueInfo().GetName().strip()
 
             ## dont scan amide bonds
-            if atom2Name in ["NN", "C"] and atom3Name in ["NN", "C"]:
+            nTerminalAtomNames = config["moleculeInfo"]["nTermini"]
+            cTerminalAtomNames = config["moleculeInfo"]["cTermini"]
+            nTerminalAmideAtoms = nTerminalAtomNames + ["CC1"]
+            cTerminalAmideAtoms = cTerminalAtomNames + ["NN"]
+            if atom2Name in nTerminalAmideAtoms and atom3Name in nTerminalAmideAtoms:
                 continue
-            if atom2Name in ["N", "CC1"] and atom3Name in ["N", "CC1"]:
+            if atom2Name in cTerminalAmideAtoms and atom3Name in cTerminalAmideAtoms:
                 continue
-
             
             if not (atom2.IsInRing() or atom3.IsInRing()):
                 # Find neighboring atoms for torsion angle
@@ -250,7 +297,7 @@ def identify_rotatable_bonds(inputPdb) -> List[Tuple[int,int,int,int]]:
                         atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
                         atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
 
-                        ## dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
+                        # dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
                         if atom1Name.startswith("H"):
                             if atom2Name.startswith("C"):
                                 continue
@@ -258,13 +305,12 @@ def identify_rotatable_bonds(inputPdb) -> List[Tuple[int,int,int,int]]:
                             if atom3Name.startswith("C"):
                                 continue
                         ## add torsion data to list
-                        torsionAngles.append({
+                        rotatableBonds.append({
                             'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
                             'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
                         })
 
-
-    return torsionAngles
+    return rotatableBonds
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def process_scan_data(scanDfs: List[pd.DataFrame],

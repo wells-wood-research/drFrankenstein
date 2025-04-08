@@ -44,10 +44,12 @@ def twist_protocol(config):
     config = Twisted_Assistant.set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
-    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config["runtimeInfo"]["madeByCapping"]["cappedPdb"])
+    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config)
 
-    nRotatableBonds = len(rotatableBonds)
-    for torsionIndex, rotatableBond in enumerate(rotatableBonds):
+    uniqueRotatableBonds = Twisted_Assistant.get_non_symmetric_rotatable_bonds(rotatableBonds, config)
+
+    nRotatableBonds = len(uniqueRotatableBonds)
+    for torsionIndex, rotatableBond in enumerate(uniqueRotatableBonds):
         config = run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config)
     config["checkpointInfo"]["scanningComplete"] = True
     return config

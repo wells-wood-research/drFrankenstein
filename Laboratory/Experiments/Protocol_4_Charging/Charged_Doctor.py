@@ -164,7 +164,8 @@ def run_qm_calculations_for_charge_fitting(orcaDir: DirectoryPath,
         "ascii": "-ϟ",  
         "colour": "yellow",
         "unit":  "scan",
-        "dynamic_ncols": True
+        "dynamic_ncols": True,
+        "leave": True
     }
     ## run in serial
     if debug:

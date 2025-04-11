@@ -124,13 +124,19 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
 
 def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
     argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
+
+    purpleText = "\033[35m"
+    resetTextColor = "\033[0m"
+
+    ## set up progress bar
     tqdmBarOptions = {
-        "desc": f"\033[32mRunning Single-Points \033[0m",
-        "ascii": "-▒",  
-        "colour": "magenta",
+        "desc": f"{purpleText}Running Single-Points {resetTextColor}",
+        "ascii": "-🗲→",    
+        "colour": "yellow",
         "unit":  "scan",
-        "dynamic_ncols": True
+        "dynamic_ncols": True,
     }
+
     with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
         results = pool.map(do_the_single_point_worker,
                             make_single_arguments(argsList),
@@ -145,12 +151,16 @@ def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
     return singlePointDfs
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
+    greenText = "\033[32m"
+    resetTextColor = "\033[0m"
+
+    ## set up progress bar
     tqdmBarOptions = {
-        "desc": f"\033[32mScanning Torsion Angle\033[0m",
-        "ascii": "-▒",  
-        "colour": "green",
+        "desc": f"{greenText}Scanning Torsion Angle{resetTextColor}",
+        "ascii": "-🗲→",    
+        "colour": "yellow",
         "unit":  "scan",
-        "dynamic_ncols": True
+        "dynamic_ncols": True,
     }
 
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
@@ -195,7 +205,7 @@ def do_the_twist_worker(args):
     ## unpack args tuple
     conformerXyz, torsionScanDir,  torsionIndexes, config= args
     try:
-        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config)
+        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config=config)
         return scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir
     except FileNotFoundError as e:
         ## this is fine TODO: make a custom error to look for - this is when a scan crashes
@@ -205,6 +215,7 @@ def do_the_twist_worker(args):
         raise(e)
     
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def do_the_twist(conformerXyz: FilePath,
                  torsionScanDir: DirectoryPath,
                  torsionIndexes: List[int],

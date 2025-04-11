@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 ## drFrankenstein LIBRARIES ##
-from OperatingTools import drOrca
+from OperatingTools import file_parsers
 
 ## CLEAN CODE ##
 class FilePath:
@@ -16,6 +16,54 @@ class DirectoryPath:
     pass
 
 
+
+def find_tip3p_water_params() -> FilePath:
+
+    """
+    Looks through drFrankenstein's src directory to find TIP3P water params in orcaFF format
+
+    Args:
+        None
+    Returns:
+        nmePdb (FilePath): path to NME.pdb
+        acePdb (FilePath): path to ACE.pdb
+    """
+    ## get location of this file
+    chargeSrcDir = p.dirname(p.abspath(__file__))
+    tip3pParams = p.join(chargeSrcDir, "TIP3P.ORCAFF.prms")
+    return tip3pParams
+
+def get_qm_atoms_for_solvated_system(xyzFile: FilePath, config:dict) -> dict:
+    """
+    Simple function that gets a contiguous list of atom indexes (starting with 0)
+    for orca to use as a qm region. 
+    """
+    xyzDf = file_parsers.xyz2df(xyzFile)
+    nAtoms = len(xyzDf.index)
+    qmAtoms = "{" + "0:" + str(nAtoms-1) + "}"
+
+    config["runtimeInfo"]["madeByCharges"]["qmAtoms"] = qmAtoms
+    return config
+
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def how_many_waters_for_solvator(xyzFile: FilePath, multiplier=2) -> int:
+    """
+    Simple function that decides how many water molecules to add in a SOLVATOR calculation
+    Currently we just do 2 x nHeavyAtoms
+    TODO: This could be more detailed?
+    
+    Args: 
+        xyzFile (FilePath): an XYZ file of our molecule
+        multiplier (int): nWaters = nHeavyAtoms * multiplier
+
+    Returns:
+        nWaters (int):  how many water molecules to add in a SOLVATOR calculation
+    """
+    xyzDf = file_parsers.xyz2df(xyzFile)
+    heavyAtomDf = xyzDf[xyzDf["element"]!="H"]
+    nHeavyAtoms = len(heavyAtomDf.index)
+    nWaters = nHeavyAtoms * multiplier
+    return nWaters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> FilePath:
     """
@@ -68,11 +116,13 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
         calculationDir = p.join(orcaCalculationsDir, conformerName)
         if not p.isdir:
             continue
-        singlePointOutFile = p.join(calculationDir, "orca_sp.out")
+        ## find ORCA.out file
+        singlePointOutFile = [p.join(calculationDir, file) for file
+                               in os.listdir(calculationDir)
+                               if p.splitext(file)[1] == ".out"][0]
         singlePointEnergy = find_final_single_point_energy(singlePointOutFile)
         singlePointData[conformerName]["Energy"] = singlePointEnergy
         singlePointData[conformerName]["Path"] = p.join(chargeFittingDir, f"{conformerName}.molden.input")
-
 
     singlePointDf =pd.DataFrame.from_dict(singlePointData, orient='index')
 
@@ -149,12 +199,11 @@ def set_up_directories(config: dict, protocol: str) -> dict:
 
     #### FOR RESP FITTING, just run once ##
     if protocol == "RESP":
-        orcaCalculationsDir: DirectoryPath = p.join(chargeDir, "orca_calculations")
+        orcaCalculationsDir: DirectoryPath = p.join(chargeDir, "01_orca_calculations")
         os.makedirs(orcaCalculationsDir, exist_ok=True)
-        chargeFittingDir: DirectoryPath = p.join(chargeDir, "charge_fitting")
+        chargeFittingDir: DirectoryPath = p.join(chargeDir, "02_charge_fitting")
         os.makedirs(chargeFittingDir, exist_ok=True)
         config["runtimeInfo"]["madeByCharges"]["chargeDir"] = chargeFittingDir
-   
         return config
     
     elif protocol == "RESP2":
@@ -169,5 +218,23 @@ def set_up_directories(config: dict, protocol: str) -> dict:
             "solvatedDir": solvatedDir,
             "gasPhaseDir": gasPhaseDir,
         })
-
+        return config
+    elif protocol == "SOLVATOR":
+        ## create output directories for orca single-point calculations and MultiWFN charge fitting
+        solvatorDir = p.join(chargeDir, "01_solvator_calculations")
+        os.makedirs(solvatorDir, exist_ok=True)
+        qmmmOptDir = p.join(chargeDir, "02_QMMM_optimisations")
+        os.makedirs(qmmmOptDir, exist_ok=True)
+        qmmmSinglepointDir = p.join(chargeDir, "03_QMMM_singlepoints")
+        os.makedirs(qmmmSinglepointDir, exist_ok=True)
+        fittingDir = p.join(chargeDir, "04_charge_fitting")
+        os.makedirs(fittingDir, exist_ok=True)
+        ## update config
+        config["runtimeInfo"]["madeByCharges"].update({
+            "chargeDir": chargeDir,
+            "solvatorDir": solvatorDir,
+            "qmmmOptDir": qmmmOptDir,
+            "qmmmSinglepointDir": qmmmSinglepointDir,
+            "fittingDir": fittingDir
+        })
         return config

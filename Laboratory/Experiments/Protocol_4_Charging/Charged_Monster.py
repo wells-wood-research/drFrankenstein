@@ -13,15 +13,159 @@ from copy import deepcopy
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import drOrca
 from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
-
+from . import Charged_Assistant
 ## CLEAN CODE ##
 class FilePath:
     pass
 class DirectoryPath:
     pass
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_qmmm_opt(qmmmOptArgs):
+    ## unpack args
+    solvatedXyz, singlepointDir, config = qmmmOptArgs
+
+    ## unpack config
+    qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
+    solvatedParams = config["runtimeInfo"]["madeByCharges"]["solvatedParams"]
+
+    ## get conformer name, make a dir for qmmm opt calculations
+    conformerName = p.basename(solvatedXyz).split(".")[0]
+    
+    conformerQmmmOptDir = p.join(singlepointDir, f"{conformerName}")
+    os.makedirs(conformerQmmmOptDir, exist_ok=True)
+
+    qmmmOptOrcaInput = drOrca.make_orca_input_qmmm_opt(inputXyz = solvatedXyz,
+                                                    outDir = conformerQmmmOptDir,
+                                                    moleculeInfo = config["moleculeInfo"],
+                                                    qmMethod = config["chargeFittingInfo"]["optMethod"],
+                                                    qmAtoms=qmAtoms,
+                                                    parameterFile=solvatedParams)
+    qmmmOptOrcaOutput = p.join(conformerQmmmOptDir, "QMMM_orca_opt.out")
+    solvatedOptXyz = p.join(conformerQmmmOptDir, f"{conformerName}.xyz")
+
+    if not p.isfile(qmmmOptOrcaOutput):
+        drOrca.run_orca(qmmmOptOrcaInput, qmmmOptOrcaOutput, config)
+        optXyz = p.join(conformerQmmmOptDir, "QMMM_orca_opt.xyz")
+        copy(optXyz, solvatedOptXyz)
+
+    return solvatedOptXyz
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_orca_singlepoint_for_charge_calculations(args) -> None:
+def run_qmmm_singlepoint(qmmmSinglepointArgs):
+
+    ## unpack args
+    solvatedOptXyz, singlepointDir, fittingDir, config = qmmmSinglepointArgs 
+    ## unpack config
+    qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
+    solvatedParams = config["runtimeInfo"]["madeByCharges"]["solvatedParams"]
+
+    ## get conformer name, make a dir for qmmm opt calculations
+    conformerName = p.basename(solvatedOptXyz).split(".")[0]
+    
+    conformerQmmmSinglepointDir = p.join(singlepointDir, f"{conformerName}")
+    os.makedirs(conformerQmmmSinglepointDir, exist_ok=True)
+
+    qmmmSinglepointOrcaInput = drOrca.make_orca_input_qmmm_singlepoint(inputXyz=solvatedOptXyz,
+                                                                       outDir= conformerQmmmSinglepointDir,
+                                                                       moleculeInfo= config["moleculeInfo"],
+                                                                       qmMethod= config["chargeFittingInfo"]["singlePointMethod"],
+                                                                       qmAtoms=qmAtoms,
+                                                                       parameterFile=solvatedParams)
+    qmmmSinglepointOrcaOutput = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp.out")
+    if not p.isfile(qmmmSinglepointOrcaOutput):
+        drOrca.run_orca(qmmmSinglepointOrcaInput, qmmmSinglepointOrcaOutput, config)
+    
+    ## create molden file for charge fitting TODO: move to its own func
+    call(["orca_2mkl", p.join(conformerQmmmSinglepointDir,"QMMM_orca_sp"), "-molden"], stdout=DEVNULL)
+    singlePointMolden = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp.molden.input")
+
+    destMolden = p.join(fittingDir, f"{conformerName}.molden.input")
+
+    copy(singlePointMolden, destMolden)
+
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
+    """
+    Creates an ORCAFF.prms file for a solvated XYZ file
+    1. Use orca_mm -makeff to make a forcefield file for just the unsolvated molecule
+    2. Use orca_mm -repeatff to repeat a pre-made TIP3P water parameter * nWaters
+    3. Ise orca_mm -mergeff to combine the results of steps 1 and 2   
+
+    Args:
+        unsolvatedXyz (FilePath): Path to a conformerXYZ moved to the qmmmParameters dir
+        config (dict): Contains all run information
+    Returns:
+        config (dict): updated config
+    """
+
+    ## unpack config
+    qmmmParameterDir = config["runtimeInfo"]["madeByCharges"]["qmmmParameterDir"]
+    nWaters  = config["runtimeInfo"]["madeByCharges"]["nWaters"]
+    ## Create a dummy parameter set for the molecule without solvating waters
+    makeffCommand = ["orca_mm", "-makeff", unsolvatedXyz]
+    call(makeffCommand)
+    unsolvatedParams = p.join(qmmmParameterDir, "unsolvated.ORCAFF.prms")
+
+
+    ## Create a parameter file for nWaters TIP3P water molecules
+    tip3pParamsSource = Charged_Assistant.find_tip3p_water_params()
+    tip3pParams = p.join(qmmmParameterDir, "TIP3P.ORCAFF.prms")
+    copy(tip3pParamsSource, tip3pParams)
+    repeatffCommand = ["orca_mm", "-repeatff", tip3pParams, str(nWaters)]
+    call(repeatffCommand)
+    watersParams = p.join(qmmmParameterDir, f"TIP3P_repeat{nWaters}.ORCAFF.prms")
+
+    ## Combine unsolvated parameters with water parameters
+    mergeffCommand = ["orca_mm", "-mergeff", unsolvatedParams, watersParams]
+    call(mergeffCommand, stdout=DEVNULL)
+    solvatedParams = p.join(qmmmParameterDir, "unsolvated_merged.ORCAFF.prms")
+
+    config["runtimeInfo"]["madeByCharges"]["solvatedParams"] = solvatedParams
+
+    return config
+
+
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_orca_solvator_for_charge_calculations(args: tuple) -> FilePath:
+    """
+    Runs ORCA's SOLVATOR protocol to place explicit water molecules around the conformer of interest
+
+    This is much faster than using the non-STOCHASTIC cluster mode in the solvator
+
+    Args:
+        args (tuple): to be unpacked, containing:
+            TODO
+    Returns:
+        solvatedXyz (FilePath): XYZ file containing the solvated conformer
+    
+    """
+    ## unpack config
+    conformerXyz, solvatorDir, chargeFittingInfo,  moleculeInfo, nWaters, config = args
+    ## get conformer name, make a dir for solvator + opt calculations
+    conformerName = p.basename(conformerXyz).split(".")[0]
+    
+    conformerSolvatorDir = p.join(solvatorDir, conformerName)
+    os.makedirs(conformerSolvatorDir, exist_ok=True)
+
+    solvatorOrcaInput = drOrca.make_orca_input_for_solvator(inputXyz = conformerXyz,
+                                                    outDir = conformerSolvatorDir,
+                                                    moleculeInfo = moleculeInfo,
+                                                    qmMethod = chargeFittingInfo["optMethod"],
+                                                    solvationMethod = chargeFittingInfo["optSolvationMethod"],
+                                                    nWaters= nWaters)
+    solvatorOrcaOutput = p.join(conformerSolvatorDir, "SOLVATOR_orca.out")
+    solvatedXyz = p.join(conformerSolvatorDir, f"{conformerName}.xyz")
+
+    if not p.isfile(solvatorOrcaOutput):
+        drOrca.run_orca(solvatorOrcaInput, solvatorOrcaOutput, config)
+        outXyz = p.join(conformerSolvatorDir, "SOLVATOR_orca.solvator.xyz")
+        ## rename the xyz file  
+        os.rename(outXyz, solvatedXyz)
+
+    return solvatedXyz
+
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def run_orca_singlepoint_for_charge_calculations(args) -> None: 
     conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config = args
     conformerName = p.basename(conformerXyz).split(".")[0]
     
@@ -253,16 +397,19 @@ def run_charge_fitting(config: dict,
         child.sendline("2")
 
         # Monitor the output for progress updates
-
+        orangeText = "\033[38;5;172m"
+        resetTextColor = "\033[0m"
         # Initialize tqdm progress bar
         tqdmBarOptions = {
-        "desc": f"Performing Charge Fitting",
-        "ascii": "-ϟ",  
+        "desc": f"{orangeText}Performing Charge Fitting{resetTextColor}",
+        "ascii": "-ϟ→",  
         "colour": "yellow",
         "unit":  "calculations",
         "dynamic_ncols": True,
         "leave": True
             }
+
+
         totalTickProgress = nConformers * 100.00
         progress_bar = tqdm(total=totalTickProgress, **tqdmBarOptions)
         try:

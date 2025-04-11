@@ -19,6 +19,8 @@ class FilePath:
 class DirectoryPath:
     pass
 
+
+from OperatingTools import file_parsers
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def shuffle_torsion_tags(torsionTags: list) -> list:
     """
@@ -604,7 +606,7 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
     """
 
     inDf = pdbUtils.pdb2df(inPdb)
-    xyzDf = xyz2df(xyzFile)
+    xyzDf = file_parsers.xyz2df(xyzFile)
 
     inDf["X"] = xyzDf["x"]
     inDf["Y"] = xyzDf["y"]
@@ -612,30 +614,7 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
 
     pdbUtils.df2pdb(inDf, outPdb)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
-    """
-    converts an xyz file to a pd.DataFrame
 
-    Args:
-        xyzFile (FilePath): input XYZ file
-
-    Returns:
-        xyzDf (pd.DataFrame): dataframe containing index, element and coords
-    """
-
-    xyzData = []
-    atomIndex = 0
-    with open(xyzFile, "r") as f:
-        lines = f.readlines()[2:]
-        for line in lines:
-            atomIndex +=1
-            lineData = line.split()
-            xyzData.append({"index": atomIndex,
-                            "element": lineData[0],
-                              "x": float(lineData[1]), 
-                              "y": float(lineData[2]),
-                                "z": float(lineData[3])})
-    return pd.DataFrame(xyzData)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def make_prmtop_and_inpcrd(inMol2: FilePath,

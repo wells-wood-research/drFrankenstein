@@ -99,8 +99,9 @@ def show_torsion_being_scanned(torsionTag, torsionIndex, nTorsions) -> None:
     yellowText = "\033[33m"
     resetTextColor = "\033[0m"
     tealText = "\033[38;5;37m"     
-    print(f"{yellowText}Scanning torsion {greenText}{torsionTag}{yellowText} ({torsionIndex+1}/{nTorsions})")
-
+    print(f"{yellowText}🗲 🗲{' '*8}SCANNING TORSION:{' '*8}\
+[{' '*1}{greenText}{torsionTag}{yellowText}{' '*1}]{' '*8}\
+{resetTextColor}({torsionIndex+1}/{nTorsions}){yellowText}{' '*58}🗲 🗲")
 
 
 def show_stitch_splash() -> None:

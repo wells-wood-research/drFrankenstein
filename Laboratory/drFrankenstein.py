@@ -48,33 +48,34 @@ def main():
     checkpointInfo = config["checkpointInfo"]
     if not checkpointInfo["cappingComplete"]:
         print("Running Capping Protocol")
-        config = Capping_Doctor.capping_protocol(config)
+        config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
-        config = Wriggling_Doctor.conformer_generation_protocol(config)
+        config = Wriggling_Doctor.conformer_generation_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
     ## run torsion scanning
     if not checkpointInfo["scanningComplete"]:
         drSplash.show_twist_splash()
-        config = Twisted_Doctor.twist_protocol(config)
+        config = Twisted_Doctor.twist_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
     ## run charge calculations
     if not checkpointInfo["chargesComplete"]:
         drSplash.show_charge_splash()
-        config = Charged_Doctor.charge_protocol(config)
+        config = Charged_Doctor.charge_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
-        config = Stitching_Doctor.torsion_fitting_protocol(config)
+        config = Stitching_Doctor.torsion_fitting_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["finalCreationComplete"]:
         drSplash.show_creation_splash()
-        drCreator.create_the_monster(config)
+        drCreator.create_the_monster(config=config)
     
     
     drSplash.show_what_have_we_created(config["moleculeInfo"]["moleculeName"])

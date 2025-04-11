@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 
 ## drFRANKENSTEIN MODULES ##
 from . import Twisted_Assistant
-from OperatingTools import drOrca
+from OperatingTools import drOrca, Timer
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
@@ -111,6 +111,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 
     return backwardsScanDf, backwardsDir  
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
 
     scanXyzs = Twisted_Assistant.find_scan_xyz_files(scanDir, expectedNumberOfFiles=config["torsionScanInfo"]["nScanSteps"])

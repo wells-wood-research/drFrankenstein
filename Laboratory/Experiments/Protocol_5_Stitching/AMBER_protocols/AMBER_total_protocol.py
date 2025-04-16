@@ -14,9 +14,14 @@ from concurrent.futures import ProcessPoolExecutor
 from mpire import WorkerPool
 from mpire.utils import make_single_arguments
 
-## drFRANKENSTEIN LIBRARIES ##
-from . import Stitching_Assistant
+## OPENMM LIBRARIES
+import openmm.app as app
+import openmm as openmm
+import  openmm.unit  as unit
 
+## drFRANKENSTEIN LIBRARIES ##
+from .. import Stitching_Assistant
+from . import AMBER_helper_functions
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -106,7 +111,7 @@ def single_point_worker(args):
 
     except Exception as e:
         raise(e)
-        return None
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, debug=False):
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
@@ -117,10 +122,10 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
                         for file in os.listdir(scanDir) 
                         if re.match(r'^orca_scan\.\d\d\d\.xyz$', file)])
 
-    prmtop, inpcrd = make_prmtop_inpcrd(trajXyzs[0], fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug)
+    prmtop, inpcrd = AMBER_helper_functions.make_prmtop_inpcrd(trajXyzs[0], fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug)
 
-    trajPdbs = convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
-    singlePointEnergies = Stitching_Assistant.run_mm_singlepoints(trajPdbs, prmtop, inpcrd)
+    trajPdbs = Stitching_Assistant.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
+    singlePointEnergies = run_mm_singlepoints(trajPdbs, prmtop, inpcrd)
 
 
     singlePointEnergyDf = pd.DataFrame(singlePointEnergies, columns=["TrajIndex", "Energy"])
@@ -137,37 +142,40 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
     return singlePointEnergyDf
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir):
-    trajPdbs = []
-    for trajXyz in trajXyzs:
-        trajIndex = trajXyz.split(".")[1]
-        trajPdb = p.join(fittingRoundDir, f"orca.{trajIndex}.pdb")
-        Stitching_Assistant.update_pdb_coords(cappedPdb, trajXyz, trajPdb)
-        trajPdbs.append(trajPdb)
+def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd: FilePath) -> float:
+    """
+    Runs a singlepoint energy calculation at the MM level 
+    using OpenMM
 
-    return trajPdbs
-##########################################################
-def make_prmtop_inpcrd(trajXyz, fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug=False):
+    Args:
+        prmtop (FilePath): topology file for AMBER
+        impcrd (FilePath): coordinate file for AMBER
 
-    trajIndex = trajXyz.split(".")[1]
+    Returns:
+        singlePointEnergy (float): energy of prmtop // inpcrd
+    """
+    # Load Amber files and create system
+    prmtop: app.Topology = app.AmberPrmtopFile(moleculePrmtop)
 
-    os.makedirs(fittingRoundDir, exist_ok=True)
-    os.chdir(fittingRoundDir)
+    # Create the system.
+    system: openmm.System = prmtop.createSystem(nonbondedMethod=app.NoCutoff,
+                                                nonbondedCutoff=1 * unit.nanometer,
+                                                constraints=None)
 
-    trajPdb = p.join(fittingRoundDir, f"orca_{trajIndex}.pdb")
-    Stitching_Assistant.update_pdb_coords(cappedPdb, trajXyz, trajPdb)
+    integrator = openmm.LangevinIntegrator(300, 1/unit.picosecond,  0.0005*unit.picoseconds)
+    platform = openmm.Platform.getPlatformByName('CPU')
 
-    trajMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}.mol2")
-    Stitching_Assistant.pdb2mol2(trajPdb, trajMol2, fittingRoundDir)
+    simulation = app.Simulation(prmtop.topology, system, integrator, platform)
+    ## set coordinates of simulation 
+    singlePointEnergies = []
+    for trajPdb in trajPdbs:
+        pdbFile = app.PDBFile(trajPdb)
+        simulation.context.setPositions(pdbFile.positions)
+        state: openmm.State = simulation.context.getState(getPositions=True, getEnergy=True)
+        singlePointEnergy = state.getPotentialEnergy() / unit.kilocalories_per_mole
 
-    chargedMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}_charged.mol2")
-    Stitching_Assistant.edit_mol2_partial_charges(trajMol2, chargesDf, chargedMol2)
+        trajIndex = trajPdb.split(".")[0].split("_")[1]
+        singlePointEnergies.append((trajIndex,singlePointEnergy))
 
-    renamedMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}_charged_renamed.mol2")
-    Stitching_Assistant.edit_mo2_atom_types(chargedMol2, renamedMol2)
-    prmtop, inpcrd = Stitching_Assistant.make_prmtop_and_inpcrd(renamedMol2, moleculeFrcmod, fittingRoundDir, trajIndex)
-
-    return prmtop, inpcrd
-
-##########################################################
-
+    return singlePointEnergies
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

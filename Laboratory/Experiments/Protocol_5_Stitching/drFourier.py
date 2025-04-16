@@ -18,7 +18,7 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=10):
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=10, forcefeild = "CHARMM"):
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)
@@ -31,17 +31,19 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     angle: np.array = np.arange(signalLength) * sampleSpacing
     ## convert data to dataframe
     fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies, amplitudes, phases)
+    paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
 
-    amberParamDf: pd.DataFrame = convert_params_to_amber_format(fourierDf)
-    ## construct cosine components from parameters
-    reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components(amberParamDf, angle, maxFunctions)
-    ## plot signal and components
-    # plot_signal_and_components(angle, qmTorsionEnergy, reconstructedSignal, cosineComponents, torsionFittingDir , torsionTag)
-    ## write data to csv file
+    if forcefeild == "AMBER":
+        ## construct cosine components from parameters
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxFunctions)
+
+    elif forcefeild == "CHARMM":
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxFunctions)
+        ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
-    amberParamDf.iloc[:nFunctionsUsed].to_csv(outCsv)
+    paramDf.iloc[:nFunctionsUsed].to_csv(outCsv)
 
-    return amberParamDf.iloc[:nFunctionsUsed], cosineComponents   
+    return paramDf.iloc[:nFunctionsUsed], cosineComponents   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
@@ -51,20 +53,70 @@ def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, ph
     return dataDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_params_to_amber_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
-    amberDf = pd.DataFrame()
-    amberDf["Amplitude"] = fourierDf["Amplitude"]
-    amberDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
-    amberDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
+def convert_params_to_amber_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+    paramDf = pd.DataFrame()
+    paramDf["Amplitude"] = fourierDf["Amplitude"]
+    paramDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
+    paramDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
 
     ## remove period == 0 (DC) Signal
-    amberDf = amberDf[amberDf["Period"] > 0]
+    paramDf = paramDf[paramDf["Period"] > 0]
 
-    amberDf.sort_values(by="Amplitude", ascending=False, inplace=True,ignore_index=True)
-    return amberDf
+    paramDf.sort_values(by="Amplitude", ascending=False, inplace=True,ignore_index=True)
+    return paramDf
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+    charmmDf = pd.DataFrame()
+    charmmDf["Amplitude"] = fourierDf["Amplitude"]
+    charmmDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
+    charmmDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
+    ## remove period == 0 (DC) Signal
+    charmmDf = charmmDf[charmmDf["Period"] > 0]
+    charmmDf.sort_values(by="Amplitude", ascending=False, inplace=True, ignore_index=True)
+
+    return charmmDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components(amberParamDf: pd.DataFrame,
+def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
+                                 angle: np.array,
+                                     maxFunctions: int,
+                                       tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+    
+    amplitudes = charmmParamDf["Amplitude"]
+    periods = charmmParamDf["Period"]
+    phases = charmmParamDf["Phase"]
+
+    sample_spacing = 10
+    signalLength = 36
+    
+    # Angle array
+    angle = np.arange(signalLength) * sample_spacing  # Shape: (N,)
+    
+    # Initialize reconstructed signal
+    reconstructedSignal = np.zeros(signalLength)
+    previousSignal = np.zeros(signalLength)
+
+    ## init mean average error
+    meanAverageError = np.inf
+    ## collect cosine components for plotting
+    cosineComponents = []
+    # Construct each cosine component
+    while True:
+        for nFunctionsUsed in range(1, maxFunctions+1):
+            charmmComponent =  amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * (angle - phases[nFunctionsUsed]))))
+
+            previousSignal = reconstructedSignal.copy()
+            reconstructedSignal += charmmComponent
+            meanAverageError =  np.mean(np.abs(reconstructedSignal - previousSignal))
+            cosineComponents.append((nFunctionsUsed , charmmComponent))
+            if meanAverageError < tolerance:
+                break
+        if meanAverageError < tolerance:
+            break
+            
+    return reconstructedSignal, cosineComponents, nFunctionsUsed
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
                                  angle: np.array,
                                      maxFunctions: int,
                                        tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
@@ -100,7 +152,6 @@ def construct_cosine_components(amberParamDf: pd.DataFrame,
                 break
         if meanAverageError < tolerance:
             break
-            
     return reconstructedSignal, cosineComponents, nFunctionsUsed
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

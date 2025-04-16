@@ -9,10 +9,7 @@ from pdbUtils import pdbUtils
 from shutil import move
 import random
 
-## OPENMM LIBRARIES
-import openmm.app as app
-import openmm as openmm
-import  openmm.unit  as unit
+
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -22,12 +19,38 @@ class DirectoryPath:
 
 from OperatingTools import file_parsers
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-def shuffle_torsion_tags(torsionTags: list) -> list:
+def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
+                             cappedPdb: FilePath,
+                               fittingRoundDir: DirectoryPath) -> list[FilePath]:
+    """
+    Effectively converts a list of XYZ files to PDB
+    In practice, updates a static PDB file with coords from a list of XYZ files
+
+    Args:
+        trajXyzs (list[FilePath]): a list of XYZ files
+        cappedPdb (FilePath): a PDB file containing correct atom data
+        fittingRoundDir (DirectoryPath): the output dir for this function
+    
+    """
+    trajPdbs = []
+    for trajXyz in trajXyzs:
+        trajIndex = trajXyz.split(".")[1]
+        trajPdb = p.join(fittingRoundDir, f"orca.{trajIndex}.pdb")
+        update_pdb_coords(cappedPdb, trajXyz, trajPdb)
+        trajPdbs.append(trajPdb)
+
+    return trajPdbs
+
+
+
+
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
+def shuffle_torsion_tags(torsionTags: list[str]) -> list[str]:
     """
     Re-orders the torsion tags in a random order
     
     Args:
-        torsionTags (list): the torsion tags associated with our torsions
+        torsionTags (list[str]): the torsion tags associated with our torsions
     Returns:
         shuffledTorsionTags: torsionTags re-ordered
     """
@@ -36,75 +59,6 @@ def shuffle_torsion_tags(torsionTags: list) -> list:
 
     return shuffledTorsionTags
 
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def update_frcmod(config, torsionTag, torsionParamDf):
-    """
-    Updates a frcmod file with a torsion parameter block
-    
-    Args:
-        config (dict): the drFrankenstein config containing all run information
-        torsionTag (str): the torsion tag for the torsion we are updating
-        torsionParamDf (pd.DataFrame): the torsion parameters for the torsion we are updating
-    Returns:    
-        config (dict): updated config
-    """
-    ## unpack config ##
-    inFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
-    tmpFrcmod = p.splitext(inFrcmod)[0] + "_tmp.frcmod"
-    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
-    
-    ## construct torsion identifier forwards and reversed for finding line in frcmod ##
-    atomNames = torsionTag.split("-")
-    atomTypes = [atomTypeMap[name] for name in atomNames]
-    atomTypesReversed = atomTypes[::-1]
-    torsionIdentifier = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypes])
-    torsionIdentifierReversed = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypesReversed])
-
-    ## init a bool to determine whether to write lines to frcmod
-    writeLines = False
-    ## init new torsion block as an empty string
-    newTorsionBlock = ""
-
-    ##TODO: multiplicity from symmetry
-    multiplicity = 1
-
-    ## read through torsionParamDf and write new torsion block to add to frcmod
-    for _, row in torsionParamDf.iloc[:-1].iterrows():
-        amplitude = f"{row['Amplitude']:.3f}"
-        phase = f"{row['Phase']:.3f}"
-        period = f"{-row['Period']:.3f}"
-        newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
-                            f"{amplitude:>5}{phase:>14}{period:>16}"
-                            f"\t\tMADE BY drFRANKENSTEIN\n")
-    ## write last row TODO: (why is this separate????)
-    lastRow = torsionParamDf.iloc[-1]
-    amplitude = f"{lastRow['Amplitude']:.3f}"
-    phase = f"{lastRow['Phase']:.3f}"
-    period = f"{lastRow['Period']:.3f}"
-    newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
-                        f"{amplitude:>5}{phase:>14}{period:>16}"
-                        f"\t\tMADE BY drFRANKENSTEIN\n")
-    
-    ## init a bool to determine whether to write lines to frcmod
-    writeLines = False
-    ## read through frcmod and write to tmp frcmod
-    with open(inFrcmod, "r") as f, open(tmpFrcmod, "w") as tmp:
-        for line in f:
-            ## dont copy params for this torsion
-            if  line.startswith(torsionIdentifier) or line.startswith(torsionIdentifierReversed):
-                continue
-            elif line.startswith("DIHE"):
-                writeLines = True
-                tmp.write(line)
-            elif writeLines:
-                tmp.write(newTorsionBlock)
-                writeLines = False
-                tmp.write(line)
-            else:
-                tmp.write(line)
-    ## owerwrite frcmod
-    move(tmpFrcmod, inFrcmod)
-    return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pdb2mol2(inPdb: FilePath,
               outMol2: FilePath,
@@ -282,176 +236,8 @@ def create_frcmod_file(chargesMol2: FilePath,
 
     return molFrcmod
 
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def extract_torsion_parameters(config: dict, torsionTag: str) -> dict:
-    """
-    Reads through a frcmod file 
-    Finds torsion parameters for each torsion that we have scanned
-    Returns a dict with the torsion tag as the key and the torsion parameters as the value
-
-    Args:
-        molFrcmod (FilePath): frcmod file
-        atomTypeMap (dict): dict mapping atom names to atom types
-        config (dict): config dict
-
-    Returns:
-        mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
-    """
-
-    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
-    parsedFrcmod: dict = parse_frcmod(molFrcmod)
-
-    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
-
-    ## get torsion atom names
-    torsionAtoms: list = torsionTag.split("-")
-    ## get torsion atom types
-    torsionAtomTypes: list = [atomTypeMap[atom] for atom in torsionAtoms]
-    ## find torsion parameters for these atom types (account for reverse torsion order)
-    torsionAtomTypes_reversed = torsionAtomTypes[::-1]
-    lookForAtoms = [torsionAtomTypes, torsionAtomTypes_reversed]
-    try:
-        torsionParameters = [entry for entry in parsedFrcmod["DIHEDRALS"] if entry["atoms"] in lookForAtoms]
-
-    except:
-        raise Exception(f"Torsion {torsionTag} not found in frcmod file")
-
-    return torsionParameters
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def parse_frcmod(molFrcmod: FilePath) -> dict:
-    """
-    Reads through a FRCMOD file and returns a dict with the contents of the file
-
-    Args:
-        molFrcmod (FilePath): frcmod file
-
-    Returns:
-        parsedFrcmod (dict): dict with the contents of the frcmod file
-    
-    """
-    ## init a bunch of bools
-    readingMass: bool       = False
-    readingBonds: bool      = False
-    readingAngles: bool     = False
-    readingDihedrals: bool  = False
-    readingImpropers: bool  = False
-    readingNonbonded: bool  = False
-
-    ## init empty parsedFrcmod dict
-    parsedFrcmod = {"ATOMS": [], "BONDS": [], "ANGLES": [], "DIHEDRALS": [], "IMPROPERS": [], "NONBONDED": []}
-    ## open molFrcmod for reading
-    with open(molFrcmod, 'r') as f:
-        ## loop through lines
-        for line in f:
-            ## skip empty lines
-            if line.strip() == "":
-                continue
-            ## use bools to determine which section of the frcmod file we are in
-            elif line.startswith("MASS"):
-                readingMass = True
-            elif line.startswith("BOND"):
-                readingBonds = True
-                readingMass = False
-            elif line.startswith("ANGLE"):
-                readingAngles = True
-                readingBonds = False
-            elif line.startswith("DIHE"):
-                readingDihedrals = True
-                readingAngles = False
-            elif line.startswith("IMPROPER"):
-                readingImpropers = True
-                readingDihedrals = False
-            elif line.startswith("NONBON"):
-                readingNonbonded = True
-                readingImpropers = False
-            ## if we are in a data section, parse the line
-            else:
-                ## process mass data
-                if readingMass:
-                    lineData = line.split()
-                    lineParsed = {"atomType": lineData[0], "mass": lineData[1], "vdw-radius": lineData[2]}
-                    parsedFrcmod["ATOMS"].append(lineParsed)
-                ## process bond data
-                elif readingBonds:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [4, 6]])
-                    paramData = "".join(line[6:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "r0": paramData[0], "k": paramData[1]}
-                    parsedFrcmod["BONDS"].append(lineParsed)
-                ## process angle data
-                elif readingAngles:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8]])
-                    paramData = "".join(line[9:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "theta0": paramData[0], "k": paramData[1]}
-                    parsedFrcmod["ANGLES"].append(lineParsed)
-                ## process dihedral data
-                elif readingDihedrals:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8], [9, 11]])
-                    paramData = "".join(line[12:]).split()[0:4]
-                    lineParsed = {"atoms": atomData, "multiplicity": paramData[0], "k": paramData[1], "phase": paramData[2], "periodicity": paramData[3]}  
-                    parsedFrcmod["DIHEDRALS"].append(lineParsed)  
-                ## process improper data
-                elif readingImpropers:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8], [9, 11]])
-                    paramData = "".join(line[12:]).split()[0:3]
-                    lineParsed = {"atoms": atomData, "k": paramData[0], "phi0": paramData[1], "periodicity": paramData[2]}
-                    parsedFrcmod["IMPROPERS"].append(lineParsed)
-                ## process nonbonded data
-                elif readingNonbonded:
-                    atomData = get_frcmod_atom_data(line, [[0, 6]])
-                    paramData = "".join(line[6:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "vdw-radius": paramData[0], "well-depth": paramData[1]}
-                    parsedFrcmod["NONBONDED"].append(lineParsed)
-    return parsedFrcmod
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_frcmod_atom_data(line: str, indexes: list) -> list:
-    """
-    Small function for getting atom names from FRCMOD file lines
-
-    Args:
-        line (str): line from a FRCMOD file
-        indexes (List[int,int]): location of atom types in FRCMOD line
-
-    Returns:
-        atomData (List[str]): list of atom types 
-    """
-
-    return [line[start:end].strip() for start, end in indexes]
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
-    """
-    Constructs MM energies from mmTorsionParameters using:
-
-        E(torsion) = (K / Mult) * (1 + cos(periodicity * Angle - Phase))
-    https://ambermd.org/FileFormats.php#frcmod
-
-    Args:
-        mmTorsionParameters (dict): dict containing torsion parameters for each torsion
-
-    Returns:
-        mmTorsionEnergies (dict): dict containing MM energies for each torsion
-    """
-    ## init angle 
-    angle = np.radians(np.arange(0, 360, 10, dtype=float))
-    ## init empty array
-    mmTorsionEnergy = np.zeros_like(angle)
-    ## loop through terms for torsion parameter
-    mmCosineComponents = {}
-    for parameter in mmTorsionParameters:
-        ## extract params from dict
-        potentialConstant = float(parameter["k"])
-        inverseDivisionFactor = float(parameter["multiplicity"])
-        periodicityNumber = abs(float(parameter["periodicity"]))
-        phase = np.radians(float(parameter["phase"]))
-        ## construct cosine component
-        cosineComponent: np.array = (potentialConstant / inverseDivisionFactor) * (1 + np.cos(periodicityNumber * angle - phase)) 
-        ## add to torsion energy
-        mmTorsionEnergy += cosineComponent
-        mmCosineComponents[periodicityNumber] = cosineComponent
-        
-    return mmTorsionEnergy, mmCosineComponents
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
 def sort_out_directories(config) -> dict:
     """
     Makes directories for the parameter fitting stage
@@ -613,84 +399,4 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
     inDf["Z"] = xyzDf["z"]
 
     pdbUtils.df2pdb(inDf, outPdb)
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def make_prmtop_and_inpcrd(inMol2: FilePath,
-                            molFrcmod: FilePath,
-                              outDir: DirectoryPath,
-                                index: str):
-    """
-    Uses TLEAP to create a prmtop inpcrd pair
-
-    Args:
-        inMol2 (FilePath): input MOL2 file
-        molFrcmod (FilePath): input FRCMOD file
-        outDir (DirectoryPath): output directory
-        index (str): identifier for output files
-
-    Returns: 
-        prmtop (FilePath): topology file for AMBER
-        impcrd (FilePath): coordinate file for AMBER
-    """
-
-    prmtop: FilePath = p.join(outDir, f"orca_{index}.prmtop")
-    inpcrd: FilePath = p.join(outDir, f"orca_{index}.inpcrd")
-
-    tleapInput: FilePath = p.join(outDir, f"leap_{index}.in")
-    with open(tleapInput, "w") as f:
-        f.write("source leaprc.gaff2\n")
-        f.write(f"mol  = loadmol2 {inMol2} \n")
-        f.write(f"loadamberparams {molFrcmod} \n") # use frcmod previously made
-        # this frcmod will need to be updated after each torsion fit, so the next batch of mol2 are parameterised with the updated file
-        f.write(f"saveamberparm mol {prmtop} {inpcrd}  \n")
-        f.write("quit")
-
-    tleapOutput: FilePath = p.join(outDir, f"tleap_{index}.out")
-
-    tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
-
-    call(tleapCommand, stdout=PIPE)
-
-    return prmtop, inpcrd
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd: FilePath) -> float:
-    """
-    Runs a singlepoint energy calculation at the MM level 
-    using OpenMM
-
-    Args:
-        prmtop (FilePath): topology file for AMBER
-        impcrd (FilePath): coordinate file for AMBER
-
-    Returns:
-        singlePointEnergy (float): energy of prmtop // inpcrd
-    """
-    # Load Amber files and create system
-    prmtop: app.Topology = app.AmberPrmtopFile(moleculePrmtop)
-    inpcrd: app.InpcrdFile = app.AmberInpcrdFile(moleculeInpcrd)
-
-    # Create the system.
-    system: openmm.System = prmtop.createSystem(nonbondedMethod=app.NoCutoff,
-                                                nonbondedCutoff=1 * unit.nanometer,
-                                                constraints=None)
-
-    integrator = openmm.LangevinIntegrator(300, 1/unit.picosecond,  0.0005*unit.picoseconds)
-    platform = openmm.Platform.getPlatformByName('CPU')
-
-    simulation = app.Simulation(prmtop.topology, system, integrator, platform)
-    ## set coordinates of simulation 
-    singlePointEnergies = []
-    for trajPdb in trajPdbs:
-        pdbFile = app.PDBFile(trajPdb)
-        simulation.context.setPositions(pdbFile.positions)
-        state: openmm.State = simulation.context.getState(getPositions=True, getEnergy=True)
-        singlePointEnergy = state.getPotentialEnergy() / unit.kilocalories_per_mole
-
-        trajIndex = trajPdb.split(".")[0].split("_")[1]
-        singlePointEnergies.append((trajIndex,singlePointEnergy))
-
-    return singlePointEnergies
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

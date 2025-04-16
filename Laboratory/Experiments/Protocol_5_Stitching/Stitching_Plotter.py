@@ -61,6 +61,8 @@ def plot_qmmm_energies(qmTotalEnergy,
                         cosineComponents,
                         outDir,
                         shuffleIndex):
+    
+
     set_rc_params()
     ## init some colors to be used
     white :str = '#FFFFFF'

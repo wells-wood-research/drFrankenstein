@@ -11,26 +11,17 @@
     [ ] get donor/acceptors
 [] parameter fitting
     [] get starting parameter set for molecule
+        (CGenFF can be used for this, need a binary license to run)
+         
     [] get MM[total] with CHARMM
     [] get mm[torsion] with CHARMM
 
 
-config thoughts
-AMBER options are RESP, RESP2
-CHARMM options are SOLVATOR 
+$K_\chi (1 + \cos(n (\chi - \delta))$
 
-We may need to add support foer TIP3P waters instead of ALPB(waters)
-This could be done by:
-1. SOLVATOR
-2. QM/MM opt with TIP3P waters (get params)
-3. QM/MM sp with TIP3P waters 
-4. MultiWFN charge fitting
-
-we just need to add a different option for SOLVATION in the [chargeFittingProtocol] config field
+Amplitude * (1 + cos( multiplicty * (Angle - Phase)))
 
 
-For the SOLVATOR Method we need the dirs:
-04_charge_calculations
-    |--> SOLVATOR_calculations
-    |--> single_points
-    |--> charge_fitting
+## COMPATIBILITY OPTIONS
+[] skipBackboneTorsion
+    [] identify backbone torsions? [can we use the graph + N and C termini]

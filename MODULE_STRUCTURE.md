@@ -6,7 +6,9 @@ flowchart LR
     Laboratory --> Experiments
     Laboratory --> OperatingTools
     Laboratory --> drFrankenstein.py
+    Laboratory --> __init__.py
     Benchmarks --> benchmark_charge_calculations.py
+    Benchmarks --> PLANNING.md
     Benchmarks --> plot_benchmarking.py
     Experiments --> Protocol_6_Creation
     Experiments --> Protocol_3_Twisting
@@ -14,6 +16,7 @@ flowchart LR
     Experiments --> Protocol_5_Stitching
     Experiments --> Protocol_1_Capping
     Experiments --> Protocol_4_Charging
+    Experiments --> __init__.py
     Protocol_6_Creation --> __init__.py
     Protocol_6_Creation --> drCreator.py
     Protocol_3_Twisting --> Twisted_Monster.py
@@ -23,23 +26,37 @@ flowchart LR
     Protocol_3_Twisting --> Twisted_Plotter.py
     Protocol_2_Wriggling --> Wriggling_Doctor.py
     Protocol_2_Wriggling --> __init__.py
-    Protocol_5_Stitching --> parameter_fitting_protocol.py
-    Protocol_5_Stitching --> shared_utils.py
+    Protocol_5_Stitching --> CHARMM_protocols
+    Protocol_5_Stitching --> AMBER_protocols
+    Protocol_5_Stitching --> Stitching_Assistant.py
+    Protocol_5_Stitching --> Stitching_Plotter.py
     Protocol_5_Stitching --> QMMM_fitting_protocol.py
     Protocol_5_Stitching --> __init__.py
-    Protocol_5_Stitching --> MM_torsion_protocol.py
-    Protocol_5_Stitching --> MM_total_protocol.py
+    Protocol_5_Stitching --> Stitching_Doctor.py
+    Protocol_5_Stitching --> par_all36_cgenff.prm
+    Protocol_5_Stitching --> top_all36_cgenff.rtf
     Protocol_5_Stitching --> drFourier.py
-    Protocol_5_Stitching --> Plotter.py
+    CHARMM_protocols --> __init__.py
+    CHARMM_protocols --> CHARMM_total_protocol.py
+    CHARMM_protocols --> fit_charmm_parameters.py
+    AMBER_protocols --> AMBER_torsion_protocol.py
+    AMBER_protocols --> __init__.py
+    AMBER_protocols --> AMBER_total_protocol.py
     Protocol_1_Capping --> ACE.pdb
     Protocol_1_Capping --> Capping_Assistant.py
     Protocol_1_Capping --> __init__.py
     Protocol_1_Capping --> Capping_Doctor.py
     Protocol_1_Capping --> Capping_Monster.py
     Protocol_1_Capping --> NME.pdb
+    Protocol_4_Charging --> Charged_Monster.py
     Protocol_4_Charging --> Charged_Doctor.py
+    Protocol_4_Charging --> TIP3P.ORCAFF.prms
     Protocol_4_Charging --> __init__.py
+    Protocol_4_Charging --> Charged_Assistant.py
+    OperatingTools --> Timer.py
     OperatingTools --> drSplash.py
+    OperatingTools --> symmetry_tool.py
     OperatingTools --> drOrca.py
+    OperatingTools --> file_parsers.py
     OperatingTools --> drYaml.py
 ```

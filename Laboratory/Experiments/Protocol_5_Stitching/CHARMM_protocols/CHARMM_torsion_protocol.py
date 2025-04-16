@@ -15,7 +15,7 @@ class DirectoryPath:
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:    
+def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) -> Tuple[dict, dict]:    
     """
     Gets MM[torsion] energy for each torsion we have scanned
     This is done by extracting torsion parameters from FRCMOD file
@@ -29,6 +29,8 @@ def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:
         mmTorsionEnergies (dict): energies 
         mmCosineComponents (dict): cosine components
     """
+    if debug:
+        print(f"Getting MM torsion energies for torsion {torsionTag}")
     ## get torsion parameters from PRM file
     mmTorsionParameters = extract_torsion_parameters_from_prm(config, torsionTag)
     ## reconstruct torsion energies from parameters

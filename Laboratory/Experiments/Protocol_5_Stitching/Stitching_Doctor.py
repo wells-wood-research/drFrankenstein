@@ -79,7 +79,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
 
 
 @Timer.time_function()
-def torsion_fitting_protocol_CHARMM(config: dict) -> dict:
+def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     """
     Main protocol for torsion fitting for CHARMM parameters
     For each torsion that has had QM scans performed (creates QM[total]):
@@ -113,10 +113,10 @@ def torsion_fitting_protocol_CHARMM(config: dict) -> dict:
         shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags)
         ## run the torsion fitting protocol for each torsion
         for torsionTag in shuffledTorsionTags:
-            mmTotalEnergy = CHARMM_total_protocol.get_MM_total_energies(config, torsionTag)
-            mmTorsionEnergy, mmCosineComponents = CHARMM_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
+            mmTotalEnergy = CHARMM_total_protocol.get_MM_total_energies(config, torsionTag, debug)
+            mmTorsionEnergy, mmCosineComponents = CHARMM_torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
             
-            torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
+            torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug)
             config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf)
     ## make a gif for each torsion being fitted - so satisfying!
     for torsionTag in torsionTags:

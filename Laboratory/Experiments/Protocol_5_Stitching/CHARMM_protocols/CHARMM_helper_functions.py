@@ -50,7 +50,7 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
         periodicityNumber = abs(float(parameter["period"]))
         phase = np.radians(float(parameter["phase"]))
         ## construct cosine component
-        cosineComponent: np.array = potentialConstant  * (1 + np.cos(periodicityNumber * (angle - phase))) 
+        cosineComponent: np.array = potentialConstant  * (1 + np.cos(periodicityNumber * angle - phase)) 
         ## add to torsion energy
         mmTorsionEnergy += cosineComponent
         mmCosineComponents[periodicityNumber] = cosineComponent
@@ -264,11 +264,11 @@ def split_charmm_str(config: dict) -> dict:
 
     moleculeName = config["moleculeInfo"]["moleculeName"]
     cappedStr = config["moleculeInfo"]["cappedMoleculeStr"]
-    mmTotalCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
+    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
 
 
-    moleculePrm = p.join(mmTotalCalculationDir, f"{moleculeName}.prm")
-    moleculeRtf = p.join(mmTotalCalculationDir, f"{moleculeName}.rtf")
+    moleculePrm = p.join(mmTorsionCalculationDir, f"{moleculeName}.prm")
+    moleculeRtf = p.join(mmTorsionCalculationDir, f"{moleculeName}.rtf")
 
     with open (cappedStr, "r") as stream, open(moleculePrm, "w") as prm, open(moleculeRtf, "w") as rtf:
         writeRtf = True
@@ -300,14 +300,14 @@ def make_charmm_psf(config: dict) -> dict:
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     cgenffRtf = config["runtimeInfo"]["madeByStitching"]["cgenffRtf"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-    mmTotalCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
+    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     ## make a PDB file with only one RES_ID and RES_NAME value for all atoms
     cappedDf = pdbUtils.pdb2df(cappedPdb)
     cappedDf["RES_ID"] = "1"
     cappedDf["RES_NAME"] = moleculeName
-    tmpPdb = p.join(mmTotalCalculationDir, f"united_capped_{moleculeName}.pdb")
+    tmpPdb = p.join(mmTorsionCalculationDir, f"united_capped_{moleculeName}.pdb")
     pdbUtils.df2pdb(cappedDf, tmpPdb)
 
 
@@ -319,7 +319,7 @@ def make_charmm_psf(config: dict) -> dict:
     gen.read_coords(segid="A", filename=tmpPdb)
 
 
-    psfFile = p.join(mmTotalCalculationDir, f"{moleculeName}_capped.psf")
+    psfFile = p.join(mmTorsionCalculationDir, f"{moleculeName}_capped.psf")
     gen.write_psf(psfFile)
     config["runtimeInfo"]["madeByStitching"]["moleculePsf"] = psfFile
     return config

@@ -40,6 +40,8 @@ def get_MM_total_energies(config:dict,
         smoothedEnergies (mp.ndarray): CHARMM energy
     
     """
+    if debug:
+        print(f"Calculating MM Total energies for {torsionTag}")
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
@@ -115,7 +117,7 @@ def run_serial(scanDirs, torsionTotalDir, config):
     return singlePointEnergyDfs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, config, debug = True):
+def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, config, debug = False):
     ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
 

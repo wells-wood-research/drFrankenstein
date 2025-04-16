@@ -18,7 +18,7 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=10, forcefeild = "CHARMM"):
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=4, forcefeild = "CHARMM"):
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)
@@ -32,7 +32,6 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     ## convert data to dataframe
     fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies, amplitudes, phases)
     paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
-
     if forcefeild == "AMBER":
         ## construct cosine components from parameters
         reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxFunctions)
@@ -102,18 +101,16 @@ def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
     cosineComponents = []
     # Construct each cosine component
     while True:
-        for nFunctionsUsed in range(1, maxFunctions+1):
-            charmmComponent =  amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * (angle - phases[nFunctionsUsed]))))
-
+        for nFunctionsUsed in range(1, maxFunctions + 1):
+            charmmComponent = amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
             previousSignal = reconstructedSignal.copy()
             reconstructedSignal += charmmComponent
-            meanAverageError =  np.mean(np.abs(reconstructedSignal - previousSignal))
-            cosineComponents.append((nFunctionsUsed , charmmComponent))
+            meanAverageError = np.mean(np.abs(reconstructedSignal - previousSignal))
+            cosineComponents.append((nFunctionsUsed, charmmComponent))
             if meanAverageError < tolerance:
                 break
-        if meanAverageError < tolerance:
-            break
-            
+        break  # Exit the while loop after the for loop completes or breaks
+
     return reconstructedSignal, cosineComponents, nFunctionsUsed
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,

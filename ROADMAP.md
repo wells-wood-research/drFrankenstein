@@ -25,3 +25,7 @@ Amplitude * (1 + cos( multiplicty * (Angle - Phase)))
 ## COMPATIBILITY OPTIONS
 [] skipBackboneTorsion
     [] identify backbone torsions? [can we use the graph + N and C termini]
+
+## THINGS to loop back into config
+[] nShuffles for STITCHING
+[] nProcs for GOAT (or use max(16, nCores))

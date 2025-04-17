@@ -13,7 +13,7 @@ from Experiments.Protocol_6_Creation import drCreator
 from OperatingTools import drYaml
 from OperatingTools import drSplash
 from OperatingTools import Timer 
-
+from OperatingTools import validate_config
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -28,6 +28,9 @@ def main():
     ## load into dict, check for bad formatting
     ## TODO: write config_checker for bad args
     config = drYaml.read_input_yaml(configYaml)
+
+    config = validate_config.validate_config(config)
+    exit()
 
     ## unpack config to find outputDir, make directory
     outputDir = config["pathInfo"]["outputDir"]

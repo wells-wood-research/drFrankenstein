@@ -11,17 +11,53 @@ def create_the_monster(config):
     ## create a runtimeInfo 
     config["runtimeInfo"]["madeByCreator"] = {}
 
+
+    ## unpack config
+    forcefield = config["parameterFittingInfo"]["forceField"]
+
     ## make a dir
     outputDir = config["pathInfo"]["outputDir"]
     finalCreationDir = p.join(outputDir, "06_final_creation")
     os.makedirs(finalCreationDir, exist_ok=True)
     config["runtimeInfo"]["madeByCreator"]["finalCreationDir"] = finalCreationDir
 
-    ##TODO: this could be done during the capping step instead
-    cappingAtomIds = get_capping_atom_ids(config)
 
-    create_final_lib_and_mol2(cappingAtomIds, config)
-    copy_final_frcmod(config)
+
+    ##TODO: this could be done during the capping step instead
+
+    if forcefield == "AMBER":
+        cappingAtomIds = get_capping_atom_ids(config)
+        create_final_lib_and_mol2(cappingAtomIds, config)
+        copy_final_frcmod(config)
+    elif forcefield == "CHARMM":
+        create_final_rtf(config)
+
+def create_final_rtf(config):
+    ## unpack config
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    nTerminialAtoms = config["moleculeInfo"]["nTerminialAtoms"]
+    cTerminalAtoms = config["molceculeInfo"]["cTerminalAtoms"]
+
+    rtfFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.rtf")
+    finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
+
+    cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
+
+    terminalSectionWritten = False
+    with open(rtfFile, "r") as inRtf, open(finalRtf, "w") as outRtf:
+        for line in inRtf.readlines():
+            if any(atomName in line for atomName in cappingAtomNames):
+                continue
+            if line.startswith("BOND") and not terminalSectionWritten:
+                for atomName in cTerminalAtoms:
+                    outRtf.write(f"BOND {atomName} +N\n")
+ 
+                terminalSectionWritten = True
+            outRtf.write(line)
+            ##TODO: DONORS and ACCEPTORS
+            ##TODO: CMAP for Phi/Psi torsion angles if possible
 
 ################################################################################
 def copy_final_frcmod(config):
@@ -77,10 +113,6 @@ def create_final_lib_and_mol2(cappingAtomIds, config):
     os.chdir(finalCreationDir)
     call(tleapCommand, stdout=PIPE)
 ################################################################################
-
-
-
-
 def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
     cappingProtonIds = []
     for cappingHeteroAtomName in cappingHeteroAtomNames:

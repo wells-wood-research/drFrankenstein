@@ -1,6 +1,5 @@
 import os
 from os import path as p
-import sys
 import pandas as pd
 ## CLEAN CODE CLASSES ##
 class FilePath:

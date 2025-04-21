@@ -3,7 +3,6 @@ from os import path as p
 import pandas as pd
 
 ## drFRANKENSTEIN LIBRARIES ##
-from .. import Stitching_Assistant
 from . import AMBER_helper_functions
 
 ## CLEAN CODE CLASSES ##

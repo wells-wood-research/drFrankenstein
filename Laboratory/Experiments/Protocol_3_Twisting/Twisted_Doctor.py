@@ -1,16 +1,6 @@
-"""
-This script contains:
- - twist_protocol (the main function for torsion scanning)
- - run_torsion_scanning (scanning for each rotatable bond)
- - scan_in_serial (non-multiprocessing, use for debug)
- - scan_in_parallel (multiprocessing with nice loading bars [IMPORTANT])
- - do_the_twist_worker(small helper for do_the_twist, has as try/except and unpacks args)
 
- and helper function
-"""
 import os
 from os import path as p
-import sys
 import pandas as pd
 
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##

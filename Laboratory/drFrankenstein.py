@@ -26,12 +26,9 @@ def main():
     ## get config yaml file from argpass command-line-argument
     configYaml = drYaml.get_config_input_arg()
     ## load into dict, check for bad formatting
-    ## TODO: write config_checker for bad args
     config = drYaml.read_input_yaml(configYaml)
-
+    ## check config for errors
     config = validate_config.validate_config(config)
-    exit()
-
     ## unpack config to find outputDir, make directory
     outputDir = config["pathInfo"]["outputDir"]
     os.makedirs(outputDir,exist_ok=True)

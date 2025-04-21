@@ -16,11 +16,9 @@ import re
 from shutil import rmtree
 from scipy.signal import argrelextrema
 import random
-from pdbUtils import pdbUtils
 ## RDKIT IMPORTS ##
 from rdkit import Chem, RDLogger
-from rdkit.Chem import AllChem
-from rdkit.Chem.rdmolfiles import MolToPDBFile
+
 
 ## CLEAN CODE CLASSES ##
 class FilePath:

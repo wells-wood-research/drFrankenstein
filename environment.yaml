@@ -1,0 +1,10 @@
+name: Igor
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - ambertools=23
+  - openmm==8.2.0
+  - pip
+  - pip:
+    - -r requirements.txt

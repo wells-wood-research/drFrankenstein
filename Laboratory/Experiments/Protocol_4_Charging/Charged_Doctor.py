@@ -3,9 +3,7 @@ from os import path as p
 import os
 import pandas as pd
 from shutil import copy
-## drFrankenstein LIBRARIES ##
-from . import Charged_Monster
-from . import Charged_Assistant
+
 
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##c
 from mpire import WorkerPool
@@ -19,6 +17,8 @@ class DirectoryPath:
 
 ## drFRANKENSTEIN LIBRARIES ##
 from OperatingTools import Timer
+from . import Charged_Monster
+from . import Charged_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()

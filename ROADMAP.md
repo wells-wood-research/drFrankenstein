@@ -26,6 +26,14 @@ Amplitude * (1 + cos( multiplicty * (Angle - Phase)))
 [] skipBackboneTorsion
     [] identify backbone torsions? [can we use the graph + N and C termini]
 
+Tried to map capping groups to CHARMM backbone types
+PROBLEM Building PSF from resulting RTF and PRM pair
+I think the issue is that the CGENFF params for CGENFF--CHARMM params don't exist
+SOLUTION:
+[] find CGENFF-CGENFF params in par_cgenff.prm
+[] copy over to molecule.prm
+[] change the CGENFF types to CHARMM types 
+
 ## THINGS to loop back into config
 [] nShuffles for STITCHING
 [] nProcs for GOAT (or use max(16, nCores))

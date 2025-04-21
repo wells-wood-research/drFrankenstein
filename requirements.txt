@@ -1,0 +1,13 @@
+# Tested with Python 3.10.16
+pandas==2.2.3
+numpy==1.26.4
+ruamel.yaml==0.18.10
+pdbutils==2024.0.2
+mpire==2.10.2
+scipy==1.15.1
+rdkit==2024.9.5
+matplotlib==3.10.0
+pexpect==4.9.0
+tqdm==4.67.1
+psfgen==1.0.5  # CHARMM ONLY
+imageio==2.37.0

@@ -14,6 +14,7 @@ from OperatingTools import drYaml
 from OperatingTools import drSplash
 from OperatingTools import Timer 
 from OperatingTools import validate_config
+from OperatingTools import handle_CGenFF_dependancy
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -50,6 +51,11 @@ def main():
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
+    if config["parameterFittingInfo"]["forceField"] == "CHARMM":
+        config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
+        drYaml.write_config_to_yaml(config, outputDir)
+
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
@@ -79,7 +85,9 @@ def main():
 
     if not checkpointInfo["finalCreationComplete"]:
         drSplash.show_creation_splash()
-        drCreator.create_the_monster(config=config)
+        config = drCreator.create_the_monster(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)
+
     
     
     drSplash.show_what_have_we_created(config["moleculeInfo"]["moleculeName"])

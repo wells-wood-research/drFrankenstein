@@ -411,7 +411,7 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
             Charged_Monster.run_orca_singlepoint_for_charge_calculations(arg)
     ## run in parallel
     else:
-        nCpus = min(len(argsList), config["hardwareInfo"]["nCores"])
+        nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
         with WorkerPool(n_jobs = nCpus) as pool:
             pool.map(Charged_Monster.run_orca_singlepoint_for_charge_calculations,
                     make_single_arguments(argsList),

@@ -2,7 +2,50 @@ import os
 from os import path as p
 import time
 
+def show_need_cgenff_str(cappedMol2) -> None:
+    ## using font ANSI Shadow
+    greenText = "\033[32m"
+    orangeText = "\033[38;5;172m"
+    yellowText = "\033[33m"
+    resetTextColor = "\033[0m"
 
+    lightningBar = "🗲 "*int((80//2))
+
+    pausedAscii = """
+            ██████╗  █████╗ ██╗   ██╗███████╗███████╗██████╗ 
+            ██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗
+            ██████╔╝███████║██║   ██║███████╗█████╗  ██║  ██║
+            ██╔═══╝ ██╔══██║██║   ██║╚════██║██╔══╝  ██║  ██║
+            ██║     ██║  ██║╚██████╔╝███████║███████╗██████╔╝
+            ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═════╝ 
+                              """
+    
+    needStrText = f"CHARMM parameterisation procedure requires a {orangeText}stream (.STR){resetTextColor} file.\n" \
+                "As you don't have CGenFF installed locally,\n" \
+                "you can  use the CGenFF webserver to generate this:\n" \
+                f"1. Go to {greenText}https://cgenff.com/{resetTextColor}\n" \
+                "2. Create an account and log in\n" \
+                "3. Select \"Start CGenFF Job\"\n" \
+                "4. Upload the following MOL2 file:\n"\
+                f"{greenText}{cappedMol2}{resetTextColor}\n" \
+                "\nOnce CGenFF has finished running:\n" \
+                f"Place the {orangeText}stream (.STR){resetTextColor} file in your specified inputDir\n" \
+                "and re-run drFrankenstein with the same config file"
+    
+    getLocalText = f"\n{yellowText}NOTE that if you want to run this protocol in a\n"\
+                    "fully automated manner, you can request the CGenFF binaries\n" \
+                    f"by emailing: {orangeText}info@silcsbio.com{yellowText}\n"\
+                    "NOTE: make sure you CC your PI into this email!\n\n" \
+                    "Once you have the binary, supply the location in the\n" \
+                    f"{greenText}pathInfo.cgenffExe{yellowText} entry in your config file" 
+    
+    print(f"{yellowText}{lightningBar}{resetTextColor}")
+    print(f"{greenText}{pausedAscii}{resetTextColor}")
+    print(f"{yellowText}{lightningBar}{resetTextColor}")
+
+    print(f"{resetTextColor}{needStrText}{resetTextColor}")
+    print(f"{getLocalText}")
+    print(f"{yellowText}{lightningBar}{resetTextColor}")
 
 def show_config_error(errors: dict) -> None:
     ## using font Bloody

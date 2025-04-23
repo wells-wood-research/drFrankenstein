@@ -31,7 +31,7 @@ def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
 
     optXyz = p.join(optDir, "orca_opt.xyz")
 
-    Twisted_Assistant.clean_up_opt_dir(optDir, config["cleanUpLevel"])
+    Twisted_Assistant.clean_up_opt_dir(optDir, config["miscInfo"]["cleanUpLevel"])
     return optXyz
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -68,7 +68,7 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     forwardsScanDf["scan_index"] = [f"{i:03}" for i in range(1, 38)]
 
     forwardsScanDf = Twisted_Assistant.take_min_duplicate_angles(forwardsScanDf)
-    Twisted_Assistant.clean_up_scan_dir(forwardsDir, config["cleanUpLevel"])
+    Twisted_Assistant.clean_up_scan_dir(forwardsDir, config["miscInfo"]["cleanUpLevel"])
 
     ## find scan xyzFiles,
     return forwardsScanDf, forwardsXyz, forwardsDir
@@ -106,7 +106,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 
     backwardsScanDf = Twisted_Assistant.take_min_duplicate_angles(backwardsScanDf)
 
-    Twisted_Assistant.clean_up_scan_dir(backwardsDir, config["cleanUpLevel"])
+    Twisted_Assistant.clean_up_scan_dir(backwardsDir, config["miscInfo"]["cleanUpLevel"])
 
     return backwardsScanDf, backwardsDir  
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

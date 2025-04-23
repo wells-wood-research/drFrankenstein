@@ -2,6 +2,7 @@
 from os import path as p
 import os
 import pandas as pd
+from subprocess import run, PIPE
 
 
 ## CLEAN CODE ##
@@ -10,6 +11,171 @@ class FilePath:
 class DirectoryPath:
     pass
 
+def pdb2mol2(pdbFile: FilePath, mol2File: FilePath) -> None:
+    """
+    Uses OpenBabel to convert a PDB file into a MOL2 file
+
+    Args:
+        pdbFile (FilePath): path to PDB file
+        mol2File (FilePath): path to MOL2 file to be created
+
+    Returns:
+        None [mol2File has already been defined]
+
+    """
+    obabelCommand = ["obabel", pdbFile, "-O", mol2File]
+    run(obabelCommand, stdout=PIPE, stderr=PIPE)
+    
+
+def parse_rtf(filePath: str) -> dict:
+    """
+    Parse a CHARMM RTF file into a structured dictionary.
+    
+    Args:
+        filePath (str): Path to the CHARMM RTF file.
+    
+    Returns:
+        Dict: Parsed RTF data with sections for mass, residues, and other declarations.
+    """
+    rtfData = {
+        "mass": [],  # List of mass entries
+        "declarations": [],  # DECL statements
+        "defaults": {},  # DEFA statements
+        "residues": {},  # RESI definitions
+        "auto": []  # AUTO statements
+    }
+    
+    currentResidue = None
+    currentGroup = None
+    parsingIc = False
+    
+    with open(filePath, 'r') as file:
+        lines = file.readlines()
+    
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('*'):  # Skip empty lines and comments
+            continue
+        
+        # Parse MASS entries
+        if line.startswith('MASS'):
+            parts = line.split()
+            if len(parts) >= 4:
+                massEntry = {
+                    "index": parts[1],
+                    "atomType": parts[2],
+                    "mass": float(parts[3]),
+                    "comment": ' '.join(parts[4:]) if len(parts) > 4 else ''
+                }
+                rtfData["mass"].append(massEntry)
+        
+        # Parse DECL statements
+        elif line.startswith('DECL'):
+            rtfData["declarations"].append(line.split()[1])
+        
+        # Parse DEFA statements
+        elif line.startswith('DEFA'):
+            parts = line.split()
+            rtfData["defaults"] = {
+                "first": parts[1] if len(parts) > 1 else '',
+                "last": parts[3] if len(parts) > 3 else ''
+            }
+        
+        # Parse AUTO statements
+        elif line.startswith('AUTO'):
+            rtfData["auto"].extend(line.split()[1:])
+        
+        # Parse RESI (residue) definitions
+        elif line.startswith('RESI'):
+            parts = line.split()
+            residueName = parts[1]
+            charge = float(parts[2]) if len(parts) > 2 else 0.0
+            currentResidue = {
+                "name": residueName,
+                "charge": charge,
+                "groups": [],
+                "atoms": [],
+                "bonds": [],
+                "doubleBonds": [],
+                "impropers": [],
+                "cmap": [],
+                "donors": [],
+                "acceptors": [],
+                "ic": []
+            }
+            rtfData["residues"][residueName] = currentResidue
+        
+        # Parse GROUP within residue
+        elif line.startswith('GROUP') and currentResidue:
+            currentGroup = []
+            currentResidue["groups"].append(currentGroup)
+        
+        # Parse ATOM within residue
+        elif line.startswith('ATOM') and currentResidue:
+            parts = line.split()
+            if len(parts) >= 4:
+                atom = {
+                    "name": parts[1],
+                    "type": parts[2],
+                    "charge": float(parts[3]),
+                    "comment": ' '.join(parts[4:]) if len(parts) > 4 else ''
+                }
+                currentResidue["atoms"].append(atom)
+                if currentGroup is not None:
+                    currentGroup.append(atom["name"])
+        
+        # Parse BOND
+        elif line.startswith('BOND') and currentResidue:
+            parts = line.split()[1:]
+            for i in range(0, len(parts), 2):
+                if i + 1 < len(parts):
+                    currentResidue["bonds"].append((parts[i], parts[i + 1]))
+        
+        # Parse DOUBLE (double bonds)
+        elif line.startswith('DOUBLE') and currentResidue:
+            parts = line.split()[1:]
+            for i in range(0, len(parts), 2):
+                if i + 1 < len(parts):
+                    currentResidue["doubleBonds"].append((parts[i], parts[i + 1]))
+        
+        # Parse IMPR (improper dihedrals)
+        elif line.startswith('IMPR') and currentResidue:
+            parts = line.split()[1:]
+            for i in range(0, len(parts), 4):
+                if i + 3 < len(parts):
+                    currentResidue["impropers"].append(parts[i:i + 4])
+        
+        # Parse CMAP
+        elif line.startswith('CMAP') and currentResidue:
+            parts = line.split()[1:]
+            currentResidue["cmap"].append(parts)
+        
+        # Parse DONOR
+        elif line.startswith('DONOR') and currentResidue:
+            parts = line.split()[1:]
+            currentResidue["donors"].append(parts)
+        
+        # Parse ACCEPTOR
+        elif line.startswith('ACCEPTOR') and currentResidue:
+            parts = line.split()[1:]
+            currentResidue["acceptors"].append(parts)
+        
+        # Parse IC (internal coordinates)
+        elif line.startswith('IC') and currentResidue:
+            parts = line.split()
+            if len(parts) == 9:
+                icEntry = {
+                    "atoms": parts[1:5],
+                    "star": parts[2] if parts[2].startswith('*') else None,
+                    "dist": float(parts[5]),
+                    "angle1": float(parts[6]),
+                    "dihedral": float(parts[7]),
+                    "angle2": float(parts[8]),
+                    "dist2": float(parts[9])
+                }
+                currentResidue["ic"].append(icEntry)
+    
+    return rtfData
 
 def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
     """

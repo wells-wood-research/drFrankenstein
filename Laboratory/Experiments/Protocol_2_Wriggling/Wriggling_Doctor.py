@@ -124,7 +124,7 @@ def clean_up(conformerDir: DirectoryPath, config: dict) -> None:
         conformerDir (DirectoryPath): directory containing conformers
         config (dict): dictionary containing all information
     """
-    if config["cleanUpLevel"] in ["basic", "full"]:
+    if config["miscInfo"]["cleanUpLevel"] in ["basic", "full"]:
         filesToRemove = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith("GOAT")]
         for f in filesToRemove:
             os.remove(f)

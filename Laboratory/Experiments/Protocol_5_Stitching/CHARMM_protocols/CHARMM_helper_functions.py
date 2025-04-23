@@ -375,7 +375,7 @@ def split_charmm_str(config: dict) -> dict:
     """
 
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    cappedStr = config["moleculeInfo"]["cappedMoleculeStr"]
+    cappedStr = config["runtimeInfo"]["madeByCapping"]["cappedMoleculeStr"]
     mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
 
 

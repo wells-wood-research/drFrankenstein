@@ -36,6 +36,9 @@ def create_the_monster(config):
         config = CHARMM_creation.get_donor_acceptors(config)
         CHARMM_creation.create_final_rtf(config)
 
+    config["checkpointInfo"]["finalCreationComplete"] = True
+    return config
+
 
 
 ################################################################################

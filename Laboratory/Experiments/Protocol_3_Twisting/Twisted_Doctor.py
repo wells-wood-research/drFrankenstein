@@ -127,7 +127,7 @@ def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
         "dynamic_ncols": True,
     }
 
-    with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
+    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
         results = pool.map(do_the_single_point_worker,
                             make_single_arguments(argsList),
                               progress_bar=True,
@@ -156,7 +156,7 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
 
     ## save on cores 
-    nCores = min(len(argsList), config["hardwareInfo"]["nCores"])
+    nCores = min(len(argsList), config["miscInfo"]["availableCpus"])
 
     with WorkerPool(n_jobs = nCores) as pool:
         results = pool.map(do_the_twist_worker,

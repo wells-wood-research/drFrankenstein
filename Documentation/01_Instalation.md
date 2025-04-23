@@ -79,7 +79,7 @@ conda activate Igor
 ```
 
 ### A Note on CGenFF for CHARMM parameters
-In order to create CHARMM parameters, drFrankenstein requires a stream (.STR) file of your capped molecule to be generated. This needs to be created using **CGenFF**. **CGenFF** is primarily available as a server-based service. For local installation of **CGenFF**, one must request permission from [TODO].
+In order to create CHARMM parameters, drFrankenstein requires a stream (.STR) file of your capped molecule to be generated. This needs to be created using **CGenFF**. **CGenFF** is primarily available as a server-based service. For local installation of **CGenFF**, one must request permission by emailing `info@silcsbio.com`. [TODO: installation once you have CGenFF permissions]
 
 drFrankenstein was built to function with both server-based **CGenFF** and local **CGenFF** installations. 
 - If you have **CGenFF** installed locally, you will need to supply the location of its binary using the `pathInfo`.`cgenffExe` parameter in all of your config.yaml files. Once this has been done, drFrankenstein will be able to generated CHARMM parameters in a fully-automated manner.

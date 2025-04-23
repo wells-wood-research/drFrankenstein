@@ -46,7 +46,7 @@ def get_qm_atoms_for_solvated_system(xyzFile: FilePath, config:dict) -> dict:
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def how_many_waters_for_solvator(xyzFile: FilePath, multiplier=2) -> int:
+def how_many_waters_for_solvator(xyzFile: FilePath, multiplier=4) -> int:
     """
     Simple function that decides how many water molecules to add in a SOLVATOR calculation
     Currently we just do 2 x nHeavyAtoms

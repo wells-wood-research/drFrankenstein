@@ -9,17 +9,14 @@
     [x] SINGLE POINTS
     [x] multiwfn for charge fitting
     [ ] get donor/acceptors
-[] parameter fitting
-    [] get starting parameter set for molecule
+    
+[x] parameter fitting
+    [x] get starting parameter set for molecule
         (CGenFF can be used for this, need a binary license to run)
          
-    [] get MM[total] with CHARMM
-    [] get mm[torsion] with CHARMM
+    [x] get MM[total] with CHARMM
+    [x] get mm[torsion] with CHARMM
 
-
-$K_\chi (1 + \cos(n (\chi - \delta))$
-
-Amplitude * (1 + cos( multiplicty * (Angle - Phase)))
 
 
 ## COMPATIBILITY OPTIONS

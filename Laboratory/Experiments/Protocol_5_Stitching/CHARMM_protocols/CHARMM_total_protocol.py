@@ -89,7 +89,7 @@ def run_parallel(scanDirs, torsionTotalDir, torsionTag, config):
         "dynamic_ncols": True
     }
 
-    with WorkerPool(n_jobs = config["hardwareInfo"]["nCores"]) as pool:
+    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
         singlePointEnergyDfs = pool.map(single_point_worker,
                             make_single_arguments(argsList),
                               progress_bar=True,

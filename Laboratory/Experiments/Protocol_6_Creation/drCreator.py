@@ -4,6 +4,9 @@ import pandas as pd
 from subprocess import call, PIPE
 from shutil import copy
 
+from . import CHARMM_creation
+from . import AMBER_creation
+
 
 ################################################################################
 
@@ -26,141 +29,15 @@ def create_the_monster(config):
     ##TODO: this could be done during the capping step instead
 
     if forcefield == "AMBER":
-        cappingAtomIds = get_capping_atom_ids(config)
-        create_final_lib_and_mol2(cappingAtomIds, config)
-        copy_final_frcmod(config)
+        cappingAtomIds = AMBER_creation.get_capping_atom_ids(config)
+        AMBER_creation.create_final_lib_and_mol2(cappingAtomIds, config)
+        AMBER_creation.copy_final_frcmod(config)
     elif forcefield == "CHARMM":
-        create_final_rtf(config)
-
-def create_final_rtf(config):
-    ## unpack config
-    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
-    moleculeName = config["moleculeInfo"]["moleculeName"]
-    nTerminialAtoms = config["moleculeInfo"]["nTerminialAtoms"]
-    cTerminalAtoms = config["molceculeInfo"]["cTerminalAtoms"]
-
-    rtfFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.rtf")
-    finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
-
-    cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
-
-    terminalSectionWritten = False
-    with open(rtfFile, "r") as inRtf, open(finalRtf, "w") as outRtf:
-        for line in inRtf.readlines():
-            if any(atomName in line for atomName in cappingAtomNames):
-                continue
-            if line.startswith("BOND") and not terminalSectionWritten:
-                for atomName in cTerminalAtoms:
-                    outRtf.write(f"BOND {atomName} +N\n")
- 
-                terminalSectionWritten = True
-            outRtf.write(line)
-            ##TODO: DONORS and ACCEPTORS
-            ##TODO: CMAP for Phi/Psi torsion angles if possible
-
-################################################################################
-def copy_final_frcmod(config):
-    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
-    moleculeName = config["moleculeInfo"]["moleculeName"]
-
-    frcmodFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.frcmod")
-    finalFrcmod = p.join(finalCreationDir, f"{moleculeName}.frcmod")
-
-    copy(frcmodFile, finalFrcmod)
-    
-################################################################################
-def get_capping_atom_ids(config):
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
-
-    cappingHeteroAtomNames = ["NN", "CN", "CC1", "OC", "CC2"]
-    atomDf, bondDf  = parse_mol2(cappedMol2)
-    cappingHeteroAtomIds = atomDf[atomDf["ATOM_NAME"].isin(cappingHeteroAtomNames)]["ATOM_ID"].to_list()
-    cappingProtonIds = get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf)
-
-    cappingAtomIds = cappingHeteroAtomIds + cappingProtonIds
-
-    return cappingAtomIds
-################################################################################
-
-def create_final_lib_and_mol2(cappingAtomIds, config):
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
-
-    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    moleculeName = config["moleculeInfo"]["moleculeName"]
-    finalMol2 = p.join(finalCreationDir, f"{moleculeName}.mol2")
-    finalLib= p.join(finalCreationDir, f"{moleculeName}.lib")
-
-    finalTleapInput = p.join(finalCreationDir, "tleap.in")
-    
-    with open(finalTleapInput, "w") as f:
-        f.write("source leaprc.gaff2 \n")
-        f.write(f"{moleculeName}  = loadmol2  {cappedMol2}\n")
-        f.write(f"set {moleculeName} head {moleculeName}.1.N \n")
-        f.write(f"set {moleculeName} tail {moleculeName}.1.C \n")
-        for atomId in cappingAtomIds:
-            f.write(f"remove {moleculeName} {moleculeName}.1.{atomId}\n")
-        f.write(f"check {moleculeName} \n")
-        f.write(f"saveoff  {moleculeName} {finalLib} \n")
-        f.write(f"saveMol2 {moleculeName} {finalMol2} 1\n")
-        f.write("quit")
-
-    tleapOutput = p.join(finalCreationDir, f"tleap.out")
-
-    tleapCommand: list = ["tleap", "-f", finalTleapInput, ">", tleapOutput]
-
-    os.chdir(finalCreationDir)
-    call(tleapCommand, stdout=PIPE)
-################################################################################
-def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
-    cappingProtonIds = []
-    for cappingHeteroAtomName in cappingHeteroAtomNames:
-        heteroAtomId = atomDf[atomDf["ATOM_NAME"]==cappingHeteroAtomName]["ATOM_ID"].to_list()[0]
-
-        bondedToHeteroAtom_A = bondDf[(bondDf["ATOM_A_ID"] == heteroAtomId)]["ATOM_B_ID"].to_list()
-        bondedToHeteroAtom_B = bondDf[(bondDf["ATOM_B_ID"] == heteroAtomId)]["ATOM_A_ID"].to_list()
-
-        bondedToHeteroAtomIds = bondedToHeteroAtom_A + bondedToHeteroAtom_B
-        protonIds = atomDf[atomDf["ATOM_ID"].isin(bondedToHeteroAtomIds) & atomDf["ATOM_TYPE"].str.startswith("h")]["ATOM_ID"].values
-        cappingProtonIds.extend(protonIds)
-
-    return cappingProtonIds
-
-################################################################################
-
-def parse_mol2(mol2File):
-    atomData = []
-    bondData = []
-    readingAtoms = False
-    readingBonds = False
-
-    with open(mol2File, "r") as mol2:
-        for line in mol2:
-            if line.strip() == "":
-                continue
-            if line.startswith("@<TRIPOS>ATOM"):
-                readingAtoms=True
-                continue
-            if line.startswith("@<TRIPOS>BOND"):
-                readingBonds=True
-                readingAtoms=False
-                continue
-            if line.startswith("@<TRIPOS>SUBSTRUCTURE"):
-                break
-            if readingAtoms:
-                atomData.append(line.split())
-            elif readingBonds:
-                bondData.append(line.split())
+        config = CHARMM_creation.get_donor_acceptors(config)
+        CHARMM_creation.create_final_rtf(config)
 
 
-        
-    atomDataColumns = ["ATOM_ID", "ATOM_NAME", "X", "Y", "Z", "ATOM_TYPE", "RES_ID", "RES_NAME", "CHARGE"]
-    atomDf = pd.DataFrame(atomData, columns=atomDataColumns)
-    bondDataColumns = ["BOND_ID", "ATOM_A_ID", "ATOM_B_ID", "BOND_ORDER"]
-    bondDf = pd.DataFrame(bondData, columns=bondDataColumns)
 
-    return atomDf, bondDf
 ################################################################################
 
 if __name__ == "__main__":

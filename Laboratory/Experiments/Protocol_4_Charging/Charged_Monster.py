@@ -10,6 +10,7 @@ import pandas as pd
 import pexpect
 from tqdm import tqdm
 from copy import deepcopy
+import mdtraj as md
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import drOrca
 from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
@@ -19,6 +20,10 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
+
+
+
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_qmmm_opt(qmmmOptArgs):
     ## unpack args

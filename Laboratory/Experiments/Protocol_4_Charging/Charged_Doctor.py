@@ -116,10 +116,11 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
     config = add_solvation_shell_with_SOLVATOR(config=config, debug=debug)
 
     if config["chargeFittingInfo"]["singlePointSolvationMethod"].upper() == "TIP3P":
-        tip3p_qmmm_protocol(config=config, 
+        config = tip3p_qmmm_protocol(config=config, 
                                 debug=debug)
     else:
-        raise NotImplementedError ## do standard opt/sp with waters in QM region (not QMMM)
+        raise NotImplementedError ## do standard opt/sp with waters in QM region (not QMMM) TODO: implement
+    
 
     ## create input files for MultiWFN
     conformerListTxt = Charged_Assistant.generate_conformer_list_file(qmmmSinglepointDir, fittingDir)
@@ -159,10 +160,13 @@ def tip3p_qmmm_protocol(config, debug):
     config = Charged_Assistant.get_qm_atoms_for_solvated_system(unsolvatedXyz, config)
     ## create ORCAFF parameters with TIP3P waters
     config = Charged_Monster.create_orca_ff_parameters(unsolvatedXyz, config)
-    ## optimise solvated geometries
+    ## optimise solvated geometries, update config
     qmmmOptXyzs = qmmm_opt_protocol_for_charges(config=config, debug=debug)
+    config["runtimeInfo"]["madeByCharges"]["solvatedOptimisedXyzs"] = qmmmOptXyzs
     ## get singlepoint energies
     qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs=qmmmOptXyzs, config=config, debug=debug)
+
+    return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def qmmm_opt_protocol_for_charges(config, debug):
@@ -191,7 +195,7 @@ def qmmm_opt_protocol_for_charges(config, debug):
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(qmmmOptArgsList), config["hardwareInfo"]["nCores"])
+        nCpus = min(len(qmmmOptArgsList), config["miscInfo"]["availableCpus"])
         with WorkerPool(n_jobs = nCpus) as pool:
             qmmmOptXyzs = pool.map(Charged_Monster.run_qmmm_opt,
                     make_single_arguments(qmmmOptArgsList),
@@ -225,7 +229,7 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(qmmmSinglepointArgsList), config["hardwareInfo"]["nCores"])
+        nCpus = min(len(qmmmSinglepointArgsList), config["miscInfo"]["availableCpus"])
         with WorkerPool(n_jobs = nCpus) as pool:
             optXyzs = pool.map(Charged_Monster.run_qmmm_singlepoint,
                     make_single_arguments(qmmmSinglepointArgsList),
@@ -288,7 +292,7 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(solvatorArgList), config["hardwareInfo"]["nCores"])
+        nCpus = min(len(solvatorArgList), config["miscInfo"]["availableCpus"])
         with WorkerPool(n_jobs = nCpus) as pool:
             solvatedXyzs = pool.map(Charged_Monster.run_orca_solvator_for_charge_calculations,
                     make_single_arguments(solvatorArgList),

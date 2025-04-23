@@ -70,9 +70,9 @@ def main():
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
-        if config["parameterInfo"]["forceField"] == "AMBER":
+        if config["parameterFittingInfo"]["forceField"] == "AMBER":
             config = Stitching_Doctor.torsion_fitting_protocol_AMBER(config=config)
-        elif config["parameterInfo"]["forceField"] == "CHARMM":
+        elif config["parameterFittingInfo"]["forceField"] == "CHARMM":
             config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
 
         drYaml.write_config_to_yaml(config, outputDir)

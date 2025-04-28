@@ -16,7 +16,46 @@ from typing import List, Tuple
 
 ## drFRANKENSTIEN LIBRARIES ##
 from . import Capping_Assistant
+from OperatingTools import drOrca
+from OperatingTools import file_parsers
 
+def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
+    """
+    Runs a quick ORCA XTB2 optimisation of the capped structure
+    This avoids odd distances between the capping groups and the rest of the molecule
+
+    Args:
+        cappedPdb (FilePath): path to the capped PDB file
+        config (dict): drFrankenstein config
+    Returns:
+        optimisedPdb (FilePath): path to the capped PDB file
+    """
+
+    ## unpack config
+    cappingDir = config["runtimeInfo"]["madeByCapping"]["cappingDir"]
+    optDir = p.join(cappingDir, "geometry_optimisation")
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    os.makedirs(optDir, exist_ok=True)
+
+    ## convert PDB to XYZ
+    xyzFile = p.join(optDir, f"{moleculeName}_capped.xyz")
+    file_parsers.pdb2xyz(cappedPdb, xyzFile)
+
+
+    ## make an ORCA input file for optimisation
+    optOrcaInput: FilePath = drOrca.make_orca_input_for_opt(inputXyz=xyzFile,
+                                                   outDir = optDir,
+                                                   moleculeInfo=config["moleculeInfo"],
+                                                   qmMethod="XTB2",
+                                                    solvationMethod=None)
+    optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
+    drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
+
+    optimisedXyz = p.join(optDir, "orca_opt.xyz")
+    optimisedPdb = p.join(optDir, f"{moleculeName}_capped_opt.pdb")
+    file_parsers.update_pdb_coords(cappedPdb, optimisedXyz, optimisedPdb)
+
+    return optimisedPdb
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def trim_termini(molDf: pd.DataFrame,

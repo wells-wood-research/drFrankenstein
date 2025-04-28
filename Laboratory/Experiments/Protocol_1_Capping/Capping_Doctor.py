@@ -44,7 +44,7 @@ def capping_protocol(config: dict) -> dict:
     ## make a dir for capping, update config ##
     cappingDir = p.join(outputDir, "01_termini_capping")
     os.makedirs(cappingDir, exist_ok=True)
-    config["runtimeInfo"]["madeByCapping"]["cappingDir"] = outputDir
+    config["runtimeInfo"]["madeByCapping"]["cappingDir"] = cappingDir
 
     ## load pdb file into a dataframe
     molDf = pdbUtils.pdb2df(molPdb)
@@ -61,13 +61,19 @@ def capping_protocol(config: dict) -> dict:
     ## write to PDB file, update config
     cappedPdb = p.join(cappingDir, f"{moleculeName}_capped.pdb")
     pdbUtils.df2pdb(cappedDf, cappedPdb)
-    config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = cappedPdb
-    symmetryData = symmetry_tool.symmetry_protocol(cappedPdb)
+
+    optimedPdb = Capping_Monster.optimise_capped_structures(cappedPdb, config)
+
+    config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = optimedPdb
+    symmetryData = symmetry_tool.symmetry_protocol(optimedPdb)
     config["runtimeInfo"]["madeByCapping"]["symmetryData"] = symmetryData
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
 
     return config
+
+
+
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

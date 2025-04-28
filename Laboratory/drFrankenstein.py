@@ -52,6 +52,8 @@ def main():
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
+    exit()
+
     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
         config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
         drYaml.write_config_to_yaml(config, outputDir)

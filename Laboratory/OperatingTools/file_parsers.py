@@ -4,12 +4,49 @@ import os
 import pandas as pd
 from subprocess import run, PIPE
 
-
+from pdbUtils import pdbUtils
 ## CLEAN CODE ##
 class FilePath:
     pass
 class DirectoryPath:
     pass
+
+def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
+    """
+    updates PDB file with XYZ coords
+    
+    Args:
+        inPdb (FilePath): input PDB file
+        xyzFile (FilePath): input XYZ file
+        outPdb (FilePath): output PDB file
+
+    Returns:
+        None (outPdb already defined!)
+    """
+
+    inDf = pdbUtils.pdb2df(inPdb)
+    xyzDf = xyz2df(xyzFile)
+
+    inDf["X"] = xyzDf["x"]
+    inDf["Y"] = xyzDf["y"]
+    inDf["Z"] = xyzDf["z"]
+
+    pdbUtils.df2pdb(inDf, outPdb)
+
+def pdb2xyz(pdbFile: FilePath, xyzFile: FilePath) -> None:
+    """
+    Uses OpenBabel to convert a PDB file into an XYZ file
+
+    Args:
+        pdbFile (FilePath): path to PDB file
+        xyzFile (FilePath): path to XYZ file to be created
+
+    Returns:
+        None [xyzFile has already been defined]
+
+    """
+    obabelCommand = ["obabel", pdbFile, "-O", xyzFile]
+    run(obabelCommand, stdout=PIPE, stderr=PIPE)
 
 def pdb2mol2(pdbFile: FilePath, mol2File: FilePath) -> None:
     """

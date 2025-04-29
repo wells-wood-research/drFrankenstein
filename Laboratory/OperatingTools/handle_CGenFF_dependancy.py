@@ -10,7 +10,6 @@ def handle_CGenFF_dependancy(config):
         moleculeName = config["moleculeInfo"]["moleculeName"]
         moleculeStr = p.join(inputDir, f"{moleculeName}_capped.str")
         if p.isfile(moleculeStr):
-            print("WONK")
             config["runtimeInfo"]["madeByCapping"]["cappedMoleculeStr"] = moleculeStr
             return config
         else:
@@ -23,9 +22,8 @@ def handle_CGenFF_dependancy(config):
             rename_molecule_mol2(cappedMol2, moleculeName)
 
             drSplash.show_need_cgenff_str(cappedMol2)
-            exit()
+            exit(0)
     else:  
-        print("SPLONK")
         return config
 
 

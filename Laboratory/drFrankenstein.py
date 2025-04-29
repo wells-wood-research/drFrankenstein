@@ -4,11 +4,13 @@ import traceback
 import ruamel.yaml as ruamel
 ## drFRANKENSTEIN LIBRARIES ##
 from Experiments.Protocol_1_Capping import Capping_Doctor
-from Experiments.Protocol_2_Wriggling import Wriggling_Doctor
-from Experiments.Protocol_3_Twisting import Twisted_Doctor
-from Experiments.Protocol_4_Charging import Charged_Doctor
-from Experiments.Protocol_5_Stitching import Stitching_Doctor
-from Experiments.Protocol_6_Creation import drCreator
+from Experiments.Protocol_2_Assembly import Assembly_Doctor
+from Experiments.Protocol_3_Wriggling import Wriggling_Doctor
+from Experiments.Protocol_4_Twisting import Twisted_Doctor
+from Experiments.Protocol_5_Charging import Charged_Doctor
+from Experiments.Protocol_6_Stitching import Stitching_Doctor
+from Experiments.Protocol_7_Creation import drCreator
+
 
 from OperatingTools import drYaml
 from OperatingTools import drSplash
@@ -52,12 +54,14 @@ def main():
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
-    exit()
-
     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
         config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
         drYaml.write_config_to_yaml(config, outputDir)
-
+        config = Assembly_Doctor.charmm_assembly_protocol(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)  
+    elif config["parameterFittingInfo"]["forceField"] == "AMBER":
+        raise NotImplementedError("Assembly for AMBER force field not implemented yet")
+    exit()
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()

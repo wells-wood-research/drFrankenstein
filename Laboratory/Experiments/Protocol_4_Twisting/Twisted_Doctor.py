@@ -34,7 +34,10 @@ def twist_protocol(config):
     config = Twisted_Assistant.set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
-    rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config)
+    if config["parameterFittingInfo"]["forceField"] == "CHARMM":
+        rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds_CHARMM(config)
+    elif config["parameterFittingInfo"]["forceField"] == "AMBER":
+        rotatableBonds: Dict[List[Tuple[int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config)
 
     uniqueRotatableBonds = Twisted_Assistant.get_non_symmetric_rotatable_bonds(rotatableBonds, config)
 

@@ -53,7 +53,7 @@ def main():
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
-
+    ## run assembly protocol
     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
         config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
         drYaml.write_config_to_yaml(config, outputDir)
@@ -61,7 +61,6 @@ def main():
         drYaml.write_config_to_yaml(config, outputDir)  
     elif config["parameterFittingInfo"]["forceField"] == "AMBER":
         raise NotImplementedError("Assembly for AMBER force field not implemented yet")
-    exit()
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()

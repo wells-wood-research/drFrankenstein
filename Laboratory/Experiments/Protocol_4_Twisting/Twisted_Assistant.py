@@ -8,7 +8,8 @@ This script contains:
 """
 import os
 from os import path as p
-import sys
+import re
+from collections import defaultdict
 import pandas as pd
 import numpy as np
 import glob
@@ -16,6 +17,8 @@ import re
 from shutil import rmtree
 from scipy.signal import argrelextrema
 import random
+import parmed
+from parmed.charmm import CharmmParameterSet, CharmmPsfFile
 ## RDKIT IMPORTS ##
 from rdkit import Chem, RDLogger
 
@@ -255,6 +258,178 @@ def get_non_symmetric_rotatable_bonds(rotatableBonds, config):
     return uniqueBonds
 
 
+def identify_rotatable_bonds_CHARMM(config) -> List[Tuple[int,int,int,int]]:
+    ## unpack config
+    assembledPsf = config["runtimeInfo"]["madeByAssembly"]["assembledPsf"]
+    assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
+    assembledRtf = config["runtimeInfo"]["madeByAssembly"]["assembledRtf"]
+
+    parmedPsf = CharmmPsfFile(assembledPsf)
+    parmedPsf.load_parameters(CharmmParameterSet(assembledPrm, assembledRtf))
+    # Create bond lookup dictionary
+    bond_lookup = {}
+    for bond in parmedPsf.bonds:
+        # Use sorted indices as key to handle undirected bonds
+        key = tuple(sorted([bond.atom1.idx, bond.atom2.idx]))
+        bond_lookup[key] = bond
+
+    rotatableDihedrals = []
+    aromaticDihedrals = []
+    nonAromaticRingDihedrals = []
+    terminalDihedrals = []
+
+    rings = find_ring_atoms(parmedPsf)
+    adjacencyMatrix = _construct_adjacency_matrix(parmedPsf)
+
+    aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, parmedPsf, adjacencyMatrix)
+
+    for dihedral in parmedPsf.dihedrals:
+        atomNames = extract_dihedral_atom_names(dihedral)
+        atomTypes = extract_dihedral_atom_types(dihedral)
+
+        if _is_terminal_non_polar_dihedral(dihedral):
+            terminalDihedrals.append((atomTypes, atomNames))
+            continue
+
+        if _is_a_ring_dihedral(dihedral, rings):
+            if _is_a_ring_dihedral(dihedral, aromaticRings):
+                aromaticDihedrals.append((atomTypes, atomNames))
+                continue
+            else:
+                nonAromaticRingDihedrals.append((atomTypes, atomNames))
+                continue
+        rotatableDihedrals.append((atomTypes, atomNames))
+    uniqueRotatableDihedrals = get_unique_dihedrals(rotatableDihedrals)
+    for key, value in uniqueRotatableDihedrals.items():
+        print(key, value, len(value))
+
+    exit()
+ 
+def get_unique_dihedrals(dihedralGroup: list[tuple[tuple[str], tuple[str]]]):
+    uniqueDihedrals = {}
+
+    for dihedral in dihedralGroup:
+        if not dihedral[0] in uniqueDihedrals.keys():
+            uniqueDihedrals[dihedral[0]] = [dihedral[1]]
+        else:
+            uniqueDihedrals[dihedral[0]].append(dihedral[1])
+
+    return uniqueDihedrals
+def _is_a_ring_dihedral(dihedral: parmed.topologyobjects.Dihedral, rings: List[set[int]]) -> bool:
+    atomIndexes = extract_dihedral_atom_indexes(dihedral)
+    for ring in rings:
+        if atomIndexes[1] in ring and atomIndexes[2] in ring:
+            return True
+    return False
+
+
+def classify_rings_aromatic(rings: List[set[int]], parmedPsf: CharmmPsfFile, adjacencyMatrix: defaultdict) -> Tuple[List[set[int]], List[set[int]]]:
+    aromaticValenceCheck = {
+                        6 : [3],        ## Carbons MUST have 3 bonded atoms
+                        7 : [2,3],      ## Nitrogens MUST have 2 or 3 bonded atoms
+                        8 : [2]         ## Oxygens MUST have 2 bonded atoms
+
+    }
+    
+    aromaticRings = []
+    nonAromaticRings = []
+    for ringIndex in rings:
+        ringElements = [parmedPsf.atoms[idx].element for idx in ringIndex]
+        ringValences = [len(adjacencyMatrix[idx]) for idx in ringIndex]  
+
+        print(ringElements, ringValences)
+        # possibleAromaticValences = [aromaticValenceCheck.get(element, (0)) for element in ringElements]
+
+        passedCheckAtoms = [valence in aromaticValenceCheck.get(element, (0))
+                            for valence, element in zip(ringValences, ringElements)]
+        if all(passedCheckAtoms):
+            aromaticRings.append(ringIndex)
+        else:
+            nonAromaticRings.append(ringIndex)
+    return aromaticRings, nonAromaticRings
+
+def find_ring_atoms(structure):
+    """
+    Identify atoms in rings within a ParmEd Structure object and return as a list of sets.
+    Each set contains the indices of atoms in a distinct ring.
+    Args:
+        structure: ParmEd Structure object (e.g., loaded from a PSF file).
+    Returns:
+        list: List of sets, where each set contains atom indices (atom.idx) for a ring.
+    """
+    def dfs(current_atom, parent_atom, visited, path, rings, start_atom):
+        """
+        DFS to detect cycles and collect atoms in rings.
+        """
+        visited.add(current_atom)
+        path.append(current_atom)
+
+        for bond in current_atom.bonds:
+            neighbor = bond.atom1 if bond.atom2 == current_atom else bond.atom2
+            if neighbor == parent_atom:
+                continue
+            # If neighbor is in path and not the immediate parent, we found a cycle
+            if neighbor in path:
+                cycle_start_idx = path.index(neighbor)
+                # Extract atoms from path back to neighbor
+                cycle_atoms = path[cycle_start_idx:]
+                # Store as a set of atom indices
+                ring = set(atom.idx for atom in cycle_atoms)
+                # Only add if not already found (avoid duplicates)
+                if ring not in rings:
+                    rings.append(ring)
+            elif neighbor not in visited:
+                # Continue DFS if neighbor hasn't been visited
+                dfs(neighbor, current_atom, visited, path, rings, start_atom)
+
+        path.pop()
+        # Allow revisiting atoms for detecting multiple rings
+        visited.remove(current_atom) # Uncomment if needed for complex graphs
+
+    rings = []
+    visited = set()
+
+    # Run DFS from each atom to find all cycles
+    for atom in structure.atoms:
+        if atom not in visited:
+            dfs(atom, None, visited.copy(), [], rings, atom)
+
+    return rings
+
+
+def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
+    # Build adjacency list for graph representation
+    adjacency = defaultdict(list)
+    for bond in parmedPsf.bonds:
+        idx1, idx2 = bond.atom1.idx, bond.atom2.idx
+        adjacency[idx1].append(idx2)
+        adjacency[idx2].append(idx1)
+
+    return adjacency
+
+
+def _is_terminal_non_polar_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+
+    atomElements = extract_dihedral_atom_elements(dihedral)
+    print(atomElements)
+    if atomElements[0] == 1 and atomElements[1] == 6:
+        return True
+    elif atomElements[2] == 6 and atomElements[3] == 1:
+        return True
+    else:
+        return False
+
+def extract_dihedral_atom_types(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
+    return dihedral.atom1.type, dihedral.atom2.type, dihedral.atom3.type, dihedral.atom4.type
+
+def extract_dihedral_atom_elements(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
+    return dihedral.atom1.element, dihedral.atom2.element, dihedral.atom3.element, dihedral.atom4.element
+
+def extract_dihedral_atom_indexes(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
+    return dihedral.atom1.idx, dihedral.atom2.idx, dihedral.atom3.idx, dihedral.atom4.idx
+
+def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
+    return dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name
 
 def identify_rotatable_bonds(config) -> List[Tuple[int,int,int,int]]:
     ## unpack config

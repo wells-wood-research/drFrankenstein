@@ -1,14 +1,8 @@
 import os
 from os import path as p
 import warnings
-import parmed as pmd
-from parmed.charmm import CharmmParameterSet, CharmmPsfFile
+from parmed.charmm import CharmmParameterSet
 from parmed.exceptions import ParameterWarning
-from psfgen import PsfGen
-
-# Suppress ParameterWarning
-warnings.filterwarnings('ignore', category=ParameterWarning)
-
 
 from . import Assembly_Monster
 from . import Assembly_Assistant
@@ -18,6 +12,16 @@ class FilePath:
 
 class DirectoryPath:
     pass
+
+def amber_assembly_protocol(config:dict) -> dict:
+    """
+    Main protocol for assembly of starting parameters for AMBER parameters
+    This protocol:
+    1. Make a MOl2 with openbabel
+    2. Make a FRCMOD file with antechamber
+    3. Optionally maps backbone atoms from gaff2 to AMBER atoms
+    """
+    ...
 
 
 

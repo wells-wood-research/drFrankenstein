@@ -15,7 +15,8 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=4, forcefeild = "CHARMM"):
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forcefeild = "AMBER"):
+    
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)
@@ -35,6 +36,7 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
 
     elif forcefeild == "CHARMM":
         reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxFunctions)
+
         ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
     paramDf.iloc[:nFunctionsUsed].to_csv(outCsv)
@@ -113,7 +115,7 @@ def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
 def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
                                  angle: np.array,
                                      maxFunctions: int,
-                                       tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+                                       tolerance: float = 0.05) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     
     amplitudes = amberParamDf["Amplitude"]
     periods = amberParamDf["Period"]
@@ -144,8 +146,8 @@ def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
             cosineComponents.append((nFunctionsUsed , amberComponent))
             if meanAverageError < tolerance:
                 break
-        if meanAverageError < tolerance:
-            break
+        # if meanAverageError < tolerance:
+        break
     return reconstructedSignal, cosineComponents, nFunctionsUsed
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

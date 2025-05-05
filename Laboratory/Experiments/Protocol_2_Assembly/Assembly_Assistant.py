@@ -103,8 +103,11 @@ def create_frcmod_file(mol2File: FilePath,
                               "-a", "Y",
                                 "-p", gaff2Dat]
 
-    call(parmchk2Command)
-    
+    try:
+        call(parmchk2Command)
+    except Exception as e:
+        raise(e)
+
     return None
 
 

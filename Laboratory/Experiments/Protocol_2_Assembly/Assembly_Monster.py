@@ -83,7 +83,7 @@ def change_backbone_types_amber(mol2File: FilePath, config: dict) -> None:
     """
 
     # Define CHARMM36m atom type mapping
-    amberDefaultMAp = {
+    amberDefaultMap = {
                     "N" : "N",
                     "HN": "H",
                     "CA": "CT",
@@ -93,21 +93,21 @@ def change_backbone_types_amber(mol2File: FilePath, config: dict) -> None:
                     "NN": "N",
                     "HNN1": "H",
                     "CN": "CT", 
-                    "HCN1": "H1",
-                    "HCN2": "H1",
-                    "HCN3": "H1",
+                    "HCN1": "H3",
+                    "HCN2": "H3",
+                    "HCN3": "H3",
                     "CC1": "C",
                     "OC": "O",
                     "CC2": "CT", 
-                    "HC1": "H1",
-                    "HC2": "H1",
-                    "HC3": "H1"
+                    "HC1": "H3",
+                    "HC2": "H3",
+                    "HC3": "H3"
     }
 
     parmedStructure = parmed.load_file(mol2File)
     for atom in parmedStructure.atoms:
-        if atom.name in amberDefaultMAp:
-            atom.type = amberDefaultMAp[atom.name]
+        if atom.name in amberDefaultMap:
+            atom.type = amberDefaultMap[atom.name]
 
     parmedStructure.save(mol2File, overwrite=True)
 

@@ -53,10 +53,13 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
     config = AMBER_helper_functions.copy_assembled_parameters(config)
 
     AMBER_helper_functions.edit_mol2_partial_charges(config)
+    AMBER_helper_functions.run_tleap_to_make_params(config)
+
+
     ## get torsion tags from config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     
-    nShuffles = 10   ## TODO: put in config
+    nShuffles = 100   ## TODO: put in config
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for shuffleIndex in range(nShuffles):
         print(f"Shuffle round {shuffleIndex+1}") ## TODO: SPLASH
@@ -67,14 +70,13 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
             mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
             mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
             torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
-            AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf)
-            AMBER_helper_functions.run_tleap_to_make_params(config)
-
-    ## make a gif for each torsion being fitted - so satisfying!
+            config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf)
+            AMBER_helper_functions.run_tleap_to_make_params(config)    ## make a gif for each torsion being fitted - so satisfying!
     for torsionTag in torsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
+    exit()
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config

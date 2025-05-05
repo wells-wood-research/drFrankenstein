@@ -63,12 +63,11 @@ def update_frcmod(config: dict,
     target_atom_types = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
 
     # Prepare new dihedral types from DataFrame
-    torsionParamDf['Phase_rad'] = np.radians(torsionParamDf['Phase'])
     new_dihedral_types = [
         parmed.DihedralType(
             phi_k=row['Amplitude'],
             per=int(row['Period']), # Ensure periodicity is integer
-            phase=row['Phase_rad'],
+            phase=row['Phase'],
             scee=1.2, # Default AMBER scaling
             scnb=2.0  # Default AMBER scaling
         )
@@ -78,34 +77,33 @@ def update_frcmod(config: dict,
     # Load frcmod as parameter set
     parmedFrcmod = parmed.load_file(moleculeFrcmod)
     # Alternative if load_file fails inference:
-    # parmedFrcmod = parmed.amber.AmberParameterSet(moleculeFrcmod)
-
-    # Find and update the matching dihedral entry
-    found = False
-    # Use list() to create a copy of keys if modifying dict during iteration,
-    # though here we only modify values, direct iteration is often fine.
-    for frcmodAtomNames in list(parmedFrcmod.dihedral_types.keys()):
+   # 3. Find and replace the matching dihedral entry
+    keys_to_delete = []
+    for frcmodAtomNames in parmedFrcmod.dihedral_types:
         if frcmodAtomNames == target_atom_types or frcmodAtomNames == target_atom_types[::-1]:
-            parmedFrcmod.dihedral_types[frcmodAtomNames] = new_dihedral_types
-            found = True
-            break
+            keys_to_delete.append(frcmodAtomNames)
+    
+    for key_to_delete in keys_to_delete:
+        del parmedFrcmod.dihedral_types[key_to_delete]
 
-    if not found:
-        # Minimal handling: print a warning or raise a simple error
-        print(f"Warning: Dihedral {target_atom_types} not found in {moleculeFrcmod}.")
-        # Or uncomment to raise error:
-        # raise ValueError(f"Dihedral {target_atom_types} not found in {moleculeFrcmod}.")
+   
+    parmedFrcmod.dihedral_types[target_atom_types] = new_dihedral_types
+
+    nFrcmods = len([file for file in os.listdir(moleculeParameterDir) if file.endswith(".frcmod")])
 
     # Define output path and write the updated frcmod file
-    outputFrcmod = p.join(moleculeParameterDir, f"{torsionTag}_updated.frcmod")
+    outputFrcmod = p.join(moleculeParameterDir, f"{torsionTag}_{nFrcmods + 1}.frcmod")
     # Use save method, explicitly setting format and allowing overwrite
     parmedFrcmod.write(outputFrcmod, style='frcmod')
 
 
-    ## overwrite frcmod
-    move(outputFrcmod, moleculeFrcmod)
+    config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = outputFrcmod
 
-    return None
+
+    ## overwrite frcmod
+    # move(outputFrcmod, moleculeFrcmod)
+
+    return config
 
 
 def edit_mol2_partial_charges(config: dict) -> None:

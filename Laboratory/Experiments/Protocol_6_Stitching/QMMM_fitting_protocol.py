@@ -27,13 +27,11 @@ def fit_torsion_parameters(config: dict,
                                   shuffleIndex: int,
                                     mmCosineComponents: dict,
                                       debug: bool = False):
-    if debug:
-        print(f"Fitting torsion parameters for {torsionTag}")
+
     qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
     qmmmTorsionFittingDir = p.join(qmmmFittingDir, torsionTag)
     os.makedirs(qmmmTorsionFittingDir,exist_ok=True)
-    if debug:
-        print(f"Getting QM scan energies for {torsionTag}")
+
     qmTotalEnergy = get_qm_scan_energies(config, torsionTag)
 
     qmTotalEnergy = qmTotalEnergy - qmTotalEnergy.min()
@@ -42,11 +40,12 @@ def fit_torsion_parameters(config: dict,
 
     qmTorsionEnergy = qmTorsionEnergy - qmTorsionEnergy.min()
 
-
     Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy, qmTorsionEnergy, mmTotalEnergy, mmTorsionEnergy, mmCosineComponents, qmmmTorsionFittingDir, shuffleIndex)
-    if debug:
-        print(f"Running fourier transform for {torsionTag}")
-    torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy, torsionTag, qmmmTorsionFittingDir)
+
+    torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy,
+                                                                                  torsionTag,
+                                                                                    qmmmTorsionFittingDir,
+                                                                                      forcefeild=config["parameterFittingInfo"]["forceField"])
 
     return torsionParametersDf
 

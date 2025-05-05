@@ -117,9 +117,7 @@ def get_donor_acceptors(config: dict, debug:bool = False) -> dict:
 
     donorAcceptors = {"DONORS": uniqueDonors,
                       "ACCEPTORS": uniqueAcceptors}
-    
-    print(donorAcceptors)
-    
+        
     config["runtimeInfo"]["madeByCreator"]["donorAcceptors"] = donorAcceptors
 
     return config

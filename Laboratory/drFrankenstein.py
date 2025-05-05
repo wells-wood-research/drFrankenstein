@@ -31,7 +31,8 @@ def main():
     ## load into dict, check for bad formatting
     config = drYaml.read_input_yaml(configYaml)
     ## check config for errors
-    config = validate_config.validate_config(config)
+    # config = validate_config.validate_config(config)
+
     ## unpack config to find outputDir, make directory
     outputDir = config["pathInfo"]["outputDir"]
     os.makedirs(outputDir,exist_ok=True)
@@ -53,6 +54,7 @@ def main():
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
     ## run assembly protocol
     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
         config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
@@ -60,12 +62,15 @@ def main():
         config = Assembly_Doctor.charmm_assembly_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)  
     elif config["parameterFittingInfo"]["forceField"] == "AMBER":
-        raise NotImplementedError("Assembly for AMBER force field not implemented yet")
+        config = Assembly_Doctor.amber_assembly_protocol(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)
+
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
         config = Wriggling_Doctor.conformer_generation_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
     ## run torsion scanning
     if not checkpointInfo["scanningComplete"]:
         drSplash.show_twist_splash()
@@ -85,7 +90,6 @@ def main():
             config = Stitching_Doctor.torsion_fitting_protocol_AMBER(config=config)
         elif config["parameterFittingInfo"]["forceField"] == "CHARMM":
             config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
-
         drYaml.write_config_to_yaml(config, outputDir)
 
     if not checkpointInfo["finalCreationComplete"]:

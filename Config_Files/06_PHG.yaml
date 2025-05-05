@@ -17,8 +17,8 @@ pathInfo:
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
   orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
-  ## full path to AMBER gaff2.dat
-  gaff2Dat: /home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat
+  ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
+  amberHome: /home/esp/anaconda3/envs/Igor/
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null
 
@@ -125,11 +125,11 @@ chargeFittingInfo:
 ############################################################################################################################
 parameterFittingInfo:
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
-  forceField: CHARMM
+  forceField: AMBER
   ## maximum cosine functions to be used to fit each torsion parameter
-  maxCosineFunctions: 5
+  maxCosineFunctions: 3
   ## how many rounds of parameter fitting do you want to perform (more is better?)
-  nShuffles: 10
+  nShuffles: 25
 
 #####################################################
 #              _             ___          __        #

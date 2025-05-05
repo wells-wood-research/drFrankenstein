@@ -3,8 +3,9 @@ import os
 from os import path as p
 from subprocess import call, PIPE
 import pandas as pd
-from shutil import move
-
+from shutil import move, copy
+import numpy as np
+import parmed
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
 
@@ -37,11 +38,11 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
     for parameter in mmTorsionParameters:
         ## extract params from dict
         potentialConstant = float(parameter["k"])
-        inverseDivisionFactor = float(parameter["multiplicity"])
+        # inverseDivisionFactor = float(parameter["multiplicity"])
         periodicityNumber = abs(float(parameter["periodicity"]))
         phase = np.radians(float(parameter["phase"]))
         ## construct cosine component
-        cosineComponent: np.array = (potentialConstant / inverseDivisionFactor) * (1 + np.cos(periodicityNumber * angle - phase)) 
+        cosineComponent: np.array = (potentialConstant) * (1 + np.cos(periodicityNumber * angle - phase)) 
         ## add to torsion energy
         mmTorsionEnergy += cosineComponent
         mmCosineComponents[periodicityNumber] = cosineComponent
@@ -50,254 +51,151 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_frcmod(config: dict,
-                   torsionTag: str,
-                     torsionParamDf: pd.DataFrame) -> dict:
+                  torsionTag: str,
+                  torsionParamDf: pd.DataFrame) -> None:
     """
-    Updates an AMBER frcmod file with a torsion parameter block
-    
+    Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
+    Minimal version focusing on core logic.
+    """
+    moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
+    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
+    target_atom_types = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+
+    # Prepare new dihedral types from DataFrame
+    torsionParamDf['Phase_rad'] = np.radians(torsionParamDf['Phase'])
+    new_dihedral_types = [
+        parmed.DihedralType(
+            phi_k=row['Amplitude'],
+            per=int(row['Period']), # Ensure periodicity is integer
+            phase=row['Phase_rad'],
+            scee=1.2, # Default AMBER scaling
+            scnb=2.0  # Default AMBER scaling
+        )
+        for _, row in torsionParamDf.iterrows()
+    ]
+
+    # Load frcmod as parameter set
+    parmedFrcmod = parmed.load_file(moleculeFrcmod)
+    # Alternative if load_file fails inference:
+    # parmedFrcmod = parmed.amber.AmberParameterSet(moleculeFrcmod)
+
+    # Find and update the matching dihedral entry
+    found = False
+    # Use list() to create a copy of keys if modifying dict during iteration,
+    # though here we only modify values, direct iteration is often fine.
+    for frcmodAtomNames in list(parmedFrcmod.dihedral_types.keys()):
+        if frcmodAtomNames == target_atom_types or frcmodAtomNames == target_atom_types[::-1]:
+            parmedFrcmod.dihedral_types[frcmodAtomNames] = new_dihedral_types
+            found = True
+            break
+
+    if not found:
+        # Minimal handling: print a warning or raise a simple error
+        print(f"Warning: Dihedral {target_atom_types} not found in {moleculeFrcmod}.")
+        # Or uncomment to raise error:
+        # raise ValueError(f"Dihedral {target_atom_types} not found in {moleculeFrcmod}.")
+
+    # Define output path and write the updated frcmod file
+    outputFrcmod = p.join(moleculeParameterDir, f"{torsionTag}_updated.frcmod")
+    # Use save method, explicitly setting format and allowing overwrite
+    parmedFrcmod.write(outputFrcmod, style='frcmod')
+
+
+    ## overwrite frcmod
+    move(outputFrcmod, moleculeFrcmod)
+
+    return None
+
+
+def edit_mol2_partial_charges(config: dict) -> None:
+    """
+    Gets partial charges stored in a dataframe and pastes them into the
+    charges column of a MOL2 file
+
     Args:
-        config (dict): the drFrankenstein config containing all run information
-        torsionTag (str): the torsion tag for the torsion we are updating
-        torsionParamDf (pd.DataFrame): the torsion parameters for the torsion we are updating
-    Returns:    
-        config (dict): updated config
+        config (dict): config with all run information
+
+    Returns:
+        None [path to updated mol2 file already in config]
+    
     """
+
     ## unpack config ##
-    inFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
-    tmpFrcmod = p.splitext(inFrcmod)[0] + "_tmp.frcmod"
-    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
-    
-    ## construct torsion identifier forwards and reversed for finding line in frcmod ##
-    atomNames = torsionTag.split("-")
-    atomTypes = [atomTypeMap[name] for name in atomNames]
-    atomTypesReversed = atomTypes[::-1]
-    torsionIdentifier = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypes])
-    torsionIdentifierReversed = "-".join([el + ' ' if len(el) == 1 else el for el in atomTypesReversed])
-
-    ## init a bool to determine whether to write lines to frcmod
-    writeLines = False
-    ## init new torsion block as an empty string
-    newTorsionBlock = ""
-
-    ##TODO: multiplicity from symmetry
-    multiplicity = 1
-
-    ## read through torsionParamDf and write new torsion block to add to frcmod
-    for _, row in torsionParamDf.iloc[:-1].iterrows():
-        amplitude = f"{row['Amplitude']:.3f}"
-        phase = f"{row['Phase']:.3f}"
-        period = f"{-row['Period']:.3f}"
-        newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
-                            f"{amplitude:>5}{phase:>14}{period:>16}"
-                            f"\t\tMADE BY drFRANKENSTEIN\n")
-    ## write last row TODO: (why is this separate????)
-    lastRow = torsionParamDf.iloc[-1]
-    amplitude = f"{lastRow['Amplitude']:.3f}"
-    phase = f"{lastRow['Phase']:.3f}"
-    period = f"{lastRow['Period']:.3f}"
-    newTorsionBlock += (f"{torsionIdentifier:<14}{multiplicity:<5}"
-                        f"{amplitude:>5}{phase:>14}{period:>16}"
-                        f"\t\tMADE BY drFRANKENSTEIN\n")
-    
-    ## init a bool to determine whether to write lines to frcmod
-    writeLines = False
-    ## read through frcmod and write to tmp frcmod
-    with open(inFrcmod, "r") as f, open(tmpFrcmod, "w") as tmp:
-        for line in f:
-            ## dont copy params for this torsion
-            if  line.startswith(torsionIdentifier) or line.startswith(torsionIdentifierReversed):
-                continue
-            elif line.startswith("DIHE"):
-                writeLines = True
-                tmp.write(line)
-            elif writeLines:
-                tmp.write(newTorsionBlock)
-                writeLines = False
-                tmp.write(line)
-            else:
-                tmp.write(line)
-    ## owerwrite frcmod
-    move(tmpFrcmod, inFrcmod)
-    return config
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_generate_initial_frcmod(config: dict) -> dict:
-    """
-    Gets MM(torsion) energy for each torsion we have scanned
-    This is done by extracting torsion parameters from FRCMOD file 
-    And reconstructing energy as a sum of the cosine functions described
-
-    Args:
-        config (dict): config containing all run information
-
-    Returns:
-        mmTorsionEnergies (dict): energies
-        config (dict): updated config dict 
-    """
-
-    ## get dir to write files to
-    mmTorsionDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
-    ## get capped pdb file as input
-    cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-    ## get molecule name from filepath
-    moleculeName: str = config["moleculeInfo"]["moleculeName"]
-
-    ## convert capped PDB to MOL2
-    cappedMol2: FilePath = p.join(mmTorsionDir, f"{moleculeName}_capped.mol2")
-    Stitching_Assistant.pdb2mol2(cappedPdb, cappedMol2, mmTorsionDir)
-    config["runtimeInfo"]["madeByStitching"]["cappedMol2"] = cappedMol2
-
-    ## read calculated partial charges
+    moleculeMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
     chargesCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
-    chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
-    chargesDf["Charge"] = chargesDf["Charge"].round(4)
 
-    ## paste charges from prior QM calculations into MOL2 file
-    chargesMol2 = p.join(config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"], f"{moleculeName}_charges.mol2")
-    Stitching_Assistant.edit_mol2_partial_charges(cappedMol2, chargesDf, chargesMol2)
+    outMol2 = p.splitext(moleculeMol2)[0] + "_tmp.mol2"
+    chargesDf = pd.read_csv(chargesCsv)
 
-    ## fix atom types in MOL2 file
-    fixedAtomMol2 = p.join(mmTorsionDir, f"{moleculeName}_fixed_atoms.mol2")
-    Stitching_Assistant.edit_mo2_atom_types(chargesMol2, fixedAtomMol2)
-    config["runtimeInfo"]["madeByStitching"]["finalMol2"] = fixedAtomMol2
+    ## init atom index counter
+    atomIndex: int = 0
+    ## open inMol2 for reading and outMol2 for writing
+    with open(moleculeMol2, 'r') as inMol2, open(outMol2, "w") as writeMol2:
+        ## read through inMol2 until we get to the atom section
+        mol2Lines = inMol2.readlines()
+        isAtomLine = False
+        for line in mol2Lines:
+            if line.strip() == "@<TRIPOS>ATOM":
+                isAtomLine = True
+            elif line.strip() == "@<TRIPOS>BOND":
+                isAtomLine = False
+            elif isAtomLine:
+                ## increment atom index
+                atomIndex += 1
+                ## get atom charge for this index
+                atomCharge = chargesDf.loc[chargesDf['atomIndex'] == atomIndex, 'Charge'].values[0]
+                ## Format to 4 decimal places
+                atomCharge = f"{atomCharge:.4f}"
+                ## sort out spaces for the case of negative charges
+                if not atomCharge.startswith("-"):
+                    atomCharge = " "+atomCharge
+                newLine = line[:-10]  + atomCharge
+                line = newLine+"\n"
+            ## write to outMol2
+            writeMol2.write(line)
 
-    ## get a map of atomName -> atomType
-    atomTypeMap = Stitching_Assistant.create_atom_type_map(fixedAtomMol2)
-    config["runtimeInfo"]["madeByStitching"]["atomTypeMap"] = atomTypeMap
-    ## create a FRCMOD file from MOL2 file
-    molFrcmod = Stitching_Assistant.create_frcmod_file(fixedAtomMol2, moleculeName, config)
-    ## update config 
-    config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = molFrcmod
+    ## overwrite inMol2 with outMol2    
+    move(outMol2, moleculeMol2)
+    return None
+# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+def copy_assembled_parameters(config: dict) -> dict:
+    """
+    Copies the FRCMOD created during the assembly stage
+    to the stitching directory
+
+    Args:
+        config (dict): contains all information needed for run
+
+    Returns:
+        config (dict): updated config
+
+    """
+    ## unpack config
+    assembledFrcmod = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
+    assembledPrmtop = config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"]
+    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
+
+    destFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_capped.frcmod")
+    copy(assembledFrcmod, destFrcmod)
+
+    destPrmtop = p.join(moleculeParameterDir, f"{moleculeName}_capped.prmtop")
+    copy(assembledPrmtop, destPrmtop)
+
+    destMol2 = p.join(moleculeParameterDir, f"{moleculeName}_capped.mol2")
+    copy(cappedMol2, destMol2)
+
+    config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = destFrcmod
+    config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"] = destPrmtop
+    config["runtimeInfo"]["madeByStitching"]["moleculeMol2"] = destMol2
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def make_prmtop_inpcrd(trajXyz, fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug=False):
-
-    trajIndex = trajXyz.split(".")[1]
-
-    os.makedirs(fittingRoundDir, exist_ok=True)
-    os.chdir(fittingRoundDir)
-
-    trajPdb = p.join(fittingRoundDir, f"orca_{trajIndex}.pdb")
-    Stitching_Assistant.update_pdb_coords(cappedPdb, trajXyz, trajPdb)
-
-    trajMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}.mol2")
-    Stitching_Assistant.pdb2mol2(trajPdb, trajMol2, fittingRoundDir)
-
-    chargedMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}_charged.mol2")
-    Stitching_Assistant.edit_mol2_partial_charges(trajMol2, chargesDf, chargedMol2)
-
-    renamedMol2 = p.join(fittingRoundDir, f"orca_{trajIndex}_charged_renamed.mol2")
-    Stitching_Assistant.edit_mo2_atom_types(chargedMol2, renamedMol2)
-    prmtop, inpcrd = run_tleap_to_make_params(renamedMol2, moleculeFrcmod, fittingRoundDir, trajIndex)
-
-    return prmtop, inpcrd
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def parse_frcmod(molFrcmod: FilePath) -> dict:
-    """
-    Reads through a FRCMOD file and returns a dict with the contents of the file
-
-    Args:
-        molFrcmod (FilePath): frcmod file
-
-    Returns:
-        parsedFrcmod (dict): dict with the contents of the frcmod file
-    
-    """
-    ## init a bunch of bools
-    readingMass: bool       = False
-    readingBonds: bool      = False
-    readingAngles: bool     = False
-    readingDihedrals: bool  = False
-    readingImpropers: bool  = False
-    readingNonbonded: bool  = False
-
-    ## init empty parsedFrcmod dict
-    parsedFrcmod = {"ATOMS": [], "BONDS": [], "ANGLES": [], "DIHEDRALS": [], "IMPROPERS": [], "NONBONDED": []}
-    ## open molFrcmod for reading
-    with open(molFrcmod, 'r') as f:
-        ## loop through lines
-        for line in f:
-            ## skip empty lines
-            if line.strip() == "":
-                continue
-            ## use bools to determine which section of the frcmod file we are in
-            elif line.startswith("MASS"):
-                readingMass = True
-            elif line.startswith("BOND"):
-                readingBonds = True
-                readingMass = False
-            elif line.startswith("ANGLE"):
-                readingAngles = True
-                readingBonds = False
-            elif line.startswith("DIHE"):
-                readingDihedrals = True
-                readingAngles = False
-            elif line.startswith("IMPROPER"):
-                readingImpropers = True
-                readingDihedrals = False
-            elif line.startswith("NONBON"):
-                readingNonbonded = True
-                readingImpropers = False
-            ## if we are in a data section, parse the line
-            else:
-                ## process mass data
-                if readingMass:
-                    lineData = line.split()
-                    lineParsed = {"atomType": lineData[0], "mass": lineData[1], "vdw-radius": lineData[2]}
-                    parsedFrcmod["ATOMS"].append(lineParsed)
-                ## process bond data
-                elif readingBonds:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [4, 6]])
-                    paramData = "".join(line[6:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "r0": paramData[0], "k": paramData[1]}
-                    parsedFrcmod["BONDS"].append(lineParsed)
-                ## process angle data
-                elif readingAngles:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8]])
-                    paramData = "".join(line[9:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "theta0": paramData[0], "k": paramData[1]}
-                    parsedFrcmod["ANGLES"].append(lineParsed)
-                ## process dihedral data
-                elif readingDihedrals:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8], [9, 11]])
-                    paramData = "".join(line[12:]).split()[0:4]
-                    lineParsed = {"atoms": atomData, "multiplicity": paramData[0], "k": paramData[1], "phase": paramData[2], "periodicity": paramData[3]}  
-                    parsedFrcmod["DIHEDRALS"].append(lineParsed)  
-                ## process improper data
-                elif readingImpropers:
-                    atomData = get_frcmod_atom_data(line, [[0, 2], [3, 5], [6, 8], [9, 11]])
-                    paramData = "".join(line[12:]).split()[0:3]
-                    lineParsed = {"atoms": atomData, "k": paramData[0], "phi0": paramData[1], "periodicity": paramData[2]}
-                    parsedFrcmod["IMPROPERS"].append(lineParsed)
-                ## process nonbonded data
-                elif readingNonbonded:
-                    atomData = get_frcmod_atom_data(line, [[0, 6]])
-                    paramData = "".join(line[6:]).split()[0:2]
-                    lineParsed = {"atoms": atomData, "vdw-radius": paramData[0], "well-depth": paramData[1]}
-                    parsedFrcmod["NONBONDED"].append(lineParsed)
-    return parsedFrcmod
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_frcmod_atom_data(line: str, indexes: list) -> list:
-    """
-    Small function for getting atom names from FRCMOD file lines
-
-    Args:
-        line (str): line from a FRCMOD file
-        indexes (List[int,int]): location of atom types in FRCMOD line
-
-    Returns:
-        atomData (List[str]): list of atom types 
-    """
-
-    return [line[start:end].strip() for start, end in indexes]
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_tleap_to_make_params(inMol2: FilePath,
-                            molFrcmod: FilePath,
-                              outDir: DirectoryPath,
-                                index: str):
+def run_tleap_to_make_params(config: dict) -> None:
     """
     Uses TLEAP to create a prmtop inpcrd pair
 
@@ -311,11 +209,17 @@ def run_tleap_to_make_params(inMol2: FilePath,
         prmtop (FilePath): topology file for AMBER
         impcrd (FilePath): coordinate file for AMBER
     """
+    ## unpack config
+    inMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
+    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
+    outDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
 
-    prmtop: FilePath = p.join(outDir, f"orca_{index}.prmtop")
-    inpcrd: FilePath = p.join(outDir, f"orca_{index}.inpcrd")
 
-    tleapInput: FilePath = p.join(outDir, f"leap_{index}.in")
+    prmtop: FilePath = p.join(outDir, f"{moleculeName}_capped.prmtop")
+    inpcrd: FilePath = p.join(outDir, f"{moleculeName}_capped.inpcrd")
+
+    tleapInput: FilePath = p.join(outDir, f"leap_{moleculeName}.in")
     with open(tleapInput, "w") as f:
         f.write("source leaprc.gaff2\n")
         f.write(f"mol  = loadmol2 {inMol2} \n")
@@ -324,10 +228,10 @@ def run_tleap_to_make_params(inMol2: FilePath,
         f.write(f"saveamberparm mol {prmtop} {inpcrd}  \n")
         f.write("quit")
 
-    tleapOutput: FilePath = p.join(outDir, f"tleap_{index}.out")
+    tleapOutput: FilePath = p.join(outDir, f"tleap.out")
 
     tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
 
     call(tleapCommand, stdout=PIPE)
 
-    return prmtop, inpcrd
+    return prmtop

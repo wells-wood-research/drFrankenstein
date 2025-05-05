@@ -1,16 +1,16 @@
 import os
 from os import path as p
 import warnings
+from subprocess import call, run, PIPE, STDOUT
+from pdbUtils import pdbUtils
 import parmed as pmd
 from parmed.charmm import CharmmParameterSet, CharmmPsfFile
 from parmed.exceptions import ParameterWarning
-from psfgen import PsfGen
 
 # Suppress ParameterWarning
 warnings.filterwarnings('ignore', category=ParameterWarning)
 
 
-from . import Assembly_Monster
 # Placeholder classes (extend if needed)
 class FilePath:
     pass
@@ -18,7 +18,140 @@ class FilePath:
 class DirectoryPath:
     pass
 
+def run_tleap_to_make_params(inMol2: FilePath,
+                            molFrcmod: FilePath,
+                              outDir: DirectoryPath,
+                                moleculeName: str):
+    """
+    Uses TLEAP to create a prmtop inpcrd pair
 
+    Args:
+        inMol2 (FilePath): input MOL2 file
+        molFrcmod (FilePath): input FRCMOD file
+        outDir (DirectoryPath): output directory
+        index (str): identifier for output files
+
+    Returns: 
+        prmtop (FilePath): topology file for AMBER
+        impcrd (FilePath): coordinate file for AMBER
+    """
+
+    prmtop: FilePath = p.join(outDir, f"{moleculeName}_cappped.prmtop")
+    inpcrd: FilePath = p.join(outDir, f"{moleculeName}_capped.inpcrd")
+
+    tleapInput: FilePath = p.join(outDir, f"leap.in")
+    with open(tleapInput, "w") as f:
+        f.write("source leaprc.gaff2\n")
+        f.write(f"mol  = loadmol2 {inMol2} \n")
+        f.write(f"loadamberparams {molFrcmod} \n") # use frcmod previously made
+        f.write(f"saveamberparm mol {prmtop} {inpcrd}  \n")
+        f.write("quit")
+
+    tleapOutput: FilePath = p.join(outDir, f"tleap.out")
+
+    tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
+
+    call(tleapCommand, stdout=PIPE)
+
+    return prmtop
+
+
+def find_default_amber_parameters(amberHome: DirectoryPath) -> tuple[FilePath, FilePath]:
+    """
+    Finds gaff2.dat and parm19.dat from AMBERHOME
+
+    Args:
+        amberHome (DirectoryPath): path to AMBERHOME
+
+    Returns:
+        gaff2Dat (FilePath): path to gaff2.dat
+        parm19Dat (FilePath): path to parm19.dat
+    
+    """
+
+    gaff2Dat = p.join(amberHome, "dat", "leap", "parm", "gaff2.dat")
+    parm19Dat = p.join(amberHome, "dat", "leap", "parm", "parm19.dat")
+
+    if not p.exists(gaff2Dat):
+        raise FileNotFoundError(f"Could not find {gaff2Dat}")
+    if not p.exists(parm19Dat):
+        raise FileNotFoundError(f"Could not find {parm19Dat}")
+
+    return gaff2Dat, parm19Dat
+
+def create_frcmod_file(mol2File: FilePath,
+                        frcmodFile: FilePath,
+                          gaff2Dat: FilePath) -> FilePath:
+    """
+    uses parmchk2 to create a frcmod file from a mol2 file
+
+    Args:
+        chargesMol2 (FilePath): mol2 file of charges
+        moleculeName (str): name of molecule
+        config (dict): config dict
+
+    Returns:
+        molFrcmod (FilePath): path to frcmod file
+    
+    """
+
+    ## run run parmchk2
+    parmchk2Command = ["parmchk2",
+                        "-i", mol2File,
+                          "-f", "mol2",
+                            "-o", frcmodFile,
+                              "-a", "Y",
+                                "-p", gaff2Dat]
+
+    call(parmchk2Command)
+    
+    return None
+
+
+def pdb2mol2(inPdb: FilePath,
+              outMol2: FilePath,
+                workingDir: DirectoryPath) -> None:
+    """
+    Uses antechamber to convert pdb to mol2
+    Writes some unwanted temporary files
+    TODO: clean these up
+
+    Args:
+        inPdb (FilePath): input file in PDB format
+        outPdb (FilePath): output file in MOL2 format
+        workingDir (DirectoryPath): working directory (vital for cleanup)
+
+    Returns:
+        None (outMol2 has already been defined!)
+    
+    """
+    if p.exists(outMol2):
+        return None
+    os.chdir(workingDir)
+
+    ## set RES_ID to 1 for all atoms to keep antechamber happy
+    pdbDf = pdbUtils.pdb2df(inPdb)
+    pdbDf["RES_ID"] = 1
+    tmpPdb = p.join(workingDir, "tmp.pdb")
+    pdbUtils.df2pdb(pdbDf, tmpPdb)
+    ## get index, set path for antechamber to write outputs
+    index: str = p.basename(inPdb).split("_")[1].split(".")[0]
+    antechamberOut: FilePath = p.join(workingDir, f"antechamber_{index}.out")
+    ## run antechamber to create MOL2 file from PDB
+    antechamberCommand: list = [
+        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
+        "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
+        "-c", "bcc"
+    ]
+    with open(antechamberOut, 'w') as outfile:
+        run(antechamberCommand, stdout=outfile, stderr=STDOUT)
+
+    ## clean up temporary files
+    os.remove(tmpPdb)
+    filesTtoRemove = [f for f in os.listdir(workingDir) if f.startswith("ANTECHAMBER")]
+    for f in filesTtoRemove:
+        os.remove(p.join(workingDir, f))
+    return None
 
 def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dict:
     """

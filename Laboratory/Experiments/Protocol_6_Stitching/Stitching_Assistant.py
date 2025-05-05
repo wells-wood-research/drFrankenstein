@@ -6,7 +6,7 @@ import pandas as pd
 import re
 import numpy as np
 from pdbUtils import pdbUtils
-from shutil import move
+from shutil import move, copy
 import random
 
 
@@ -95,48 +95,7 @@ def pdb2mol2(inPdb: FilePath,
     with open(antechamberOut, 'w') as outfile:
         run(antechamberCommand, stdout=outfile, stderr=STDOUT)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def edit_mol2_partial_charges(inMol2: FilePath,
-                               chargesDf: pd.DataFrame,
-                                 outMol2: FilePath) -> None:
-    """
-    Gets partial charges stored in a dataframe and pastes them into the
-    charges column of a MOL2 file
 
-    Args:
-        inMol2 (FilePath): input MOL2 file
-        chargesDf (pd.DataFrame): dataframe of partial charges
-        outMol2 (FilePath): output MOL2 file
-
-    Returns:
-        None (outMol2 is already defined!)
-    
-    """
-    ## init atom index counter
-    atomIndex: int = 0
-    ## open inMol2 for reading and outMol2 for writing
-    with open(inMol2, 'r') as inMol2, open(outMol2, "w") as writeMol2:
-        ## read through inMol2 until we get to the atom section
-        mol2Lines = inMol2.readlines()
-        isAtomLine = False
-        for line in mol2Lines:
-            if line.strip() == "@<TRIPOS>ATOM":
-                isAtomLine = True
-            elif line.strip() == "@<TRIPOS>BOND":
-                isAtomLine = False
-            elif isAtomLine:
-                ## increment atom index
-                atomIndex += 1
-                ## get atom charge for this index
-                atomCharge = chargesDf.loc[chargesDf['atomIndex'] == atomIndex, 'Charge'].values[0]
-                ## Format to 4 decimal places
-                atomCharge = f"{atomCharge:.4f}"
-                ## sort out spaces for the case of negative charges
-                if not atomCharge.startswith("-"):
-                    atomCharge = " "+atomCharge
-                newLine = line[:-10]  + atomCharge
-                line = newLine+"\n"
-            ## write to outMol2
-            writeMol2.write(line)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def edit_mo2_atom_types(inMol2: FilePath,
@@ -211,30 +170,6 @@ def create_atom_type_map(inMol2: FilePath) -> dict:
     return atomTypeMap
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def create_frcmod_file(chargesMol2: FilePath,
-                        moleculeName: str,
-                          config: dict) -> FilePath:
-    """
-    uses parmchk2 to create a frcmod file from a mol2 file
-
-    Args:
-        chargesMol2 (FilePath): mol2 file of charges
-        moleculeName (str): name of molecule
-        config (dict): config dict
-
-    Returns:
-        molFrcmod (FilePath): path to frcmod file
-    
-    """
-    ## get path to gaff2.dat fom config file
-    gaff2Dat: FilePath = config["pathInfo"]["gaff2Dat"]
-    ## init molFrcmod output file
-    molFrcmod = p.join(config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"], f"{moleculeName}.frcmod")
-    ## run run parmchk2
-    parmchk2Command = ["parmchk2", "-i", chargesMol2, "-f", "mol2", "-o", molFrcmod, "-a", "-Y", "-p", gaff2Dat]
-    call(parmchk2Command)
-
-    return molFrcmod
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -252,13 +187,13 @@ def sort_out_directories(config) -> dict:
     """
     outputDir: DirectoryPath = config["pathInfo"]["outputDir"]
 
-    parameterFittingTopDir: DirectoryPath = p.join(outputDir, "05_parameter_fitting")
+    parameterFittingTopDir: DirectoryPath = p.join(outputDir, "06_parameter_fitting")
     os.makedirs(parameterFittingTopDir, exist_ok=True)
     config["runtimeInfo"]["madeByStitching"]["parameterFittingTopDir"] = parameterFittingTopDir
 
-    mmTorsionCalculationDir: DirectoryPath = p.join(parameterFittingTopDir, "mm_torsion_energies")
-    os.makedirs(mmTorsionCalculationDir, exist_ok=True)
-    config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"] = mmTorsionCalculationDir
+    moleculeParameterDir: DirectoryPath = p.join(parameterFittingTopDir, "molecule_parameters")
+    os.makedirs(moleculeParameterDir, exist_ok=True)
+    config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"] = moleculeParameterDir
 
     mmTotalCalculationDir: DirectoryPath = p.join(parameterFittingTopDir, "mm_total_energies")
     os.makedirs(mmTotalCalculationDir, exist_ok=True)

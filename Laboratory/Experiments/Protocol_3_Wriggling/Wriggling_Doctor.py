@@ -69,7 +69,7 @@ def  sort_out_directories(config: dict) -> dict:
         config (dict): updated config
     """
     outputDir = config["pathInfo"]["outputDir"]
-    conformerDir = p.join(outputDir, "02_GOAT_conformers")
+    conformerDir = p.join(outputDir, "03_GOAT_conformers")
     os.makedirs(conformerDir, exist_ok=True) 
     config["runtimeInfo"]["madeByConformers"]["conformerDir"] = conformerDir
 
@@ -125,7 +125,7 @@ def clean_up(conformerDir: DirectoryPath, config: dict) -> None:
         config (dict): dictionary containing all information
     """
     if config["miscInfo"]["cleanUpLevel"] in ["basic", "full"]:
-        filesToRemove = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith("GOAT")]
+        filesToRemove = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith("GOAT") and not f.endswith(".out")]
         for f in filesToRemove:
             os.remove(f)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

@@ -2,7 +2,6 @@ import os
 from os import path as p
 import warnings
 from parmed.charmm import CharmmParameterSet
-from parmed.exceptions import ParameterWarning
 
 from . import Assembly_Monster
 from . import Assembly_Assistant
@@ -17,14 +16,45 @@ def amber_assembly_protocol(config:dict) -> dict:
     """
     Main protocol for assembly of starting parameters for AMBER parameters
     This protocol:
-    1. Make a MOl2 with openbabel
-    2. Make a FRCMOD file with antechamber
+    1. Make a MOl2 with antechamber
+    2. Make a FRCMOD file with tleap
     3. Optionally maps backbone atoms from gaff2 to AMBER atoms
     """
-    ...
 
+    ## unpack config
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    amberHome = config["pathInfo"]["amberHome"]
 
+    ## find amber parameter sets
+    gaff2Dat, parm19Dat = Assembly_Assistant.find_default_amber_parameters(amberHome)
 
+    ## create an empty dict in config
+    config["runtimeInfo"]["madeByAssembly"] = {}
+
+    ## make a dir for assembly of initial parameters
+    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
+    os.makedirs(assemblyDir, exist_ok=True)
+    config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] = assemblyDir
+
+    ## create a mol2 file with antechamber
+    moleculeMol2 = p.join(assemblyDir, f"{moleculeName}_capped.mol2")
+    Assembly_Assistant.pdb2mol2(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], moleculeMol2, assemblyDir)
+    ## reset backbone atom types to AMBER defaults
+    Assembly_Monster.change_backbone_types_amber(moleculeMol2, config)
+    ## create frcmod file
+    moleculeFrcmod = p.join(assemblyDir, f"{moleculeName}_capped.frcmod")
+    Assembly_Assistant.create_frcmod_file(moleculeMol2, moleculeFrcmod, gaff2Dat)
+    ## replace gaff2 params with amber19sb parameters
+    Assembly_Monster.replace_parameters(moleculeFrcmod, parm19Dat)
+    ## create a PRMTOP file
+    moleculePrmtop = Assembly_Assistant.run_tleap_to_make_params(moleculeMol2, moleculeFrcmod, assemblyDir, "amber")
+
+    ## update config
+    config["runtimeInfo"]["madeByAssembly"]["cappedMol2"] = moleculeMol2
+    config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"] = moleculeFrcmod
+    config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"] = moleculePrmtop
+
+    return config
 def charmm_assembly_protocol(config:dict) -> dict:
     """
     Main protocol for assembly of starting parameters for CHARMM parameters
@@ -40,10 +70,11 @@ def charmm_assembly_protocol(config:dict) -> dict:
     Returns:
         config (dict): updated config   
     """
+    ## create an empty dict in config
     config["runtimeInfo"]["madeByAssembly"] = {}
 
     ## make a dir for assembly of initial parameters
-    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_assembly")
+    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
     os.makedirs(assemblyDir, exist_ok=True)
     config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] = assemblyDir
     ## Split STR file into RTF and PRM

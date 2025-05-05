@@ -34,6 +34,119 @@ from typing import List, Tuple
 RDLogger.DisableLog('rdApp.warning')
 
 from OperatingTools import drOrca
+
+
+
+def load_amber_params(config):
+    ## unpack config
+    assembledPrmtop = config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"]
+
+    parmedPrmtop = parmed.load_file(assembledPrmtop)
+
+    return parmedPrmtop
+
+def load_charmm_params(config):
+    ## unpack config
+    assembledPsf = config["runtimeInfo"]["madeByAssembly"]["assembledPsf"]
+    assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
+    assembledRtf = config["runtimeInfo"]["madeByAssembly"]["assembledRtf"]
+
+    parmedPsf = CharmmPsfFile(assembledPsf)
+    parmedPsf.load_parameters(CharmmParameterSet(assembledPrm, assembledRtf))
+
+    return parmedPsf
+
+def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[int,int,int,int]]:
+
+    if mode == "AMBER":
+        moleculeParams = load_amber_params(config)
+    else:
+        moleculeParams = load_charmm_params(config)
+
+    rotatableDihedrals = []
+    aromaticDihedrals = []
+    nonAromaticRingDihedrals = []
+    terminalDihedrals = []
+
+    rings = find_ring_atoms(moleculeParams)
+    adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
+
+    aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
+
+    for dihedral in moleculeParams.dihedrals:
+        atomNames = extract_dihedral_atom_names(dihedral)
+        atomTypes = extract_dihedral_atom_types(dihedral)
+        atomIndexes = extract_dihedral_atom_indexes(dihedral)
+        ## skip amide dihedrals
+        if _is_amide_dihedral(dihedral):
+            continue
+        ## store terminal non-polar dihedrals
+        if _is_terminal_non_polar_dihedral(dihedral):
+            terminalDihedrals.append((atomTypes, atomNames, atomIndexes))
+            continue
+        ## store aromatic dihedrals
+        if _is_a_ring_dihedral(dihedral, rings):
+            if _is_a_ring_dihedral(dihedral, aromaticRings):
+                aromaticDihedrals.append((atomTypes, atomNames, atomIndexes))
+                continue
+            else:
+                ## store non-aromatic ring dihedrals
+                nonAromaticRingDihedrals.append((atomTypes, atomNames, atomIndexes))
+                continue
+        ## store rotatable dihedrals
+        rotatableDihedrals.append((atomTypes, atomNames, atomIndexes))
+        
+    taggedRotatableDihedrals = assign_torsion_tags(rotatableDihedrals)
+    taggedAromaticDihedrals = assign_torsion_tags(aromaticDihedrals)
+    taggedNonAromaticRingDihedrals = assign_torsion_tags(nonAromaticRingDihedrals)
+    taggedTerminalDihedrals = assign_torsion_tags(terminalDihedrals)
+
+    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"] = taggedRotatableDihedrals
+    config["runtimeInfo"]["madeByTwisting"]["aromaticDihedrals"] = taggedAromaticDihedrals
+    config["runtimeInfo"]["madeByTwisting"]["nonAromaticRingDihedrals"] = taggedNonAromaticRingDihedrals
+    config["runtimeInfo"]["madeByTwisting"]["terminalDihedrals"] = taggedTerminalDihedrals
+
+    return config
+
+
+def exclude_backbone_torsions(config: dict) -> dict:
+    """
+    Removes Phi and Psi Angles from the rotatable bonds list
+
+    Args:
+        config (dict): the config dict
+    
+    Returns:
+        config (dict): the config dict updated
+    """
+    ## unpack config
+    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    forceFeild = config["parameterFittingInfo"]["forceField"]
+    if forceFeild == "CHARMM":
+        phiCenterTypes = ("NH1", "CT1") ## C N CA C
+        psiCenterTypes = ("CT1", "C") ## N CA C N
+    elif forceFeild == "AMBER":
+        phiCenterTypes = ("N", "CT") ## C N CA C
+        psiCenterTypes = ("CT", "C") ## N CA C N    
+
+    tagsToRemove = []
+    for torsionTag, dihedralData in uniqueRotatableDihedrals.items():
+        dihedralCenterTypes = dihedralData["ATOM_TYPES"][1:3]
+        if dihedralCenterTypes == phiCenterTypes or dihedralCenterTypes == phiCenterTypes[::-1]:
+            tagsToRemove.append(torsionTag)
+        elif dihedralCenterTypes == psiCenterTypes or dihedralCenterTypes == psiCenterTypes[::-1]:
+            tagsToRemove.append(torsionTag)
+
+    for torsionTag in tagsToRemove:
+        uniqueRotatableDihedrals.pop(torsionTag)
+    config["runtimeInfo"]["madeByTwisting"]["uniqueRotatableDihedrals"] = uniqueRotatableDihedrals
+    return config
+
+        
+        
+
+
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_conformer_xyzs(config, seed = 1818):
     ## get conformer XYZ files
@@ -258,63 +371,41 @@ def get_non_symmetric_rotatable_bonds(rotatableBonds, config):
     return uniqueBonds
 
 
-def identify_rotatable_bonds_CHARMM(config) -> List[Tuple[int,int,int,int]]:
-    ## unpack config
-    assembledPsf = config["runtimeInfo"]["madeByAssembly"]["assembledPsf"]
-    assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
-    assembledRtf = config["runtimeInfo"]["madeByAssembly"]["assembledRtf"]
 
-    parmedPsf = CharmmPsfFile(assembledPsf)
-    parmedPsf.load_parameters(CharmmParameterSet(assembledPrm, assembledRtf))
-    # Create bond lookup dictionary
-    bond_lookup = {}
-    for bond in parmedPsf.bonds:
-        # Use sorted indices as key to handle undirected bonds
-        key = tuple(sorted([bond.atom1.idx, bond.atom2.idx]))
-        bond_lookup[key] = bond
-
-    rotatableDihedrals = []
-    aromaticDihedrals = []
-    nonAromaticRingDihedrals = []
-    terminalDihedrals = []
-
-    rings = find_ring_atoms(parmedPsf)
-    adjacencyMatrix = _construct_adjacency_matrix(parmedPsf)
-
-    aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, parmedPsf, adjacencyMatrix)
-
-    for dihedral in parmedPsf.dihedrals:
-        atomNames = extract_dihedral_atom_names(dihedral)
-        atomTypes = extract_dihedral_atom_types(dihedral)
-
-        if _is_terminal_non_polar_dihedral(dihedral):
-            terminalDihedrals.append((atomTypes, atomNames))
-            continue
-
-        if _is_a_ring_dihedral(dihedral, rings):
-            if _is_a_ring_dihedral(dihedral, aromaticRings):
-                aromaticDihedrals.append((atomTypes, atomNames))
-                continue
-            else:
-                nonAromaticRingDihedrals.append((atomTypes, atomNames))
-                continue
-        rotatableDihedrals.append((atomTypes, atomNames))
-    uniqueRotatableDihedrals = get_unique_dihedrals(rotatableDihedrals)
-    for key, value in uniqueRotatableDihedrals.items():
-        print(key, value, len(value))
-
-    exit()
  
+
+def assign_torsion_tags(dihedrals: list[tuple[tuple[str], tuple[str]]]) -> dict[tuple[str], tuple[str], tuple[str]]:
+    taggedDihedrals = {}
+    seenTags = set()
+    for dihedralData in dihedrals:
+        torsionTag = "-".join(dihedralData[0])
+        if torsionTag not in seenTags:
+            seenTags.add(torsionTag)
+            taggedDihedrals[torsionTag] = {"ATOM_TYPES": dihedralData[0], "ATOM_NAMES": dihedralData[1], "ATOM_INDEXES": dihedralData[2]}
+        else:
+           continue
+    return taggedDihedrals
+
+
+
 def get_unique_dihedrals(dihedralGroup: list[tuple[tuple[str], tuple[str]]]):
     uniqueDihedrals = {}
-
-    for dihedral in dihedralGroup:
-        if not dihedral[0] in uniqueDihedrals.keys():
-            uniqueDihedrals[dihedral[0]] = [dihedral[1]]
+    for dihedralData in dihedralGroup:
+        if dihedralData[0] not in uniqueDihedrals.keys():
+            uniqueDihedrals[dihedralData[0]] = [dihedralData[1]]
         else:
-            uniqueDihedrals[dihedral[0]].append(dihedral[1])
+            uniqueDihedrals[dihedralData[0]].append(dihedralData[1])
 
     return uniqueDihedrals
+
+
+def _is_amide_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+    atomTypes = extract_dihedral_atom_types(dihedral)
+    if atomTypes[1] in ["N","NH1"] and atomTypes[2] == "C":
+        return True
+    elif atomTypes[2] in ["N","NH1"] and atomTypes[1] == "C":
+        return True
+    return False
 def _is_a_ring_dihedral(dihedral: parmed.topologyobjects.Dihedral, rings: List[set[int]]) -> bool:
     atomIndexes = extract_dihedral_atom_indexes(dihedral)
     for ring in rings:
@@ -337,7 +428,6 @@ def classify_rings_aromatic(rings: List[set[int]], parmedPsf: CharmmPsfFile, adj
         ringElements = [parmedPsf.atoms[idx].element for idx in ringIndex]
         ringValences = [len(adjacencyMatrix[idx]) for idx in ringIndex]  
 
-        print(ringElements, ringValences)
         # possibleAromaticValences = [aromaticValenceCheck.get(element, (0)) for element in ringElements]
 
         passedCheckAtoms = [valence in aromaticValenceCheck.get(element, (0))
@@ -411,7 +501,6 @@ def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
 def _is_terminal_non_polar_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
 
     atomElements = extract_dihedral_atom_elements(dihedral)
-    print(atomElements)
     if atomElements[0] == 1 and atomElements[1] == 6:
         return True
     elif atomElements[2] == 6 and atomElements[3] == 1:
@@ -431,59 +520,59 @@ def extract_dihedral_atom_indexes(dihedral: parmed.topologyobjects.Dihedral) -> 
 def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
     return dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name
 
-def identify_rotatable_bonds(config) -> List[Tuple[int,int,int,int]]:
-    ## unpack config
-    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-    # Load the molecule from a PDB file
-    mol = Chem.MolFromPDBFile(cappedPdb, removeHs=False)
-    # Identify torsion angles for rotatable bonds
-    rotatableBonds = []
-    for bond in mol.GetBonds():
-        if bond.IsInRing():
-            continue
-        if bond.GetBondType() == Chem.BondType.SINGLE:
-            atom2 = bond.GetBeginAtom()
-            atom3 = bond.GetEndAtom()
+# def identify_rotatable_bonds(config) -> List[Tuple[int,int,int,int]]:
+#     ## unpack config
+#     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
+#     # Load the molecule from a PDB file
+#     mol = Chem.MolFromPDBFile(cappedPdb, removeHs=False)
+#     # Identify torsion angles for rotatable bonds
+#     rotatableBonds = []
+#     for bond in mol.GetBonds():
+#         if bond.IsInRing():
+#             continue
+#         if bond.GetBondType() == Chem.BondType.SINGLE:
+#             atom2 = bond.GetBeginAtom()
+#             atom3 = bond.GetEndAtom()
 
-            ## get atom names for begin and end atoms
-            atom2Name = atom2.GetPDBResidueInfo().GetName().strip()
-            atom3Name = atom3.GetPDBResidueInfo().GetName().strip()
+#             ## get atom names for begin and end atoms
+#             atom2Name = atom2.GetPDBResidueInfo().GetName().strip()
+#             atom3Name = atom3.GetPDBResidueInfo().GetName().strip()
 
-            ## dont scan amide bonds
-            nTerminalAtomNames = config["moleculeInfo"]["nTermini"]
-            cTerminalAtomNames = config["moleculeInfo"]["cTermini"]
-            nTerminalAmideAtoms = nTerminalAtomNames + ["CC1"]
-            cTerminalAmideAtoms = cTerminalAtomNames + ["NN"]
-            if atom2Name in nTerminalAmideAtoms and atom3Name in nTerminalAmideAtoms:
-                continue
-            if atom2Name in cTerminalAmideAtoms and atom3Name in cTerminalAmideAtoms:
-                continue
+#             ## dont scan amide bonds
+#             nTerminalAtomNames = config["moleculeInfo"]["nTermini"]
+#             cTerminalAtomNames = config["moleculeInfo"]["cTermini"]
+#             nTerminalAmideAtoms = nTerminalAtomNames + ["CC1"]
+#             cTerminalAmideAtoms = cTerminalAtomNames + ["NN"]
+#             if atom2Name in nTerminalAmideAtoms and atom3Name in nTerminalAmideAtoms:
+#                 continue
+#             if atom2Name in cTerminalAmideAtoms and atom3Name in cTerminalAmideAtoms:
+#                 continue
             
-            if not (atom2.IsInRing() or atom3.IsInRing()):
-                # Find neighboring atoms for torsion angle
-                neighborsBegin = [a for a in atom2.GetNeighbors() if a.GetIdx() != atom3.GetIdx()]
-                neighborsEnd = [a for a in atom3.GetNeighbors() if a.GetIdx() != atom2.GetIdx()]
+#             if not (atom2.IsInRing() or atom3.IsInRing()):
+#                 # Find neighboring atoms for torsion angle
+#                 neighborsBegin = [a for a in atom2.GetNeighbors() if a.GetIdx() != atom3.GetIdx()]
+#                 neighborsEnd = [a for a in atom3.GetNeighbors() if a.GetIdx() != atom2.GetIdx()]
                 
-                for atom1 in neighborsBegin:
-                    for atom4 in neighborsEnd:
+#                 for atom1 in neighborsBegin:
+#                     for atom4 in neighborsEnd:
 
-                        atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
-                        atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
+#                         atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
+#                         atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
 
-                        # dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
-                        if atom1Name.startswith("H"):
-                            if atom2Name.startswith("C"):
-                                continue
-                        if atom4Name.startswith("H"):
-                            if atom3Name.startswith("C"):
-                                continue
-                        ## add torsion data to list
-                        rotatableBonds.append({
-                            'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
-                            'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
-                        })
+#                         # dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
+#                         if atom1Name.startswith("H"):
+#                             if atom2Name.startswith("C"):
+#                                 continue
+#                         if atom4Name.startswith("H"):
+#                             if atom3Name.startswith("C"):
+#                                 continue
+#                         ## add torsion data to list
+#                         rotatableBonds.append({
+#                             'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
+#                             'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
+#                         })
 
-    return rotatableBonds
+#     return rotatableBonds
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def process_scan_data(scanDfs: List[pd.DataFrame],

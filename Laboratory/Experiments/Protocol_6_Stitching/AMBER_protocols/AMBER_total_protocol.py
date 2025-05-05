@@ -35,6 +35,7 @@ def get_MM_total_energies(config, torsionTag, debug=False):
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
     
     moleculeFrcmod: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
+    moleculePrmtop: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
 
     ## read calculated partial charges
     chargesCsv: FilePath = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
@@ -49,9 +50,9 @@ def get_MM_total_energies(config, torsionTag, debug=False):
     os.makedirs(torsionFittingDir, exist_ok=True)
 
     if debug:
-        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod)
+        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop)
     else:
-        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, config, torsionTag)
+        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag)
 
 
     ## sort out data
@@ -73,8 +74,8 @@ def get_MM_total_energies(config, torsionTag, debug=False):
     return  finalScanEnergiesDf["smoothedEnergy"].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod) for  scanIndex, scanDir in enumerate(scanDirs)]
+def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(*args)
@@ -83,7 +84,7 @@ def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod):
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, config, torsionTag):
+def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag):
 
     tqdmBarOptions = {
         "desc": f"\033[32mFitting {torsionTag}\033[0m",
@@ -92,7 +93,7 @@ def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod
         "unit":  "scan",
         "dynamic_ncols": True
     }
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod) for  scanIndex, scanDir in enumerate(scanDirs)]
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
 
     with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
         singlePointEnergyDfs = pool.map(single_point_worker,
@@ -104,16 +105,16 @@ def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def single_point_worker(args):
-    scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod = args
+    scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop = args
     try:
-        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod)
+        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop)
         return singlePointEnergyDf
 
     except Exception as e:
         raise(e)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, debug=False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, debug=False):
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
     os.makedirs(fittingRoundDir, exist_ok=True)
 
@@ -122,11 +123,9 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
                         for file in os.listdir(scanDir) 
                         if re.match(r'^orca_scan\.\d\d\d\.xyz$', file)])
 
-    prmtop, inpcrd = AMBER_helper_functions.make_prmtop_inpcrd(trajXyzs[0], fittingRoundDir, cappedPdb, chargesDf, moleculeFrcmod, debug)
 
     trajPdbs = Stitching_Assistant.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
-    singlePointEnergies = run_mm_singlepoints(trajPdbs, prmtop, inpcrd)
-
+    singlePointEnergies = run_mm_singlepoints(trajPdbs, moleculePrmtop)
 
     singlePointEnergyDf = pd.DataFrame(singlePointEnergies, columns=["TrajIndex", "Energy"])
 
@@ -142,7 +141,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
     return singlePointEnergyDf
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd: FilePath) -> float:
+def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> float:
     """
     Runs a singlepoint energy calculation at the MM level 
     using OpenMM
@@ -152,7 +151,7 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath, moleculeInpcrd
         impcrd (FilePath): coordinate file for AMBER
 
     Returns:
-        singlePointEnergy (float): energy of prmtop // inpcrd
+        singlePointEnergy (float): energy of prmtop // xyz coords
     """
     # Load Amber files and create system
     prmtop: app.Topology = app.AmberPrmtopFile(moleculePrmtop)

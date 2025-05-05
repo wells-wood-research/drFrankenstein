@@ -1,7 +1,7 @@
 ## BASIC LIBRARIES ##
 from os import path as p
 import pandas as pd
-
+import parmed
 ## drFRANKENSTEIN LIBRARIES ##
 from . import AMBER_helper_functions
 
@@ -28,7 +28,7 @@ def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:
         mmCosineComponents (dict): cosine components
     """
     ## get torsion parameters from FRCMOD file
-    mmTorsionParameters = extract_torsion_parameters_from_frcmod(config, torsionTag)
+    mmTorsionParameters = extract_torsion_parameters_from_prmtop(config, torsionTag)
 
     ## reconstruct torsion energies from parameters
     mmTorsionEnergies, mmCosineComponents = AMBER_helper_functions.construct_MM_torsion_energies(mmTorsionParameters)
@@ -36,7 +36,7 @@ def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:
     return  mmTorsionEnergies, mmCosineComponents
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str) -> dict:
+def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dict:
     """
     Reads through a frcmod file 
     Finds torsion parameters for each torsion that we have scanned
@@ -51,23 +51,27 @@ def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str) -> dic
         mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
     """
 
-    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
-    parsedFrcmod: dict = AMBER_helper_functions.parse_frcmod(molFrcmod)
+    molPrmtop = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
+    parmedPrmtop  = parmed.load_file(molPrmtop, structure=True)
 
-    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
+    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    atomNames = tuple(rotatableDihedrals[torsionTag]["ATOM_NAMES"])
 
-    ## get torsion atom names
-    torsionAtoms: list = torsionTag.split("-")
-    ## get torsion atom types
-    torsionAtomTypes: list = [atomTypeMap[atom] for atom in torsionAtoms]
-    ## find torsion parameters for these atom types (account for reverse torsion order)
-    torsionAtomTypes_reversed = torsionAtomTypes[::-1]
-    lookForAtoms = [torsionAtomTypes, torsionAtomTypes_reversed]
-    try:
-        torsionParameters = [entry for entry in parsedFrcmod["DIHEDRALS"] if entry["atoms"] in lookForAtoms]
+    torsionParameters = []
+    for dihedral in parmedPrmtop.dihedrals:
+        paramAtoms = (dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name)
+        if paramAtoms == atomNames or paramAtoms[::-1] == atomNames:
+            params = parse_torsion_params(dihedral.type)
+            torsionParameters.append(params)
 
-    except:
-        raise Exception(f"Torsion {torsionTag} not found in frcmod file")
 
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def parse_torsion_params(dihedralType: parmed.topologyobjects.Dihedral) -> dict:
+    params = {
+        "k": dihedralType.phi_k,
+        "periodicity": dihedralType.per,
+        "phase": dihedralType.phase,
+    }
+    return params
+    

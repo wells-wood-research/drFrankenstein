@@ -34,24 +34,29 @@ def twist_protocol(config):
     config = Twisted_Assistant.set_up_directories(config)
 
     ## identify rotatable bonds to be scanned
-    if config["parameterFittingInfo"]["forceField"] == "CHARMM":
-        rotatableBonds: Dict[List[Tuple[int,int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds_CHARMM(config)
-    elif config["parameterFittingInfo"]["forceField"] == "AMBER":
-        rotatableBonds: Dict[List[Tuple[int,int,int]]] = Twisted_Assistant.identify_rotatable_bonds(config)
+    config = Twisted_Assistant.identify_rotatable_bonds(config, mode = config["parameterFittingInfo"]["forceField"])
 
-    uniqueRotatableBonds = Twisted_Assistant.get_non_symmetric_rotatable_bonds(rotatableBonds, config)
+    ## exclude backbone torsions if requested
+    if config["torsionScanInfo"]["preserveBackboneTorsions"]:
+        config = Twisted_Assistant.exclude_backbone_torsions(config)
 
-    nRotatableBonds = len(uniqueRotatableBonds)
-    for torsionIndex, rotatableBond in enumerate(uniqueRotatableBonds):
-        config = run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config)
+    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+
+    nRotatableBonds = len(rotatableDihedrals)
+    for torsionIndex, (torsionTag, torsionData) in enumerate(rotatableDihedrals.items()):
+        config = run_torsion_scanning(torsionTag, torsionData, torsionIndex, nRotatableBonds, config)
     config["checkpointInfo"]["scanningComplete"] = True
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config, debug=False) -> dict:
+def run_torsion_scanning(torsionTag: str,
+                          torsionData: dict[str:tuple[str], str:tuple[str], str:tuple[str]],
+                            torsionIndex: int,
+                              nRotatableBonds: int,
+                                config: dict,
+                                  debug: bool = False) -> dict:
 
     ## make a top level dir for this torsion
-    torsionTag: str = "-".join(map(str, rotatableBond["atoms"])) 
     torsionDir = p.join(config["runtimeInfo"]["madeByTwisting"]["torsionDir"], f"torsion_{torsionTag}" )
     os.makedirs(torsionDir, exist_ok=True)
     ## add to config
@@ -62,21 +67,22 @@ def run_torsion_scanning(rotatableBond, torsionIndex, nRotatableBonds, config, d
     drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
     if debug:
         ## run in serial
-        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, rotatableBond["indices"], config)
+        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], config)
         if config["torsionScanInfo"]["scanSinglePointsOn"] is None:
             singlePointDfs = None
         else:
             singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag)
     else:
         # run torsion scans in parallel
-        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, rotatableBond["indices"], torsionTag, config)
-        if config["torsionScanInfo"]["scanSinglePointsOn"] is None:
+        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], torsionTag, config)
+        ## run single point scans in parallel
+        if config["torsionScanInfo"]["scanSinglePointsOn"] is None or config["torsionScanInfo"]["singlePointMethod"] == None:
             singlePointDfs = None
         else:
             singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, config, torsionTag)
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Twisted_Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
-    if  config["torsionScanInfo"]["singlePointMethod"] is None:
+    if config["torsionScanInfo"]["scanSinglePointsOn"] is None or config["torsionScanInfo"]["singlePointMethod"] == None:
         config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag] = scanEnergiesCsv
         singlePointAveragesDf = None
     else:
@@ -127,7 +133,8 @@ def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
         "ascii": "-🗲→",    
         "colour": "yellow",
         "unit":  "scan",
-        "dynamic_ncols": True,
+        "ncols": 124,
+        "dynamic_ncols": False
     }
 
     with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
@@ -153,8 +160,8 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
         "ascii": "-🗲→",    
         "colour": "yellow",
         "unit":  "scan",
-        "dynamic_ncols": True,
-    }
+        "ncols": 124,
+        "dynamic_ncols": False    }
 
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
 
@@ -191,7 +198,7 @@ def do_the_single_point_worker(args):
                                   config = config)
         return singlePointDf
     except Exception as e:
-        print(e)
+        ...
         return None
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def do_the_twist_worker(args):

@@ -21,9 +21,6 @@ class FilePath:
 class DirectoryPath:
     pass
 
-
-
-
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_qmmm_opt(qmmmOptArgs):
     ## unpack args

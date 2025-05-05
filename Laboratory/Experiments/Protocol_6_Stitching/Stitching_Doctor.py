@@ -50,7 +50,9 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
     ## create output directories
     config = Stitching_Assistant.sort_out_directories(config)
     ## create a basic frcmod using antechamber
-    config = AMBER_helper_functions.get_generate_initial_frcmod(config)
+    config = AMBER_helper_functions.copy_assembled_parameters(config)
+
+    AMBER_helper_functions.edit_mol2_partial_charges(config)
     ## get torsion tags from config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     
@@ -65,7 +67,9 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
             mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
             mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
             torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
-            config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf)
+            AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf)
+            AMBER_helper_functions.run_tleap_to_make_params(config)
+
     ## make a gif for each torsion being fitted - so satisfying!
     for torsionTag in torsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")

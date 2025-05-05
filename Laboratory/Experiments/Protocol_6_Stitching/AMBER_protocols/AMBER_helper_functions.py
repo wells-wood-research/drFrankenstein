@@ -52,7 +52,8 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_frcmod(config: dict,
                   torsionTag: str,
-                  torsionParamDf: pd.DataFrame) -> None:
+                  torsionParamDf: pd.DataFrame,
+                  shuffleIndex: int) -> None:
     """
     Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
     Minimal version focusing on core logic.
@@ -60,6 +61,8 @@ def update_frcmod(config: dict,
     moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
     target_atom_types = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
 
     # Prepare new dihedral types from DataFrame
@@ -92,16 +95,12 @@ def update_frcmod(config: dict,
     nFrcmods = len([file for file in os.listdir(moleculeParameterDir) if file.endswith(".frcmod")])
 
     # Define output path and write the updated frcmod file
-    outputFrcmod = p.join(moleculeParameterDir, f"{torsionTag}_{nFrcmods + 1}.frcmod")
+    outputFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_{shuffleIndex}.frcmod")
     # Use save method, explicitly setting format and allowing overwrite
     parmedFrcmod.write(outputFrcmod, style='frcmod')
 
-
-    config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = outputFrcmod
-
-
-    ## overwrite frcmod
-    # move(outputFrcmod, moleculeFrcmod)
+    ## put updated frcmod in config as new entry
+    config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"] = outputFrcmod
 
     return config
 

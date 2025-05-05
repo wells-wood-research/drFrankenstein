@@ -15,7 +15,7 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forcefeild = "AMBER"):
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forcefeild = "AMBER", l2Damping = 0.1):
     
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
@@ -25,6 +25,9 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     ## get frequencies, amplitudes and phases
     frequencies: np.array = get_frequencies(signalLength, sampleSpacing)
     amplitudes, phases = compute_amplitude_and_phase(fftResult, signalLength)
+
+    amplitudes = apply_l2_damping(amplitudes, l2Damping)
+
     ## construct angle x-axis
     angle: np.array = np.arange(signalLength) * sampleSpacing
     ## convert data to dataframe
@@ -44,6 +47,24 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     return paramDf.iloc[:nFunctionsUsed], cosineComponents   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
+    """
+    Applies a L2 damping to the amplitudes
+    This may help prevent escalating amplitudes as nShuffles increases
+
+    Args:
+        amplitudes (np.array): array of amplitudes
+        l2Damping (float): damping factor
+
+    Returns:
+        dampenedAmplitudes (np.array): dampened amplitudes
+    
+    """
+    dampenedAmplitudes = amplitudes / (1 + l2Damping * np.abs(amplitudes))
+
+    return dampenedAmplitudes
+
+
 def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
     data = {"Frequency": frequencies, "Amplitude": amplitudes, "Phase": phases}
     dataDf = pd.DataFrame(data)

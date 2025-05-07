@@ -8,7 +8,7 @@ from shutil import rmtree
 from scipy.signal import savgol_filter
 
  ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##
-from mpire import WorkerPool
+import multiprocessing 
 from mpire.utils import make_single_arguments
 
 ## OPENMM LIBRARIES
@@ -18,6 +18,7 @@ import  openmm.unit  as unit
 
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
+from OperatingTools import drSplash
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -40,10 +41,9 @@ def get_MM_total_energies(config:dict,
         smoothedEnergies (mp.ndarray): CHARMM energy
     
     """
-    if debug:
-        print(f"Calculating MM Total energies for {torsionTag}")
+    drSplash.show_getting_mm_total(torsionTag)
+
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
-    cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
 
     torsionTotalDir = p.join(mmTotalDir, f"{torsionTag}")
@@ -79,22 +79,11 @@ def get_MM_total_energies(config:dict,
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_parallel(scanDirs, torsionTotalDir, torsionTag, config):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, config) for  scanIndex, scanDir in enumerate(scanDirs)]
+    argsList = [(scanIndex, scanDir, torsionTotalDir, config) for scanIndex, scanDir in enumerate(scanDirs)]
 
-    tqdmBarOptions = {
-        "desc": f"\033[32mFitting {torsionTag}\033[0m",
-        "ascii": "-ϟ",  
-        "colour": "yellow",
-        "unit":  "scan",
-        "dynamic_ncols": True
-    }
-
-    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
-        singlePointEnergyDfs = pool.map(single_point_worker,
-                            make_single_arguments(argsList),
-                              progress_bar=True,
-                              iterable_len = len(argsList),
-                              progress_bar_options=tqdmBarOptions)
+    with multiprocessing.Pool(processes=config["miscInfo"]["availableCpus"]) as pool:
+        singlePointEnergyDfs = pool.starmap(single_point_worker, make_single_arguments(argsList))
+    
     return singlePointEnergyDfs
 
 
@@ -166,13 +155,13 @@ def run_mm_singlepoints(trajPdbs: list, config: dict) -> list[float]:
     moleculePsf = config["runtimeInfo"]["madeByStitching"]["moleculePsf"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
-    cgenffRtf = config["runtimeInfo"]["madeByStitching"]["cgenffRtf"]
-    cgenffPrm = config["runtimeInfo"]["madeByStitching"]["cgenffPrm"]
+    # cgenffRtf = config["runtimeInfo"]["madeByStitching"]["cgenffRtf"]
+    # cgenffPrm = config["runtimeInfo"]["madeByStitching"]["cgenffPrm"]
 
 
     ## load CHARMM parameters
     psf: app.Topology = app.CharmmPsfFile(moleculePsf)
-    charmmParams = app.CharmmParameterSet(cgenffRtf, cgenffPrm, moleculeRtf, moleculePrm)
+    charmmParams = app.CharmmParameterSet(moleculeRtf, moleculePrm)
 
     # Create the system.
     system: openmm.System = psf.createSystem(charmmParams,

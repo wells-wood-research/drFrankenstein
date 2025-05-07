@@ -27,22 +27,6 @@ def get_capping_atom_ids(config):
 
     return cappingAtomIds
 
-
-
-
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
-
-    cappingHeteroAtomNames = ["NN", "CN", "CC1", "OC", "CC2"]
-    atomDf, bondDf  = file_parsers.parse_mol2(cappedMol2)
-    cappingHeteroAtomIds = atomDf[atomDf["ATOM_NAME"].isin(cappingHeteroAtomNames)]["ATOM_ID"].to_list()
-    cappingProtonIds = get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf)
-
-    cappingAtomIds = cappingHeteroAtomIds + cappingProtonIds
-
-    print(cappingAtomIds)
-    exit()
-
-    return cappingAtomIds
 ################################################################################
 
 def create_final_lib_and_mol2(cappingAtomIds, config):

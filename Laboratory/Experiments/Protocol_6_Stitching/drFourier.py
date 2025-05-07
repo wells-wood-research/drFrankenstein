@@ -99,7 +99,7 @@ def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
 def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
                                  angle: np.array,
                                      maxFunctions: int,
-                                       tolerance: float = 0.5) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+                                       tolerance: float = 0.2) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     
     amplitudes = charmmParamDf["Amplitude"]
     periods = charmmParamDf["Period"]

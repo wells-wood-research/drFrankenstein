@@ -22,13 +22,13 @@ class DirectoryPath:
 def create_final_rtf(config):
     ## unpack config
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
+    moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     nTerminialAtoms = config["moleculeInfo"]["nTermini"]
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
     donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
 
-    rtfFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.rtf")
+    rtfFile = p.join(moleculeParameterDir, f"{moleculeName}.rtf")
     finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
 
     cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]

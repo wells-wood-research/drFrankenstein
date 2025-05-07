@@ -53,17 +53,16 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
 def update_frcmod(config: dict,
                   torsionTag: str,
                   torsionParamDf: pd.DataFrame,
-                  shuffleIndex: int) -> None:
+                  shuffleIndex: int) -> dict:
     """
     Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
-    Minimal version focusing on core logic.
     """
     moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
-    target_atom_types = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+    targetAtomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
 
     # Prepare new dihedral types from DataFrame
     new_dihedral_types = [
@@ -79,18 +78,17 @@ def update_frcmod(config: dict,
 
     # Load frcmod as parameter set
     parmedFrcmod = parmed.load_file(moleculeFrcmod)
-    # Alternative if load_file fails inference:
    # 3. Find and replace the matching dihedral entry
-    keys_to_delete = []
+    keysToDelete = []
     for frcmodAtomNames in parmedFrcmod.dihedral_types:
-        if frcmodAtomNames == target_atom_types or frcmodAtomNames == target_atom_types[::-1]:
-            keys_to_delete.append(frcmodAtomNames)
+        if frcmodAtomNames == targetAtomTypes or frcmodAtomNames == targetAtomTypes[::-1]:
+            keysToDelete.append(frcmodAtomNames)
     
-    for key_to_delete in keys_to_delete:
+    for key_to_delete in keysToDelete:
         del parmedFrcmod.dihedral_types[key_to_delete]
 
    
-    parmedFrcmod.dihedral_types[target_atom_types] = new_dihedral_types
+    parmedFrcmod.dihedral_types[targetAtomTypes] = new_dihedral_types
 
     # Define output path and write the updated frcmod file
     outputFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_{shuffleIndex}.frcmod")

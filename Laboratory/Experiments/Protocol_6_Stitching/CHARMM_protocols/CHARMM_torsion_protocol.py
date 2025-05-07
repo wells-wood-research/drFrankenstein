@@ -1,6 +1,11 @@
 ## BASIC LIBRARIES ##
 from os import path as p
 import pandas as pd
+import numpy as np
+
+## PARMED LIBRARIES ##
+import parmed
+from parmed.charmm import CharmmParameterSet
 
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
@@ -34,42 +39,79 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) 
     ## get torsion parameters from PRM file
     mmTorsionParameters = extract_torsion_parameters_from_prm(config, torsionTag)
     ## reconstruct torsion energies from parameters
-    mmTorsionEnergies, mmCosineComponents = CHARMM_helper_functions.construct_MM_torsion_energies(mmTorsionParameters)
+    mmTorsionEnergies, mmCosineComponents = construct_MM_torsion_energies(mmTorsionParameters)
 
     return  mmTorsionEnergies, mmCosineComponents
 
 def extract_torsion_parameters_from_prm(config: dict, torsionTag: str) -> dict:
     """
-    Reads through a CHARMM prm file 
-    Finds torsion parameters for each torsion that we have scanned
-    Returns a dict with the torsion tag as the key and the torsion parameters as the value
+    Extracts torsion parameters from PRM file
 
     Args:
-        molFrcmod (FilePath): frcmod file
-        atomTypeMap (dict): dict mapping atom names to atom types
-        config (dict): config dict
+        config (dict): config containing all run information
+        torsionTag (str): tag for torsion we are interested in
 
     Returns:
-        mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
+        torsionParameters (dict): torsion parameters
     """
-
+    ## unpack config
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
-    parsedPrm: dict = CHARMM_helper_functions.parse_prm(moleculePrm)
+    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
+    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    
+    ## get atom types from previously made dict
+    targetAtomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
 
-    atomTypeMap = config["runtimeInfo"]["madeByStitching"]["atomTypeMap"]
+    ## load PRM and RTF in to Parmed
+    parmedPrm = CharmmParameterSet(moleculePrm, moleculeRtf)
 
-    ## get torsion atom names
-    torsionAtoms: list = torsionTag.split("-")
-    ## get torsion atom types
-    torsionAtomTypes: list = [atomTypeMap[atom] for atom in torsionAtoms]
-    ## find torsion parameters for these atom types (account for reverse torsion order)
-    torsionAtomTypes_reversed = torsionAtomTypes[::-1]
-    lookForAtoms = [torsionAtomTypes, torsionAtomTypes_reversed]
+    ## find old dihedral types
+    for prmDihedralTypes in parmedPrm.dihedral_types:
+        if prmDihedralTypes == targetAtomTypes or prmDihedralTypes == targetAtomTypes[::-1]:
+            diheralParams = parmedPrm.dihedral_types[prmDihedralTypes]
+            break
 
-    try:
-        torsionParameters = [entry for entry in parsedPrm["DIHEDRALS"] if entry["atoms"] in lookForAtoms]
 
-    except:
-        raise Exception(f"Torsion {torsionTag} not found in frcmod file")
+    torsionParameters = []
+    for cosineTerm in diheralParams:
+        torsionParameters.append({
+            "k": cosineTerm.phi_k,
+            "period": cosineTerm.per,
+            "phase": cosineTerm.phase
+        })
 
     return torsionParameters
+
+
+def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
+    """
+    Constructs MM energies from mmTorsionParameters using:
+
+        E(torsion) = K  * (1 + cos(periodicity * (Angle - Phase)))
+    https://ambermd.org/FileFormats.php#frcmod
+
+    Args:
+        mmTorsionParameters (dict): dict containing torsion parameters for each torsion
+
+    Returns:
+        mmTorsionEnergies (dict): dict containing MM energies for each torsion
+    """
+
+    ## init angle 
+    angle = np.radians(np.arange(0, 360, 10, dtype=float))
+    ## init empty array
+    mmTorsionEnergy = np.zeros_like(angle)
+    ## loop through terms for torsion parameter
+    mmCosineComponents = {}
+    for parameter in mmTorsionParameters:
+        ## extract params from dict
+        potentialConstant = float(parameter["k"])
+        periodicityNumber = abs(float(parameter["period"]))
+        phase = np.radians(float(parameter["phase"]))
+        ## construct cosine component
+        cosineComponent: np.array = potentialConstant  * (1 + np.cos(periodicityNumber * angle - phase)) 
+        ## add to torsion energy
+        mmTorsionEnergy += cosineComponent
+        mmCosineComponents[periodicityNumber] = cosineComponent
+        
+    return mmTorsionEnergy, mmCosineComponents

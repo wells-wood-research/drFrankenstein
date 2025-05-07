@@ -85,6 +85,8 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
 
     ## update config with checkpoint flag
     config["checkpointInfo"]["chargesComplete"] = True
+
+    print("CHARGES DONE!")
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

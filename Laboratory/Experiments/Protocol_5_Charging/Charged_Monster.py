@@ -320,6 +320,7 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
                 "charge": 0,
                 "indexes": chargeGroupIndexes
             }
+
     config["runtimeInfo"]["madeByCharges"]["chargeGroups"] = chargeGroups
 
     return config
@@ -428,7 +429,7 @@ def run_charge_fitting(config: dict,
                     break
                 
                 elif index == 3:  # Timeout (no output for 5 seconds)
-                    continue
+                    break
 
         except pexpect.ExceptionPexpect as e:
             raise e

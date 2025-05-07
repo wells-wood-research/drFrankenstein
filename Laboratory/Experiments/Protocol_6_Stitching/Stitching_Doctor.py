@@ -4,6 +4,7 @@ import os
 from os import path as p
 import sys
 import random
+from tqdm import tqdm
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -54,38 +55,50 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
 
     AMBER_helper_functions.edit_mol2_partial_charges(config)
     AMBER_helper_functions.run_tleap_to_make_params(config)
+    # Minimal test
 
+    tqdmBarOptions = {
+        "desc": f"\033[32mRunning Parameter Fitting\033[0m",
+        "ascii": "-🗲→",    
+        "colour": "yellow",
+        "unit":  "scan",
+        "dynamic_ncols": False, 
+        "ncols": 102,
+        "leave": True,
+        "position": 1
+    }
 
     ## get torsion tags from config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     
-    nShuffles = 100   ## TODO: put in config
+    nShuffles = config["parameterFittingInfo"]["nShuffles"]
+    shuffledTorsionTags = []
+    for i in range(nShuffles):
+        random.shuffle(torsionTags)
+        shuffledTorsionTags.extend(torsionTags)
+
+    shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
-    for shuffleIndex in range(nShuffles):
-        print(f"Shuffle round {shuffleIndex+1}") ## TODO: SPLASH
+    for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not shuffleIndex == 0:
             config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
             AMBER_helper_functions.run_tleap_to_make_params(config)
-        ## shuffle the order of our torsion tags
-        shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags)
-        ## run the torsion fitting protocol for each torsion
-        for torsionTag in shuffledTorsionTags:
-            mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
-            mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
-            torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
-            config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
+        # torsionTag = random.choice(torsionTags)
+        mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
+        mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
+        torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
+        config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
+        shuffleIndex += 1
+
+    ## make gif out of the torsion fitting
     for torsionTag in torsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
-    exit()
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config
-
-
-
-
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()
 def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     """

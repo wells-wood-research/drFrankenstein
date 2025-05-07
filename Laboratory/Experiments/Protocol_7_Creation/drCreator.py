@@ -20,7 +20,7 @@ def create_the_monster(config):
 
     ## make a dir
     outputDir = config["pathInfo"]["outputDir"]
-    finalCreationDir = p.join(outputDir, "06_final_creation")
+    finalCreationDir = p.join(outputDir, "07_final_creation")
     os.makedirs(finalCreationDir, exist_ok=True)
     config["runtimeInfo"]["madeByCreator"]["finalCreationDir"] = finalCreationDir
 

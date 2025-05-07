@@ -6,13 +6,15 @@ import numpy as np
 import re
 from shutil import rmtree
 from scipy.signal import savgol_filter
-
+from tqdm import tqdm
 
 ## MULTIPROCESSION LIBRARIES ##
 from concurrent.futures import ProcessPoolExecutor
  ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##
 from mpire import WorkerPool
 from mpire.utils import make_single_arguments
+
+import multiprocessing
 
 ## OPENMM LIBRARIES
 import openmm.app as app
@@ -22,6 +24,8 @@ import  openmm.unit  as unit
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
 from . import AMBER_helper_functions
+
+from OperatingTools import drSplash
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -30,6 +34,8 @@ class DirectoryPath:
 
 
 def get_MM_total_energies(config, torsionTag, debug=False):
+    drSplash.show_getting_mm_total(torsionTag)
+
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
@@ -85,22 +91,12 @@ def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for scanIndex, scanDir in enumerate(scanDirs)]
 
-    tqdmBarOptions = {
-        "desc": f"\033[32mFitting {torsionTag}\033[0m",
-        "ascii": "-ϟ",  
-        "colour": "yellow",
-        "unit":  "scan",
-        "dynamic_ncols": True
-    }
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
-
-    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
-        singlePointEnergyDfs = pool.map(single_point_worker,
-                            make_single_arguments(argsList),
-                              progress_bar=True,
-                              iterable_len = len(argsList),
-                              progress_bar_options=tqdmBarOptions)
+    # Use multiprocessing Pool without tqdm progress bar
+    with multiprocessing.Pool() as pool:
+        singlePointEnergyDfs = list(pool.imap(single_point_worker, argsList))
+    
     return singlePointEnergyDfs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

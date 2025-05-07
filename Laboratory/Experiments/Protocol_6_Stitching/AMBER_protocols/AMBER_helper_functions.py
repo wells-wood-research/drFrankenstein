@@ -92,8 +92,6 @@ def update_frcmod(config: dict,
    
     parmedFrcmod.dihedral_types[target_atom_types] = new_dihedral_types
 
-    nFrcmods = len([file for file in os.listdir(moleculeParameterDir) if file.endswith(".frcmod")])
-
     # Define output path and write the updated frcmod file
     outputFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_{shuffleIndex}.frcmod")
     # Use save method, explicitly setting format and allowing overwrite

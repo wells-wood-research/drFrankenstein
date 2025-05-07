@@ -9,30 +9,44 @@ from OperatingTools import file_parsers
 ################################################################################
 def copy_final_frcmod(config):
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
+    proposedFrcmod = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
-    frcmodFile = p.join(mmTorsionCalculationDir, f"{moleculeName}.frcmod")
     finalFrcmod = p.join(finalCreationDir, f"{moleculeName}.frcmod")
 
-    copy(frcmodFile, finalFrcmod)
+    copy(proposedFrcmod, finalFrcmod)
     
 ################################################################################
 def get_capping_atom_ids(config):
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
+    chargeGroups = config["runtimeInfo"]["madeByCharges"]["chargeGroups"]
+
+    cappingAtomIds = []
+    for chargeGroupName, chargeGroupData in chargeGroups.items():
+        if chargeGroupName.startswith("NME_cap") or chargeGroupName.startswith("ACE_cap"):
+            cappingAtomIds.extend(chargeGroupData["indexes"])
+
+    return cappingAtomIds
+
+
+
+
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
 
     cappingHeteroAtomNames = ["NN", "CN", "CC1", "OC", "CC2"]
-    atomDf, bondDf  = file_parsers.pasrse_mol2(cappedMol2)
+    atomDf, bondDf  = file_parsers.parse_mol2(cappedMol2)
     cappingHeteroAtomIds = atomDf[atomDf["ATOM_NAME"].isin(cappingHeteroAtomNames)]["ATOM_ID"].to_list()
     cappingProtonIds = get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf)
 
     cappingAtomIds = cappingHeteroAtomIds + cappingProtonIds
 
+    print(cappingAtomIds)
+    exit()
+
     return cappingAtomIds
 ################################################################################
 
 def create_final_lib_and_mol2(cappingAtomIds, config):
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["finalMol2"]
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
 
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]

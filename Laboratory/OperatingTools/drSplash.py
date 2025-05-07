@@ -1,6 +1,33 @@
 import os 
 from os import path as p
 import time
+import sys
+import re
+
+def strip_ansi_codes(text):
+    """Remove ANSI color codes from a string."""
+    ansi_pattern = re.compile(r'\033\[[0-9;]*m')
+    return ansi_pattern.sub('', text)
+
+def show_getting_mm_total(torsionTag):
+    greenText = "\033[32m"
+    redText = "\033[31m"
+    orangeText = "\033[38;5;172m"
+    yellowText = "\033[33m"
+    resetTextColor = "\033[0m"
+    tealText = "\033[38;5;37m" 
+    brightGreenText = "\033[92m"
+
+    text = f"{yellowText}🗲🗲{resetTextColor}{' '*8}Fitting torsion parameters for {greenText}{torsionTag}"
+  # Calculate visible length (excluding ANSI codes)
+    visible_text = strip_ansi_codes(text)
+    nSpaces = 102 - len(visible_text) - 3  # Account for trailing spaces and 🗲🗲
+    text += f"{' '*nSpaces}{yellowText}🗲🗲{resetTextColor}"
+
+    sys.stdout.write("\r\033[K" + text)  # \r: move to start of line, \033[K: clear line
+    sys.stdout.flush()
+
+
 
 def show_need_cgenff_str(cappedMol2) -> None:
     ## using font ANSI Shadow

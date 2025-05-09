@@ -7,6 +7,7 @@ from shutil import move, copy
 ## PARMED LIBRARIES ##
 import parmed
 from parmed.charmm import CharmmParameterSet
+from parmed.topologyobjects import Cmap
 ## OPENMM LIBRARIES
 import openmm.app as app
 import openmm as openmm
@@ -20,6 +21,31 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
+
+def add_CMAP_term(config: dict) -> dict:
+    """
+    Adds CMAP term to a CHARMM RTF file
+
+    Args: 
+        config (dict): contains all run info
+    Returns:
+        config (dict): updated config
+    
+    """
+    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"] 
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
+    parmedRtf = CharmmParameterSet(moleculeRtf)
+
+
+    print(dir(parmedRtf.residues[moleculeName]))
+    # tmpRtf = p.dirname(moleculeRtf) + f"/{moleculeName}_tmp.rtf"
+    # parmedRtf.write(rtf = tmpRtf)
+
+    exit()
+
+    
+
 
 def copy_assembled_parameters(config: dict) -> dict:
     ## unpack config
@@ -94,7 +120,7 @@ def update_prm(config: dict,
     parmedPrm.dihedral_types[targetAtomTypes] = newDihedralTypes
 
     ## save PRM
-    proposedPrm = p.join(moleculeParameterDir, f"{moleculeName}_capped_{shuffleIndex}.prm")
+    proposedPrm = p.join(moleculeParameterDir, f"{moleculeName}_capped_{shuffleIndex+1}.prm")
     parmedPrm.write(par = proposedPrm)
 
     ## update config

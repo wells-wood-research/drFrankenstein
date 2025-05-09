@@ -215,7 +215,7 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
 
     parmedPsf = Assembly_Assistant.update_psf_atom_types(parmedPsf, nameToDesiredType)
 
-    return parmedPsf, nameToCgenffType
+    return parmedPsf, nameToCgenffType, nameToDesiredType
 
 
 

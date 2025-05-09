@@ -91,8 +91,9 @@ def charmm_assembly_protocol(config:dict) -> dict:
                                                                 charmmDefaultParams["cgenffPrm"],
                                                                 cappedRtf, cappedPrm))
     
-    parmedPsf, nameToCgenffType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
+    parmedPsf, nameToCgenffType, nameToDesiredType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
                                                                            config)
+
 
     missingPrm = Assembly_Monster.create_missing_prm(parmedPsf = parmedPsf,
                                                 cappedRtf = cappedRtf,
@@ -100,11 +101,11 @@ def charmm_assembly_protocol(config:dict) -> dict:
                                                 charmmDefaultParams = charmmDefaultParams,
                                                 nameToCgenffType = nameToCgenffType,
                                                 config = config)
-    ##NOTE try to skip a couple of steps here - can't remember why I did this!
+    
     completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, missingPrm, *charmmDefaultParams.values())
     parmedPsf.load_parameters(completeParameterSet)
 
 
     config = Assembly_Assistant.save_modified_parameter_files(parmedPsf, config)
-
+    config = Assembly_Assistant.update_rtf_types(cappedRtf, nameToDesiredType, config)
     return config

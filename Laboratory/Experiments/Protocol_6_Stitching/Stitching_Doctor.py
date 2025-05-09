@@ -125,6 +125,7 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     config = Stitching_Assistant.sort_out_directories(config)
     ## create RTF, PRM and PSF files 
     config = CHARMM_helper_functions.copy_assembled_parameters(config)
+
     ## get torsion tags from config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     
@@ -145,18 +146,23 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         "position": 1
     }
 
+
+
+    counter = 1
     shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
-        if not shuffleIndex == 0:
+        if not counter == 1:
             config["runtimeInfo"]["madeByStitching"]["moleculePrm"] = config["runtimeInfo"]["madeByStitching"]["proposedPrm"]
-
+        # shuffleIndexTag = shuffleIndex // len(torsionTags)
         ## run the torsion fitting protocol for each torsion
         mmTotalEnergy = CHARMM_total_protocol.get_MM_total_energies(config, torsionTag, debug)
         mmTorsionEnergy, mmCosineComponents = CHARMM_torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
         torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug)
         config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf, shuffleIndex)
-        shuffleIndex += 1
+        if counter % len(torsionTags) == 0:
+            shuffleIndex += 1
+        counter += 1
     ## update config moleculePrm
     config["runtimeInfo"]["madeByStitching"]["moleculePrm"] = config["runtimeInfo"]["madeByStitching"]["proposedPrm"]
 
@@ -165,8 +171,6 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
-
-    exit()
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config

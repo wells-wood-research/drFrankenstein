@@ -139,7 +139,6 @@ def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
                                        tolerance: float = 0.05) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     
     amplitudes = amberParamDf["Amplitude"]
-    periods = amberParamDf["Period"]
     phases = amberParamDf["Phase"]
 
     sample_spacing = 10

@@ -35,6 +35,7 @@ def create_the_monster(config):
     elif forcefield == "CHARMM":
         config = CHARMM_creation.get_donor_acceptors(config)
         CHARMM_creation.create_final_rtf(config)
+        CHARMM_creation.copy_final_prm(config)
 
     config["checkpointInfo"]["finalCreationComplete"] = True
     return config

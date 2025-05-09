@@ -3,13 +3,14 @@ from os import path as p
 from pdbUtils import pdbUtils
 import pandas as pd
 import numpy as np
-import mdtraj as md
+from shutil import copy
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##
 import multiprocessing as mp
 from tqdm import tqdm
 
 ## drFrankenstein LIBRARIES ##e
 from OperatingTools import file_parsers
+from OperatingTools import symmetry_tool
 from ..Protocol_1_Capping import Capping_Assistant
 ## CLEAN CODE ##
 class FilePath:
@@ -19,22 +20,41 @@ class DirectoryPath:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+def copy_final_prm(config: dict) -> None:
+    """
+    Copies final PRM file into the final creation directory
+
+    Args:
+        config (dict): contains all run information
+
+    Returns:
+        None
+    """
+    moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    finalPrm = p.join(finalCreationDir, f"{moleculeName}.prm")
+
+    copy(moleculePrm, finalPrm)
+
+
 def create_final_rtf(config):
     ## unpack config
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
+    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
+
+    
     moleculeName = config["moleculeInfo"]["moleculeName"]
     nTerminialAtoms = config["moleculeInfo"]["nTermini"]
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
     donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
-
-    rtfFile = p.join(moleculeParameterDir, f"{moleculeName}.rtf")
     finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
 
     cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
 
     terminalSectionWritten = False
-    with open(rtfFile, "r") as inRtf, open(finalRtf, "w") as outRtf:
+    with open(moleculeRtf, "r") as inRtf, open(finalRtf, "w") as outRtf:
         for line in inRtf.readlines():
             if line.startswith("END"): 
                 continue
@@ -43,9 +63,16 @@ def create_final_rtf(config):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
- 
+                for atomName in nTerminialAtoms:
+                    outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
+
+        if config["torsionScanInfo"]["preserveBackboneTorsions"]:
+            cmapTerms = create_cmap_terms(config)
+            for cmapTerm in cmapTerms:
+                outRtf.write(f"{cmapTerm}\n")
+        
         for donorPair in donorAcceptors["DONORS"]:
             outRtf.write(f"DONOR {donorPair[0]} {donorPair[1]}\n")
         for acceptorPair in donorAcceptors["ACCEPTORS"]:
@@ -55,11 +82,21 @@ def create_final_rtf(config):
         ##TODO: CMAP for Phi/Psi torsion angles if possible
 
 
+def create_cmap_terms(config: dict) -> dict:
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+    cmapTerms = []
+    for nAtom, caAtom, cAtom in zip(backboneAliases["N"], backboneAliases["CA"], backboneAliases["C"]):
+        cmapTerms.append("CMAP -C "+nAtom+" "+caAtom+" "+cAtom+ " N CA C +N")
+    return cmapTerms
+    
+
+
+
 def get_donor_acceptors(config: dict, debug:bool = False) -> dict:
     """
     Looks though optimised solvated conformers for hydrogen bonds donors and acceptors
     Creates a dict of DONOR and ACCEPTOR atom pairs,
-    where the first entry is the atom participating in teh Hydrogen Bond, 
+    where the first entry is the atom participating in the Hydrogen Bond, 
     and the second is the (a) heavy atom covalently bound to the first
 
     Args:

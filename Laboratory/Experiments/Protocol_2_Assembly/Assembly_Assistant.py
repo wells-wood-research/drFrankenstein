@@ -10,6 +10,8 @@ from parmed.exceptions import ParameterWarning
 # Suppress ParameterWarning
 warnings.filterwarnings('ignore', category=ParameterWarning)
 
+## drFRANKENSTEIN LIBRARIES ##
+from OperatingTools import file_parsers
 
 # Placeholder classes (extend if needed)
 class FilePath:
@@ -156,6 +158,35 @@ def pdb2mol2(inPdb: FilePath,
         os.remove(p.join(workingDir, f))
     return None
 
+
+def  update_rtf_types(inRtf: FilePath, nameToDesiredType: dict,  config: dict) -> dict:
+    """
+    Update RTF file with updated atom types
+
+    Args:
+        inRtf (FilePath): input RTF file
+        outRtf (FilePath): output RTF file
+        config (dict): configuration dictionary
+
+    Returns:
+        config (dict): updated configuration dictionary
+    """
+    assemblyDir = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    parsedRtf = file_parsers.parse_rtf(inRtf)
+
+    for atom in parsedRtf["residues"][moleculeName]["atoms"]:
+        if not atom["name"] in nameToDesiredType:
+            continue
+        atom["type"] = nameToDesiredType[atom["name"]]
+
+    outRtf = p.join(assemblyDir, f"{moleculeName}_assembled.rtf")
+    file_parsers.write_rtf(parsedRtf, outRtf)
+
+    config["runtimeInfo"]["madeByAssembly"]["assembledRtf"] = outRtf
+
+    return config
+
 def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dict:
     """
     Save modified RTF, PRM, and PSF files.
@@ -172,14 +203,12 @@ def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dic
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     outputParams = CharmmParameterSet.from_structure(parmedPsf)
-    outRtf = p.join(assemblyDir, f"{moleculeName}_assembled.rtf")
     outPrm = p.join(assemblyDir, f"{moleculeName}_assembled.prm")
     outPsf = p.join(assemblyDir, f"{moleculeName}_assembled.psf")
 
-    outputParams.write(top=outRtf, par=outPrm)
+    outputParams.write(par=outPrm)
     parmedPsf.save(outPsf, overwrite=True)
 
-    config["runtimeInfo"]["madeByAssembly"]["assembledRtf"] = outRtf 
     config["runtimeInfo"]["madeByAssembly"]["assembledPrm"] = outPrm
     config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = outPsf 
 

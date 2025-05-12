@@ -29,7 +29,7 @@ class DirectoryPath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_MM_total_energies(config:dict,
                            torsionTag: str,
-                             debug = False) -> np.ndarray:
+                             debug = True) -> np.ndarray:
     """
     Main protocol for calculating CHARMM energies for a torsion scan
 

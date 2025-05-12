@@ -322,7 +322,7 @@ def calculate_torsion_angle(coords, torsionIndexes):
 
 def set_up_directories(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
-    torsionTopDir = p.join(outputDir, "03_torsion_scanning")
+    torsionTopDir = p.join(outputDir, "04_torsion_scanning")
     os.makedirs(torsionTopDir, exist_ok=True)
     config["runtimeInfo"]["madeByTwisting"]["torsionDir"] = torsionTopDir
 
@@ -520,59 +520,6 @@ def extract_dihedral_atom_indexes(dihedral: parmed.topologyobjects.Dihedral) -> 
 def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
     return dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name
 
-# def identify_rotatable_bonds(config) -> List[Tuple[int,int,int,int]]:
-#     ## unpack config
-#     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-#     # Load the molecule from a PDB file
-#     mol = Chem.MolFromPDBFile(cappedPdb, removeHs=False)
-#     # Identify torsion angles for rotatable bonds
-#     rotatableBonds = []
-#     for bond in mol.GetBonds():
-#         if bond.IsInRing():
-#             continue
-#         if bond.GetBondType() == Chem.BondType.SINGLE:
-#             atom2 = bond.GetBeginAtom()
-#             atom3 = bond.GetEndAtom()
-
-#             ## get atom names for begin and end atoms
-#             atom2Name = atom2.GetPDBResidueInfo().GetName().strip()
-#             atom3Name = atom3.GetPDBResidueInfo().GetName().strip()
-
-#             ## dont scan amide bonds
-#             nTerminalAtomNames = config["moleculeInfo"]["nTermini"]
-#             cTerminalAtomNames = config["moleculeInfo"]["cTermini"]
-#             nTerminalAmideAtoms = nTerminalAtomNames + ["CC1"]
-#             cTerminalAmideAtoms = cTerminalAtomNames + ["NN"]
-#             if atom2Name in nTerminalAmideAtoms and atom3Name in nTerminalAmideAtoms:
-#                 continue
-#             if atom2Name in cTerminalAmideAtoms and atom3Name in cTerminalAmideAtoms:
-#                 continue
-            
-#             if not (atom2.IsInRing() or atom3.IsInRing()):
-#                 # Find neighboring atoms for torsion angle
-#                 neighborsBegin = [a for a in atom2.GetNeighbors() if a.GetIdx() != atom3.GetIdx()]
-#                 neighborsEnd = [a for a in atom3.GetNeighbors() if a.GetIdx() != atom2.GetIdx()]
-                
-#                 for atom1 in neighborsBegin:
-#                     for atom4 in neighborsEnd:
-
-#                         atom1Name = atom1.GetPDBResidueInfo().GetName().strip()
-#                         atom4Name = atom4.GetPDBResidueInfo().GetName().strip()
-
-#                         # dont scan bonds with non-polar hydrogens at either as atoms 1 or 4
-#                         if atom1Name.startswith("H"):
-#                             if atom2Name.startswith("C"):
-#                                 continue
-#                         if atom4Name.startswith("H"):
-#                             if atom3Name.startswith("C"):
-#                                 continue
-#                         ## add torsion data to list
-#                         rotatableBonds.append({
-#                             'atoms': (atom1Name, atom2Name, atom3Name, atom4Name),
-#                             'indices': (atom1.GetIdx(), atom2.GetIdx(), atom3.GetIdx(), atom4.GetIdx())
-#                         })
-
-#     return rotatableBonds
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def process_scan_data(scanDfs: List[pd.DataFrame],
@@ -626,69 +573,6 @@ def detect_jumps_in_data(df):
     
     return cleanDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def clean_up_opt_dir(optDir, cleanUpLevel):
-    """
-    For an opt dir:
-    vital = orca_opt.xyz (for use in forwards)
-    nice2have = orca_opt.out (for debugging)
-    
-    OPTIONS: off, basic, full
- 
-    """
-    if cleanUpLevel == "off":
-        return
-    
-    keepFiles = ["orca_opt.xyz", "ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]
 
-    for file in os.listdir(optDir):
-        if file in keepFiles:
-            continue
-        elif cleanUpLevel in ["basic", "full"]:
-            os.remove(p.join(optDir, file))
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def clean_up_scan_dir(scanDir, cleanUpLevel):
-    """
-    For a scan dir
-    vital = orca_scan_XYZ.xyz, orca_scan.relaxscanact.dat, orca_scan.out
-    """
-    if cleanUpLevel == "off":
-        return
-
-    scanXyzs = [file for file in os.listdir(scanDir) if re.match(r'orca_scan\.\d\d\d\.xyz$', file)]
-
-    keepFiles = ["orca_scan.relaxscanact.dat",  ## need for getting energies
-                 "orca_scan.inp",               ## need for getting angles
-                 "ORCA_FINISHED_NORMALLY",      ## need as a positive flag for charge fitting later
-                 "ORCA_CRASHED"]                ## need as a negative flag for charge fitting later
-
-    for file in os.listdir(scanDir):
-        if file in scanXyzs:
-            continue
-        elif file in keepFiles:
-            continue
-        elif cleanUpLevel in ["basic", "full"]:
-            os.remove(p.join(scanDir, file))
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def clean_up_singlepoint_dir(spDir, cleanUpLevel):
-    """
-    For a singlepoint dir
-    vital = None
-    nice2have = orca_singlepoint.out
-    """
-
-    keepFiles = ["orca_opt.xyz", "ORCA_FINISHED_NORMALLY", "ORCA)CRASHED"]
-
-    if cleanUpLevel == "off":
-        return
-    if cleanUpLevel == "basic":
-        for file in os.listdir(spDir):
-            if file in keepFiles:
-                continue
-            else:
-                os.remove(p.join(spDir, file))
-
-    elif cleanUpLevel == "full":
-        rmtree(spDir)
 
 

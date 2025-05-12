@@ -17,7 +17,7 @@ from typing import List, Tuple
 ## drFRANKENSTIEN LIBRARIES ##
 from . import Capping_Monster
 from . import Capping_Assistant
-from OperatingTools import Timer, symmetry_tool
+from OperatingTools import Timer, symmetry_tool, cleaner
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()
@@ -69,6 +69,9 @@ def capping_protocol(config: dict) -> dict:
     config["runtimeInfo"]["madeByCapping"]["symmetryData"] = symmetryData
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
+
+    cleaner.clean_capping(config)
+
 
     return config
 

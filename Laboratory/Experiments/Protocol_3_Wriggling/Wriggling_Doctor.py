@@ -3,6 +3,7 @@ import os
 from os import path as p
 from subprocess import call, PIPE
 
+
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -13,6 +14,7 @@ from typing import List, Tuple
 ## drFRANKESTEN IMPORTS ##
 from OperatingTools import drOrca
 from OperatingTools import Timer
+from OperatingTools import cleaner
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function()
 def conformer_generation_protocol(config: dict) -> dict:
@@ -51,7 +53,7 @@ def conformer_generation_protocol(config: dict) -> dict:
     config["runtimeInfo"]["madeByConformers"]["conformerXyzs"] = conformerXyzs
 
     ## delete unnecessary files
-    clean_up(conformerDir, config)
+    cleaner.clean_wriggle(config)
 
     ## update checkpoint flags
     config["checkpointInfo"]["conformersComplete"] = True
@@ -116,18 +118,7 @@ def pdb_to_xyz(inPdb: FilePath, outXyz: FilePath) -> None:
     call(obabelCommand, stdout=PIPE, stderr=PIPE)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def clean_up(conformerDir: DirectoryPath, config: dict) -> None:
-    """
-    Removes unnecessary files from conformer directory
 
-    Args:
-        conformerDir (DirectoryPath): directory containing conformers
-        config (dict): dictionary containing all information
-    """
-    if config["miscInfo"]["cleanUpLevel"] in ["basic", "full"]:
-        filesToRemove = [p.join(conformerDir, f) for f in os.listdir(conformerDir) if f.startswith("GOAT") and not f.endswith(".out")]
-        for f in filesToRemove:
-            os.remove(f)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 if __name__ == "__main__":

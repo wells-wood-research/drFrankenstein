@@ -121,6 +121,7 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
                                in os.listdir(calculationDir)
                                if p.splitext(file)[1] == ".out"][0]
         singlePointEnergy = find_final_single_point_energy(singlePointOutFile)
+       
         singlePointData[conformerName]["Energy"] = singlePointEnergy
         singlePointData[conformerName]["Path"] = p.join(chargeFittingDir, f"{conformerName}.molden.input")
 
@@ -194,7 +195,7 @@ def set_up_directories(config: dict, protocol: str) -> dict:
 
     outputDir: DirectoryPath = pathInfo["outputDir"]
     ## charge dir - acts as a topDir for all charge-related processes
-    chargeDir: DirectoryPath = p.join(outputDir, "04_charge_calculations")
+    chargeDir: DirectoryPath = p.join(outputDir, "05_charge_calculations")
     os.makedirs(chargeDir, exist_ok=True)
 
     #### FOR RESP FITTING, just run once ##

@@ -55,13 +55,13 @@ def copy_assembled_parameters(config: dict) -> dict:
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
-    destRtf = p.join(moleculeParameterDir, f"{moleculeName}_capped.rtf")
+    destRtf = p.join(moleculeParameterDir, f"DEFAULT_PARAMS.rtf")
     copy(assembledRtf, destRtf)
 
-    destPrm = p.join(moleculeParameterDir, f"{moleculeName}_capped.prm")    
+    destPrm = p.join(moleculeParameterDir, f"DEFAULT_PARAMS.prm")    
     copy(assembledPrm, destPrm)
 
-    destPsf = p.join(moleculeParameterDir, f"{moleculeName}_capped.psf")
+    destPsf = p.join(moleculeParameterDir, f"DEFAULT_PARAMS.psf")
     copy(assembledPsf, destPsf)
 
     config["runtimeInfo"]["madeByStitching"]["moleculeRtf"] = destRtf

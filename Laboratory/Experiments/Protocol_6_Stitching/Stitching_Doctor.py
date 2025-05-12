@@ -22,7 +22,7 @@ from .CHARMM_protocols import CHARMM_torsion_protocol
 from . import QMMM_fitting_protocol
 from . import Stitching_Assistant
 from . import Stitching_Plotter
-from OperatingTools import Timer
+from OperatingTools import Timer, cleaner
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -96,6 +96,9 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
+    ## clean up 
+    cleaner.clean_up_stitching(config)
+
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config
@@ -146,8 +149,6 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         "position": 1
     }
 
-
-
     counter = 1
     shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
@@ -171,6 +172,10 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
+        
+    ## clean up 
+    cleaner.clean_up_stitching(config)
+
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config

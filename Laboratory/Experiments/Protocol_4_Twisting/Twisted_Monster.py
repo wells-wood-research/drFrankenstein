@@ -1,6 +1,10 @@
 import os
 from os import path as p
 import pandas as pd
+
+## drFRANKENSTEIN LIBRARIES ##
+from OperatingTools import cleaner
+
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -31,7 +35,7 @@ def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
 
     optXyz = p.join(optDir, "orca_opt.xyz")
 
-    Twisted_Assistant.clean_up_opt_dir(optDir, config["miscInfo"]["cleanUpLevel"])
+    cleaner.clean_up_opt_dir(optDir, config)
     return optXyz
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -68,7 +72,7 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     forwardsScanDf["scan_index"] = [f"{i:03}" for i in range(1, 38)]
 
     forwardsScanDf = Twisted_Assistant.take_min_duplicate_angles(forwardsScanDf)
-    Twisted_Assistant.clean_up_scan_dir(forwardsDir, config["miscInfo"]["cleanUpLevel"])
+    cleaner.clean_up_scan_dir(forwardsDir, config)
 
     ## find scan xyzFiles,
     return forwardsScanDf, forwardsXyz, forwardsDir
@@ -106,7 +110,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 
     backwardsScanDf = Twisted_Assistant.take_min_duplicate_angles(backwardsScanDf)
 
-    Twisted_Assistant.clean_up_scan_dir(backwardsDir, config["miscInfo"]["cleanUpLevel"])
+    cleaner.clean_up_scan_dir(backwardsDir, config)
 
     return backwardsScanDf, backwardsDir  
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -151,6 +155,7 @@ def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
             drOrca.run_orca(spOrcaInput, spOrcaOutput, config)
         singlePointEnergy = Twisted_Assistant.read_singlepoint_energy(spOrcaOutput)
         singlePointEnergies[scanId] = singlePointEnergy
+        cleaner.clean_up_singlepoint_dir(spDir, config)
     singlePointEnergyDf = pd.DataFrame(list(singlePointEnergies.items()), columns = ["scan_index", "Energy"])
 
     singlePointEnergyDf = singlePointEnergyDf.merge(

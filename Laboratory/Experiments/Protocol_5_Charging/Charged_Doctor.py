@@ -16,7 +16,7 @@ class DirectoryPath:
     pass
 
 ## drFRANKENSTEIN LIBRARIES ##
-from OperatingTools import Timer
+from OperatingTools import Timer, cleaner
 from . import Charged_Monster
 from . import Charged_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -81,7 +81,8 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
                                                           debug = debug)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
 
-
+    ## clean up
+    cleaner.clean_up_charges(config)
 
     ## update config with checkpoint flag
     config["checkpointInfo"]["chargesComplete"] = True
@@ -404,7 +405,6 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
         "colour": "yellow",
         "unit":  "scan",
         "dynamic_ncols": True,
-        "leave": True
     }
 
     ## run in serial

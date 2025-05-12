@@ -148,4 +148,4 @@ miscInfo:
   ## the maximum number of cores that will be used
   availableCpus: 30
   ## How many file do you want to delete? Accepts ["None", "basic", "full", "brutal"] (WARNING: only "None" and "basic" work at the moment!)
-  cleanUpLevel: basic
+  cleanUpLevel: 1

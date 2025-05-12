@@ -54,16 +54,17 @@ def main():
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
-
-    ## run assembly protocol
-    if config["parameterFittingInfo"]["forceField"] == "CHARMM":
-        config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
-        drYaml.write_config_to_yaml(config, outputDir)
-        config = Assembly_Doctor.charmm_assembly_protocol(config=config)
-        drYaml.write_config_to_yaml(config, outputDir)  
-    elif config["parameterFittingInfo"]["forceField"] == "AMBER":
-        config = Assembly_Doctor.amber_assembly_protocol(config=config)
-        drYaml.write_config_to_yaml(config, outputDir)
+        
+    if not checkpointInfo["assemblyComplete"]:
+        ## run assembly protocol
+        if config["parameterFittingInfo"]["forceField"] == "CHARMM":
+            config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
+            drYaml.write_config_to_yaml(config, outputDir)
+            config = Assembly_Doctor.charmm_assembly_protocol(config=config)
+            drYaml.write_config_to_yaml(config, outputDir)  
+        elif config["parameterFittingInfo"]["forceField"] == "AMBER":
+            config = Assembly_Doctor.amber_assembly_protocol(config=config)
+            drYaml.write_config_to_yaml(config, outputDir)
 
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:

@@ -12,7 +12,7 @@ from tqdm import tqdm
 from copy import deepcopy
 import mdtraj as md
 ## drFrankenstein LIBRARIES ##
-from OperatingTools import drOrca
+from OperatingTools import drOrca, cleaner
 from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
 from . import Charged_Assistant
 ## CLEAN CODE ##
@@ -49,6 +49,7 @@ def run_qmmm_opt(qmmmOptArgs):
         drOrca.run_orca(qmmmOptOrcaInput, qmmmOptOrcaOutput, config)
         optXyz = p.join(conformerQmmmOptDir, "QMMM_orca_opt.xyz")
         copy(optXyz, solvatedOptXyz)
+        cleaner.clean_up_opt_dir(conformerQmmmOptDir, config)
 
     return solvatedOptXyz
 
@@ -164,6 +165,8 @@ def run_orca_solvator_for_charge_calculations(args: tuple) -> FilePath:
         ## rename the xyz file  
         os.rename(outXyz, solvatedXyz)
 
+        cleaner.clean_up_solvator_dir(conformerSolvatorDir, config)
+
     return solvatedXyz
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -207,6 +210,8 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
     singlePointMolden = p.join(conformerQmDir, "orca_sp.molden.input")
 
     destMolden = p.join(fittingDir, f"{conformerName}.molden.input")
+
+    cleaner.clean_up_singlepoint_dir(conformerQmDir, config, keepGbw=True)
 
     copy(singlePointMolden, destMolden)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

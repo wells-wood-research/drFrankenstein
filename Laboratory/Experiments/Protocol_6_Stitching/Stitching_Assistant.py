@@ -18,28 +18,28 @@ class DirectoryPath:
 
 
 from OperatingTools import file_parsers
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
-                             cappedPdb: FilePath,
-                               fittingRoundDir: DirectoryPath) -> list[FilePath]:
-    """
-    Effectively converts a list of XYZ files to PDB
-    In practice, updates a static PDB file with coords from a list of XYZ files
+# # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
+# def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
+#                              cappedPdb: FilePath,
+#                                fittingRoundDir: DirectoryPath) -> list[FilePath]:
+#     """
+#     Effectively converts a list of XYZ files to PDB
+#     In practice, updates a static PDB file with coords from a list of XYZ files
 
-    Args:
-        trajXyzs (list[FilePath]): a list of XYZ files
-        cappedPdb (FilePath): a PDB file containing correct atom data
-        fittingRoundDir (DirectoryPath): the output dir for this function
+#     Args:
+#         trajXyzs (list[FilePath]): a list of XYZ files
+#         cappedPdb (FilePath): a PDB file containing correct atom data
+#         fittingRoundDir (DirectoryPath): the output dir for this function
     
-    """
-    trajPdbs = []
-    for trajXyz in trajXyzs:
-        trajIndex = trajXyz.split(".")[1]
-        trajPdb = p.join(fittingRoundDir, f"orca.{trajIndex}.pdb")
-        update_pdb_coords(cappedPdb, trajXyz, trajPdb)
-        trajPdbs.append(trajPdb)
+#     """
+#     trajPdbs = []
+#     for trajXyz in trajXyzs:
+#         trajIndex = trajXyz.split(".")[1]
+#         trajPdb = p.join(fittingRoundDir, f"orca.{trajIndex}.pdb")
+#         update_pdb_coords(cappedPdb, trajXyz, trajPdb)
+#         trajPdbs.append(trajPdb)
 
-    return trajPdbs
+#     return trajPdbs
 
 
 

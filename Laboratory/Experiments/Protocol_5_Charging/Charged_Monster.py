@@ -29,7 +29,7 @@ def run_qmmm_opt(qmmmOptArgs):
     ## unpack config
     qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
     solvatedParams = config["runtimeInfo"]["madeByCharges"]["solvatedParams"]
-
+    nCoresPerCalculation = config["chargeFittingInfo"]["nCoresPerCalculation"]
     ## get conformer name, make a dir for qmmm opt calculations
     conformerName = p.basename(solvatedXyz).split(".")[0]
     
@@ -41,7 +41,8 @@ def run_qmmm_opt(qmmmOptArgs):
                                                     moleculeInfo = config["moleculeInfo"],
                                                     qmMethod = config["chargeFittingInfo"]["optMethod"],
                                                     qmAtoms=qmAtoms,
-                                                    parameterFile=solvatedParams)
+                                                    parameterFile=solvatedParams,
+                                                    nCpus=nCoresPerCalculation)
     qmmmOptOrcaOutput = p.join(conformerQmmmOptDir, "QMMM_orca_opt.out")
     solvatedOptXyz = p.join(conformerQmmmOptDir, f"{conformerName}.xyz")
 

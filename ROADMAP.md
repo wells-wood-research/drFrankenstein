@@ -13,7 +13,7 @@
 
 [] add CMAP term for AMBER
 [] add optional-ness for backbone preservation for CHARMM
-[] delete
+[] sort out multi-threading for 
 
 
 

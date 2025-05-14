@@ -16,13 +16,14 @@ def run_orca(orcaInput, orcaOutput, config):
             call(orcaCommand, stdout=output_file, stderr=output_file)
         except Exception as e:
             raise(e)
-        
+########################################
 def make_orca_input_qmmm_opt(inputXyz: FilePath,
                                 outDir: DirectoryPath,
                                 moleculeInfo: dict,
                                 qmMethod: str,
                                 qmAtoms: str,
-                                parameterFile: FilePath) -> FilePath:
+                                parameterFile: FilePath,
+                                nCpus: int) -> FilePath:
     ## write QM/MM opt orca input file
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -33,6 +34,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
         f.write(" # --------------------------------- #\n")  
         ## simpleinput line for method and QMMM flag      
         f.write(f"! QMMM {qmMethod} Opt\n")
+        f.write(f"%pal nprocs {nCpus}\nend\n")
         ## qmmmm options
         f.write("%qmmm\n")
         f.write(f"{' '*4}QMAtoms {qmAtoms} end\n")
@@ -43,6 +45,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
 
 
 
+########################################
 
 def make_orca_input_qmmm_singlepoint(inputXyz: FilePath,
                                 outDir: DirectoryPath,

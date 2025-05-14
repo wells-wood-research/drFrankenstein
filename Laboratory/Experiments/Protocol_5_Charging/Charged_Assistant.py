@@ -5,7 +5,7 @@ import os
 from shutil import  copy
 import pandas as pd
 import numpy as np
-
+import mdtraj as md
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import file_parsers
 
@@ -46,7 +46,10 @@ def get_qm_atoms_for_solvated_system(xyzFile: FilePath, config:dict) -> dict:
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def how_many_waters_for_solvator(xyzFile: FilePath, multiplier=4) -> int:
+def how_many_waters_for_solvator(conformerXyzs: list[FilePath],
+                                  conformerPdb: FilePath,
+                                    outDir: DirectoryPath,
+                                    nWatersPerNmSquared: int = 10) -> int:
     """
     Simple function that decides how many water molecules to add in a SOLVATOR calculation
     Currently we just do 2 x nHeavyAtoms
@@ -59,10 +62,23 @@ def how_many_waters_for_solvator(xyzFile: FilePath, multiplier=4) -> int:
     Returns:
         nWaters (int):  how many water molecules to add in a SOLVATOR calculation
     """
-    xyzDf = file_parsers.xyz2df(xyzFile)
-    heavyAtomDf = xyzDf[xyzDf["element"]!="H"]
-    nHeavyAtoms = len(heavyAtomDf.index)
-    nWaters = nHeavyAtoms * multiplier
+    ## convert XYZs to PDBs so we can load them into mdtraj
+    conformerPdbs = file_parsers.convert_traj_xyz_to_pdb(conformerXyzs, conformerPdb, outDir)
+
+    totalSasas = []
+    for pdbFile in conformerPdbs:
+        traj = md.load(pdbFile)
+        sasaPerAtom = md.shrake_rupley(traj)
+        totalSasa = sasaPerAtom.sum()
+        totalSasas.append(totalSasa)
+    meanTotalSasa = sum(totalSasas)/len(totalSasas)
+
+    nWaters = round(meanTotalSasa * nWatersPerNmSquared)
+
+    ## clean up
+    for pdbFile in conformerPdbs:
+        os.remove(pdbFile)
+    
     return nWaters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> FilePath:

@@ -38,11 +38,9 @@ def add_CMAP_term(config: dict) -> dict:
     parmedRtf = CharmmParameterSet(moleculeRtf)
 
 
-    print(dir(parmedRtf.residues[moleculeName]))
     # tmpRtf = p.dirname(moleculeRtf) + f"/{moleculeName}_tmp.rtf"
-    # parmedRtf.write(rtf = tmpRtf)
+    # parmedRtf.write(rtf = tmpRtf
 
-    exit()
 
     
 

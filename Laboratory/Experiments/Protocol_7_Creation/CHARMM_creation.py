@@ -92,7 +92,7 @@ def create_cmap_terms(config: dict) -> dict:
 
 
 
-def get_donor_acceptors(config: dict, debug:bool = False) -> dict:
+def get_donor_acceptors(config: dict, debug:bool = True) -> dict:
     """
     Looks though optimised solvated conformers for hydrogen bonds donors and acceptors
     Creates a dict of DONOR and ACCEPTOR atom pairs,
@@ -115,7 +115,7 @@ def get_donor_acceptors(config: dict, debug:bool = False) -> dict:
     os.makedirs(hydrogenBondDir, exist_ok=True)
     config["runtimeInfo"]["madeByCharges"]["hydrogenBondDir"] = hydrogenBondDir
     solvatedOptimisedXyzs = config["runtimeInfo"]["madeByCharges"]["solvatedOptimisedXyzs"]
-
+    print(solvatedOptimisedXyzs)
     config, solvatedDf = pad_pdb_with_waters(config)
 
     allDonors = []
@@ -154,6 +154,8 @@ def get_donor_acceptors(config: dict, debug:bool = False) -> dict:
 
     donorAcceptors = {"DONORS": uniqueDonors,
                       "ACCEPTORS": uniqueAcceptors}
+    
+    print(donorAcceptors)
         
     config["runtimeInfo"]["madeByCreator"]["donorAcceptors"] = donorAcceptors
 
@@ -173,12 +175,15 @@ def detect_hydrogen_bonds_construct_donor_acceptors(solvatedOptXyz: FilePath,
 
 
 def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: str) -> dict:
+    print(moleculeName)
+    exit()
     donors = []
     acceptors = []
     for hBond in hBonds:
         donorDf = pdbDf.iloc[hBond[0]]
         hydrogenDf = pdbDf.iloc[hBond[1]]
         acceptorDf = pdbDf.iloc[hBond[2]]
+        print(donorDf["RES_NAME"], acceptorDf["RES_NAME"])
         if donorDf["RES_NAME"] == moleculeName:
             donorPair = (hydrogenDf["ATOM_NAME"], donorDf["ATOM_NAME"])
             donors.append(donorPair)

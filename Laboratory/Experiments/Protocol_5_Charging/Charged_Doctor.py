@@ -198,7 +198,12 @@ def qmmm_opt_protocol_for_charges(config, debug):
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(qmmmOptArgsList), config["miscInfo"]["availableCpus"])
+        ## work out how many cpus to use
+        nCoresPerCalculation = config["chargeFittingInfo"]["nCoresPerCalculation"]
+        availableCpus = config["miscInfo"]["availableCpus"]
+
+        nCpus = min((availableCpus // nCoresPerCalculation), len(qmmmOptArgsList))
+        
         with WorkerPool(n_jobs = nCpus) as pool:
             qmmmOptXyzs = pool.map(Charged_Monster.run_qmmm_opt,
                     make_single_arguments(qmmmOptArgsList),
@@ -232,8 +237,14 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(qmmmSinglepointArgsList), config["miscInfo"]["availableCpus"])
-        with WorkerPool(n_jobs = nCpus) as pool:
+        ## work out how many cpus to use
+        nCoresPerCalculation = config["chargeFittingInfo"]["nCoresPerCalculation"]
+        availableCpus = config["miscInfo"]["availableCpus"]
+        ## set OMP_NUM_THREADS
+        os.environ["OMP_NUM_THREADS"] = str(nCoresPerCalculation)
+
+        nCpus = min((availableCpus // nCoresPerCalculation), len(qmmmSinglepointArgsList))        
+        with WorkerPool(n_jobs = nCpus) as pool:        
             optXyzs = pool.map(Charged_Monster.run_qmmm_singlepoint,
                     make_single_arguments(qmmmSinglepointArgsList),
                     progress_bar=True,
@@ -259,11 +270,12 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
 
     moleculeInfo = config["moleculeInfo"]
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
     chargeFittingInfo = config["chargeFittingInfo"]
 
 
-    nWaters = Charged_Assistant.how_many_waters_for_solvator(xyzFile = conformerXyzs[0])
+    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs, cappedPdb, solvatorDir)
 
     ## decide how many conformers to sample
     if nConformers == -1 or nConformers > len(conformerXyzs):
@@ -295,8 +307,13 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
             "dynamic_ncols": True,
         }
     ## run in parallel
-        nCpus = min(len(solvatorArgList), config["miscInfo"]["availableCpus"])
-        with WorkerPool(n_jobs = nCpus) as pool:
+        ## work out how many cpus to use
+        availableCpus = config["miscInfo"]["availableCpus"]
+        nCoresPerCalculation = chargeFittingInfo["nCoresPerCalculation"]
+        nCpus = min(availableCpus, len(solvatorArgList))
+
+        ## set OMP_NUM_THREADS
+        with WorkerPool(n_jobs = nCpus) as pool:        
             solvatedXyzs = pool.map(Charged_Monster.run_orca_solvator_for_charge_calculations,
                     make_single_arguments(solvatorArgList),
                     progress_bar=True,
@@ -413,8 +430,9 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
             Charged_Monster.run_orca_singlepoint_for_charge_calculations(arg)
     ## run in parallel
     else:
-        nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
-        with WorkerPool(n_jobs = nCpus) as pool:
+        nCpus = min(len(argsList), config[["miscInfo"]]["availableCpus"])
+        with WorkerPool(n_jobs = nCpus) as pool:        
+
             pool.map(Charged_Monster.run_orca_singlepoint_for_charge_calculations,
                     make_single_arguments(argsList),
                     progress_bar=True,

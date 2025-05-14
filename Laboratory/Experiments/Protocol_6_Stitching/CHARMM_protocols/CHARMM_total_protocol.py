@@ -19,6 +19,7 @@ import  openmm.unit  as unit
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
 from OperatingTools import drSplash
+from OperatingTools import file_parsers
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -120,7 +121,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
                         if re.match(r'^orca_scan\.\d\d\d\.xyz$', file)])
 
 
-    trajPdbs = Stitching_Assistant.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
+    trajPdbs = file_parsers.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
     singlePointEnergies = run_mm_singlepoints(trajPdbs, config)
 
 

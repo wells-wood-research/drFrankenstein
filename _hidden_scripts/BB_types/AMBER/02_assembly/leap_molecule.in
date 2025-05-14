@@ -1,5 +1,0 @@
-source leaprc.gaff2
-mol  = loadmol2 /home/esp/scriptDevelopment/drFrankenstein/_hidden_scripts/BB_types/AMBER/02_assembly/PHG_capped.mol2 
-loadamberparams /home/esp/scriptDevelopment/drFrankenstein/_hidden_scripts/BB_types/AMBER/02_assembly/PHG_capped.frcmod 
-saveamberparm mol /home/esp/scriptDevelopment/drFrankenstein/_hidden_scripts/BB_types/AMBER/02_assembly/orca_molecule.prmtop /home/esp/scriptDevelopment/drFrankenstein/_hidden_scripts/BB_types/AMBER/02_assembly/orca_molecule.inpcrd  
-quit

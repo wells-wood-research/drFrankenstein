@@ -1,7 +1,0 @@
- # --------------------------------- #
- #  Geometry Optimisation            #
- # --------------------------------- #
-! XTB2 
-%DOCKER GUEST "Helium.xyz" END
-*xyzfile 0 1 /home/esp/scriptDevelopment/drFrankenstein/_hidden_scripts/LJ_params/PHG_conformer_1.xyz
-

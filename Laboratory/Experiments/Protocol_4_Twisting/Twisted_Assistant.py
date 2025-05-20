@@ -19,9 +19,6 @@ from scipy.signal import argrelextrema
 import random
 import parmed
 from parmed.charmm import CharmmParameterSet, CharmmPsfFile
-## RDKIT IMPORTS ##
-from rdkit import Chem, RDLogger
-
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -31,11 +28,35 @@ class DirectoryPath:
 from typing import List, Tuple
 
 
-RDLogger.DisableLog('rdApp.warning')
 
 from OperatingTools import drOrca
 
+def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) -> dict:
+    """
+    Gets the global minimum angle and barrier height for the torsion in question
 
+    Args:
+        averagesDf (pd.DataFrame): dataframe containing single point energies
+        torsionTag (str): torsion tag
+        config (dict): config containing all run information
+    
+    Returns:
+        config (dict): updated config
+    """
+
+    globalMinimaAngle = averagesDf["Angle"].loc[averagesDf[torsionTag].idxmin()]
+    globalMinimaEnergy = averagesDf[torsionTag].loc[averagesDf[torsionTag].idxmin()]
+    globalMaximaEnergy = averagesDf[torsionTag].loc[averagesDf[torsionTag].idxmax()]
+
+
+
+    barrierHeight = round(globalMaximaEnergy - globalMinimaEnergy, 3)
+
+    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["globalMinimaAngle"] = int(globalMinimaAngle)
+    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["barrierHeight"] = float(barrierHeight)
+
+
+    return config
 
 def load_amber_params(config):
     ## unpack config

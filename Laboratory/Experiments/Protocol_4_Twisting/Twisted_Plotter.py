@@ -23,11 +23,15 @@ def twist_plotting_protocol(scanDf, scanAveragesDf, spDf, spAveragesDf, outDir, 
     else:
         scanQmMethod = scanMethod + " [ " + scanSolvation + " ]"
 
-    plot_individual_vs_average(scanDf, scanAveragesDf, scanPlotDir, torsionTag, "scan", scanQmMethod)
+    scanPng = plot_individual_vs_average(scanDf, scanAveragesDf, scanPlotDir, torsionTag, "scan", scanQmMethod)
+    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanPng"] = scanPng
 
 
+    if  config["torsionScanInfo"]["singlePointMethod"] is None:
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["spPng"] = None
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanVsSpPng"] = None
 
-    if not  config["torsionScanInfo"]["singlePointMethod"] is None:
+    else:
         ## extract qm method for single point
         singlepointMethod = config["torsionScanInfo"]["singlePointMethod"]
         singlepointSolvation = config["torsionScanInfo"]["singlePointSolvationMethod"]
@@ -36,9 +40,12 @@ def twist_plotting_protocol(scanDf, scanAveragesDf, spDf, spAveragesDf, outDir, 
         else:
             singlepointQmMethod = singlepointMethod + " [ " + singlepointSolvation + " ]"
 
-        plot_individual_vs_average(spDf, spAveragesDf, scanPlotDir, torsionTag, "SP", singlepointQmMethod)
-        plot_scan_singlepoint_comparison(scanAveragesDf, spAveragesDf, scanPlotDir, torsionTag, scanQmMethod, singlepointQmMethod)
+        spPng = plot_individual_vs_average(spDf, spAveragesDf, scanPlotDir, torsionTag, "SP", singlepointQmMethod)
+        scanVsSpPng = plot_scan_singlepoint_comparison(scanAveragesDf, spAveragesDf, scanPlotDir, torsionTag, scanQmMethod, singlepointQmMethod)
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["spPng"] = spPng
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanVsSpPng"] = scanVsSpPng
 
+    return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def set_rc_params():
@@ -91,9 +98,14 @@ def plot_individual_vs_average(individualDfs, averageDf, outDir, torsionTag, tag
     plt.ylabel('Energy (Kcal / mol)')
     plt.title(f'Torsion scans for {torsionTag} at {qmMethod}')
 
+
+    plotPng = p.join(outDir,f"{saveTag}_{torsionTag}.png")
     # Save the plot to the specified directory
-    plt.savefig(p.join(outDir,f"{saveTag}_{torsionTag}.png"))
+    plt.savefig(plotPng)
     plt.close()
+
+    return plotPng
+
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def plot_scan_singlepoint_comparison(scanDf, spDf, outDir, torsionTag, scanQmMethod, singlepointQmMethod):
@@ -129,7 +141,11 @@ def plot_scan_singlepoint_comparison(scanDf, spDf, outDir, torsionTag, scanQmMet
         labelcolor=[brightGreen, magenta]
     )
     
+    plotPng = p.join(outDir,f"03_scan_vs_SP_{torsionTag}.png")
     # Save the plot to the specified directory
-    plt.savefig(p.join(outDir,f"02_scan_vs_SP_{torsionTag}.png"))
+    plt.savefig(plotPng)
     plt.close()
+
+    return plotPng
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

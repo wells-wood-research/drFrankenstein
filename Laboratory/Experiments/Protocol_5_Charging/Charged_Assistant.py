@@ -6,6 +6,7 @@ from shutil import  copy
 import pandas as pd
 import numpy as np
 import mdtraj as md
+from pdbUtils import pdbUtils
 ## drFrankenstein LIBRARIES ##
 from OperatingTools import file_parsers
 
@@ -14,6 +15,30 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
+
+
+def process_charge_csv(config: dict) -> dict:
+    """
+    Converts auto-generated charge csv into a format that can be used in the report protocol
+
+    Args:
+        config (dict): config containing all run information
+
+    Returns:
+        config (dict): updated config dict
+    """
+    ## unpack config ##
+    chargeCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
+
+    cappedDf = pdbUtils.pdb2df(cappedPdb)
+    chargeDf = pd.read_csv(chargeCsv, index_col="Unnamed: 0")
+    chargeDf["ATOM_NAME"] = cappedDf["ATOM_NAME"]
+
+    chargeDf.to_csv(chargeCsv)
+
+    return config
+
 
 
 

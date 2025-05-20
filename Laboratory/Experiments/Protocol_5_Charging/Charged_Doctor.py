@@ -81,6 +81,10 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
                                                           debug = debug)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
 
+
+
+    config = Charged_Assistant.process_charge_csv(config)
+
     ## clean up
     cleaner.clean_up_charges(config)
 
@@ -100,7 +104,6 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
         1. Runs ORCA SOLVATOR calculations to add explicit waters around the molecule
         2. Runs single-point calculations with ORCA to creates wavefunction files 
         3. Runs MultiWFN to assign partial charges to the molecule
-        4. Detects hydrogen bond donors and acceptors
 
     Args:
         outDir (DirectoryPath): Directory for output files

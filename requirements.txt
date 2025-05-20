@@ -9,6 +9,7 @@ rdkit==2024.9.5
 matplotlib==3.10.0
 pexpect==4.9.0
 tqdm==4.67.1
-psfgen==1.0.5  # CHARMM ONLY
 imageio==2.37.0
 mdtraj==1.10.3
+networkx
+argpass

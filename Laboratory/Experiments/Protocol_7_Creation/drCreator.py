@@ -14,7 +14,6 @@ def create_the_monster(config):
     ## create a runtimeInfo 
     config["runtimeInfo"]["madeByCreator"] = {}
 
-
     ## unpack config
     forcefield = config["parameterFittingInfo"]["forceField"]
 
@@ -24,10 +23,6 @@ def create_the_monster(config):
     os.makedirs(finalCreationDir, exist_ok=True)
     config["runtimeInfo"]["madeByCreator"]["finalCreationDir"] = finalCreationDir
 
-
-
-    ##TODO: this could be done during the capping step instead
-
     if forcefield == "AMBER":
         cappingAtomIds = AMBER_creation.get_capping_atom_ids(config)
         AMBER_creation.create_final_lib_and_mol2(cappingAtomIds, config)
@@ -36,7 +31,6 @@ def create_the_monster(config):
         config = CHARMM_creation.get_donor_acceptors(config)
         CHARMM_creation.create_final_rtf(config)
         CHARMM_creation.copy_final_prm(config)
-    exit()
     config["checkpointInfo"]["finalCreationComplete"] = True
     return config
 

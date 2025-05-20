@@ -5,6 +5,7 @@ dependencies:
   - python=3.10
   - ambertools=23
   - openmm==8.2.0
+  - psfgen
   - pip
   - pip:
     - -r requirements.txt

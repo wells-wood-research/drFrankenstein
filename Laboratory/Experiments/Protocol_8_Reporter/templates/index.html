@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculation Summary</title>
+    <style>
+        body {
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace; 
+            margin: 20px;
+            background-color: #1a1a1a;
+        }
+        .tab-container {
+            width: 80%;
+            margin: 0 auto;
+            background-color: #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden; /* Important for rounded corners with tabs */
+
+        }
+        .tab-nav {
+            display: flex;
+            background-color: #00FF00;
+        }
+        .tab-nav button {
+            background-color: #333;
+            color: #ffffff;
+            border: none;
+            padding: 15px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex-grow: 1; /* Make buttons fill the space */
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace; /* Add this line */
+        }
+        .tab-nav button:hover {
+            background-color: #555;
+        }
+        .tab-nav button.active {
+            background-color: #00FF00; /* Or any color you like for active tab */
+            color: rgb(0, 0, 0);
+        }
+        .tab-content {
+            display: none; /* Hide all tab content by default */
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block; /* Show active tab content */
+        }
+        h1 { /* USE FOR MAIN TITLE*/
+            text-align: center;
+            color: yellow;
+            margin-bottom: 20px;
+        }
+        h2 { /* USE FOR SUB HEADINGS*/
+            color: white;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        h3 { /* USE FOR INFO SECTIONS */
+            color: black;
+            margin-top: 0;
+            font-size: 1.2em; /* Slightly smaller than typical h3 (default ~1.5em) */
+            font-weight: 400; /* Lighter base weight to make <strong> stand out */
+        }
+
+        h3 strong { /* USE FOR INFO SECTIONS */
+            font-weight: 700; /* Bolder weight for <strong> to stand out */
+            /* Optional: Add color or other styles to emphasize <strong> */
+            /* color: #333; */ /* Slightly darker shade for contrast */
+        }
+        h4 { /* USE FOR YELLOW-ON-BLACK */
+            color: yellow;
+        }
+        h5 { /* USE FOR WHITE-ON-BLACK */
+            color: white;
+
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .info {
+            background-color: #8b8b8b;
+            border-left: 6px solid #00FF00;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <h1>drFrankenstein Report for Molecule: {{ job_name }}</h1>
+
+    <div class="tab-container">
+        <div class="tab-nav">
+            <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer Generation</button>
+            <button class="tab-button" onclick="openTab(event, 'torsionScan')">Torsion Scanning</button>
+            <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
+            <button class="tab-button" onclick="openTab(event, 'paramFit')">Parameter Fitting</button>
+            <button class="tab-button" onclick="openTab(event, 'timeReport')">Time Report</button>
+        </div>
+
+        <div id="conformerGen" class="tab-content active">
+            {% include 'conformer_generation.html' %}
+        </div>
+
+        <div id="torsionScan" class="tab-content">
+            {% include 'torsion_scanning.html' %}
+        </div>
+
+        <div id="chargeCalc" class="tab-content">
+            {% include 'charge_calculations.html' %}
+        </div>
+
+        <div id="paramFit" class="tab-content">
+            {% include 'parameter_fitting.html' %}
+        </div>
+
+        </div> id="timeReport" class="tab-content">
+            {% include 'time_report.html' %}`
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            // Get all elements with class="tab-content" and hide them
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+
+            // Get all elements with class="tab-button" and remove the class "active"
+            var tabbuttons = document.getElementsByClassName("tab-button");
+            for (var i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Optional: Open the first tab by default if needed, though CSS handles it
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     document.querySelector('.tab-button').click(); // Click the first tab
+        // });
+    </script>
+
+</body>
+</html>

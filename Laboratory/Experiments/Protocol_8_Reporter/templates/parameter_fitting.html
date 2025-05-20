@@ -1,0 +1,259 @@
+<!-- templates/parameter_fitting.html -->
+<style>
+    /* General page element styling to match dark theme implied by torsion_scanning.html */
+    /* Assuming a body background is set globally, otherwise add: body { background-color: #0d0d0d; color: #e0e0e0; } */
+    h2, h3, h4, h5 {
+        color: #e0e0e0;
+    }
+    .info {
+        background-color: #1a1a1a;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px; /* Optional: for softer corners */
+    }
+    .info p, .info table {
+        color: #e0e0e0;
+        margin-bottom: 10px;
+    }
+    .info p strong, .info th {
+        color: #ffffff;
+    }
+    .info table {
+        border-collapse: collapse;
+        width: auto; /* Or 100% if preferred */
+    }
+    .info th, .info td {
+        border: 1px solid #333333;
+        padding: 8px;
+        text-align: left;
+    }
+    .info th {
+        background-color: #2c2c2c;
+    }
+
+    /* Styles for Sub-Tabs within Parameter Fitting (mimicking torsion_scanning.html) */
+    .fitting-sub-tab-nav {
+        display: flex;
+        flex-wrap: wrap;
+        background-color: #1a1a1a; /* Dark background for nav bar */
+        margin-top: 15px;
+    }
+
+    .fitting-sub-tab-nav button {
+        background-color: inherit;
+        color: #b0b0b0; /* Light grey text for inactive tabs */
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 10px 15px;
+        transition: 0.3s;
+        font-size: 0.9em;
+    }
+
+    .fitting-sub-tab-nav button:last-child {
+        border-right: none; /* No border on the very last button */
+    }
+
+    .fitting-sub-tab-nav button:hover {
+        background-color: #2c2c2c; /* Slightly lighter dark for hover */
+        color: #ffffff; /* White text on hover */
+    }
+
+    .fitting-sub-tab-nav button.active {
+        background-color: #333333; /* Darker grey for active tab */
+        color: #ffffff; /* White text for active tab */
+        font-weight: bold;
+    }
+
+    .fitting-sub-tab-content {
+        display: none; /* Hide sub-tab content by default */
+        padding: 15px;
+        background-color: #1a1a1a; /* Dark background for content */
+        color: #e0e0e0; /* Light grey text for content */
+        /* border-top: none; If nav had a bottom border */
+    }
+
+    .fitting-sub-tab-content.active {
+        display: block; /* Show active sub-tab content */
+    }
+
+    /* Text elements within sub-tab content */
+    .fitting-sub-tab-content h4,
+    .fitting-sub-tab-content h5,
+    .fitting-sub-tab-content p {
+        color: #e0e0e0;
+    }
+    .fitting-sub-tab-content p strong {
+        color: #ffffff;
+    }
+
+    /* Parameter table specific styling */
+    .fitting-params-panel {
+        margin-bottom: 20px;
+    }
+    .fitting-params-table table {
+        width: auto; /* Don't force full width */
+        margin-bottom: 15px;
+        border-collapse: collapse;
+        color: #e0e0e0;
+    }
+    .fitting-params-table th, .fitting-params-table td {
+        border: 1px solid #333333; /* Dark borders */
+        padding: 8px;
+        text-align: left;
+    }
+    .fitting-params-table th {
+        background-color: #2c2c2c; /* Dark header background */
+        color: #ffffff;
+    }
+
+    /* Images container and individual image holder styling */
+    .fitting-images-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px; /* Space between images */
+        justify-content: space-around; /* Distribute images */
+        margin-top: 15px;
+    }
+
+    .fitting-images-container .image-holder {
+        text-align: center;
+        flex: 1 1 45%; /* Allow two images side-by-side, with some space */
+        max-width: 400px; /* Max width for each image container */
+        padding: 10px;
+        background-color: #232323; /* Slightly lighter than tab content bg */
+        border-radius: 4px; /* Optional */
+    }
+    .fitting-images-container .image-holder p strong {
+         display: block;
+         margin-bottom: 8px;
+    }
+
+    .fitting-images-container img {
+        max-width: 100%; /* Make images responsive */
+        max-height: 300px;
+        border: 1px solid #333333; /* Dark border for images */
+        background-color: #2a2a2a; /* Dark background for image area if transparent */
+        border-radius: 3px; /* Optional */
+    }
+</style>
+
+<h2>Parameter Fitting Summary</h2>
+
+{% if fitting_data %}
+    <div class="info">
+        <h3><strong>Number of Shuffles:</strong> {{ fitting_data.nShuffles | default('N/A') }}</h3>
+        <h3><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</h3>
+
+    </div>
+
+    {% if fitting_data.rotatableDihedrals and fitting_data.rotatableDihedrals|length > 0 %}
+        <h2>Data for Individual Dihedrals</h2>
+
+        <!-- Sub-Tab Navigation for Dihedrals -->
+        <div class="fitting-sub-tab-nav">
+            {% for dihedral_name, details in fitting_data.rotatableDihedrals.items() %}
+                <button class="fitting-sub-tab-button {% if loop.first %}active{% endif %}"
+                        onclick="open_fitting_sub_tab(event, 'fitting_sub_tab_{{ loop.index }}')">
+                    {{ dihedral_name }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <!-- Sub-Tab Content Panes for Dihedrals -->
+        {% for dihedral_name, _ in fitting_data.rotatableDihedrals.items() %}
+            <div id="fitting_sub_tab_{{ loop.index }}" class="fitting-sub-tab-content {% if loop.first %}active{% endif %}">
+                <h4>Dihedral: {{ dihedral_name }}</h4>
+
+                <div class="fitting-params-panel">
+                    <h5>Final Parameters:</h5>
+                    {% set current_final_params = fitting_data.finalParameters.get(dihedral_name) %}
+                    {% if current_final_params and current_final_params|length > 0 %}
+                        <div class="fitting-params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for param_set in current_final_params %}
+                                    <tr>
+                                        <td>{{ param_set.Amplitude | round(4) | default('N/A') }}</td>
+                                        <td>{{ param_set.Period | default('N/A') }}</td>
+                                        <td>{{ param_set.Phase | round(2) | default('N/A') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No final parameters available for this dihedral.</p>
+                    {% endif %}
+                </div>
+
+                <div class="fitting-images-container">
+                    {% set current_images = fitting_data.fittingImages.get(dihedral_name) %}
+                    {% if current_images and current_images.fittingGif %}
+                    <div class="image-holder">
+                        <p><strong>Fitting Process (GIF)</strong></p>
+                        <img src="{{ current_images.fittingGif }}" alt="Fitting process for {{ dihedral_name }}">
+                    </div>
+                    {% else %}
+                    <div class="image-holder"><p>Fitting GIF not available.</p></div>
+                    {% endif %}
+
+                    {% if current_images and current_images.finalPng %}
+                    <div class="image-holder">
+                        <p><strong>Final Fit (PNG)</strong></p>
+                        <img src="{{ current_images.finalPng }}" alt="Final fit for {{ dihedral_name }}">
+                    </div>
+                    {% else %}
+                    <div class="image-holder"><p>Final PNG not available.</p></div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <p>No unique rotatable dihedrals data available or processed for parameter fitting details.</p>
+    {% endif %}
+{% else %}
+    <p>No parameter fitting data available.</p>
+{% endif %}
+
+<script>
+    function open_fitting_sub_tab(evt, subTabName) {
+        var i, subTabContent, subTabButtons;
+        let parentScope = evt.target.closest('.fitting-sub-tab-nav').parentNode;
+
+        subTabContent = parentScope.getElementsByClassName("fitting-sub-tab-content");
+        for (i = 0; i < subTabContent.length; i++) {
+            subTabContent[i].style.display = "none";
+            subTabContent[i].classList.remove("active");
+        }
+
+        subTabButtons = parentScope.getElementsByClassName("fitting-sub-tab-button");
+        for (i = 0; i < subTabButtons.length; i++) {
+            subTabButtons[i].classList.remove("active");
+        }
+
+        let targetContentElement = document.getElementById(subTabName);
+        if (targetContentElement) {
+            targetContentElement.style.display = "block";
+            targetContentElement.classList.add("active");
+        }
+        if (evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const activeFittingSubTabs = document.querySelectorAll('.fitting-sub-tab-content.active');
+        activeFittingSubTabs.forEach(tab => {
+            tab.style.display = 'block';
+        });
+    });
+</script>

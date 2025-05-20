@@ -10,7 +10,7 @@ from Experiments.Protocol_4_Twisting import Twisted_Doctor
 from Experiments.Protocol_5_Charging import Charged_Doctor
 from Experiments.Protocol_6_Stitching import Stitching_Doctor
 from Experiments.Protocol_7_Creation import drCreator
-
+from Experiments.Protocol_8_Reporter import Reporting_Doctor
 
 from OperatingTools import drYaml
 from OperatingTools import drSplash
@@ -93,10 +93,16 @@ def main():
             config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
+    ## run final creation
     if not checkpointInfo["finalCreationComplete"]:
         drSplash.show_creation_splash()
         config = drCreator.create_the_monster(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
+    # if not checkpointInfo["reportingComplete"]:
+        # drSplash.show_report_splash()
+    config = Reporting_Doctor.reporter_protocol(config=config)
+    drYaml.write_config_to_yaml(config, outputDir)
 
     
     

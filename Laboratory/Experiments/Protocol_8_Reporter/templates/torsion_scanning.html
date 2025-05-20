@@ -1,0 +1,305 @@
+<!-- templates/torsion_scanning.html -->
+<style>
+
+    /* Styles for Sub-Tabs within Torsion Scanning */
+    .torsion-sub-tab-nav {
+        display: flex;
+        flex-wrap: wrap; /* Allow buttons to wrap if many */
+        background-color: #1a1a1a;
+        margin-top: 15px;
+    }
+
+    .torsion-sub-tab-nav button {
+        background-color: inherit;
+        color: #b0b0b0;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 10px 15px;
+        transition: 0.3s;
+        font-size: 0.9em;
+    }
+
+    .torsion-sub-tab-nav button:last-child {
+        border-right: none;
+    }
+
+    .torsion-sub-tab-nav button:hover {
+        background-color: #2c2c2c;
+        color: #ffffff;
+    }
+
+    .torsion-sub-tab-nav button.active {
+        background-color: #333333;
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    .torsion-sub-tab-content {
+        display: none; /* Hide sub-tab content by default */
+        padding: 15px;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+    }
+
+    .torsion-sub-tab-content.active {
+        display: block; /* Show active sub-tab content */
+    }
+
+    /* Text elements within sub-tab content */
+    .torsion-sub-tab-content h3, /* Covers viz panel h3 */
+    .torsion-sub-tab-content h4, /* Covers info panel h4 */
+    .torsion-sub-tab-content p {
+        color: #e0e0e0;
+    }
+    .torsion-sub-tab-content p strong {
+        color: #ffffff;
+    }
+    .torsion-sub-tab-content a {
+        color: #6cb6ff;
+    }
+
+    /* NEW: Styles for side-by-side dihedral info and visualization */
+    .dihedral-top-section {
+        display: flex;
+        flex-wrap: wrap; /* Allow items to wrap on smaller screens before media query kicks in */
+        gap: 20px;       /* Space between info and viz panels */
+        margin-bottom: 25px; /* Space between this section and plots below */
+        align-items: flex-start; /* Align panels to the top */
+    }
+
+    .dihedral-info-panel {
+        flex: 1; /* Allows this panel to grow */
+        min-width: 280px; /* Adjust as needed, ensures text doesn't get too squished */
+    }
+    .dihedral-info-panel h4 { /* Specific styling for the Dihedral name heading */
+        margin-top: 0; /* Align with potential h3 in viz panel */
+    }
+
+    .dihedral-viz-panel {
+        flex: 1; /* Allows this panel to grow */
+        min-width: 350px; /* To comfortably house the 330px iframe + wrapper margins/border */
+        /* text-align: center; */ /* Uncomment if you want iframe to center if panel is much wider */
+    }
+    .dihedral-viz-panel h3 { /* Specific styling for "Molecular Visualization" heading */
+        margin-top: 0; /* Good practice for alignment */
+        margin-bottom: 10px;
+    }
+
+    .viz-iframe-wrapper {
+        width: 330px;
+        height: 330px;
+        margin: 0 auto 10px auto; /* Top margin 0, auto for L/R centering, 10px bottom */
+        border: none;
+        overflow: hidden; /* Good practice */
+    }
+
+    .viz-iframe {
+        width: 100%;
+        height: 100%;
+        border: none; /* Remove default iframe border */
+    }
+
+
+    .dihedral-plots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px; /* Space between plots */
+        justify-content: space-around; /* Distribute plots nicely */
+        margin-top: 15px; /* This is now relative to the bottom of dihedral-top-section */
+    }
+
+    .dihedral-plots .plot-container {
+        text-align: center;
+        flex: 1 1 400px; /* Adjusted basis for potentially more plots or better wrapping */
+        max-width: 800px; /* Max width for each plot container */
+    }
+    .dihedral-plots .plot-container p {
+        color: #e0e0e0;
+    }
+    .dihedral-plots .plot-container p strong {
+        color: #ffffff;
+    }
+
+    .dihedral-plots img {
+        max-width: 100%;
+        height: auto; /* Maintain aspect ratio */
+        max-height: 400px; /* Keep max height */
+    }
+    .dihedral-atom-table table {
+        width: auto;
+        margin-bottom: 15px;
+        color: #e0e0e0;
+    }
+
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 768px) { /* Adjust breakpoint as needed */
+        .dihedral-top-section {
+            flex-direction: column; /* Stack info and viz panels vertically */
+            align-items: stretch;   /* Make panels take full available width */
+        }
+        .dihedral-info-panel,
+        .dihedral-viz-panel {
+            flex-basis: auto; /* Reset flex-basis for column layout */
+            min-width: 0; /* Reset min-width */
+            width: 100%;      /* Make them take full width of the column container */
+        }
+        .dihedral-viz-panel {
+            margin-top: 15px; /* Add some space when stacked */
+        }
+        .viz-iframe-wrapper {
+            /* margin: 10px auto; */ /* Remains centered due to auto L/R margins */
+        }
+        .dihedral-plots .plot-container {
+            flex-basis: 100%; /* Make plots take full width on small screens */
+        }
+    }
+
+</style>
+
+<h2>Torsion Scanning Summary</h2>
+
+{% if torsion_data %}
+    <div class="info">
+        <h3><strong>Scan Method:</strong> {{ torsion_data.scanMethod | default('N/A') }}
+        {% if torsion_data.scanSolvationMethod %}({{ torsion_data.scanSolvationMethod }}){% endif %}</h3>
+        <h3><strong>Single-Point Method:</strong> {{ torsion_data.singlePointMethod | default('N/A') }}
+        {% if torsion_data.singlePointSolvationMethod %}({{ torsion_data.singlePointSolvationMethod }}){% endif %}</h3>
+        <h3><strong>Number of Conformers Scanned:</strong> {{ torsion_data.nConformers | default('N/A') }}</h3>
+        <h3><strong>Number of Rotatable Bonds Considered:</strong> {{ torsion_data.nRotatableBonds | default('N/A') }}</h3>
+    </div>
+    <h2>Data for Individual Dihedrals</h2>
+
+    {% if torsion_data.rotatableDihedrals and torsion_data.rotatableDihedrals|length > 0 %}
+        <!-- Sub-Tab Navigation for Dihedrals -->
+        <div class="torsion-sub-tab-nav">
+
+            {% for dihedral_name, details in torsion_data.rotatableDihedrals.items() %}
+                <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
+                        onclick="openDihedralSubTab(event, 'dihedral_sub_tab_{{ loop.index }}')">
+                    {{ dihedral_name }}
+                </button>
+            {% endfor %}
+        </div>
+        <!-- Sub-Tab Content Panes for Dihedrals -->
+        {% for dihedral_name, details in torsion_data.rotatableDihedrals.items() %}
+            <div id="dihedral_sub_tab_{{ loop.index }}" class="torsion-sub-tab-content {% if loop.first %}active{% endif %}">
+                <!-- NEW: Wrapper for side-by-side dihedral info and visualization -->
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> {{ details.ATOM_NAMES | join('-') if details.ATOM_NAMES else 'N/A' }} </p>
+                        <p><strong>Types</strong>  {{ details.ATOM_TYPES | join('-') if details.ATOM_TYPES else 'N/A' }}</p>
+                        <p><strong>Global Minima Angle:</strong> {{ details.globalMinimaAngle | default('N/A') }}°</p>
+                        <p><strong>Barrier Height:</strong> {{ "%.3f kcal/mol" | format(details.barrierHeight) if details.barrierHeight is not none else 'N/A' }}</p>
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        {% set viz_html_path = torsion_data.torsionHtmls.get(dihedral_name) %}
+                        {% if viz_html_path %}
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper">
+                                <iframe
+                                    class="viz-iframe"
+                                    src="{{ viz_html_path }}"
+                                    title="Molecule 3D Viewer for {{ dihedral_name }}">
+                                    Your browser does not support iframes. Please open <a href="{{ viz_html_path }}">this link</a> directly.
+                                </iframe>
+                            </div>
+                        {% else %}
+                            <p>No molecular visualization file provided for this torsion.</p>
+                        {% endif %}
+                    </div>
+                </div> <!-- END .dihedral-top-section -->
+
+                <!-- Plots remain below the top section -->
+                <div class="dihedral-plots">
+                    {% if details.scanPng %}
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        <img src="{{ details.scanPng }}" alt="Scan Energies for {{ dihedral_name }}">
+                    </div>
+                    {% else %}
+                    <div class="plot-container"><p>Scan Energies plot not available.</p></div>
+                    {% endif %}
+
+                    {% if details.spPng %}
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        <img src="{{ details.spPng }}" alt="SP Energies for {{ dihedral_name }}">
+                    </div>
+                    {% else %}
+                    <div class="plot-container"><p>Single-Point Energies plot not available.</p></div>
+                    {% endif %}
+
+                    {% if details.scanVsSpPng %}
+                    <div class="plot-container">
+                        <p><strong>Scan vs Single-Point Energies</strong></p>
+                        <img src="{{ details.scanVsSpPng }}" alt="Scan vs SP Energies for {{ dihedral_name }}">
+                    </div>
+                    {% else %}
+                    <div class="plot-container"><p>Scan vs SP Energies plot not available.</p></div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <p>No unique rotatable dihedrals data available or processed for detailed view.</p>
+    {% endif %}
+{% else %}
+    <p>No torsion scanning data available.</p>
+{% endif %}
+
+<script>
+    function openDihedralSubTab(evt, subTabName) {
+        var i, subTabContent, subTabButtons;
+        // Find the closest ancestor that contains all sub-tabs for this instance.
+        // This is important if you have multiple sets of these tabs on one page.
+        // If .torsion-sub-tab-nav is always a direct sibling of .torsion-sub-tab-content groups,
+        // you might need to go up to their common parent.
+        let parentScope = evt.target.closest('.torsion-sub-tab-nav').parentNode; // Assuming common parent
+
+        subTabContent = parentScope.getElementsByClassName("torsion-sub-tab-content");
+        for (i = 0; i < subTabContent.length; i++) {
+            subTabContent[i].style.display = "none";
+            subTabContent[i].classList.remove("active");
+        }
+
+        subTabButtons = parentScope.getElementsByClassName("torsion-sub-tab-button");
+        for (i = 0; i < subTabButtons.length; i++) {
+            subTabButtons[i].classList.remove("active");
+        }
+
+        let targetContentElement = document.getElementById(subTabName);
+        if (targetContentElement) {
+            targetContentElement.style.display = "block";
+            targetContentElement.classList.add("active");
+        }
+        if (evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // This logic is for activating the first tab if JS is solely responsible.
+        // Since Jinja already adds 'active' class, this is more of a fallback or
+        // could be used if the active state was determined dynamically on client-side.
+        const firstActiveButton = document.querySelector('.torsion-sub-tab-nav .torsion-sub-tab-button.active');
+        if (firstActiveButton) {
+            // If you needed to trigger the display logic via JS:
+            // const firstTabId = firstActiveButton.getAttribute('onclick').match(/'([^']+)'/g)[1].replace(/'/g, '');
+            // if (document.getElementById(firstTabId)) {
+            //    document.getElementById(firstTabId).style.display = 'block';
+            //    document.getElementById(firstTabId).classList.add('active');
+            // }
+        }
+
+        // Ensure that initially active sub-tab content is displayed
+        // This is because CSS sets display:none by default, but Jinja sets class="active"
+        const activeSubTabs = document.querySelectorAll('.torsion-sub-tab-content.active');
+        activeSubTabs.forEach(tab => {
+            tab.style.display = 'block';
+        });
+    });
+</script>

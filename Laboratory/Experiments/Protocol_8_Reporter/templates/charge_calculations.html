@@ -1,0 +1,227 @@
+<!-- templates/charge_calculations.html -->
+<style>
+    /* Wrapper for both visualization and color bar to ensure tight stacking */
+    .viz-and-colorbar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 630px; /* Match the width of both elements */
+        margin: 0 auto; /* Center the entire container */
+    }
+
+    /* Visualization iframe container */
+    .charge-viz-wrapper {
+        width: 630px; /* Match plot-container width */
+        max-width: 100%; /* Ensure responsiveness */
+        height: 630px; /* Adjust height as needed */
+        margin: 0; /* Remove all margins to eliminate gaps */
+        border: none;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .charge-viz-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* Plot container for color bar */
+    .plot-container {
+        width: 600px; /* Consistent width */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0; /* Remove margins to eliminate gaps */
+    }
+
+    .plot-container img {
+        width: 600px;
+        height: auto;
+        display: block;
+    }
+
+    /* Responsive adjustments for the visualization iframe */
+    @media (max-width: 650px) {
+        .viz-and-colorbar-container {
+            width: 100%; /* Full width on smaller screens */
+        }
+
+        .charge-viz-wrapper {
+            height: 50vw; /* Adjust height based on viewport width */
+            max-height: 450px;
+        }
+
+        .plot-container {
+            width: 100%; /* Match container width */
+        }
+
+        .plot-container img {
+            width: 100%; /* Responsive image width */
+        }
+    }
+
+    .charges-table-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem; /* Adds spacing between the two tables */
+        padding: 1rem;
+        background-color: #1a1a1a; /* Light background for contrast */
+        border-radius: 8px; /* Rounded corners for a modern look */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        max-width: 100%; /* Ensures container fits within parent */
+        overflow-x: auto; /* Allows horizontal scrolling on small screens */
+    }
+
+    .charges-table-container > div {
+        width: 48%; /* Maintains equal width for each table */
+        min-width: 250px; /* Ensures tables don't collapse too much on small screens */
+    }
+
+    .charges-table-container table {
+        width: 100%; /* Full width within each container */
+        border-collapse: collapse; /* Removes gaps between cells */
+        background-color: #1a1a1a; /* White background for tables */
+    }
+
+    .charges-table-container th,
+    .charges-table-container td {
+        padding: 0.75rem; /* Comfortable padding for cells */
+        text-align: left; /* Left-align text for readability */
+        border-bottom: 1px solid gray; /* Subtle row separator */
+    }
+
+    .charges-table-container th {
+        background-color: #8b8b8b; /* Slightly darker header background */
+        font-weight: bold; /* Emphasize headers */
+    }
+
+    .charges-table-container tr:nth-child(even) {
+        background-color: rgb(59, 59, 59); /* Zebra striping for rows */
+    }
+
+    .charges-table-container tr:hover {
+        background-color: rgb(93, 93, 93); /* Highlight row on hover */
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .charges-table-container {
+            flex-direction: column; /* Stack tables vertically on small screens */
+            align-items: center; /* Center tables */
+        }
+
+        .charges-table-container > div {
+            width: 100%; /* Full width for each table */
+            margin-bottom: 1rem; /* Space between stacked tables */
+        }
+    }
+
+</style>
+
+<!-- Main heading for this tab, styled by h2 from index.html -->
+<h2>Charge Calculation Summary</h2>
+
+{% if charge_data %}
+    <!-- Parameter summary using the .info class and table structure -->
+    <!-- The .info class and table, th, td elements will be styled by index.html -->
+    <div class="info">
+        <p><h3><strong>Charge Fitting Protocol: </strong>{{ charge_data.chargeFittingProtocol | default('N/A') }}</h3></p>
+        <h3><strong>Optimisation Method:</strong> {{ charge_data.optMethod | default('N/A') }}
+        {% if charge_data.optSolvationMethod %}({{ charge_data.optSolvationMethod }}){% endif %}</h3>
+         <h3><strong>Single-Point Method:</strong> {{ charge_data.singlePointMethod | default('N/A') }}
+        {% if charge_data.singlePointSolvationMethod %}({{ charge_data.singlePointSolvationMethod }}){% endif %}</h3>       
+        <p><h3><strong>Number of Conformers Used: </strong>{{ charge_data.nConformers | default('N/A') }}</h3></p>
+    </div>
+
+    <!-- Molecular Visualization -->
+    {% if charge_data.chargeHtml %}
+        <h2>3D Visualization of Charges</h2>
+        <div class="viz-and-colorbar-container">
+            <div class="charge-viz-wrapper">
+                <iframe
+                    src="{{ charge_data.chargeHtml }}"
+                    title="Molecule 3D Viewer with Charges">
+                    Your browser does not support iframes. Please open <a href="{{ charge_data.chargeHtml }}">this link</a> directly.
+                </iframe>
+            </div>
+            {% if charge_data.colorBar %}
+                <div class="plot-container">
+                    <img src="{{ charge_data.colorBar }}" alt="Color Bar for Charges">
+                </div>
+            {% else %}
+                <div class="plot-container">
+                    <p>Color Bar not available.</p>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No molecular visualization file provided for charges.</p>
+    {% endif %}
+
+    <!-- Partial Charges Table -->
+    {% if charge_data.partialChargeHeaders and charge_data.partialChargeData %}
+        <h2>Calculated Partial Charges</h2>
+        <div class="charges-table-container" style="display: flex; justify-content: space-between;">
+            <!-- First Table (Left Half) -->
+            <div style="width: 48%;">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for header_cell in charge_data.partialChargeHeaders %}
+                                <th><h3>{{ header_cell }}</h3></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in charge_data.partialChargeData[0:(charge_data.partialChargeData|length / 2)|int] %}
+                            <tr>
+                                {% for cell in row %}
+                                    {% if loop.index == 2 and cell is number %} {# Assuming 2nd column is charge value #}
+                                        <td><h4>{{ "%.3f" | format(cell) }}</h4></td> {# Format charge to 3 decimal places #}
+                                    {% else %}
+                                        <td><h4>{{ cell }}</h4></td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Second Table (Right Half) -->
+            <div style="width: 48%;">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for header_cell in charge_data.partialChargeHeaders %}
+                                <th><h3>{{ header_cell }}</h3></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in charge_data.partialChargeData[(charge_data.partialChargeData|length / 2)|int:] %}
+                            <tr>
+                                {% for cell in row %}
+                                    {% if loop.index == 2 and cell is number %} {# Assuming 2nd column is charge value #}
+                                        <td><h4>{{ "%.3f" | format(cell) }}</h4></td> {# Format charge to 3 decimal places #}
+                                    {% else %}
+                                        <td><h4>{{ cell }}</h4></td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% elif charge_data.partialChargeHeaders is none and charge_data.partialChargeData is none %}
+        <p>Partial charges data (headers and rows) was not found.</p>
+    {% elif charge_data.partialChargeHeaders is not none and (charge_data.partialChargeData is none or charge_data.partialChargeData|length == 0) %}
+        <p>Partial charges data is empty or contains only headers.</p>
+    {% else %}
+        <p>No partial charge data available to display.</p>
+    {% endif %}
+
+{% else %}
+    <p>No charge calculation data available.</p>
+{% endif %}

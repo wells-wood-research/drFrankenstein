@@ -115,7 +115,8 @@ def create_frcmod_file(mol2File: FilePath,
 
 def pdb2mol2(inPdb: FilePath,
               outMol2: FilePath,
-                workingDir: DirectoryPath) -> None:
+                workingDir: DirectoryPath,
+                config: dict) -> None:
     """
     Uses antechamber to convert pdb to mol2
     Writes some unwanted temporary files
@@ -130,9 +131,14 @@ def pdb2mol2(inPdb: FilePath,
         None (outMol2 has already been defined!)
     
     """
+
+
     if p.exists(outMol2):
         return None
     os.chdir(workingDir)
+
+    ## unpack config
+    netCharge = config["moleculeInfo"]["charge"]
 
     ## set RES_ID to 1 for all atoms to keep antechamber happy
     pdbDf = pdbUtils.pdb2df(inPdb)
@@ -146,7 +152,7 @@ def pdb2mol2(inPdb: FilePath,
     antechamberCommand: list = [
         "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
         "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
-        "-c", "bcc"
+        "-c", "bcc", "-nc", str(netCharge)
     ]
     with open(antechamberOut, 'w') as outfile:
         run(antechamberCommand, stdout=outfile, stderr=STDOUT)

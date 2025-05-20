@@ -30,6 +30,7 @@ def twist_protocol(config):
     config["runtimeInfo"]["madeByTwisting"]["torsionDirs"] = []
     config["runtimeInfo"]["madeByTwisting"]["torsionTags"] = []
     config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"] = {}
+    config["runtimeInfo"]["madeByTwisting"]["scanEnergyData"] = {}
 
     config = Twisted_Assistant.set_up_directories(config)
 
@@ -43,9 +44,11 @@ def twist_protocol(config):
     rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
 
     nRotatableBonds = len(rotatableDihedrals)
+    config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"] = nRotatableBonds
     for torsionIndex, (torsionTag, torsionData) in enumerate(rotatableDihedrals.items()):
         config = run_torsion_scanning(torsionTag, torsionData, torsionIndex, nRotatableBonds, config)
     config["checkpointInfo"]["scanningComplete"] = True
+
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -68,7 +71,7 @@ def run_torsion_scanning(torsionTag: str,
     if debug:
         ## run in serial
         scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], config)
-        if config["torsionScanInfo"]["scanSinglePointsOn"] is None:
+        if config["torsionScanInfo"]["singlePointMethod"] is None:
             singlePointDfs = None
         else:
             singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag)
@@ -82,16 +85,19 @@ def run_torsion_scanning(torsionTag: str,
             singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, config, torsionTag)
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Twisted_Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
-    if config["torsionScanInfo"]["scanSinglePointsOn"] is None or config["torsionScanInfo"]["singlePointMethod"] == None:
+    if  config["torsionScanInfo"]["singlePointMethod"] is None:
         config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag] = scanEnergiesCsv
         singlePointAveragesDf = None
+        config = Twisted_Assistant.gather_scan_data(scanAveragesDf, torsionTag, config)
     else:
         singlePointEnergiesCsv, singlePointAveragesDf = Twisted_Assistant.process_scan_data(singlePointDfs, torsionDir, torsionTag)
         config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag] = singlePointEnergiesCsv   
-
+        config = Twisted_Assistant.gather_scan_data(singlePointAveragesDf, torsionTag, config)
 
     ## Plotting
-    Twisted_Plotter.twist_plotting_protocol(scanDfs, scanAveragesDf, singlePointDfs, singlePointAveragesDf, torsionDir, torsionTag, config)
+    config = Twisted_Plotter.twist_plotting_protocol(scanDfs, scanAveragesDf, singlePointDfs, singlePointAveragesDf, torsionDir, torsionTag, config)
+    
+
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

@@ -38,9 +38,11 @@ def amber_assembly_protocol(config:dict) -> dict:
 
     ## create a mol2 file with antechamber
     moleculeMol2 = p.join(assemblyDir, f"{moleculeName}_capped.mol2")
-    Assembly_Assistant.pdb2mol2(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], moleculeMol2, assemblyDir)
-    ## reset backbone atom types to AMBER defaults
-    Assembly_Monster.change_backbone_types_amber(moleculeMol2, config)
+    Assembly_Assistant.pdb2mol2(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], moleculeMol2, assemblyDir, config)
+
+    if config["torsionScanInfo"]["preserveBackboneTorsions"]:
+        ## reset backbone atom types to AMBER defaults
+        Assembly_Monster.change_backbone_types_amber(moleculeMol2, config)
     ## create frcmod file
     moleculeFrcmod = p.join(assemblyDir, f"{moleculeName}_capped.frcmod")
     Assembly_Assistant.create_frcmod_file(moleculeMol2, moleculeFrcmod, gaff2Dat)

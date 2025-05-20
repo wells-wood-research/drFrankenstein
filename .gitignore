@@ -12,4 +12,6 @@
 /0
 __pycache__/
 _test*
-_hidden_scripts/*
+/_hidden_scripts/*
+_hidden_scripts
+.vscode

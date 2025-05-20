@@ -77,6 +77,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         random.shuffle(torsionTags)
         shuffledTorsionTags.extend(torsionTags)
 
+    currentParameters = {}
     shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
@@ -86,11 +87,12 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
         mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
         torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
+        currentParameters[torsionTag] = torsionParameterDf.to_dict()
         config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
         shuffleIndex += 1
 
     config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
-
+    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
     ## make gif out of the torsion fitting
     for torsionTag in torsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
@@ -148,25 +150,25 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         "leave": True,
         "position": 1
     }
-
+    currentParameters = {}
     counter = 1
     shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not counter == 1:
             config["runtimeInfo"]["madeByStitching"]["moleculePrm"] = config["runtimeInfo"]["madeByStitching"]["proposedPrm"]
-        # shuffleIndexTag = shuffleIndex // len(torsionTags)
         ## run the torsion fitting protocol for each torsion
         mmTotalEnergy = CHARMM_total_protocol.get_MM_total_energies(config, torsionTag, debug)
         mmTorsionEnergy, mmCosineComponents = CHARMM_torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
         torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug)
         config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf, shuffleIndex)
+        currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         if counter % len(torsionTags) == 0:
             shuffleIndex += 1
         counter += 1
     ## update config moleculePrm
     config["runtimeInfo"]["madeByStitching"]["moleculePrm"] = config["runtimeInfo"]["madeByStitching"]["proposedPrm"]
-
+    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
     ## make a gif for each torsion being fitted - so satisfying!
     for torsionTag in torsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")

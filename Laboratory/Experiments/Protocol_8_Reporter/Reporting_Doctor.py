@@ -44,9 +44,8 @@ def reporter_protocol(config: dict) -> None:
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
     make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml)
 
+    config["checkpointInfo"]["reportingComplete"] = True
 
-
-    exit()
     return config
 
 

@@ -54,9 +54,9 @@ def main():
         print("Running Capping Protocol")
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
-        
+
+    ## run assembly protocol
     if not checkpointInfo["assemblyComplete"]:
-        ## run assembly protocol
         if config["parameterFittingInfo"]["forceField"] == "CHARMM":
             config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
             drYaml.write_config_to_yaml(config, outputDir)
@@ -99,19 +99,17 @@ def main():
         config = drCreator.create_the_monster(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
-    # if not checkpointInfo["reportingComplete"]:
-        # drSplash.show_report_splash()
-    config = Reporting_Doctor.reporter_protocol(config=config)
-    drYaml.write_config_to_yaml(config, outputDir)
+    ## run reporting to make html
+    if not checkpointInfo["reportingComplete"]:
+        config = Reporting_Doctor.reporter_protocol(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)
 
-    
-    
+    ## show what we have created SPLASH
     drSplash.show_what_have_we_created(config["moleculeInfo"]["moleculeName"])
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def handle_exceptions(e, pdbName):
     tb = traceback.extract_tb(e.__traceback__)
     if tb:

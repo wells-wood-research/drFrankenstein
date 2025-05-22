@@ -6,7 +6,7 @@
     <title>Calculation Summary</title>
     <style>
         body {
-            font-family: Consolas, "Courier New", Monaco, Menlo, monospace; 
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
             margin: 20px;
             background-color: #1a1a1a;
         }
@@ -21,10 +21,10 @@
         }
         .tab-nav {
             display: flex;
-            background-color: #00FF00;
+            background-color: #00FF00; /* This creates the green bar behind the buttons */
         }
         .tab-nav button {
-            background-color: #333;
+            background-color: #333; /* Default background for tab buttons */
             color: #ffffff;
             border: none;
             padding: 15px 25px;
@@ -36,17 +36,22 @@
             transition: background-color 0.3s;
             flex-grow: 1; /* Make buttons fill the space */
             font-family: Consolas, "Courier New", Monaco, Menlo, monospace; /* Add this line */
+            border-right: 1px solid #444; /* Optional: add a separator between buttons */
+        }
+        .tab-nav button:last-child {
+            border-right: none; /* Remove border for the last button */
         }
         .tab-nav button:hover {
             background-color: #555;
         }
         .tab-nav button.active {
-            background-color: #00FF00; /* Or any color you like for active tab */
-            color: rgb(0, 0, 0);
+            background-color: #00FF00; /* Active tab background */
+            color: rgb(0, 0, 0); /* Active tab text color */
         }
         .tab-content {
             display: none; /* Hide all tab content by default */
             padding: 20px;
+            color: white; /* Default text color for tab content */
         }
         .tab-content.active {
             display: block; /* Show active tab content */
@@ -58,50 +63,54 @@
         }
         h2 { /* USE FOR SUB HEADINGS*/
             color: white;
-            border-bottom: 2px solid #000000;
+            border-bottom: 2px solid #000000; /* Changed to black for better visibility on dark content bg */
             padding-bottom: 5px;
             margin-top: 0;
         }
         h3 { /* USE FOR INFO SECTIONS */
-            color: black;
+            color: #e0e0e0; /* Lighter color for h3 text on dark background */
             margin-top: 0;
-            font-size: 1.2em; /* Slightly smaller than typical h3 (default ~1.5em) */
-            font-weight: 400; /* Lighter base weight to make <strong> stand out */
+            font-size: 1.2em;
+            font-weight: 400;
         }
 
         h3 strong { /* USE FOR INFO SECTIONS */
-            font-weight: 700; /* Bolder weight for <strong> to stand out */
-            /* Optional: Add color or other styles to emphasize <strong> */
-            /* color: #333; */ /* Slightly darker shade for contrast */
+            font-weight: 700;
+            color: #00FF00; /* Green to make it pop, or yellow */
         }
         h4 { /* USE FOR YELLOW-ON-BLACK */
             color: yellow;
         }
         h5 { /* USE FOR WHITE-ON-BLACK */
             color: white;
-
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            color: #ccc; /* Lighter text color for table content */
         }
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #555; /* Darker border for table */
             padding: 8px;
             text-align: left;
         }
         th {
-            background-color: #f0f0f0;
+            background-color: #444; /* Darker background for table header */
+            color: #00FF00; /* Green text for table header */
+        }
+        td {
+            background-color: #383838; /* Slightly lighter than content bg for cells */
         }
         .info {
-            background-color: #8b8b8b;
+            background-color: #2c2c2c; /* Darker info box background */
             border-left: 6px solid #00FF00;
             padding: 10px;
             margin-bottom: 15px;
+            color: #e0e0e0; /* Lighter text for info box */
         }
-        
+
     </style>
 </head>
 <body>
@@ -133,9 +142,12 @@
             {% include 'parameter_fitting.html' %}
         </div>
 
-        </div> id="timeReport" class="tab-content">
-            {% include 'time_report.html' %}`
+        <!-- Corrected Time Report Tab Content -->
+        <div id="timeReport" class="tab-content">
+            {% include 'time_report.html' %}
         </div>
+        <!-- End of Corrected Time Report Tab Content -->
+
     </div>
 
     <script>
@@ -159,9 +171,14 @@
             evt.currentTarget.classList.add("active");
         }
 
-        // Optional: Open the first tab by default if needed, though CSS handles it
+        // Optional: Open the first tab by default if needed.
+        // The CSS already handles making the first tab active by default with "active" class
+        // on the button and the content div.
+        // If you wanted to do it purely with JS after load:
         // document.addEventListener("DOMContentLoaded", function() {
-        //     document.querySelector('.tab-button').click(); // Click the first tab
+        //    if(document.querySelector('.tab-button')) { // Check if buttons exist
+        //        document.querySelector('.tab-button').click(); // Click the first tab
+        //    }
         // });
     </script>
 

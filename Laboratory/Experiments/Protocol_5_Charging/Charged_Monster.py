@@ -12,7 +12,7 @@ from tqdm import tqdm
 from copy import deepcopy
 import mdtraj as md
 ## drFrankenstein LIBRARIES ##
-from OperatingTools import drOrca, cleaner
+from OperatingTools import drOrca, cleaner, Timer
 from Experiments.Protocol_1_Capping.Capping_Assistant import find_bonded_atoms
 from . import Charged_Assistant
 ## CLEAN CODE ##
@@ -331,6 +331,7 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def run_charge_fitting(config: dict,
                         conformerListTxt: FilePath,
                           chargeConstraintsTxt: FilePath,

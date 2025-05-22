@@ -63,11 +63,11 @@ torsionScanInfo:
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
-  scanSolvationMethod :  ALPB(water) 
+  scanSolvationMethod :  Null 
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: Null
+  singlePointMethod: XTB2
   ## Solvation method for single point calculations, set to Null for no solvation
-  singlePointSolvationMethod: CPCM(water)
+  singlePointSolvationMethod: ALPB(water) 
   ## Do you want to perform single point calculations on all conformers? (WARNING, only works for "all" at the moment!)
   scanSinglePointsOn: all
 

@@ -21,7 +21,6 @@ from . import Charged_Monster
 from . import Charged_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
 def charge_protocol(config: dict, debug: bool = False) -> dict:
     """
     Main protocol for charge fitting
@@ -119,20 +118,21 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
     fittingDir  = config["runtimeInfo"]["madeByCharges"]["fittingDir"]
 
     ## run orca single-point calculations on conformers
-    config = add_solvation_shell_with_SOLVATOR(config=config, debug=debug)
+    config = add_solvation_shell_with_SOLVATOR(config=config,
+                                                debug=debug)
 
-    if config["chargeFittingInfo"]["singlePointSolvationMethod"].upper() == "TIP3P":
-        config = tip3p_qmmm_protocol(config=config, 
+    ## solvate with tip3 waters, optimize and run single-point
+    config = tip3p_qmmm_protocol(config=config, 
                                 debug=debug)
-    else:
-        raise NotImplementedError ## do standard opt/sp with waters in QM region (not QMMM) TODO: implement
     
-
     ## create input files for MultiWFN
     conformerListTxt = Charged_Assistant.generate_conformer_list_file(qmmmSinglepointDir, fittingDir)
     chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
     ## run MultiWFN RESP charge fitting
-    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config, conformerListTxt, chargeConstraintsTxt, fittingDir)
+    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config = config,
+                                                             conformerListTxt = conformerListTxt,
+                                                               chargeConstraintsTxt = chargeConstraintsTxt,
+                                                               fittingDir = fittingDir)
     ## parse MultiWFN output, write to CSV file
     chargesDf = Charged_Monster.parse_multiwfn_output(rawMultiWfnOutputs)
     chargesCsv = p.join(fittingDir, "charges.csv")
@@ -175,6 +175,7 @@ def tip3p_qmmm_protocol(config, debug):
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def qmmm_opt_protocol_for_charges(config, debug):
     ## unpack config
     solvatedXyzs = config["runtimeInfo"]["madeByCharges"]["solvatedXyzs"]
@@ -216,6 +217,7 @@ def qmmm_opt_protocol_for_charges(config, debug):
             
     return qmmmOptXyzs
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
 
     ## unpack config
@@ -255,6 +257,7 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
                     progress_bar_options=tqdmBarOptions)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def add_solvation_shell_with_SOLVATOR(config: dict,
                                      debug: bool = False) -> dict:
     """
@@ -379,6 +382,7 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     return chargesDf, chargesCsv
  
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function()
 def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
                                     orcaDir: DirectoryPath,
                                         fittingDir: DirectoryPath,

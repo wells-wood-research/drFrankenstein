@@ -102,7 +102,7 @@ chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
   chargeFittingProtocol: SOLVATOR
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: 4
+  nConformers: 10
   ## number of cores for charge fitting
   nCoresPerCalculation: 8
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)

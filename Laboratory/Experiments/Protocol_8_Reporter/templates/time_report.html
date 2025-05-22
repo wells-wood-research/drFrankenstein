@@ -1,0 +1,41 @@
+<style>
+    .time-plots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px; /* Space between plots */
+        justify-content: space-around; /* Distribute plots nicely */
+        margin-top: 15px;
+    }
+
+    .time-plots .plot-container {
+        text-align: center;
+        flex: 1 1 1800px; /* Adjusted basis for potentially more plots or better wrapping */
+        max-width: 1800px; /* Max width for each plot container */
+    }
+
+    /* Added/Modified styles for the image */
+    .time-plots .plot-container img {
+        width: 100%;      /* Make image fill container width */
+        height: auto;       /* Maintain aspect ratio */
+        max-width: 100%;  /* Ensure it doesn't overflow its container */
+        display: block;     /* Removes extra space below if it's an inline element */
+                            /* and allows margin auto for horizontal centering if width is less than 100% */
+    }
+    /* End of added/modified styles */
+
+    .time-plots .plot-container p {
+        color: #e0e0e0;
+    }
+    .time-plots .plot-container p strong {
+        color: #ffffff;
+    }
+</style>
+
+<h2> Time Report Summary</h2>
+{% if timeGanttPng %}
+    <div class="time-plots">
+        <div class="plot-container">
+            <img src="{{ timeGanttPng }}" alt="Time Gantt">
+        </div>
+    </div>
+{% endif %}

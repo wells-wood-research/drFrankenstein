@@ -108,6 +108,7 @@ def charmm_assembly_protocol(config:dict) -> dict:
     parmedPsf.load_parameters(completeParameterSet)
 
 
+
     config = Assembly_Assistant.save_modified_parameter_files(parmedPsf, config)
     config = Assembly_Assistant.update_rtf_types(cappedRtf, nameToDesiredType, config)
     return config

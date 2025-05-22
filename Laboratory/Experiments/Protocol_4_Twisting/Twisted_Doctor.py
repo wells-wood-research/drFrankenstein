@@ -23,7 +23,6 @@ from OperatingTools import drSplash
 from OperatingTools import Timer
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
 def twist_protocol(config):
     ## create an entry in runtimeInfo for twist
     config["runtimeInfo"]["madeByTwisting"] = {}

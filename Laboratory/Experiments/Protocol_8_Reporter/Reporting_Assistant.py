@@ -7,6 +7,289 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 
+
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as mpe
+import matplotlib.patches as patches
+import seaborn as sns
+import numpy as np
+import textwrap
+from matplotlib.font_manager import findfont, FontProperties
+
+def format_time_hms(seconds):
+    """Converts seconds to HH:MM:SS string format."""
+    seconds = int(round(seconds))
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+def initialize_matplotlib_settings(defaultFontSize):
+    """Sets global Matplotlib rcParams and verifies font."""
+    plt.rcParams['font.family'] = 'monospace'
+    plt.rcParams['font.monospace'] = ['Consolas', 'DejaVu Sans Mono', 'Courier New']
+    plt.rcParams['font.size'] = defaultFontSize
+
+def load_and_prepare_data(csvPath, functionMap):
+    """Loads time data from CSV, preprocesses it, and creates a display name map."""
+    timeDf = pd.read_csv(csvPath, sep=",")
+    timeDf['executionTimeSeconds'] = pd.to_numeric(timeDf['executionTimeSeconds'], errors='coerce').fillna(0)
+    timeDf['startTimeSeconds'] = timeDf['executionTimeSeconds'].cumsum().shift(1).fillna(0)
+    timeDf['endTimeSeconds'] = timeDf['startTimeSeconds'] + timeDf['executionTimeSeconds']
+    totalRuntimeSeconds = timeDf['executionTimeSeconds'].sum()
+
+    displayNameMap = {}
+    for group, functionsInMapDict in functionMap.items():
+        for csvName, displayName in functionsInMapDict.items():
+            displayNameMap[csvName] = displayName
+            
+    return timeDf, displayNameMap, totalRuntimeSeconds
+
+def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding):
+    """Creates the Matplotlib figure and axes with basic styling."""
+    figHeight = max(minFigHeight, numFunctions * figHeightPerFunction + figHeightBasePadding)
+    fig, ax = plt.subplots(figsize=(24, figHeight))
+    fig.patch.set_facecolor(backgroundColor)
+    ax.set_facecolor(backgroundColor)
+    return fig, ax
+
+def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize):
+    """Draws the Gantt chart bars for each task."""
+    numFunctions = len(timeDf)
+    for i, row in timeDf.iterrows():
+        yPos = numFunctions - 1 - i
+        barStartMinutes = row['startTimeSeconds'] / 60
+        barDurationMinutes = row['executionTimeSeconds'] / 60
+        
+        ax.broken_barh(
+            xranges=[(barStartMinutes, barDurationMinutes)],
+            yrange=(yPos - 0.4, 0.8),
+            facecolors=[barColors[i % len(barColors)] if numFunctions > 0 else 'blue'],
+            edgecolor=elementColor,
+            linewidth=0.75
+        )
+        if totalRuntimeSeconds > 0 and row['executionTimeSeconds'] > (0.05 * totalRuntimeSeconds):
+            timeLabel = format_time_hms(row['executionTimeSeconds'])
+            textXPosMinutes = barStartMinutes + barDurationMinutes / 2
+            ax.text(textXPosMinutes,
+                    yPos, timeLabel,
+                    ha='center', va='center', color=textColor, fontsize=defaultFontSize,
+                    path_effects=[mpe.Stroke(linewidth=2, foreground=backgroundColor), mpe.Normal()])
+
+def draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
+                           groupLabelColor, groupBoxEdgeColor, 
+                           groupBoxPaddingY, groupLabelYOffset, 
+                           groupLabelMaxCharsPerLine, estimatedLineHeightForGroupLabel, 
+                           groupLabelFontSize):
+    """Draws group boxes and labels on the Gantt chart."""
+    yMaxFromGroupLabels = 0.0
+    if numFunctions == 0: 
+        yMaxFromGroupLabels = 1.0
+
+    for groupName, functionsInGroupMap in functionMap.items():
+        csvNamesInGroup = list(functionsInGroupMap.keys())
+        groupMemberRows = timeDf[timeDf['functionName'].isin(csvNamesInGroup)]
+        if groupMemberRows.empty:
+            continue
+
+        memberIndices = groupMemberRows.index.tolist()
+        if not memberIndices:
+            continue
+
+        currentMinIndexInDf = min(memberIndices)
+        currentMaxIndexInDf = max(memberIndices)
+        
+        yPosOfTopBarInGroup = numFunctions - 1 - currentMinIndexInDf
+        yPosOfBottomBarInGroup = numFunctions - 1 - currentMaxIndexInDf
+
+        boxBottomYCoord = yPosOfBottomBarInGroup - 0.4 - groupBoxPaddingY
+        boxTopYCoord = yPosOfTopBarInGroup + 0.4 + groupBoxPaddingY
+        
+        rectYStart = boxBottomYCoord
+        rectHeight = boxTopYCoord - rectYStart
+        if rectHeight <= 0: continue
+
+        boxXStartSeconds = groupMemberRows['startTimeSeconds'].min()
+        boxXEndSeconds = groupMemberRows['endTimeSeconds'].max()
+        
+        rectXStartMinutes = boxXStartSeconds / 60
+        rectWidthMinutes = (boxXEndSeconds - boxXStartSeconds) / 60
+        if rectWidthMinutes < 0: rectWidthMinutes = 0
+
+        rect = patches.Rectangle(
+            (rectXStartMinutes, rectYStart),
+            rectWidthMinutes,
+            rectHeight,
+            linewidth=1.5,
+            edgecolor=groupBoxEdgeColor,
+            facecolor='none',
+            zorder=0.5
+        )
+        ax.add_patch(rect)
+
+        labelXCenterMinutes = rectXStartMinutes + rectWidthMinutes / 2
+        labelYPosBottomOfText = boxTopYCoord + groupLabelYOffset
+        
+        finalLabelTextForGroup = groupName
+        if len(groupName) > groupLabelMaxCharsPerLine:
+            finalLabelTextForGroup = textwrap.fill(groupName, width=groupLabelMaxCharsPerLine)
+        
+        numLinesInLabel = finalLabelTextForGroup.count('\n') + 1
+        
+        ax.text(labelXCenterMinutes,
+                labelYPosBottomOfText,
+                finalLabelTextForGroup,
+                ha='center',
+                va='bottom',
+                color=groupLabelColor,
+                fontsize=groupLabelFontSize,
+                weight='bold',
+                clip_on=False
+                )
+        
+        textBlockTotalHeightDataUnits = numLinesInLabel * estimatedLineHeightForGroupLabel # Data units
+        topOfThisLabelYCoord = labelYPosBottomOfText + textBlockTotalHeightDataUnits
+        
+        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1)
+        
+    return yMaxFromGroupLabels
+
+
+def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
+                          textColor, elementColor, backgroundColor, defaultFontSize):
+    """Applies final styling to the plot (labels, ticks, limits, grid, spines)."""
+    numFunctions = len(timeDf)
+
+    ax.set_xlabel('Time (minutes)', fontsize=defaultFontSize, labelpad=15, color=textColor)
+    ax.set_title('Function Execution Gantt Chart', fontsize=24, pad=20, weight='bold', color=textColor)
+
+    if numFunctions > 0:
+        ax.set_yticks(np.arange(numFunctions))
+        originalYTickLabels = timeDf['functionName'].iloc[::-1].tolist()
+        displayYTickLabels = [displayNameMap.get(name, name) for name in originalYTickLabels]
+        ax.set_yticklabels(displayYTickLabels, fontsize=defaultFontSize)
+    else:
+        ax.set_yticks([])
+
+    maxEndTimeValSeconds = 0.0
+    if not timeDf.empty:
+        maxEndTimeValSeconds = timeDf['endTimeSeconds'].max()
+        if pd.isna(maxEndTimeValSeconds):
+            maxEndTimeValSeconds = 0.0
+
+    xLimUpperMinutes = 1.0
+    if maxEndTimeValSeconds > 0:
+        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05
+    
+    ax.set_xlim(0, xLimUpperMinutes)
+    
+    currentYLimBottom, _ = ax.get_ylim()
+    ax.set_ylim(currentYLimBottom, yMaxForPlot)
+
+    ax.grid(True, axis='x', linestyle=':', alpha=0.6, color=elementColor)
+    ax.grid(False, axis='y')
+    ax.tick_params(axis='x', colors=textColor, labelsize=defaultFontSize)
+    ax.tick_params(axis='y', colors=textColor, labelsize=defaultFontSize)
+    ax.spines['bottom'].set_color(elementColor)
+    ax.spines['left'].set_color(elementColor)
+    ax.spines['top'].set_color(backgroundColor)
+    ax.spines['right'].set_color(backgroundColor)
+    sns.despine(top=True, right=True, left=False, bottom=False)
+
+    fig.subplots_adjust(left=0.22, right=0.96, top=0.88, bottom=0.08)
+
+def generate_gantt_chart(config):
+    """Generates and saves the Gantt chart based on provided data and configurations."""
+
+    ## unpack config
+    timeDir = config["runtimeInfo"]["timeDir"]
+    reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
+
+    timeImagesDir = p.join(reporterDir, "Images", "time_data")
+    os.makedirs(timeImagesDir, exist_ok=True)
+
+    timeCsv = p.join(timeDir, "timeLog.csv")
+    
+
+    # --- Configuration (could be passed as more arguments to main if needed) ---
+    backgroundColor = 'black'
+    textColor = 'yellow'
+    elementColor = 'yellow'
+    groupLabelColor = 'lime'
+    groupBoxEdgeColor = '#777777'
+    defaultFontSize = 16
+    groupLabelFontSize = 16
+    groupLabelMaxCharsPerLine = 25
+    estimatedLineHeightForGroupLabel = 0.4  # Data units
+    groupBoxPaddingY = 0.10
+    groupLabelYOffset = 0.1
+    minFigHeight = 9
+    figHeightPerFunction = 0.5
+    figHeightBasePadding = 2
+    # --- End Configuration ---
+
+
+    ## map for renaming functionss    
+    functionMap = {
+    "CAPPING": {
+    "capping_protocol": "Capping Protocol",
+    },
+    "CONFORMERS": {
+    "conformer_generation_protocol": "Conformer Protocol",
+    },
+    "SCANNING": {
+    "do_the_twist": "Torsion Scanning",
+    "run_singlepoints_on_scans": "Scan Single Points",
+    },
+    "CHARGE\nCALCULATIONS": {
+    "qmmm_opt_protocol_for_charges": "QM/MM Optimisation",
+    "qmmm_singlepoint_protocol_for_charges": "QM/MM Single-Point",
+    "add_solvation_shell_with_SOLVATOR": "Explicit Solvation",
+    "run_qm_calculations_for_RESP": "RESP Single-Point",
+    "run_charge_fitting": "Charge Fitting",
+    },
+    "PARAMETER\nFITTING": {
+    "torsion_fitting_protocol_AMBER": "Parameter Fitting",
+    "torsion_fitting_protocol_CHARMM": "Parameter Fitting",
+    }
+    }
+
+
+    initialize_matplotlib_settings(defaultFontSize)
+
+    timeDf, displayNameMap, totalRuntimeSeconds = load_and_prepare_data(timeCsv, functionMap)
+    numFunctions = len(timeDf)
+
+    fig, ax = create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding)
+    
+    barColors = sns.color_palette('viridis', n_colors=max(1, numFunctions))
+
+    draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize)
+    
+    yMaxForPlot = numFunctions if numFunctions > 0 else 1.0
+    yMaxFromGroupLabels = draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
+                                               groupLabelColor, groupBoxEdgeColor, 
+                                               groupBoxPaddingY, groupLabelYOffset, 
+                                               groupLabelMaxCharsPerLine, estimatedLineHeightForGroupLabel, 
+                                               groupLabelFontSize)
+    yMaxForPlot = max(yMaxForPlot, yMaxFromGroupLabels)
+    
+    finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
+                          textColor, elementColor, backgroundColor, defaultFontSize)
+
+
+    ganttPng = p.join(timeImagesDir, "gantt_chart.png")
+    plt.savefig(ganttPng, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
+    plt.close(fig)
+
+    relativePath = p.relpath(ganttPng, reporterDir)
+    return relativePath
+
+
+
+
 def make_charge_visualisation(config, outDir):
     ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]

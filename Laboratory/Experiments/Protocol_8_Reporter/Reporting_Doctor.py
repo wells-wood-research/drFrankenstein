@@ -35,24 +35,22 @@ def reporter_protocol(config: dict) -> None:
     config["runtimeInfo"]["madeByReporting"]["imagesDir"] = imagesDir
 
     ## run protocols
+    timeGanttPng    = Reporting_Assistant.generate_gantt_chart(config)
     wriggleData     = Reporting_Monster.process_wriggle_results(config)
     twistData       = Reporting_Monster.process_twist_results(config)
     chargesData     = Reporting_Monster.process_charges_results(config)
     fittingData     = Reporting_Monster.process_fitting_results(config)
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
-    make_html_report(wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml)
-    # print(wriggleData)
-    # print(twistData)
-    # print(chargesData)
-    print(fittingData)
+    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml)
+
 
 
     exit()
     return config
 
 
-def make_html_report(wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml):
+def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml):
 
     template_dir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(template_dir):
@@ -72,11 +70,11 @@ def make_html_report(wriggleData, twistData, chargesData, fittingData, moleculeN
     # The {% include %} directive will make these variables available to the included files.
     rendered_html = template.render(
         job_name=moleculeName,
+        timeGanttPng=timeGanttPng,
         conformer_data=wriggleData,
         torsion_data=twistData,
         charge_data=chargesData,
         fitting_data=fittingData
-
     )
 
     # Save the rendered HTML to a file

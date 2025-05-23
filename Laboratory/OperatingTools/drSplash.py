@@ -202,10 +202,21 @@ def show_torsion_being_scanned(torsionTag, torsionIndex, nTorsions) -> None:
     orangeText = "\033[38;5;172m"
     yellowText = "\033[33m"
     resetTextColor = "\033[0m"
-    tealText = "\033[38;5;37m"     
-    print(f"{yellowText}🗲 🗲{' '*8}SCANNING TORSION:{' '*8}\
+    tealText = "\033[38;5;37m"    
+
+    textToPrint = f"{yellowText}🗲 🗲{' '*8}SCANNING TORSION:{' '*8}\
 [{' '*1}{greenText}{torsionTag}{yellowText}{' '*1}]{' '*8}\
-{resetTextColor}({torsionIndex+1}/{nTorsions}){yellowText}{' '*58}🗲 🗲")
+{resetTextColor}({torsionIndex+1}/{nTorsions}){yellowText}"
+    
+    visible_text = strip_ansi_codes(textToPrint)
+
+    
+    nSpaces = 124 - len(visible_text) - 3  # Account for trailing spaces and 🗲🗲
+    textToPrint += f"{' '*nSpaces}{yellowText}🗲🗲{resetTextColor}"
+    print(textToPrint)
+
+
+
 
 
 def show_stitch_splash() -> None:
@@ -276,7 +287,13 @@ import time
 import os
 import sys
 
-def show_what_have_we_created(moleculeName):
+def show_what_have_we_created(config):
+    ## unpack config ##
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    reportHtml = config["runtimeInfo"]["madeByReporting"]["reportHtml"]
+    forcefield = config["parameterFittingInfo"]["forceField"]
+
+
     # Your ASCII art stored in a list of lines
     art = [
         " █     █░ ██░ ██  ▄▄▄     ▄▄▄█████▓    ██░ ██  ▄▄▄    ██▒   █▓▓█████           ",
@@ -309,6 +326,7 @@ def show_what_have_we_created(moleculeName):
         "░ ░        ░        ░  ░     ░  ░           ░  ░   ░        ▒         ▒        ",
         "░                                                ░          ▒         ▒        "
     ]
+    
     
     # Clear terminal function that works cross-platform
     def clear_terminal():
@@ -344,8 +362,9 @@ def show_what_have_we_created(moleculeName):
 
     yellowText = "\033[33m"
     resetTextColor = "\033[0m"
-    print(" "*16+ yellowText + "AMBER PARAMETERS FOR YOUR MOLECULE:" + " "*4 + green_text + moleculeName + resetTextColor)
-
+    print(" "*16+ yellowText + f"{forcefield} PARAMETERS FOR YOUR MOLECULE:" + " "*4 + green_text + moleculeName + resetTextColor)
+    print()
+    print(" "*16+ yellowText + f"VIEW REPORT AT:\n" + " "*4 + f"{green_text}{reportHtml}{resetTextColor}")
 
 
 

@@ -175,7 +175,7 @@ def tip3p_qmmm_protocol(config, debug):
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("QM/MM Optimisations", "CHARGE_CALCULATIONS")
 def qmmm_opt_protocol_for_charges(config, debug):
     ## unpack config
     solvatedXyzs = config["runtimeInfo"]["madeByCharges"]["solvatedXyzs"]
@@ -217,7 +217,7 @@ def qmmm_opt_protocol_for_charges(config, debug):
             
     return qmmmOptXyzs
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("QM/MM Single-Points", "CHARGE_CALCULATIONS")
 def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
 
     ## unpack config
@@ -257,7 +257,7 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
                     progress_bar_options=tqdmBarOptions)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("Explicit Solvation", "CHARGE_CALCULATIONS")
 def add_solvation_shell_with_SOLVATOR(config: dict,
                                      debug: bool = False) -> dict:
     """
@@ -279,9 +279,9 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
     chargeFittingInfo = config["chargeFittingInfo"]
+    waterDensity = config["chargeFittingInfo"]["waterDensity"]
 
-
-    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs, cappedPdb, solvatorDir)
+    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs, cappedPdb, solvatorDir, nWatersPerNmSquared=waterDensity)
 
     ## decide how many conformers to sample
     if nConformers == -1 or nConformers > len(conformerXyzs):
@@ -382,7 +382,7 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     return chargesDf, chargesCsv
  
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("QM Calculations", "CHARGE_CALCULATIONS")
 def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
                                     orcaDir: DirectoryPath,
                                         fittingDir: DirectoryPath,

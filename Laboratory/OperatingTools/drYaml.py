@@ -69,7 +69,8 @@ def init_config_checkpoints(config, outDir):
             "scanningComplete": False,
             "chargesComplete": False,
             "torsionFittingComplete": False,
-            "finalCreationComplete": False
+            "finalCreationComplete": False,
+            "reportingComplete": False
         }
         config.yaml_set_comment_before_after_key("checkpointInfo", before=checkpointBanner)
 

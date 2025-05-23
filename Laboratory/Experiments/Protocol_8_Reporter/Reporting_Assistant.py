@@ -18,6 +18,16 @@ import numpy as np
 import textwrap
 from matplotlib.font_manager import findfont, FontProperties
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.patheffects as mpe
+import numpy as np
+import seaborn as sns
+import textwrap
+import os
+import os.path as p
+
 def format_time_hms(seconds):
     """Converts seconds to HH:MM:SS string format."""
     seconds = int(round(seconds))
@@ -32,20 +42,8 @@ def initialize_matplotlib_settings(defaultFontSize):
     plt.rcParams['font.monospace'] = ['Consolas', 'DejaVu Sans Mono', 'Courier New']
     plt.rcParams['font.size'] = defaultFontSize
 
-def load_and_prepare_data(csvPath, functionMap):
-    """Loads time data from CSV, preprocesses it, and creates a display name map."""
-    timeDf = pd.read_csv(csvPath, sep=",")
-    timeDf['executionTimeSeconds'] = pd.to_numeric(timeDf['executionTimeSeconds'], errors='coerce').fillna(0)
-    timeDf['startTimeSeconds'] = timeDf['executionTimeSeconds'].cumsum().shift(1).fillna(0)
-    timeDf['endTimeSeconds'] = timeDf['startTimeSeconds'] + timeDf['executionTimeSeconds']
-    totalRuntimeSeconds = timeDf['executionTimeSeconds'].sum()
-
-    displayNameMap = {}
-    for group, functionsInMapDict in functionMap.items():
-        for csvName, displayName in functionsInMapDict.items():
-            displayNameMap[csvName] = displayName
-            
-    return timeDf, displayNameMap, totalRuntimeSeconds
+# load_and_prepare_data is removed as its functionality for the new input
+# format is integrated into generate_gantt_chart.
 
 def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding):
     """Creates the Matplotlib figure and axes with basic styling."""
@@ -86,7 +84,7 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
     """Draws group boxes and labels on the Gantt chart."""
     yMaxFromGroupLabels = 0.0
     if numFunctions == 0: 
-        yMaxFromGroupLabels = 1.0
+        yMaxFromGroupLabels = 1.0 # Default if no functions, to ensure plot has some height.
 
     for groupName, functionsInGroupMap in functionMap.items():
         csvNamesInGroup = list(functionsInGroupMap.keys())
@@ -95,7 +93,7 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
             continue
 
         memberIndices = groupMemberRows.index.tolist()
-        if not memberIndices:
+        if not memberIndices: # Should not happen if groupMemberRows is not empty
             continue
 
         currentMinIndexInDf = min(memberIndices)
@@ -116,7 +114,7 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
         
         rectXStartMinutes = boxXStartSeconds / 60
         rectWidthMinutes = (boxXEndSeconds - boxXStartSeconds) / 60
-        if rectWidthMinutes < 0: rectWidthMinutes = 0
+        if rectWidthMinutes < 0: rectWidthMinutes = 0 # Ensure non-negative width
 
         rect = patches.Rectangle(
             (rectXStartMinutes, rectYStart),
@@ -125,7 +123,7 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
             linewidth=1.5,
             edgecolor=groupBoxEdgeColor,
             facecolor='none',
-            zorder=0.5
+            zorder=0.5 # Draw behind bars slightly if overlap, though ideally not
         )
         ax.add_patch(rect)
 
@@ -142,17 +140,17 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
                 labelYPosBottomOfText,
                 finalLabelTextForGroup,
                 ha='center',
-                va='bottom',
+                va='bottom', # Anchor text at its bottom
                 color=groupLabelColor,
                 fontsize=groupLabelFontSize,
                 weight='bold',
-                clip_on=False
+                clip_on=False # Allow labels to go outside plot area if necessary before final adjustment
                 )
         
         textBlockTotalHeightDataUnits = numLinesInLabel * estimatedLineHeightForGroupLabel # Data units
         topOfThisLabelYCoord = labelYPosBottomOfText + textBlockTotalHeightDataUnits
         
-        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1)
+        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1) # Add small padding
         
     return yMaxFromGroupLabels
 
@@ -167,7 +165,8 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
 
     if numFunctions > 0:
         ax.set_yticks(np.arange(numFunctions))
-        originalYTickLabels = timeDf['functionName'].iloc[::-1].tolist()
+        # Order of y-tick labels should correspond to order in timeDf, plotted from top to bottom
+        originalYTickLabels = timeDf['functionName'].iloc[::-1].tolist() # Reversed for set_yticklabels
         displayYTickLabels = [displayNameMap.get(name, name) for name in originalYTickLabels]
         ax.set_yticklabels(displayYTickLabels, fontsize=defaultFontSize)
     else:
@@ -176,44 +175,39 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     maxEndTimeValSeconds = 0.0
     if not timeDf.empty:
         maxEndTimeValSeconds = timeDf['endTimeSeconds'].max()
-        if pd.isna(maxEndTimeValSeconds):
+        if pd.isna(maxEndTimeValSeconds): # handle case where max is NaN
             maxEndTimeValSeconds = 0.0
-
-    xLimUpperMinutes = 1.0
+            
+    xLimUpperMinutes = 1.0 # Default if no tasks or all zero duration
     if maxEndTimeValSeconds > 0:
-        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05
+        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05 # Add 5% padding
     
     ax.set_xlim(0, xLimUpperMinutes)
     
-    currentYLimBottom, _ = ax.get_ylim()
+    currentYLimBottom, _ = ax.get_ylim() # Preserve default bottom limit (e.g., -0.5)
     ax.set_ylim(currentYLimBottom, yMaxForPlot)
 
     ax.grid(True, axis='x', linestyle=':', alpha=0.6, color=elementColor)
-    ax.grid(False, axis='y')
+    ax.grid(False, axis='y') # No horizontal grid lines for y-axis
     ax.tick_params(axis='x', colors=textColor, labelsize=defaultFontSize)
-    ax.tick_params(axis='y', colors=textColor, labelsize=defaultFontSize)
+    ax.tick_params(axis='y', colors=textColor, labelsize=defaultFontSize) # Color for y-tick labels
     ax.spines['bottom'].set_color(elementColor)
     ax.spines['left'].set_color(elementColor)
-    ax.spines['top'].set_color(backgroundColor)
-    ax.spines['right'].set_color(backgroundColor)
-    sns.despine(top=True, right=True, left=False, bottom=False)
+    ax.spines['top'].set_color(backgroundColor) # Effectively hide top spine
+    ax.spines['right'].set_color(backgroundColor) # Effectively hide right spine
+    sns.despine(top=True, right=True, left=False, bottom=False) # Keep left and bottom spines visible
 
-    fig.subplots_adjust(left=0.22, right=0.96, top=0.88, bottom=0.08)
+    fig.subplots_adjust(left=0.22, right=0.96, top=0.88, bottom=0.08) # Adjust layout
 
 def generate_gantt_chart(config):
-    """Generates and saves the Gantt chart based on provided data and configurations."""
-
+    """
+    Generates and saves the Gantt chart based on provided function data dictionary
+    and saves it to a path relative to reporterDir.
+    """
     ## unpack config
-    timeDir = config["runtimeInfo"]["timeDir"]
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
-
-    timeImagesDir = p.join(reporterDir, "Images", "time_data")
-    os.makedirs(timeImagesDir, exist_ok=True)
-
-    timeCsv = p.join(timeDir, "timeLog.csv")
-    
-
-    # --- Configuration (could be passed as more arguments to main if needed) ---
+    timeInfo  = config["runtimeInfo"]["timeInfo"]
+    # --- Configuration ---
     backgroundColor = 'black'
     textColor = 'yellow'
     elementColor = 'yellow'
@@ -222,7 +216,7 @@ def generate_gantt_chart(config):
     defaultFontSize = 16
     groupLabelFontSize = 16
     groupLabelMaxCharsPerLine = 25
-    estimatedLineHeightForGroupLabel = 0.4  # Data units
+    estimatedLineHeightForGroupLabel = 0.4
     groupBoxPaddingY = 0.10
     groupLabelYOffset = 0.1
     minFigHeight = 9
@@ -230,38 +224,43 @@ def generate_gantt_chart(config):
     figHeightBasePadding = 2
     # --- End Configuration ---
 
+    # 1. Data Preparation
+    data_for_df = []
+    for func_name_key, details_dict in timeInfo.items():
+        data_for_df.append({
+            'functionName': func_name_key,
+            'executionTimeSeconds': details_dict['executionTime']
+        })
+    timeDf = pd.DataFrame(data_for_df)
 
-    ## map for renaming functionss    
-    functionMap = {
-    "CAPPING": {
-    "capping_protocol": "Capping Protocol",
-    },
-    "CONFORMERS": {
-    "conformer_generation_protocol": "Conformer Protocol",
-    },
-    "SCANNING": {
-    "do_the_twist": "Torsion Scanning",
-    "run_singlepoints_on_scans": "Scan Single Points",
-    },
-    "CHARGE\nCALCULATIONS": {
-    "qmmm_opt_protocol_for_charges": "QM/MM Optimisation",
-    "qmmm_singlepoint_protocol_for_charges": "QM/MM Single-Point",
-    "add_solvation_shell_with_SOLVATOR": "Explicit Solvation",
-    "run_qm_calculations_for_RESP": "RESP Single-Point",
-    "run_charge_fitting": "Charge Fitting",
-    },
-    "PARAMETER\nFITTING": {
-    "torsion_fitting_protocol_AMBER": "Parameter Fitting",
-    "torsion_fitting_protocol_CHARMM": "Parameter Fitting",
-    }
-    }
+    if timeDf.empty:
+        # Initialize empty DataFrame with expected columns if input is empty
+        timeDf = pd.DataFrame(columns=['functionName', 'executionTimeSeconds', 'startTimeSeconds', 'endTimeSeconds'])
+        totalRuntimeSeconds = 0.0
+    else:
+        timeDf['executionTimeSeconds'] = pd.to_numeric(timeDf['executionTimeSeconds'], errors='coerce').fillna(0)
+        timeDf['startTimeSeconds'] = timeDf['executionTimeSeconds'].cumsum().shift(1).fillna(0)
+        timeDf['endTimeSeconds'] = timeDf['startTimeSeconds'] + timeDf['executionTimeSeconds']
+        totalRuntimeSeconds = timeDf['executionTimeSeconds'].sum()
 
+    displayNameMap = {}
+    functionMap = {} 
+    for func_name_key, details_dict in timeInfo.items():
+        csvName = func_name_key
+        displayName = details_dict['functionAlias']
+        groupName = details_dict['functionGroup']
+        displayNameMap[csvName] = displayName
+        if groupName not in functionMap:
+            functionMap[groupName] = {}
+        functionMap[groupName][csvName] = displayName
 
+    # Directory setup
+    timeImagesDir = p.join(reporterDir, "Images", "time_data")
+    os.makedirs(timeImagesDir, exist_ok=True)
+
+    # 2. Plotting
     initialize_matplotlib_settings(defaultFontSize)
-
-    timeDf, displayNameMap, totalRuntimeSeconds = load_and_prepare_data(timeCsv, functionMap)
     numFunctions = len(timeDf)
-
     fig, ax = create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding)
     
     barColors = sns.color_palette('viridis', n_colors=max(1, numFunctions))
@@ -279,14 +278,12 @@ def generate_gantt_chart(config):
     finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
                           textColor, elementColor, backgroundColor, defaultFontSize)
 
-
-    ganttPng = p.join(timeImagesDir, "gantt_chart.png")
-    plt.savefig(ganttPng, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
+    ganttPngPath = p.join(timeImagesDir, "gantt_chart.png")
+    plt.savefig(ganttPngPath, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
     plt.close(fig)
 
-    relativePath = p.relpath(ganttPng, reporterDir)
+    relativePath = p.relpath(ganttPngPath, reporterDir)
     return relativePath
-
 
 
 

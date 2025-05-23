@@ -69,19 +69,19 @@ def run_torsion_scanning(torsionTag: str,
     drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
     if debug:
         ## run in serial
-        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], config)
+        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], config = config)
         if config["torsionScanInfo"]["singlePointMethod"] is None:
             singlePointDfs = None
         else:
-            singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag)
+            singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag,  config = config)
     else:
         # run torsion scans in parallel
-        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], torsionTag, config)
+        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], torsionTag, config = config)
         ## run single point scans in parallel
         if config["torsionScanInfo"]["scanSinglePointsOn"] is None or config["torsionScanInfo"]["singlePointMethod"] == None:
             singlePointDfs = None
         else:
-            singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, config, torsionTag)
+            singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, torsionTag, config = config)
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Twisted_Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
     if  config["torsionScanInfo"]["singlePointMethod"] is None:
@@ -100,7 +100,8 @@ def run_torsion_scanning(torsionTag: str,
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag):
+@Timer.time_function("Scan Single Points", "TORSION_SCANS")
+def single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag, config):
     argsList = [(scanDir, scanDf, torsionDir, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
     singlePointDfs = []
     for args in argsList:
@@ -110,6 +111,7 @@ def single_points_in_serial(scanDirs, scanDfs, torsionDir, config, torsionTag):
     return singlePointDfs
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function("Torsion Scanning", "TORSION_SCANS")
 def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tuple[pd.DataFrame, DirectoryPath]:
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
     scanDfs = []
@@ -125,8 +127,8 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
     return scanDfs, scanDirs
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
+@Timer.time_function("Scan Single Points", "TORSION_SCANS")
+def single_points_in_parallel(scanDirs, scanDfs, torsionTag, config):
     argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
 
     purpleText = "\033[35m"
@@ -155,6 +157,7 @@ def single_points_in_parallel(scanDirs, scanDfs, config, torsionTag):
             singlePointDfs.append(result)
     return singlePointDfs
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function("Torsion Scanning", "TORSION_SCANS")
 def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
     greenText = "\033[32m"
     resetTextColor = "\033[0m"
@@ -220,7 +223,6 @@ def do_the_twist_worker(args):
         raise(e)
     
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
 def do_the_twist(conformerXyz: FilePath,
                  torsionScanDir: DirectoryPath,
                  torsionIndexes: List[int],

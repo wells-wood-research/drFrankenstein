@@ -26,11 +26,21 @@ class DirectoryPath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def main():
+    """
+    Main protocol for drFrankenstein
+
+    Args:
+        None
+    Returns:
+        None
+    
+    """
     ## get config yaml file from argpass command-line-argument
     configYaml = drYaml.get_config_input_arg()
     ## load into dict, check for bad formatting
     config = drYaml.read_input_yaml(configYaml)
     ## check config for errors
+    ##TODO: re-do once config is settled
     # config = validate_config.validate_config(config)
 
     ## unpack config to find outputDir, make directory
@@ -42,8 +52,6 @@ def main():
 
     ## initialise runtimeInfo
     config = drYaml.initialise_runtime_info(config)
-    ## set up function timers
-    config = Timer.sort_output_directory(config)
     ## save config back to yaml
     drYaml.write_config_to_yaml(config, outputDir)
 
@@ -105,11 +113,10 @@ def main():
         drYaml.write_config_to_yaml(config, outputDir)
 
     ## show what we have created SPLASH
-    drSplash.show_what_have_we_created(config["moleculeInfo"]["moleculeName"])
+    drSplash.show_what_have_we_created(config)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
 def handle_exceptions(e, pdbName):
     tb = traceback.extract_tb(e.__traceback__)
     if tb:

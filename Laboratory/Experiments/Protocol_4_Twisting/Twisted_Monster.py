@@ -114,7 +114,6 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 
     return backwardsScanDf, backwardsDir  
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
 def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
 
     scanXyzs = Twisted_Assistant.find_scan_xyz_files(scanDir, expectedNumberOfFiles=config["torsionScanInfo"]["nScanSteps"])

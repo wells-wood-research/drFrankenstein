@@ -100,7 +100,7 @@ def  process_twist_results(config: dict) -> dict:
         "singlePointMethod": config["torsionScanInfo"]["singlePointMethod"],
         "singlePointSolvationMethod": config["torsionScanInfo"]["singlePointSolvationMethod"],
         "nRotatableBonds": config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"],
-        "rotatableDihedrals": config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+        "rotatableDihedrals": config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"].copy()
     }
     if config["torsionScanInfo"]["nConformers"] == -1:
         twistData["nConformers"] = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
@@ -116,6 +116,8 @@ def  process_twist_results(config: dict) -> dict:
             else:
                 pngFile = torsionData[pngTag]
                 destPng = p.join(torsionImagesDir, f"{torsionTag}_{pngTag}.png")
+                print(pngFile)
+                print(destPng)
                 copy(pngFile, destPng)
                 relativePath = p.relpath(destPng, reporterDir)
                 twistData["rotatableDihedrals"][torsionTag][pngTag] = relativePath

@@ -16,7 +16,7 @@ from OperatingTools import drOrca
 from OperatingTools import Timer
 from OperatingTools import cleaner
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("Conformer Generation", "CONFORMER_GENERATION")
 def conformer_generation_protocol(config: dict) -> dict:
     """
     Runs conformer generation protocol using ORCA's GOAT program

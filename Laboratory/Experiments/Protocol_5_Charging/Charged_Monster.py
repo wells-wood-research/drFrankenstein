@@ -3,7 +3,7 @@
 from os import path as p
 import os
 import glob
-from shutil import copy
+from shutil import copy, move
 from subprocess import call, DEVNULL
 from pdbUtils import pdbUtils
 import pandas as pd
@@ -105,6 +105,7 @@ def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
     ## unpack config
     qmmmParameterDir = config["runtimeInfo"]["madeByCharges"]["qmmmParameterDir"]
     nWaters  = config["runtimeInfo"]["madeByCharges"]["nWaters"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
     ## Create a dummy parameter set for the molecule without solvating waters
     makeffCommand = ["orca_mm", "-makeff", unsolvatedXyz]
     call(makeffCommand)
@@ -122,7 +123,10 @@ def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
     ## Combine unsolvated parameters with water parameters
     mergeffCommand = ["orca_mm", "-mergeff", unsolvatedParams, watersParams]
     call(mergeffCommand, stdout=DEVNULL)
-    solvatedParams = p.join(qmmmParameterDir, "unsolvated_merged.ORCAFF.prms")
+    outParams = p.join(qmmmParameterDir, f"unsolvated_merged.ORCAFF.prms")
+    solvatedParams = p.join(qmmmParameterDir, f"{moleculeName}_solvated.ORCAFF.prms")
+
+    move(outParams, solvatedParams)
 
     config["runtimeInfo"]["madeByCharges"]["solvatedParams"] = solvatedParams
 
@@ -331,7 +335,7 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("Charge Fitting", "CHARGE_CALCULATIONS")
 def run_charge_fitting(config: dict,
                         conformerListTxt: FilePath,
                           chargeConstraintsTxt: FilePath,

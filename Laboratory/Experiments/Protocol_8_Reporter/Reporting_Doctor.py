@@ -44,8 +44,9 @@ def reporter_protocol(config: dict) -> None:
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
     make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml)
 
+    ## update config
     config["checkpointInfo"]["reportingComplete"] = True
-
+    config["runtimeInfo"]["madeByReporting"]["reportHtml"] = reportHtml
     return config
 
 
@@ -79,5 +80,3 @@ def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingD
     # Save the rendered HTML to a file
     with open(reportHtml, 'w', encoding='utf-8') as f:
         f.write(rendered_html)
-
-    print(f"Generated HTML report: {os.path.abspath(reportHtml)}")

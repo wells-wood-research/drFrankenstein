@@ -39,6 +39,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
         f.write("%qmmm\n")
         f.write(f"{' '*4}QMAtoms {qmAtoms} end\n")
         f.write(f"{' '*4}ORCAFFFilename \"{parameterFile}\"\n")
+        f.write("Rigid_MM_Water TRUE\n")
         f.write("end\n")
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n")
     return qmmmOptOrcaInput

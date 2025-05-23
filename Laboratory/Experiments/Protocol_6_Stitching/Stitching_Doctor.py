@@ -26,7 +26,7 @@ from OperatingTools import Timer, cleaner
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
 def torsion_fitting_protocol_AMBER(config: dict) -> dict:
     """
     Main protocol for torsion fitting for AMBER parameters
@@ -105,7 +105,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function()
+@Timer.time_function("Parameter Fitting", "PARAMETER_FITTING")
 def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     """
     Main protocol for torsion fitting for CHARMM parameters

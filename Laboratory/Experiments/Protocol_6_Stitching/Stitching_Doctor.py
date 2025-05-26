@@ -78,10 +78,11 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         shuffledTorsionTags.extend(torsionTags)
 
     currentParameters = {}
+    counter = 1
     shuffleIndex = 0
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
-        if not shuffleIndex == 0:
+        if not counter == 1:
             config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
             AMBER_helper_functions.run_tleap_to_make_params(config)
         mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
@@ -89,8 +90,9 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
         currentParameters[torsionTag] = torsionParameterDf.to_dict()
         config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
-        shuffleIndex += 1
-
+        if counter % len(torsionTags) == 0:
+            shuffleIndex += 1
+        counter += 1
     config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
     config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
     ## make gif out of the torsion fitting

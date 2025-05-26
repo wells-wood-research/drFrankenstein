@@ -118,7 +118,14 @@
     }
 
 </style>
-
+{% if methods_data and methods_data.scanningMethods %}
+    <h2>Charge Calculation Protocol</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.chargeMethods }}
+        </div>
+    </div>
+{% endif %}
 <!-- Main heading for this tab, styled by h2 from index.html -->
 <h2>Charge Calculation Summary</h2>
 

@@ -1,9 +1,8 @@
 import pandas as pd
-from os import path as p
+import os.path as p
+from copy import deepcopy
 from shutil import copy
 import os
-from os import path as p
-
 
 from . import Reporting_Assistant
 
@@ -87,10 +86,11 @@ def process_charges_results(config: dict) -> dict:
 
 
 
-def  process_twist_results(config: dict) -> dict:
-    ## unpack config
+
+def process_twist_results(config: dict) -> dict:
+    # Unpack config
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
-    torsionImagesDir = p.join(imagesDir, "torsion_images")    ## create a new dict to hold the data
+    torsionImagesDir = p.join(imagesDir, "torsion_images")
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
     os.makedirs(torsionImagesDir, exist_ok=True)
 
@@ -100,7 +100,7 @@ def  process_twist_results(config: dict) -> dict:
         "singlePointMethod": config["torsionScanInfo"]["singlePointMethod"],
         "singlePointSolvationMethod": config["torsionScanInfo"]["singlePointSolvationMethod"],
         "nRotatableBonds": config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"],
-        "rotatableDihedrals": config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"].copy()
+        "rotatableDihedrals": deepcopy(config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"])  # Deep copy
     }
     if config["torsionScanInfo"]["nConformers"] == -1:
         twistData["nConformers"] = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
@@ -118,16 +118,14 @@ def  process_twist_results(config: dict) -> dict:
                 destPng = p.join(torsionImagesDir, f"{torsionTag}_{pngTag}.png")
                 print(pngFile)
                 print(destPng)
-                copy(pngFile, destPng)
+                copy(pngFile, destPng)  
                 relativePath = p.relpath(destPng, reporterDir)
                 twistData["rotatableDihedrals"][torsionTag][pngTag] = relativePath
 
-    
     torsionHtmls = Reporting_Assistant.make_highlighted_torsion_visualisations(config, torsionImagesDir)
     twistData["torsionHtmls"] = torsionHtmls    
 
     return twistData
-    
 
 
 

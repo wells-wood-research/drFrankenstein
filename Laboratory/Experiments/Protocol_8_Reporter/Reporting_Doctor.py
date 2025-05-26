@@ -9,6 +9,7 @@ from os import path as p
 
 from . import Reporting_Monster
 from . import Reporting_Assistant
+from . import Shelly
 
 def reporter_protocol(config: dict) -> None:
     """
@@ -40,17 +41,19 @@ def reporter_protocol(config: dict) -> None:
     twistData       = Reporting_Monster.process_twist_results(config)
     chargesData     = Reporting_Monster.process_charges_results(config)
     fittingData     = Reporting_Monster.process_fitting_results(config)
+    methodsData = Shelly.methods_writer_protocol(config)
+
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
-    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml)
+    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, reportHtml)
 
     ## update config
-    config["checkpointInfo"]["reportingComplete"] = True
+    # config["checkpointInfo"]["reportingComplete"] = True
     config["runtimeInfo"]["madeByReporting"]["reportHtml"] = reportHtml
     return config
 
 
-def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, reportHtml):
+def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, reportHtml):
 
     template_dir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(template_dir):
@@ -74,7 +77,8 @@ def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingD
         conformer_data=wriggleData,
         torsion_data=twistData,
         charge_data=chargesData,
-        fitting_data=fittingData
+        fitting_data=fittingData,
+        methods_data= methodsData
     )
 
     # Save the rendered HTML to a file

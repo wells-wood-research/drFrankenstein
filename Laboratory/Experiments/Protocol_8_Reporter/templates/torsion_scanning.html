@@ -155,7 +155,40 @@
         }
     }
 
+    /* General info box styling (reused for protocol and summary) */
+    .info {
+        background-color: #222;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #333;
+        color: #e0e0e0; /* Default text color for content within .info */
+    }
+    .info h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #ffffff;
+    }
+    .info h3 strong {
+        color: #ffffff; /* This is for labels like "Scan Method:" */
+    }
+
+    /* NEW CSS for Protocol Section Content */
+
+    /* End of NEW CSS */
+
 </style>
+
+<!-- NEW: Torsion Scanning Protocol Section -->
+{% if methods_data and methods_data.scanningMethods %}
+    <h2>Torsion Scanning Protocol</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.scanningMethods }}
+        </div>
+    </div>
+{% endif %}
+<!-- End of NEW Section -->
 
 <h2>Torsion Scanning Summary</h2>
 

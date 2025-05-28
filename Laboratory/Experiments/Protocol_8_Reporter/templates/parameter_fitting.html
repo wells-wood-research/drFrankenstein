@@ -137,7 +137,14 @@
         border-radius: 3px; /* Optional */
     }
 </style>
-
+{% if methods_data and methods_data.scanningMethods %}
+    <h2>Parameter Fitting Protocol</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.fittingMethods }}
+        </div>
+    </div>
+{% endif %}
 <h2>Parameter Fitting Summary</h2>
 
 {% if fitting_data %}

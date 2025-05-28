@@ -36,7 +36,14 @@
         border: 1px solid #1a1a1a1a;
     }
 </style>
-
+{% if methods_data and methods_data.scanningMethods %}
+    <h2>Conformer Generation Protocol</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.conformerMethods }}
+        </div>
+    </div>
+{% endif %}
 <h2>Conformer Generation Summary</h2>
 
 {% if conformer_data %}

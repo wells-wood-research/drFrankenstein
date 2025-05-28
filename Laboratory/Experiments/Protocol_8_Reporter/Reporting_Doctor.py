@@ -9,7 +9,11 @@ from os import path as p
 
 from . import Reporting_Monster
 from . import Reporting_Assistant
+
+from . import Shelly
 from typing import Dict, Any # Added for type hinting
+
+
 
 # Placeholder classes (extend if needed)
 class FilePath:
@@ -42,29 +46,25 @@ def reporter_protocol(config: dict) -> dict:
     config["runtimeInfo"]["madeByReporting"]["imagesDir"] = imagesDir
 
     ## run protocols
-    timeGanttPng: FilePath    = Reporting_Assistant.generate_gantt_chart(config) # type: ignore
-    wriggleData: Dict[str, Any]     = Reporting_Monster.process_wriggle_results(config)
-    twistData: Dict[str, Any]       = Reporting_Monster.process_twist_results(config)
-    chargesData: Dict[str, Any]     = Reporting_Monster.process_charges_results(config)
-    fittingData: Dict[str, Any]     = Reporting_Monster.process_fitting_results(config)
+    timeGanttPng    = Reporting_Assistant.generate_gantt_chart(config)
+    wriggleData     = Reporting_Monster.process_wriggle_results(config)
+    twistData       = Reporting_Monster.process_twist_results(config)
+    chargesData     = Reporting_Monster.process_charges_results(config)
+    fittingData     = Reporting_Monster.process_fitting_results(config)
+    methodsData = Shelly.methods_writer_protocol(config)
 
-    reportHtml: FilePath = p.join(reporterDir, "drFrankenstein_report.html") # type: ignore
-    make_html_report(time_gantt_png=timeGanttPng, 
-                     wriggle_data=wriggleData, 
-                     twist_data=twistData, 
-                     charges_data=chargesData, 
-                     fitting_data=fittingData, 
-                     molecule_name=moleculeName, 
-                     report_html=reportHtml)
+
+    reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
+    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, reportHtml)
 
     ## update config
-    config["checkpointInfo"]["reportingComplete"] = True
+    # config["checkpointInfo"]["reportingComplete"] = True
     config["runtimeInfo"]["madeByReporting"]["reportHtml"] = reportHtml
     return config
-
-
-def make_html_report(time_gantt_png: FilePath, 
-                     wriggle_data: Dict[str, Any], 
+  
+  
+def make_html_report(tim
+                     wriggle_data: Dict[st
                      twist_data: Dict[str, Any], 
                      charges_data: Dict[str, Any], 
                      fitting_data: Dict[str, Any], 
@@ -72,7 +72,6 @@ def make_html_report(time_gantt_png: FilePath,
                      report_html: FilePath) -> None:
     """
     Generates an HTML report from templates and provided data.
-
     Args:
         time_gantt_png: Path to the Gantt chart PNG for timing information.
         wriggle_data: Dictionary containing data from conformer generation.
@@ -100,12 +99,13 @@ def make_html_report(time_gantt_png: FilePath,
 
     # The {% include %} directive will make these variables available to the included files.
     rendered_html = template.render(
-        job_name=molecule_name,
-        timeGanttPng=time_gantt_png,
-        conformer_data=wriggle_data,
-        torsion_data=twist_data,
-        charge_data=charges_data,
-        fitting_data=fitting_data
+        job_name=moleculeName,
+        timeGanttPng=timeGanttPng,
+        conformer_data=wriggleData,
+        torsion_data=twistData,
+        charge_data=chargesData,
+        fitting_data=fittingData,
+        methods_data= methodsData
     )
 
     # Save the rendered HTML to a file

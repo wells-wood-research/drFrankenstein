@@ -15,8 +15,10 @@ import matplotlib.patheffects as mpe
 import matplotlib.patches as patches
 import seaborn as sns
 import numpy as np
-import textwrap
-from matplotlib.font_manager import findfont, FontProperties
+import matplotlib.text as mtext # For creating text artists
+from matplotlib.legend_handler import HandlerBase # Base class for custom handlers
+import matplotlib.ticker as ticker
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,10 +26,10 @@ import matplotlib.patches as patches
 import matplotlib.patheffects as mpe
 import numpy as np
 import seaborn as sns
-import textwrap
 import os
 import os.path as p
 
+# Utility Functions
 def format_time_hms(seconds):
     """Converts seconds to HH:MM:SS string format."""
     seconds = int(round(seconds))
@@ -36,14 +38,51 @@ def format_time_hms(seconds):
     secs = seconds % 60
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
+def pdb_to_string(pdbFile):
+    with open(pdbFile, "r") as f:
+        pdbBlock = "".join(f.readlines())
+    return pdbBlock
+
+def xyz_to_string(xyzFile):
+    with open(xyzFile, 'r') as f:
+        xyzBlock = "".join(f.readlines())
+    return xyzBlock
+
+def make_vibrant_colors():
+    vibrantColors = [
+        "#FF0000",  # Bright Red
+        "#00FF00",  # Lime Green
+        "#0000FF",  # Pure Blue
+        "#FFFF00",  # Bright Yellow
+        "#FF00FF",  # Magenta
+        "#00FFFF",  # Cyan
+        "#FF4500",  # Orange Red
+        "#32CD32",  # Lime Green (repeated, consider variety if an issue)
+        "#1E90FF",  # Dodger Blue
+        "#FFD700",  # Gold
+        "#FF69B4",  # Hot Pink
+        "#00CED1",  # Dark Turquoise
+        "#FF6347",  # Tomato
+        "#ADFF2F",  # Green Yellow
+        "#4682B4",  # Steel Blue
+        "#FFA500",  # Orange
+        "#DA70D6",  # Orchid
+        "#20B2AA",  # Light Sea Green
+        "#DC143C",  # Crimson
+        "#7CFC00"   # Lawn Green
+    ]
+    return vibrantColors
+
+def make_charge_gradient_colors():
+    chargeGradientColors = ['#FF00FF', '#FF66FF', '#FFCCFF', '#FFF5FF', '#FFFFFF', '#F5FFF5', '#CCFFCC', '#33FF33', '#00FF00']
+    return chargeGradientColors
+
+# Gantt Chart Helper Functions
 def initialize_matplotlib_settings(defaultFontSize):
     """Sets global Matplotlib rcParams and verifies font."""
     plt.rcParams['font.family'] = 'monospace'
     plt.rcParams['font.monospace'] = ['Consolas', 'DejaVu Sans Mono', 'Courier New']
     plt.rcParams['font.size'] = defaultFontSize
-
-# load_and_prepare_data is removed as its functionality for the new input
-# format is integrated into generate_gantt_chart.
 
 def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding):
     """Creates the Matplotlib figure and axes with basic styling."""
@@ -66,7 +105,7 @@ def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgr
             yrange=(yPos - 0.4, 0.8),
             facecolors=[barColors[i % len(barColors)] if numFunctions > 0 else 'blue'],
             edgecolor=elementColor,
-            linewidth=0.75
+            linewidth=1
         )
         if totalRuntimeSeconds > 0 and row['executionTimeSeconds'] > (0.05 * totalRuntimeSeconds):
             timeLabel = format_time_hms(row['executionTimeSeconds'])
@@ -76,48 +115,50 @@ def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgr
                     ha='center', va='center', color=textColor, fontsize=defaultFontSize,
                     path_effects=[mpe.Stroke(linewidth=2, foreground=backgroundColor), mpe.Normal()])
 
-def draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
-                           groupLabelColor, groupBoxEdgeColor, 
+def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
+                           groupLabelColor, groupBoxEdgeColor,
                            groupBoxPaddingY, groupLabelYOffset, 
-                           groupLabelMaxCharsPerLine, # Parameter kept for signature
+                           groupLabelMaxCharsPerLine, 
                            estimatedLineHeightForGroupLabel, 
                            groupLabelFontSize):
     """Draws group boxes and numerical labels (in a styled box) on the Gantt chart."""
     yMaxFromGroupLabels = 0.0
-    group_legend_details = [] # To store (group_id_str, full_group_name)
+    groupLegendDetails = [] 
 
-    if numFunctions == 0: 
-        yMaxFromGroupLabels = 1.0 
+    if numFunctions == 0:
+        yMaxFromGroupLabels = 1.0
 
-    for group_idx, (groupName, functionsInGroupMap) in enumerate(functionMap.items()):
+    for groupIdx, (groupName, functionsInGroupMap) in enumerate(functionMap.items()):
         csvNamesInGroup = list(functionsInGroupMap.keys())
         groupMemberRows = timeDf[timeDf['functionName'].isin(csvNamesInGroup)]
         if groupMemberRows.empty:
             continue
 
         memberIndices = groupMemberRows.index.tolist()
-        if not memberIndices: 
+        if not memberIndices:
             continue
 
         currentMinIndexInDf = min(memberIndices)
         currentMaxIndexInDf = max(memberIndices)
-        
+
         yPosOfTopBarInGroup = numFunctions - 1 - currentMinIndexInDf
         yPosOfBottomBarInGroup = numFunctions - 1 - currentMaxIndexInDf
 
         boxBottomYCoord = yPosOfBottomBarInGroup - 0.4 - groupBoxPaddingY
         boxTopYCoord = yPosOfTopBarInGroup + 0.4 + groupBoxPaddingY
-        
+
         rectYStart = boxBottomYCoord
         rectHeight = boxTopYCoord - rectYStart
-        if rectHeight <= 0: continue
+        if rectHeight <= 0:
+            continue
 
         boxXStartSeconds = groupMemberRows['startTimeSeconds'].min()
         boxXEndSeconds = groupMemberRows['endTimeSeconds'].max()
-        
+
         rectXStartMinutes = boxXStartSeconds / 60
         rectWidthMinutes = (boxXEndSeconds - boxXStartSeconds) / 60
-        if rectWidthMinutes < 0: rectWidthMinutes = 0 
+        if rectWidthMinutes < 0:
+            rectWidthMinutes = 0
 
         rect = patches.Rectangle(
             (rectXStartMinutes, rectYStart),
@@ -126,51 +167,85 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
             linewidth=0.75,
             edgecolor=groupBoxEdgeColor,
             facecolor='none',
-            zorder=0.5 
+            zorder=0.5
         )
         ax.add_patch(rect)
 
-        labelXCenterMinutes = rectXStartMinutes + rectWidthMinutes / 2
-        labelYPosBottomOfText = boxTopYCoord + groupLabelYOffset
-        
-        group_id_to_display = str(group_idx + 1) # Use numerical ID
-        finalLabelTextForGroup = group_id_to_display
-        
-        group_legend_details.append((group_id_to_display, groupName)) # Store for legend
-        
-        numLinesInLabel = 1 # Numerical ID is single line
-        
-        # Define the bounding box properties for the numerical ID
-        bbox_props = dict(boxstyle="square,pad=0.2", # Square box with some padding
-                          facecolor="black",          # Black background
-                          edgecolor="lime",           # Lime border
-                          linewidth=1)                # Border line width
+        labelXPos = rectXStartMinutes + rectWidthMinutes + 1 
+        labelYPos = rectYStart + rectHeight / 2
 
-        ax.text(labelXCenterMinutes,
-                labelYPosBottomOfText,
-                finalLabelTextForGroup, # This is the numerical ID
-                ha='center',
-                va='bottom', 
-                color=groupLabelColor, # Text color (e.g., lime, as set in main config)
+        groupIdToDisplay = str(groupIdx + 1) 
+        finalLabelTextForGroup = groupIdToDisplay
+
+        groupLegendDetails.append((groupIdToDisplay, groupName)) 
+
+        bboxProps = dict(boxstyle="square,pad=0.2", 
+                          facecolor="black",          
+                          edgecolor="lime",           
+                          linewidth=1)                
+
+        ax.text(labelXPos,
+                labelYPos,
+                finalLabelTextForGroup, 
+                ha='left',              
+                va='center',            
+                color=groupLabelColor,  
                 fontsize=groupLabelFontSize,
                 weight='bold',
-                clip_on=False,
-                bbox=bbox_props # Apply the bounding box
+                clip_on=False,          
+                bbox=bboxProps         
                 )
+        yMaxFromGroupLabels = max(yMaxFromGroupLabels, boxTopYCoord + 0.1)
+
+    return yMaxFromGroupLabels, groupLegendDetails
+
+class HandlerStyledIdBox(HandlerBase):
+    """Custom legend handler to draw a text ID within a styled box."""
+    def __init__(self, textColorName, boxFacecolorName, boxEdgecolorName,
+                fontWeight='bold', fontFamily='sans-serif', 
+                boxStyleStr='square,pad=0.3', 
+                fontSizeFactor=0.9, 
+                boxLinewidth=1):
+        super().__init__()
+        self.textColorName = textColorName
+        self.boxFacecolorName = boxFacecolorName
+        self.boxEdgecolorName = boxEdgecolorName
+        self.fontWeight = fontWeight
+        self.fontFamily = fontFamily
+        self.boxStyleStr = boxStyleStr
+        self.fontSizeFactor = fontSizeFactor
+        self.boxLinewidth = boxLinewidth
+
+    def create_artists(self, legend, origHandle, 
+                    xdescent, ydescent, width, height, fontsize, trans):
         
-        # Adjust yMaxFromGroupLabels considering the bbox might affect height.
-        # For simplicity, we assume estimatedLineHeightForGroupLabel roughly accounts for it,
-        # or that the bbox padding is small enough not to drastically change the overall height calc.
-        # If precise bbox height is needed, it's more complex to calculate from text properties.
-        textBlockTotalHeightDataUnits = numLinesInLabel * estimatedLineHeightForGroupLabel 
-        topOfThisLabelYCoord = labelYPosBottomOfText + textBlockTotalHeightDataUnits
+        groupIdStr = str(origHandle) 
+
+        textArtist = mtext.Text(
+            width / 2.0, height / 2.0, 
+            groupIdStr,
+            color=self.textColorName,
+            fontsize=fontsize * self.fontSizeFactor, 
+            ha="center",                             
+            va="center",                             
+            fontweight=self.fontWeight,
+            fontfamily=self.fontFamily,
+            transform=trans 
+        )
+
+        bboxProps = dict(
+            boxstyle=self.boxStyleStr,
+            facecolor=self.boxFacecolorName,
+            edgecolor=self.boxEdgecolorName,
+            linewidth=self.boxLinewidth
+        )
+        textArtist.set_bbox(bboxProps)
         
-        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1) 
-        
-    return yMaxFromGroupLabels, group_legend_details # Return legend details
+        return [textArtist]
+
 def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
                           textColor, elementColor, backgroundColor, defaultFontSize,
-                          group_legend_details, groupLabelColor, groupBoxEdgeColor): # Added parameters
+                          groupLegendDetails, groupLabelColor, groupBoxEdgeColor):
     """Applies final styling to the plot (labels, ticks, limits, grid, spines, and group legend)."""
     numFunctions = len(timeDf)
 
@@ -197,6 +272,8 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     
     ax.set_xlim(0, xLimUpperMinutes)
     
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(base=60))
+
     currentYLimBottom, _ = ax.get_ylim() 
     ax.set_ylim(currentYLimBottom, yMaxForPlot)
 
@@ -208,41 +285,51 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     ax.spines['left'].set_color(elementColor)
     ax.spines['top'].set_color(backgroundColor) 
     ax.spines['right'].set_color(backgroundColor) 
-    sns.despine(top=True, right=True, left=False, bottom=False) 
+    sns.despine(top=True, right=True, left=False, bottom=False)
 
-    # Add legend for groups
-    if group_legend_details:
-        legend_elements = []
-        for group_id_str, full_group_name in group_legend_details:
-            legend_elements.append(
-                patches.Patch(facecolor=groupLabelColor, # Color for the patch in legend
-                              edgecolor=groupBoxEdgeColor, # Edge color for the patch
-                              label=f"{group_id_str}: {full_group_name}")
-            )
+    if groupLegendDetails: 
+        legendHandles = []
+        legendLabels = []
         
-        ax.legend(handles=legend_elements,
-                  title="Function Groups",
-                  fontsize=defaultFontSize * 0.85,
-                  title_fontsize=defaultFontSize * 0.9,
-                  loc='upper left', 
-                  bbox_to_anchor=(1.02, 1.0), # Position legend outside plot area
-                  facecolor=backgroundColor, # Legend box background color
-                  edgecolor=elementColor,    # Legend box border color
-                  labelcolor=textColor       # Text color for legend items
-                 )
+        styledIdKeyHandler = HandlerStyledIdBox(
+            textColorName=groupLabelColor,    
+            boxFacecolorName='black',         
+            boxEdgecolorName=groupLabelColor, 
+            fontSizeFactor=0.85,              
+            boxStyleStr='square,pad=0.3',     
+            boxLinewidth=1
+        )
+        
+        handlerMapForLegend = {}
 
-    # Adjust layout, especially 'right' to make space for the legend.
-    fig.subplots_adjust(left=0.22, right=0.80, top=0.88, bottom=0.08) 
+        for groupIdStr, fullGroupName in groupLegendDetails:
+            legendHandles.append(groupIdStr)
+            legendLabels.append(f"{fullGroupName}") 
+            handlerMapForLegend[groupIdStr] = styledIdKeyHandler
 
+        ax.legend(
+            legendHandles,  
+            legendLabels,   
+            fontsize=defaultFontSize, 
+            title_fontsize=defaultFontSize * 0.9,
+            loc='lower left',              
+            bbox_to_anchor=(0.0, 0.0),     
+            facecolor=backgroundColor,     
+            edgecolor="lime",        
+            labelcolor=textColor,          
+            handler_map=handlerMapForLegend 
+        )
+    fig.subplots_adjust(left=0.22, right=0.95, top=0.95, bottom=0.15)
+
+# Main Visualization Orchestration Functions
 def generate_gantt_chart(config):
     """
     Generates and saves the Gantt chart based on provided function data dictionary
     and saves it to a path relative to reporterDir.
     """
-    ## unpack config
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
     timeInfo  = config["runtimeInfo"]["timeInfo"]
-    # --- Configuration ---
+    
     backgroundColor = 'black'
     textColor = 'yellow'
     elementColor = 'yellow'
@@ -250,23 +337,21 @@ def generate_gantt_chart(config):
     groupBoxEdgeColor = 'lime'
     defaultFontSize = 16
     groupLabelFontSize = 16
-    groupLabelMaxCharsPerLine = 25 # Kept in config, passed to draw_group_annotations, but not used for wrapping there
+    groupLabelMaxCharsPerLine = 25 
     estimatedLineHeightForGroupLabel = 0.4
     groupBoxPaddingY = 0.10
     groupLabelYOffset = 0.1
     minFigHeight = 9
     figHeightPerFunction = 0.5
     figHeightBasePadding = 2
-    # --- End Configuration ---
 
-    # 1. Data Preparation
-    data_for_df = []
-    for func_name_key, details_dict in timeInfo.items():
-        data_for_df.append({
-            'functionName': func_name_key,
-            'executionTimeSeconds': details_dict['executionTime']
+    dataForDf = []
+    for funcNameKey, detailsDict in timeInfo.items():
+        dataForDf.append({
+            'functionName': funcNameKey,
+            'executionTimeSeconds': detailsDict['executionTime']
         })
-    timeDf = pd.DataFrame(data_for_df)
+    timeDf = pd.DataFrame(dataForDf)
 
     if timeDf.empty:
         timeDf = pd.DataFrame(columns=['functionName', 'executionTimeSeconds', 'startTimeSeconds', 'endTimeSeconds'])
@@ -279,10 +364,10 @@ def generate_gantt_chart(config):
 
     displayNameMap = {}
     functionMap = {} 
-    for func_name_key, details_dict in timeInfo.items():
-        csvName = func_name_key
-        displayName = details_dict['functionAlias']
-        groupName = details_dict['functionGroup']
+    for funcNameKey, detailsDict in timeInfo.items():
+        csvName = funcNameKey
+        displayName = detailsDict['functionAlias']
+        groupName = detailsDict['functionGroup']
         displayNameMap[csvName] = displayName
         if groupName not in functionMap:
             functionMap[groupName] = {}
@@ -300,39 +385,34 @@ def generate_gantt_chart(config):
     draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize)
     
     yMaxForPlot = numFunctions if numFunctions > 0 else 1.0
-    # Call modified draw_group_annotations, get legend details
-    yMaxFromGroupLabels, group_legend_details = draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
+    yMaxFromGroupLabels, groupLegendDetails = draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
                                                groupLabelColor, groupBoxEdgeColor, 
                                                groupBoxPaddingY, groupLabelYOffset, 
-                                               groupLabelMaxCharsPerLine, # Param passed but not used for wrapping
+                                               groupLabelMaxCharsPerLine, 
                                                estimatedLineHeightForGroupLabel, 
                                                groupLabelFontSize)
     yMaxForPlot = max(yMaxForPlot, yMaxFromGroupLabels)
     
-    # Call modified finalize_plot_styling, pass legend details and colors
     finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
                           textColor, elementColor, backgroundColor, defaultFontSize,
-                          group_legend_details, groupLabelColor, groupBoxEdgeColor)
+                          groupLegendDetails, groupLabelColor, groupBoxEdgeColor)
 
     ganttPngPath = p.join(timeImagesDir, "gantt_chart.png")
-    # Ensure bbox_inches='tight' to include the legend if it's outside the main axes
     plt.savefig(ganttPngPath, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
     plt.close(fig)
 
     relativePath = p.relpath(ganttPngPath, reporterDir)
     return relativePath
 
-
-
 def make_charge_visualisation(config, outDir):
-    ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     chargesCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
+    
     cappedDf = pdbUtils.pdb2df(cappedPdb)
     chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
 
-    chargeGradientColors = make_charge_gradient_colours()
+    chargeGradientColors = make_charge_gradient_colors()
 
     cappedDf["BETAFACTOR"] = chargesDf["Charge"]
 
@@ -342,13 +422,9 @@ def make_charge_visualisation(config, outDir):
     minCharge = chargesDf["Charge"].min()
     maxCharge = chargesDf["Charge"].max()
 
-    ## load PDB into a string
-    with open(annotatedPdb, 'r') as f:
-        pdbBlock = "".join(f.readlines())
+    pdbBlock = pdb_to_string(annotatedPdb)
 
-
-    # Create 3D visualization with py3Dmol
-    view = py3Dmol.view(width=600, height=600) # Increased size slightly for better viewing
+    view = py3Dmol.view(width=600, height=600) 
     view.addModel(pdbBlock, 'pdb', {"keepH": True})
     view.setStyle({
         'stick': {
@@ -376,58 +452,45 @@ def make_charge_visualisation(config, outDir):
                         {'serial': index+1}) 
     view.zoomTo()
 
-    # Save the visualization as HTML
     chargeHtml = p.join(outDir, "charges.html")
     with open(chargeHtml, 'w') as f:
         f.write(view._make_html())
 
     os.remove(annotatedPdb)
-
     relativePath = p.relpath(chargeHtml, reporterDir)
-
     return relativePath, minCharge, maxCharge
-
 
 def make_charge_color_bar(minCharge, maxCharge, outDir, config):
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
-    chargeGradientColors = make_charge_gradient_colours() # Assuming this function is defined
+    chargeGradientColors = make_charge_gradient_colors() 
 
-    # Create figure with black background
-    fig, ax = plt.subplots(figsize=(6, 1), facecolor='black') # Figure size in inches
-    fig.subplots_adjust(bottom=0.5) # Adjust subplot to leave space for label below color bar
+    fig, ax = plt.subplots(figsize=(6, 1), facecolor='black') 
+    fig.subplots_adjust(bottom=0.5) 
 
     cmap = mcolors.ListedColormap(chargeGradientColors)
     norm = mcolors.Normalize(vmin=minCharge, vmax=maxCharge)
 
-    # Create ScalarMappable
     mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     
-    # Create colorbar with white elements
     cb = fig.colorbar(mappable, cax=ax, orientation='horizontal')
     
-    # Set label and customize appearance
     cb.set_label('Charge', color='white', fontsize=12)
     
-    # Customize colorbar appearance
-    cb.outline.set_edgecolor('white')  # White outline
-    cb.ax.tick_params(colors='white')  # White tick marks and labels
-    ax.set_facecolor('black')  # Ensure axes background is black
+    cb.outline.set_edgecolor('white')  
+    cb.ax.tick_params(colors='white')  
+    ax.set_facecolor('black')  
 
-    # Set figure background to black (redundant but ensures consistency)
     fig.set_facecolor('black')
 
     outputFilePath = os.path.join(outDir, "charge_color_bar.png")
     
-    # Save the figure with a specific DPI to control pixel height
     plt.savefig(outputFilePath, facecolor='black', edgecolor='none')
-    plt.close(fig) # Close the figure to free memory
+    plt.close(fig) 
 
     relativePath = p.relpath(outputFilePath, reporterDir)
     return relativePath
 
-
-def  make_conformer_visualisations(config, outDir):
-    ## unpack config
+def make_conformer_visualisations(config, outDir):
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     reporterDir =     config["runtimeInfo"]["madeByReporting"]["reporterDir"]
 
@@ -436,11 +499,9 @@ def  make_conformer_visualisations(config, outDir):
     conformerHtmls = []
     for idx, xyzFile in enumerate(conformerXyzs):
         name = xyzFile.split("/")[-1].split(".")[0]
-        xyzBlock = xyz2String(xyzFile)
-        # Create 3D visualization with py3Dmol
+        xyzBlock = xyz_to_string(xyzFile)
         view = py3Dmol.view(width=200, height=200) 
         view.addModel(xyzBlock, 'xyz', {"keepH": True})
-        # Use modulo to cycle through colors
         color = vibrantColors[idx % len(vibrantColors)]
         view.setStyle({"elem": "C"},{
             'stick': {
@@ -458,35 +519,29 @@ def  make_conformer_visualisations(config, outDir):
                 'scale': 0.3
             }
         })
-
         view.setBackgroundColor("black")
 
-        # Save the visualization as HTML
         conformerHtml = p.join(outDir, f"{name}.html")
         with open(conformerHtml, 'w') as f:
             f.write(view._make_html())
 
         relativePath = p.relpath(conformerHtml, reporterDir)
-
         conformerHtmls.append(relativePath)
 
     return conformerHtmls
 
-
 def make_highlighted_torsion_visualisations(config, outDir):
-    ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
     reporterDir =     config["runtimeInfo"]["madeByReporting"]["reporterDir"]
 
-    pdbBlock = pdb2string(cappedPdb)
+    pdbBlock = pdb_to_string(cappedPdb)
 
     htmlFiles = {}
     for torsionTag, dihedralData in uniqueRotatableDihedrals.items():
         view = py3Dmol.view(width=300, height=300)
         view.addModel(pdbBlock, "pdb",  {"keepH": True})
 
-        ## simple whiteCarbons balls and sticks
         view.setStyle({},{
             'stick': {
                 'radius': 0.2
@@ -498,7 +553,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
         view.setStyle({"atom": dihedralData["ATOM_NAMES"]}, {
             'sphere': {
                 'scale': 0.3,
-                'color': "#00FF00"
+                'color': "#00FF00" # Lime Green
             },
                     'stick': {
                 'radius': 0.2
@@ -506,7 +561,6 @@ def make_highlighted_torsion_visualisations(config, outDir):
         })
         view.setBackgroundColor("black")
 
-        # Save the visualization as HTML
         htmlFile = p.join(outDir, f"{torsionTag}.html")
         with open(htmlFile, 'w') as f:
             f.write(view._make_html())
@@ -515,44 +569,3 @@ def make_highlighted_torsion_visualisations(config, outDir):
         htmlFiles[torsionTag] = relativePath
 
     return htmlFiles
-
-def make_vibrant_colors():
-    vibrantColours = [
-    "#FF0000",  # Bright Red
-    "#00FF00",  # Lime Green
-    "#0000FF",  # Pure Blue
-    "#FFFF00",  # Bright Yellow
-    "#FF00FF",  # Magenta
-    "#00FFFF",  # Cyan
-    "#FF4500",  # Orange Red
-    "#32CD32",  # Lime Green
-    "#1E90FF",  # Dodger Blue
-    "#FFD700",  # Gold
-    "#FF69B4",  # Hot Pink
-    "#00CED1",  # Dark Turquoise
-    "#FF6347",  # Tomato
-    "#ADFF2F",  # Green Yellow
-    "#4682B4",  # Steel Blue
-    "#FFA500",  # Orange
-    "#DA70D6",  # Orchid
-    "#20B2AA",  # Light Sea Green
-    "#DC143C",  # Crimson
-    "#7CFC00"   # Lawn Green
-    ]
-    return vibrantColours
-
-
-def make_charge_gradient_colours():
-    chargeGradientColors = ['#FF00FF', '#FF66FF', '#FFCCFF', '#FFF5FF', '#FFFFFF', '#F5FFF5', '#CCFFCC', '#33FF33', '#00FF00']
-    return chargeGradientColors
-
-def pdb2string(pdbFile):
-    with open(pdbFile, "r") as f:
-        pdbBlock = "".join(f.readlines())
-    return pdbBlock
-
-
-def xyz2String(xyzFile):
-    with open(xyzFile, 'r') as f:
-        xyzBlock = "".join(f.readlines())
-    return xyzBlock

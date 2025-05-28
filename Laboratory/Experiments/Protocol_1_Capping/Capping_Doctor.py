@@ -17,7 +17,7 @@ from typing import List, Tuple
 ## drFRANKENSTIEN LIBRARIES ##
 from . import Capping_Monster
 from . import Capping_Assistant
-from OperatingTools import Timer, symmetry_tool, cleaner
+from OperatingTools import Timer, cleaner
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Termini Capping", "TERMINI_CAPPING")
@@ -65,8 +65,6 @@ def capping_protocol(config: dict) -> dict:
     optimedPdb = Capping_Monster.optimise_capped_structures(cappedPdb, config)
 
     config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = optimedPdb
-    symmetryData = symmetry_tool.symmetry_protocol(optimedPdb)
-    config["runtimeInfo"]["madeByCapping"]["symmetryData"] = symmetryData
     ## update config, this lets drMD know that capping is complete and lets it skip this step next time
     config["checkpointInfo"]["cappingComplete"] = True
 
@@ -74,9 +72,6 @@ def capping_protocol(config: dict) -> dict:
 
 
     return config
-
-
-
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

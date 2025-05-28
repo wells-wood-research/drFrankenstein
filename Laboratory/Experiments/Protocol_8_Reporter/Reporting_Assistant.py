@@ -79,21 +79,24 @@ def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgr
 def draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
                            groupLabelColor, groupBoxEdgeColor, 
                            groupBoxPaddingY, groupLabelYOffset, 
-                           groupLabelMaxCharsPerLine, estimatedLineHeightForGroupLabel, 
+                           groupLabelMaxCharsPerLine, # Parameter kept for signature
+                           estimatedLineHeightForGroupLabel, 
                            groupLabelFontSize):
-    """Draws group boxes and labels on the Gantt chart."""
+    """Draws group boxes and numerical labels (in a styled box) on the Gantt chart."""
     yMaxFromGroupLabels = 0.0
-    if numFunctions == 0: 
-        yMaxFromGroupLabels = 1.0 # Default if no functions, to ensure plot has some height.
+    group_legend_details = [] # To store (group_id_str, full_group_name)
 
-    for groupName, functionsInGroupMap in functionMap.items():
+    if numFunctions == 0: 
+        yMaxFromGroupLabels = 1.0 
+
+    for group_idx, (groupName, functionsInGroupMap) in enumerate(functionMap.items()):
         csvNamesInGroup = list(functionsInGroupMap.keys())
         groupMemberRows = timeDf[timeDf['functionName'].isin(csvNamesInGroup)]
         if groupMemberRows.empty:
             continue
 
         memberIndices = groupMemberRows.index.tolist()
-        if not memberIndices: # Should not happen if groupMemberRows is not empty
+        if not memberIndices: 
             continue
 
         currentMinIndexInDf = min(memberIndices)
@@ -114,50 +117,61 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
         
         rectXStartMinutes = boxXStartSeconds / 60
         rectWidthMinutes = (boxXEndSeconds - boxXStartSeconds) / 60
-        if rectWidthMinutes < 0: rectWidthMinutes = 0 # Ensure non-negative width
+        if rectWidthMinutes < 0: rectWidthMinutes = 0 
 
         rect = patches.Rectangle(
             (rectXStartMinutes, rectYStart),
             rectWidthMinutes,
             rectHeight,
-            linewidth=1.5,
+            linewidth=0.75,
             edgecolor=groupBoxEdgeColor,
             facecolor='none',
-            zorder=0.5 # Draw behind bars slightly if overlap, though ideally not
+            zorder=0.5 
         )
         ax.add_patch(rect)
 
         labelXCenterMinutes = rectXStartMinutes + rectWidthMinutes / 2
         labelYPosBottomOfText = boxTopYCoord + groupLabelYOffset
         
-        finalLabelTextForGroup = groupName
-        if len(groupName) > groupLabelMaxCharsPerLine:
-            finalLabelTextForGroup = textwrap.fill(groupName, width=groupLabelMaxCharsPerLine)
+        group_id_to_display = str(group_idx + 1) # Use numerical ID
+        finalLabelTextForGroup = group_id_to_display
         
-        numLinesInLabel = finalLabelTextForGroup.count('\n') + 1
+        group_legend_details.append((group_id_to_display, groupName)) # Store for legend
         
+        numLinesInLabel = 1 # Numerical ID is single line
+        
+        # Define the bounding box properties for the numerical ID
+        bbox_props = dict(boxstyle="square,pad=0.2", # Square box with some padding
+                          facecolor="black",          # Black background
+                          edgecolor="lime",           # Lime border
+                          linewidth=1)                # Border line width
+
         ax.text(labelXCenterMinutes,
                 labelYPosBottomOfText,
-                finalLabelTextForGroup,
+                finalLabelTextForGroup, # This is the numerical ID
                 ha='center',
-                va='bottom', # Anchor text at its bottom
-                color=groupLabelColor,
+                va='bottom', 
+                color=groupLabelColor, # Text color (e.g., lime, as set in main config)
                 fontsize=groupLabelFontSize,
                 weight='bold',
-                clip_on=False # Allow labels to go outside plot area if necessary before final adjustment
+                clip_on=False,
+                bbox=bbox_props # Apply the bounding box
                 )
         
-        textBlockTotalHeightDataUnits = numLinesInLabel * estimatedLineHeightForGroupLabel # Data units
+        # Adjust yMaxFromGroupLabels considering the bbox might affect height.
+        # For simplicity, we assume estimatedLineHeightForGroupLabel roughly accounts for it,
+        # or that the bbox padding is small enough not to drastically change the overall height calc.
+        # If precise bbox height is needed, it's more complex to calculate from text properties.
+        textBlockTotalHeightDataUnits = numLinesInLabel * estimatedLineHeightForGroupLabel 
         topOfThisLabelYCoord = labelYPosBottomOfText + textBlockTotalHeightDataUnits
         
-        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1) # Add small padding
+        yMaxFromGroupLabels = max(yMaxFromGroupLabels, topOfThisLabelYCoord + 0.1) 
         
-    return yMaxFromGroupLabels
-
-
+    return yMaxFromGroupLabels, group_legend_details # Return legend details
 def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
-                          textColor, elementColor, backgroundColor, defaultFontSize):
-    """Applies final styling to the plot (labels, ticks, limits, grid, spines)."""
+                          textColor, elementColor, backgroundColor, defaultFontSize,
+                          group_legend_details, groupLabelColor, groupBoxEdgeColor): # Added parameters
+    """Applies final styling to the plot (labels, ticks, limits, grid, spines, and group legend)."""
     numFunctions = len(timeDf)
 
     ax.set_xlabel('Time (minutes)', fontsize=defaultFontSize, labelpad=15, color=textColor)
@@ -165,8 +179,7 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
 
     if numFunctions > 0:
         ax.set_yticks(np.arange(numFunctions))
-        # Order of y-tick labels should correspond to order in timeDf, plotted from top to bottom
-        originalYTickLabels = timeDf['functionName'].iloc[::-1].tolist() # Reversed for set_yticklabels
+        originalYTickLabels = timeDf['functionName'].iloc[::-1].tolist() 
         displayYTickLabels = [displayNameMap.get(name, name) for name in originalYTickLabels]
         ax.set_yticklabels(displayYTickLabels, fontsize=defaultFontSize)
     else:
@@ -175,29 +188,51 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     maxEndTimeValSeconds = 0.0
     if not timeDf.empty:
         maxEndTimeValSeconds = timeDf['endTimeSeconds'].max()
-        if pd.isna(maxEndTimeValSeconds): # handle case where max is NaN
+        if pd.isna(maxEndTimeValSeconds): 
             maxEndTimeValSeconds = 0.0
             
-    xLimUpperMinutes = 1.0 # Default if no tasks or all zero duration
+    xLimUpperMinutes = 1.0 
     if maxEndTimeValSeconds > 0:
-        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05 # Add 5% padding
+        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05 
     
     ax.set_xlim(0, xLimUpperMinutes)
     
-    currentYLimBottom, _ = ax.get_ylim() # Preserve default bottom limit (e.g., -0.5)
+    currentYLimBottom, _ = ax.get_ylim() 
     ax.set_ylim(currentYLimBottom, yMaxForPlot)
 
     ax.grid(True, axis='x', linestyle=':', alpha=0.6, color=elementColor)
-    ax.grid(False, axis='y') # No horizontal grid lines for y-axis
+    ax.grid(False, axis='y') 
     ax.tick_params(axis='x', colors=textColor, labelsize=defaultFontSize)
-    ax.tick_params(axis='y', colors=textColor, labelsize=defaultFontSize) # Color for y-tick labels
+    ax.tick_params(axis='y', colors=textColor, labelsize=defaultFontSize) 
     ax.spines['bottom'].set_color(elementColor)
     ax.spines['left'].set_color(elementColor)
-    ax.spines['top'].set_color(backgroundColor) # Effectively hide top spine
-    ax.spines['right'].set_color(backgroundColor) # Effectively hide right spine
-    sns.despine(top=True, right=True, left=False, bottom=False) # Keep left and bottom spines visible
+    ax.spines['top'].set_color(backgroundColor) 
+    ax.spines['right'].set_color(backgroundColor) 
+    sns.despine(top=True, right=True, left=False, bottom=False) 
 
-    fig.subplots_adjust(left=0.22, right=0.96, top=0.88, bottom=0.08) # Adjust layout
+    # Add legend for groups
+    if group_legend_details:
+        legend_elements = []
+        for group_id_str, full_group_name in group_legend_details:
+            legend_elements.append(
+                patches.Patch(facecolor=groupLabelColor, # Color for the patch in legend
+                              edgecolor=groupBoxEdgeColor, # Edge color for the patch
+                              label=f"{group_id_str}: {full_group_name}")
+            )
+        
+        ax.legend(handles=legend_elements,
+                  title="Function Groups",
+                  fontsize=defaultFontSize * 0.85,
+                  title_fontsize=defaultFontSize * 0.9,
+                  loc='upper left', 
+                  bbox_to_anchor=(1.02, 1.0), # Position legend outside plot area
+                  facecolor=backgroundColor, # Legend box background color
+                  edgecolor=elementColor,    # Legend box border color
+                  labelcolor=textColor       # Text color for legend items
+                 )
+
+    # Adjust layout, especially 'right' to make space for the legend.
+    fig.subplots_adjust(left=0.22, right=0.80, top=0.88, bottom=0.08) 
 
 def generate_gantt_chart(config):
     """
@@ -212,10 +247,10 @@ def generate_gantt_chart(config):
     textColor = 'yellow'
     elementColor = 'yellow'
     groupLabelColor = 'lime'
-    groupBoxEdgeColor = '#777777'
+    groupBoxEdgeColor = 'lime'
     defaultFontSize = 16
     groupLabelFontSize = 16
-    groupLabelMaxCharsPerLine = 25
+    groupLabelMaxCharsPerLine = 25 # Kept in config, passed to draw_group_annotations, but not used for wrapping there
     estimatedLineHeightForGroupLabel = 0.4
     groupBoxPaddingY = 0.10
     groupLabelYOffset = 0.1
@@ -234,7 +269,6 @@ def generate_gantt_chart(config):
     timeDf = pd.DataFrame(data_for_df)
 
     if timeDf.empty:
-        # Initialize empty DataFrame with expected columns if input is empty
         timeDf = pd.DataFrame(columns=['functionName', 'executionTimeSeconds', 'startTimeSeconds', 'endTimeSeconds'])
         totalRuntimeSeconds = 0.0
     else:
@@ -254,11 +288,9 @@ def generate_gantt_chart(config):
             functionMap[groupName] = {}
         functionMap[groupName][csvName] = displayName
 
-    # Directory setup
     timeImagesDir = p.join(reporterDir, "Images", "time_data")
     os.makedirs(timeImagesDir, exist_ok=True)
 
-    # 2. Plotting
     initialize_matplotlib_settings(defaultFontSize)
     numFunctions = len(timeDf)
     fig, ax = create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding)
@@ -268,17 +300,22 @@ def generate_gantt_chart(config):
     draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize)
     
     yMaxForPlot = numFunctions if numFunctions > 0 else 1.0
-    yMaxFromGroupLabels = draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
+    # Call modified draw_group_annotations, get legend details
+    yMaxFromGroupLabels, group_legend_details = draw_group_annotations(ax, timeDf, functionMap, numFunctions, 
                                                groupLabelColor, groupBoxEdgeColor, 
                                                groupBoxPaddingY, groupLabelYOffset, 
-                                               groupLabelMaxCharsPerLine, estimatedLineHeightForGroupLabel, 
+                                               groupLabelMaxCharsPerLine, # Param passed but not used for wrapping
+                                               estimatedLineHeightForGroupLabel, 
                                                groupLabelFontSize)
     yMaxForPlot = max(yMaxForPlot, yMaxFromGroupLabels)
     
+    # Call modified finalize_plot_styling, pass legend details and colors
     finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
-                          textColor, elementColor, backgroundColor, defaultFontSize)
+                          textColor, elementColor, backgroundColor, defaultFontSize,
+                          group_legend_details, groupLabelColor, groupBoxEdgeColor)
 
     ganttPngPath = p.join(timeImagesDir, "gantt_chart.png")
+    # Ensure bbox_inches='tight' to include the legend if it's outside the main axes
     plt.savefig(ganttPngPath, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
     plt.close(fig)
 

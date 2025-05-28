@@ -350,51 +350,6 @@ def set_up_directories(config: dict) -> dict:
     return config
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def get_non_symmetric_rotatable_bonds(rotatableBonds, config):
-    ## unpack config
-    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-    symmetryData = config["runtimeInfo"]["madeByCapping"]["symmetryData"]
-
-    ## get groups of atoms that are symmetrically equivalent
-    symmetricAtoms = [symmetryGroup for symmetryGroup in symmetryData if len(symmetryGroup) > 1]
-    ## create a dict that assigns an int to each group of symmetrical atoms
-    enumeratedSymmetryGroups = {i: atoms for i, atoms in enumerate(symmetricAtoms)}
-    ## create a dict that maps each atom to its assigned int
-    atomToSymmetryGroupIndex = {}
-    for key, atoms in enumeratedSymmetryGroups.items():
-        for atom in atoms:
-            atomToSymmetryGroupIndex[atom] = key
-
-    ## Replace atom names with assigned int
-    for bond in rotatableBonds:
-        bond['atoms'] = tuple(atomToSymmetryGroupIndex.get(atom, atom) for atom in bond['atoms'])
-
-    ## get unique rotatable  bonds
-    uniqueBonds = []
-    seenAtoms = set()
-    for bond in rotatableBonds:
-        atoms = bond['atoms']
-        if atoms not in seenAtoms:
-            seenAtoms.add(atoms)
-            uniqueBonds.append(bond)
-
-    ## made a dict that maps assigned int back to the first atom name in each group
-    symmetryGroupIndexToFirstAtom = {}
-    for key, atoms in enumeratedSymmetryGroups.items():
-        firstAtom = sorted(atoms)[0]
-        for atom in atoms:
-            symmetryGroupIndexToFirstAtom[key] = firstAtom
-    ## replace assigned int with first atom in each group
-    for bond in uniqueBonds:
-        bond['atoms'] = tuple(symmetryGroupIndexToFirstAtom.get(atom,atom) for atom in bond['atoms'])
-
-    return uniqueBonds
-
-
-
- 
-
 def assign_torsion_tags(dihedrals: list[tuple[tuple[str], tuple[str]]]) -> dict[tuple[str], tuple[str], tuple[str]]:
     taggedDihedrals = {}
     seenTags = set()

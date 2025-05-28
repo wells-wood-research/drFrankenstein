@@ -99,19 +99,10 @@ def run_torsion_scanning(torsionTag: str,
 
     return config
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function("Scan Single Points", "TORSION_SCANS")
-def single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag, config):
-    argsList = [(scanDir, scanDf, torsionDir, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
-    singlePointDfs = []
-    for args in argsList:
-        singlePointDf = do_the_single_point_worker(args)
-        if singlePointDf is not None:
-            singlePointDfs.append(singlePointDf)
-    return singlePointDfs
+
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function("Torsion Scanning", "TORSION_SCANS")
+@Timer.time_function("Torsion Scanning (serial)", "TORSION_SCANS")
 def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tuple[pd.DataFrame, DirectoryPath]:
     argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
     scanDfs = []
@@ -126,36 +117,6 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
 
     return scanDfs, scanDirs
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-@Timer.time_function("Scan Single Points", "TORSION_SCANS")
-def single_points_in_parallel(scanDirs, scanDfs, torsionTag, config):
-    argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
-
-    purpleText = "\033[35m"
-    resetTextColor = "\033[0m"
-
-    ## set up progress bar
-    tqdmBarOptions = {
-        "desc": f"{purpleText}Running Single-Points {resetTextColor}",
-        "ascii": "-🗲→",    
-        "colour": "yellow",
-        "unit":  "scan",
-        "ncols": 124,
-        "dynamic_ncols": False
-    }
-
-    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
-        results = pool.map(do_the_single_point_worker,
-                            make_single_arguments(argsList),
-                              progress_bar=True,
-                              iterable_len = len(argsList),
-                              progress_bar_options=tqdmBarOptions)
-
-    singlePointDfs = []
-    for result in results:
-        if result is not None:
-            singlePointDfs.append(result)
-    return singlePointDfs
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Torsion Scanning", "TORSION_SCANS")
 def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
@@ -193,6 +154,46 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
             scanDirs.append(backwardsDir)
 
     return scanDfs, scanDirs
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function("Scan Single Points (serial)", "TORSION_SCANS")
+def single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag, config):
+    argsList = [(scanDir, scanDf, torsionDir, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
+    singlePointDfs = []
+    for args in argsList:
+        singlePointDf = do_the_single_point_worker(args)
+        if singlePointDf is not None:
+            singlePointDfs.append(singlePointDf)
+    return singlePointDfs
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@Timer.time_function("Scan Single Points", "TORSION_SCANS")
+def single_points_in_parallel(scanDirs, scanDfs, torsionTag, config):
+    argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
+
+    purpleText = "\033[35m"
+    resetTextColor = "\033[0m"
+
+    ## set up progress bar
+    tqdmBarOptions = {
+        "desc": f"{purpleText}Running Single-Points {resetTextColor}",
+        "ascii": "-🗲→",    
+        "colour": "yellow",
+        "unit":  "scan",
+        "ncols": 124,
+        "dynamic_ncols": False
+    }
+
+    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
+        results = pool.map(do_the_single_point_worker,
+                            make_single_arguments(argsList),
+                              progress_bar=True,
+                              iterable_len = len(argsList),
+                              progress_bar_options=tqdmBarOptions)
+
+    singlePointDfs = []
+    for result in results:
+        if result is not None:
+            singlePointDfs.append(result)
+    return singlePointDfs
 
   
 

@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 ## drFrankenstein LIBRARIES ##e
 from OperatingTools import file_parsers
-from OperatingTools import symmetry_tool
 from ..Protocol_1_Capping import Capping_Assistant
 ## CLEAN CODE ##
 class FilePath:

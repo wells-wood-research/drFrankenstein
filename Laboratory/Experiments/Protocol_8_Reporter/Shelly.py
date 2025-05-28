@@ -58,21 +58,14 @@ def methods_writer_protocol(config: dict) -> dict:
         None
     """
     conformerMethods : str = write_conformer_method(config)
-    print(conformerMethods)
 
-    print("######################")
 
     scanningMethods: str = write_torsion_scanning_method(config)
-    print(scanningMethods)
 
-    print("######################")
 
     chargeMethods: str = write_charge_calculation_method(config)
-    print(chargeMethods)
 
-    print("######################")
     fittingMethods = write_fitting_methods(config)
-    print(fittingMethods)
 
     methods = {
         "conformerMethods": conformerMethods,

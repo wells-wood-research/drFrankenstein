@@ -8,13 +8,39 @@ import numpy as np
 import mdtraj as md
 from pdbUtils import pdbUtils
 ## drFrankenstein LIBRARIES ##
-from OperatingTools import file_parsers
+from OperatingTools import file_parsers, symmetry_tool
 
 ## CLEAN CODE ##
 class FilePath:
     pass
 class DirectoryPath:
     pass
+
+
+def generate_symmetry_constraints_file(config: dict, fittingDir: DirectoryPath) -> FilePath:
+    """
+    Runs graph-based symmetry tool and generates constraints file to ensure that charges are symmetrically distributed
+
+    Args:
+        config (dict): config containing all run information
+        fittingDir (DirectoryPath): path to fitting directory
+    """
+    ## unpack config
+    cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
+
+    symmetryData = symmetry_tool.symmetry_protocol(cappedPdb)
+
+
+    symmetryTxt = p.join(fittingDir, "symmetry_constraints.txt")
+    with open(symmetryTxt, "w") as f:
+        for symmetryGroup in symmetryData:
+            if len(symmetryGroup) == 1:
+                continue
+            symmetryEntry = ",".join([str(atomIndex) for atomIndex in symmetryGroup])
+            f.write(f"{symmetryEntry}\n")
+
+
+    return symmetryTxt
 
 
 def process_charge_csv(config: dict) -> dict:

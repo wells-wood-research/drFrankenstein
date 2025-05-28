@@ -22,9 +22,9 @@ def symmetry_protocol(pdbFile: FilePath) -> List[List[str]]:
     """
 
     moleculeGraph = pdb2graph(pdbFile)
-    symmetricAtoms = find_symmetric_atoms(moleculeGraph)
+    _, symmetricIds = find_symmetric_atoms(moleculeGraph)
 
-    return symmetricAtoms
+    return symmetricIds
 
 
 def pdb2graph(pdbFile: FilePath) -> nx.Graph:
@@ -42,7 +42,8 @@ def pdb2graph(pdbFile: FilePath) -> nx.Graph:
             node_id,
             element=row["ELEMENT"],
             coords=np.array([row["X"], row["Y"], row["Z"]]),
-            atom_name=row["ATOM_NAME"]
+            atom_name=row["ATOM_NAME"],
+            atom_index= row["ATOM_ID"]
         )
 
     # Add edges with 1.6 Å threshold
@@ -55,7 +56,7 @@ def pdb2graph(pdbFile: FilePath) -> nx.Graph:
 
     return graph
 
-def find_symmetric_atoms(graph: nx.Graph) -> List[List[str]]:
+def find_symmetric_atoms(graph: nx.Graph) -> tuple[List[List[str]], List[List[str]]]:
     """
     Identify symmetrically equivalent atoms in a molecular graph using NetworkX.
     Returns a list of lists, where each sublist contains the ATOM_NAME of equivalent atoms.
@@ -81,13 +82,17 @@ def find_symmetric_atoms(graph: nx.Graph) -> List[List[str]]:
         symmetry_groups[frozenset(equiv_set)] = list(equiv_set)
 
     # Convert to a list of ATOM_NAMEs
-    symmetric_atoms = []
+    symmetricAtoms = []
+    symmetricIds = []
     for group in symmetry_groups.values():
         # Extract ATOM_NAME directly from node attributes
-        atom_names = [graph.nodes[n]["atom_name"] for n in group]
-        symmetric_atoms.append(atom_names)
+        atomNames = [graph.nodes[n]["atom_name"] for n in group]
+        atomIds = [graph.nodes[n]["atom_index"] for n in group]
+        symmetricAtoms.append(atomNames)
+        symmetricIds.append(atomIds)
 
-    return symmetric_atoms
+
+    return symmetricAtoms, symmetricIds
 
 if __name__ == "__main__":
     raise NotImplementedError

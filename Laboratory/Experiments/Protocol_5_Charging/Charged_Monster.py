@@ -339,6 +339,7 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 def run_charge_fitting(config: dict,
                         conformerListTxt: FilePath,
                           chargeConstraintsTxt: FilePath,
+                          symmetryConstraintsTxt: FilePath,
                             fittingDir: DirectoryPath) -> dict:
     """
     Runs MultiWFN to calculate charges for a set of conformers
@@ -405,6 +406,16 @@ def run_charge_fitting(config: dict,
 
         child.expect(r'.*Input.*\n?\r?')
         child.sendline(chargeConstraintsTxt)
+
+        ####### LOAD SYMMETRY CONSTRAINTS #######
+        child.expect(r'.*11.*\n?\r?')
+        child.sendline("5")
+
+        child.expect(r'.*1.*\n?\r?')
+        child.sendline("1")
+
+        child.expect(r'.*Input.*\n?\r?')
+        child.sendline(symmetryConstraintsTxt)
 
         ####### RUN CALCULATIONS #######
         child.expect(r'.*11.*\n?\r?')

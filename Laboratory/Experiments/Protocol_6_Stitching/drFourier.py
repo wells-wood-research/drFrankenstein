@@ -15,39 +15,62 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forcefeild = "AMBER", l2Damping = 0.1):
-    
-    energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
+def fourier_transform_protocol(qm_torsion_energy: np.ndarray, 
+                                torsion_tag: str, 
+                                torsion_fitting_dir: DirPath, 
+                                sample_spacing: int =10, 
+                                max_functions: int =3, 
+                                force_field: str = "AMBER", 
+                                l2_damping: float = 0.1) -> Tuple[pd.DataFrame, dict]:
+    """
+    Performs Fourier transform on QM torsion energy to derive force field parameters.
+
+    Args:
+        qm_torsion_energy: NumPy array of QM torsion energies.
+        torsion_tag: Identifier for the torsion.
+        torsion_fitting_dir: Directory to save output CSV.
+        sample_spacing: Spacing between samples in the energy profile.
+        max_functions: Maximum number of cosine functions to use for reconstruction.
+        force_field: The target force field ('AMBER' or 'CHARMM').
+        l2_damping: L2 damping factor for amplitudes.
+
+    Returns:
+        A tuple containing a DataFrame of the derived parameters (up to nFunctionsUsed)
+        and a dictionary of the cosine components used in the reconstruction.
+    """
+    energyDataPadded: np.ndarray = pad_energy_data(energy_data=qm_torsion_energy, padding_factor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)
     ## run reverse fourier transform
-    fftResult: np.array = perform_rfft(energyDataPadded)
+    fftResult: np.ndarray = perform_rfft(signal=energyDataPadded)
     ## get frequencies, amplitudes and phases
-    frequencies: np.array = get_frequencies(signalLength, sampleSpacing)
-    amplitudes, phases = compute_amplitude_and_phase(fftResult, signalLength)
+    frequencies: np.ndarray = get_frequencies(signal_length=signalLength, sample_spacing=sample_spacing)
+    amplitudes, phases = compute_amplitude_and_phase(fft_result=fftResult, signal_length=signalLength)
 
-    amplitudes = apply_l2_damping(amplitudes, l2Damping)
+    amplitudes = apply_l2_damping(amplitudes=amplitudes, l2_damping=l2_damping)
 
     ## construct angle x-axis
-    angle: np.array = np.arange(signalLength) * sampleSpacing
+    angle: np.ndarray = np.arange(signalLength) * sample_spacing
     ## convert data to dataframe
-    fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies, amplitudes, phases)
-    paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
-    if forcefeild == "AMBER":
+    fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies=frequencies, amplitudes=amplitudes, phases=phases)
+    paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourier_df=fourierDf)
+    if force_field == "AMBER":
         ## construct cosine components from parameters
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxFunctions)
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(amber_param_df=paramDf, angle=angle, max_functions=max_functions)
 
-    elif forcefeild == "CHARMM":
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxFunctions)
+    elif force_field == "CHARMM":
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(charmm_param_df=paramDf, angle=angle, max_functions=max_functions)
+    else:
+        raise ValueError(f"Unsupported force_field: {force_field}. Must be 'AMBER' or 'CHARMM'.")
 
         ## write data to csv file
-    outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
+    outCsv: FilePath = p.join(torsion_fitting_dir, f"{torsion_tag}.csv") # type: ignore
     paramDf.iloc[:nFunctionsUsed].to_csv(outCsv)
 
     return paramDf.iloc[:nFunctionsUsed], cosineComponents   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
+def apply_l2_damping(amplitudes: np.ndarray, l2_damping: float) -> np.ndarray:
     """
     Applies a L2 damping to the amplitudes
     This may help prevent escalating amplitudes as nShuffles increases
@@ -60,23 +83,23 @@ def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
         dampenedAmplitudes (np.array): dampened amplitudes
     
     """
-    dampenedAmplitudes = amplitudes / (1 + l2Damping * np.abs(amplitudes))
+    dampenedAmplitudes = amplitudes / (1 + l2_damping * np.abs(amplitudes))
 
     return dampenedAmplitudes
 
 
-def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
+def convert_fourier_params_to_df(frequencies: np.ndarray, amplitudes: np.ndarray, phases: np.ndarray) -> pd.DataFrame:
     data = {"Frequency": frequencies, "Amplitude": amplitudes, "Phase": phases}
     dataDf = pd.DataFrame(data)
     dataDf = dataDf.sort_values(by='Amplitude', ascending=False).reset_index(drop=True)
     return dataDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_params_to_amber_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+def convert_params_to_amber_charmm_format(fourier_df: pd.DataFrame) -> pd.DataFrame:
     paramDf = pd.DataFrame()
-    paramDf["Amplitude"] = fourierDf["Amplitude"]
-    paramDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
-    paramDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
+    paramDf["Amplitude"] = fourier_df["Amplitude"]
+    paramDf["Period"] = np.degrees(2 * np.pi * fourier_df["Frequency"])
+    paramDf["Phase"] = np.degrees(fourier_df["Phase"]) * -1
 
     ## remove period == 0 (DC) Signal
     paramDf = paramDf[paramDf["Period"] > 0]
@@ -84,11 +107,11 @@ def convert_params_to_amber_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFra
     paramDf.sort_values(by="Amplitude", ascending=False, inplace=True,ignore_index=True)
     return paramDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+def convert_params_to_charmm_format(fourier_df: pd.DataFrame) -> pd.DataFrame:
     charmmDf = pd.DataFrame()
-    charmmDf["Amplitude"] = fourierDf["Amplitude"]
-    charmmDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
-    charmmDf["Phase"] = np.degrees(fourierDf["Phase"]) * -1
+    charmmDf["Amplitude"] = fourier_df["Amplitude"]
+    charmmDf["Period"] = np.degrees(2 * np.pi * fourier_df["Frequency"])
+    charmmDf["Phase"] = np.degrees(fourier_df["Phase"]) * -1
     ## remove period == 0 (DC) Signal
     charmmDf = charmmDf[charmmDf["Period"] > 0]
     charmmDf.sort_values(by="Amplitude", ascending=False, inplace=True, ignore_index=True)
@@ -96,14 +119,14 @@ def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
     return charmmDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
-                                 angle: np.array,
-                                     maxFunctions: int,
-                                       tolerance: float = 0.2) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+def construct_cosine_components_CHARMM(charmm_param_df: pd.DataFrame,
+                                 angle: np.ndarray,
+                                     max_functions: int,
+                                       tolerance: float = 0.2) -> Tuple[np.ndarray, List[Tuple[float, np.ndarray]], int]:
     
-    amplitudes = charmmParamDf["Amplitude"]
-    periods = charmmParamDf["Period"]
-    phases = charmmParamDf["Phase"]
+    amplitudes = charmm_param_df["Amplitude"]
+    periods = charmm_param_df["Period"] # Corrected: Access 'Period' from DataFrame
+    phases = charmm_param_df["Phase"]
 
     sample_spacing = 10
     signalLength = 36
@@ -121,25 +144,36 @@ def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
     cosineComponents = []
     # Construct each cosine component
     while True:
-        for nFunctionsUsed in range(1, maxFunctions + 1):
-            charmmComponent = amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
+        for nFunctionsUsed_idx in range(max_functions): # Iterate up to max_functions -1 (for 0-indexed df)
+            # Ensure index is within bounds of the DataFrame
+            if nFunctionsUsed_idx >= len(amplitudes):
+                break # Not enough functions in DataFrame as requested by max_functions
+
+            amplitude_val = amplitudes.iloc[nFunctionsUsed_idx]
+            period_val = periods.iloc[nFunctionsUsed_idx]
+            phase_val = phases.iloc[nFunctionsUsed_idx]
+
+            charmmComponent = amplitude_val * (1 + np.cos(np.radians(period_val * angle - phase_val)))
             previousSignal = reconstructedSignal.copy()
             reconstructedSignal += charmmComponent
             meanAverageError = np.mean(np.abs(reconstructedSignal - previousSignal))
-            cosineComponents.append((nFunctionsUsed, charmmComponent))
-            if meanAverageError < tolerance:
+            # Store with 1-based indexing for nFunctionsUsed if that's the intended meaning
+            cosineComponents.append((nFunctionsUsed_idx + 1, charmmComponent))
+            if meanAverageError < tolerance and nFunctionsUsed_idx > 0: # Avoid breaking on first component if MAE is low
                 break
+        nFunctionsUsed = nFunctionsUsed_idx + 1 # Actual number of functions used
         break  # Exit the while loop after the for loop completes or breaks
 
     return reconstructedSignal, cosineComponents, nFunctionsUsed
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
-                                 angle: np.array,
-                                     maxFunctions: int,
-                                       tolerance: float = 0.05) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+def construct_cosine_components_AMBER(amber_param_df: pd.DataFrame,
+                                 angle: np.ndarray,
+                                     max_functions: int,
+                                       tolerance: float = 0.05) -> Tuple[np.ndarray, List[Tuple[float, np.ndarray]], int]:
     
-    amplitudes = amberParamDf["Amplitude"]
-    phases = amberParamDf["Phase"]
+    amplitudes = amber_param_df["Amplitude"]
+    periods = amber_param_df["Period"] # Corrected: Access 'Period' from DataFrame
+    phases = amber_param_df["Phase"]
 
     sample_spacing = 10
     signalLength = 36
@@ -157,46 +191,55 @@ def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
     cosineComponents = []
     # Construct each cosine component
     while True:
-        for nFunctionsUsed in range(1, maxFunctions+1):
-            amberComponent =  amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
+        for nFunctionsUsed_idx in range(max_functions): # Iterate up to max_functions -1 (for 0-indexed df)
+             # Ensure index is within bounds of the DataFrame
+            if nFunctionsUsed_idx >= len(amplitudes):
+                break # Not enough functions in DataFrame as requested by max_functions
+
+            amplitude_val = amplitudes.iloc[nFunctionsUsed_idx]
+            period_val = periods.iloc[nFunctionsUsed_idx]
+            phase_val = phases.iloc[nFunctionsUsed_idx]
+            
+            amberComponent =  amplitude_val * (1 + np.cos(np.radians(period_val * angle - phase_val)))
 
             previousSignal = reconstructedSignal.copy()
             reconstructedSignal += amberComponent
             meanAverageError =  np.mean(np.abs(reconstructedSignal - previousSignal))
-            cosineComponents.append((nFunctionsUsed , amberComponent))
-            if meanAverageError < tolerance:
+            # Store with 1-based indexing for nFunctionsUsed if that's the intended meaning
+            cosineComponents.append((nFunctionsUsed_idx + 1 , amberComponent))
+            if meanAverageError < tolerance and nFunctionsUsed_idx > 0: # Avoid breaking on first component
                 break
-        # if meanAverageError < tolerance:
+        nFunctionsUsed = nFunctionsUsed_idx + 1 # Actual number of functions used
         break
     return reconstructedSignal, cosineComponents, nFunctionsUsed
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:
+def calculate_rmsd(signal1: np.ndarray, signal2: np.ndarray) -> float:
     return np.sqrt(np.mean((signal1 - signal2) ** 2))
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def pad_energy_data(energyData: np.array, paddingFactor: int) -> np.array:
-    return np.tile(energyData, paddingFactor)
+def pad_energy_data(energy_data: np.ndarray, padding_factor: int) -> np.ndarray:
+    return np.tile(energy_data, padding_factor)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def pad_angle_data(angleData: np.array, paddingFactor: int) -> np.array:
-    return np.tile(angleData, paddingFactor)
+def pad_angle_data(angle_data: np.ndarray, padding_factor: int) -> np.ndarray:
+    return np.tile(angle_data, padding_factor)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def rescale_torsion_angles(angle):
+def rescale_torsion_angles(angle: float) -> float: # Assuming float for single angle, could be np.ndarray
     angle = angle % 360  # Reduce the angle to the 0-360 range
     if angle < 0:
         angle += 360  # Shift negative angles to the positive side
     return angle
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def perform_rfft(signal: np.array) -> np.array:
+def perform_rfft(signal: np.ndarray) -> np.ndarray:
     return np.fft.rfft(signal)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_frequencies(signalLength: int, sampleSpacing: int) -> np.array:
-    return np.fft.rfftfreq(signalLength, sampleSpacing)
+def get_frequencies(signal_length: int, sample_spacing: int) -> np.ndarray:
+    return np.fft.rfftfreq(signal_length, sample_spacing)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple[np.array, np.array]:
-    amplitudes: np.array = np.abs(fftResult) * 2 / signalLength
-    phases: np.array = np.angle(fftResult)
+def compute_amplitude_and_phase(fft_result: np.ndarray, signal_length: int) -> Tuple[np.ndarray, np.ndarray]:
+    amplitudes: np.ndarray = np.abs(fft_result) * 2 / signal_length
+    phases: np.ndarray = np.angle(fft_result)
 
     return amplitudes, phases
 

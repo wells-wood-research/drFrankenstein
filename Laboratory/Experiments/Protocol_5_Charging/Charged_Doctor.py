@@ -51,8 +51,8 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
 
     ## For RESP protocol, just run charge fitting once
     if protocol == "RESP":
-        _, chargesCsv = partial_charge_RESP_protocol(outDir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
-                                useSolvation = True,
+        _, chargesCsv = partial_charge_resp_protocol(out_dir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
+                                use_solvation = True,
                                  config = config,
                                   debug = debug)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
@@ -60,22 +60,22 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     ## for RESP2 protocol, run charge fitting twice - once with solvation and once without
     elif protocol == "RESP2":
         print("RESP2: with solvation")
-        solvatedDf, _ = partial_charge_RESP_protocol(outDir = config["runtimeInfo"]["madeByCharges"]["solvatedDir"],
-                                useSolvation = True,
+        solvatedDf, _ = partial_charge_resp_protocol(out_dir = config["runtimeInfo"]["madeByCharges"]["solvatedDir"],
+                                use_solvation = True,
                                  config = config,
                                   debug = debug)
         print("RESP2: gas phase")
-        gasPhaseDf, _ = partial_charge_RESP_protocol(outDir = config["runtimeInfo"]["madeByCharges"]["gasPhaseDir"],
-                                useSolvation = False,
+        gasPhaseDf, _ = partial_charge_resp_protocol(out_dir = config["runtimeInfo"]["madeByCharges"]["gasPhaseDir"],
+                                use_solvation = False,
                                  config = config,
                                   debug = debug)
-        resp2Df = Charged_Assistant.apply_resp2_weighted_average(solvatedDf, gasPhaseDf)
+        resp2Df = Charged_Assistant.apply_resp2_weighted_average(solvated_df=solvatedDf, gas_phase_df=gasPhaseDf) # type: ignore
         resp2Csv = p.join(config["runtimeInfo"]["madeByCharges"]["chargeDir"], "resp2_charges.csv")
         resp2Df.to_csv(resp2Csv)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = resp2Csv
     ## for SOLVATOR protocol (CHARMM compatible)
     elif protocol == "SOLVATOR":
-        chargesCsv, config = partial_charges_SOLVATOR_protocol(outDir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
+        chargesCsv, config = partial_charges_solvator_protocol(out_dir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
                                                           config = config,
                                                           debug = debug)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
@@ -95,9 +95,9 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
+def partial_charges_solvator_protocol(out_dir: DirectoryPath,
                                       config: dict,
-                                      debug: bool) -> tuple[pd.DataFrame, FilePath]:
+                                      debug: bool) -> Tuple[FilePath, dict]:
     """
     Sub-protocol that:
         1. Runs ORCA SOLVATOR calculations to add explicit waters around the molecule
@@ -118,7 +118,7 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
     fittingDir  = config["runtimeInfo"]["madeByCharges"]["fittingDir"]
 
     ## run orca single-point calculations on conformers
-    config = add_solvation_shell_with_SOLVATOR(config=config,
+    config = add_solvation_shell_with_solvator(config=config, # type: ignore
                                                 debug=debug)
 
     ## solvate with tip3 waters, optimize and run single-point
@@ -126,13 +126,13 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
                                 debug=debug)
     
     ## create input files for MultiWFN
-    conformerListTxt = Charged_Assistant.generate_conformer_list_file(qmmmSinglepointDir, fittingDir)
-    chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
+    conformerListTxt = Charged_Assistant.generate_conformer_list_file(orca_calculations_dir=qmmmSinglepointDir, charge_fitting_dir=fittingDir) # type: ignore
+    chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config=config, out_dir=fittingDir) # type: ignore
     ## run MultiWFN RESP charge fitting
     rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config = config,
-                                                             conformerListTxt = conformerListTxt,
-                                                               chargeConstraintsTxt = chargeConstraintsTxt,
-                                                               fittingDir = fittingDir)
+                                                             conformer_list_txt = conformerListTxt,
+                                                               charge_constraints_txt = chargeConstraintsTxt,
+                                                               fitting_dir = fittingDir)
     ## parse MultiWFN output, write to CSV file
     chargesDf = Charged_Monster.parse_multiwfn_output(rawMultiWfnOutputs)
     chargesCsv = p.join(fittingDir, "charges.csv")
@@ -143,7 +143,7 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def tip3p_qmmm_protocol(config, debug):
+def tip3p_qmmm_protocol(config: dict, debug: bool) -> dict:
     """
     Runs QM/MM calculations for charge calculations using TIP3P water molecules:
     1. Optimisation
@@ -163,20 +163,20 @@ def tip3p_qmmm_protocol(config, debug):
     copy(conformerXyzs[0], unsolvatedXyz)
 
     ## get qm atoms for QM/MM calculations
-    config = Charged_Assistant.get_qm_atoms_for_solvated_system(unsolvatedXyz, config)
+    config = Charged_Assistant.get_qm_atoms_for_solvated_system(xyzFile=unsolvatedXyz, config=config) # type: ignore
     ## create ORCAFF parameters with TIP3P waters
-    config = Charged_Monster.create_orca_ff_parameters(unsolvatedXyz, config)
+    config = Charged_Monster.create_orca_ff_parameters(unsolvated_xyz=unsolvatedXyz, config=config)
     ## optimise solvated geometries, update config
     qmmmOptXyzs = qmmm_opt_protocol_for_charges(config=config, debug=debug)
     config["runtimeInfo"]["madeByCharges"]["solvatedOptimisedXyzs"] = qmmmOptXyzs
     ## get singlepoint energies
-    qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs=qmmmOptXyzs, config=config, debug=debug)
+    qmmm_singlepoint_protocol_for_charges(qmmm_opt_xyzs=qmmmOptXyzs, config=config, debug=debug)
 
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("QM/MM Optimisations", "CHARGE_CALCULATIONS")
-def qmmm_opt_protocol_for_charges(config, debug):
+def qmmm_opt_protocol_for_charges(config: dict, debug: bool) -> List[FilePath]:
     ## unpack config
     solvatedXyzs = config["runtimeInfo"]["madeByCharges"]["solvatedXyzs"]
     qmmmOptDir = config["runtimeInfo"]["madeByCharges"]["qmmmOptDir"]
@@ -218,17 +218,17 @@ def qmmm_opt_protocol_for_charges(config, debug):
     return qmmmOptXyzs
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("QM/MM Single-Points", "CHARGE_CALCULATIONS")
-def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
+def qmmm_singlepoint_protocol_for_charges(qmmm_opt_xyzs: List[FilePath], config: dict, debug: bool) -> None:
 
     ## unpack config
     qmmmSinglepointDir = config["runtimeInfo"]["madeByCharges"]["qmmmSinglepointDir"]
     fittingDir = config["runtimeInfo"]["madeByCharges"]["fittingDir"]
     ### QM-MM single-points
     qmmmSinglepointArgsList = [(qmmmOptXyz, qmmmSinglepointDir, fittingDir, config)
-                     for qmmmOptXyz in qmmmOptXyzs]
+                     for qmmmOptXyz in qmmm_opt_xyzs]
     if debug: ## run serial if debug is on
         for qmmmSinglepointArgs in qmmmSinglepointArgsList:
-            Charged_Monster.run_qmmm_singlepoint(qmmmSinglepointArgs)
+            Charged_Monster.run_qmmm_singlepoint(qmmm_singlepoint_args=qmmmSinglepointArgs)
     else: ## run in parallel otherwise
         redText = "\033[31m"
         resetTextColor = "\033[0m"
@@ -250,7 +250,7 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
 
         nCpus = min((availableCpus // nCoresPerCalculation), len(qmmmSinglepointArgsList))        
         with WorkerPool(n_jobs = nCpus) as pool:        
-            optXyzs = pool.map(Charged_Monster.run_qmmm_singlepoint,
+            pool.map(Charged_Monster.run_qmmm_singlepoint, # Result is not stored, assuming side effects
                     make_single_arguments(qmmmSinglepointArgsList),
                     progress_bar=True,
                     iterable_len = len(qmmmSinglepointArgsList),
@@ -258,7 +258,7 @@ def qmmm_singlepoint_protocol_for_charges(qmmmOptXyzs, config, debug):
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Explicit Solvation", "CHARGE_CALCULATIONS")
-def add_solvation_shell_with_SOLVATOR(config: dict,
+def add_solvation_shell_with_solvator(config: dict, # Renamed function
                                      debug: bool = False) -> dict:
     """
     Runs ORCA single-point calculations on a set of conformers
@@ -281,12 +281,12 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
     chargeFittingInfo = config["chargeFittingInfo"]
     waterDensity = config["chargeFittingInfo"]["waterDensity"]
 
-    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs, cappedPdb, solvatorDir, nWatersPerNmSquared=waterDensity)
+    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformer_xyzs=conformerXyzs, conformer_pdb=cappedPdb, out_dir=solvatorDir, n_waters_per_nm_squared=waterDensity) # type: ignore
 
     ## decide how many conformers to sample
     if nConformers == -1 or nConformers > len(conformerXyzs):
         sampledConformerXyzs = conformerXyzs
-        config["chargeFittingInfo"]["nConformers"] = len(conformerXyzs)
+        config["chargeFittingInfo"]["nConformers"] = len(conformerXyzs) # type: ignore
     else:
         sampledConformerXyzs = conformerXyzs[:nConformers]
 
@@ -333,8 +333,8 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
 
     
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def  partial_charge_RESP_protocol(outDir: DirectoryPath,
-                                useSolvation: bool,
+def  partial_charge_resp_protocol(out_dir: DirectoryPath, # Renamed function and args
+                                use_solvation: bool,
                                   config: dict,
                                     debug: bool = False) -> tuple[pd.DataFrame, FilePath]:
     """
@@ -354,26 +354,26 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
 
     """
     ## create output directories for orca single-point calculations and MultiWFN charge fitting
-    orcaDir = p.join(outDir, "orca_calculations")
+    orcaDir = p.join(out_dir, "orca_calculations")
     os.makedirs(orcaDir, exist_ok=True)
 
-    fittingDir = p.join(outDir, "charge_fitting")
+    fittingDir = p.join(out_dir, "charge_fitting")
     os.makedirs(fittingDir, exist_ok=True)
 
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
 
     ## run orca single-point calculations on conformers
-    run_qm_calculations_for_RESP(conformerXyzs = conformerXyzs,
-                                 orcaDir=orcaDir,
-                                            fittingDir=fittingDir,
+    run_qm_calculations_for_resp(conformer_xyzs = conformerXyzs, # type: ignore
+                                 orca_dir=orcaDir,
+                                            fitting_dir=fittingDir,
                                                config=config,
-                                                useSolvation=useSolvation,
+                                                use_solvation=use_solvation,
                                                 debug=debug)
     ## create input files for MultiWFN
-    conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir, fittingDir)
-    chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
+    conformerListTxt = Charged_Assistant.generate_conformer_list_file(orca_calculations_dir=orcaDir, charge_fitting_dir=fittingDir) # type: ignore
+    chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config=config, out_dir=fittingDir) # type: ignore
     ## run MultiWFN RESP charge fitting
-    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config, conformerListTxt, chargeConstraintsTxt, fittingDir)
+    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config=config, conformer_list_txt=conformerListTxt, charge_constraints_txt=chargeConstraintsTxt, fitting_dir=fittingDir)
     ## parse MultiWFN output, write to CSV file
     chargesDf = Charged_Monster.parse_multiwfn_output(rawMultiWfnOutputs)
     chargesCsv = p.join(fittingDir, "charges.csv")
@@ -383,11 +383,11 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
  
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("QM Calculations", "CHARGE_CALCULATIONS")
-def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
-                                    orcaDir: DirectoryPath,
-                                        fittingDir: DirectoryPath,
+def run_qm_calculations_for_resp(conformer_xyzs: list[FilePath], # Renamed function and args
+                                    orca_dir: DirectoryPath,
+                                        fitting_dir: DirectoryPath,
                                                 config: dict,
-                                                    useSolvation: bool = True,
+                                                    use_solvation: bool = True,
                                                         debug: bool = False) -> None:
     """
     Runs ORCA single-point calculations on a set of conformers
@@ -404,19 +404,19 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
     
     ## unpack config ##
     moleculeInfo = config["moleculeInfo"]
-    # conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    # conformer_xyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"] # This line is commented out
     nConformers = config["chargeFittingInfo"]["nConformers"]
     chargeFittingInfo = config["chargeFittingInfo"]
 
     ## decide how many conformers to sample
-    if nConformers == -1 or nConformers > len(conformerXyzs):
-        sampledConformerXyzs = conformerXyzs
-        config["chargeFittingInfo"]["nConformers"] = len(conformerXyzs)
+    if nConformers == -1 or nConformers > len(conformer_xyzs):
+        sampledConformerXyzs = conformer_xyzs
+        config["chargeFittingInfo"]["nConformers"] = len(conformer_xyzs) # type: ignore
     else:
-        sampledConformerXyzs = conformerXyzs[:nConformers]
+        sampledConformerXyzs = conformer_xyzs[:nConformers]
 
     ## create an argument list for running charge calculations
-    argsList = [(conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config) for conformerXyz in sampledConformerXyzs]
+    argsList = [(conformerXyz, orca_dir, fitting_dir, chargeFittingInfo,  moleculeInfo, use_solvation, config) for conformerXyz in sampledConformerXyzs]
     
 
     redText = "\033[31m"
@@ -434,10 +434,10 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
     ## run in serial
     if debug:
         for arg in argsList:
-            Charged_Monster.run_orca_singlepoint_for_charge_calculations(arg)
+            Charged_Monster.run_orca_singlepoint_for_charge_calculations(charge_calculation_args=arg)
     ## run in parallel
     else:
-        nCpus = min(len(argsList), config[["miscInfo"]]["availableCpus"])
+        nCpus = min(len(argsList), config["miscInfo"]["availableCpus"]) # Corrected dict access
         with WorkerPool(n_jobs = nCpus) as pool:        
 
             pool.map(Charged_Monster.run_orca_singlepoint_for_charge_calculations,

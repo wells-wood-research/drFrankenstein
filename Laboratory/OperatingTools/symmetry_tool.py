@@ -11,23 +11,29 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
-from typing import List, Tuple
+from typing import List, Tuple, Any # Added Any for node_match lambda if needed, though nx usually handles it.
 
 
-def symmetry_protocol(pdbFile: FilePath) -> List[List[str]]:
+def symmetry_protocol(pdb_file: FilePath) -> List[List[str]]:
     """
-    Main protocol for symmetry analysis
-    1. Convert PDB to graph
-    2. Find symmetrically equivalent atoms
+    Main protocol for symmetry analysis.
+    1. Convert PDB to graph.
+    2. Find symmetrically equivalent atoms.
+
+    Args:
+        pdb_file: Path to the PDB file.
+
+    Returns:
+        A list of lists, where each sublist contains the ATOM_NAME of equivalent atoms.
     """
 
-    moleculeGraph = pdb2graph(pdbFile)
-    symmetricAtoms = find_symmetric_atoms(moleculeGraph)
+    moleculeGraph = pdb_to_graph(pdb_file=pdb_file) # Updated call site
+    symmetricAtoms = find_symmetric_atoms(graph=moleculeGraph)
 
     return symmetricAtoms
 
 
-def pdb2graph(pdbFile: FilePath) -> nx.Graph:
+def pdb_to_graph(pdb_file: FilePath) -> nx.Graph: # Renamed function
     """
     Convert a PDB file to a NetworkX graph.
     """

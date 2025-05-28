@@ -23,7 +23,7 @@ class DirectoryPath:
 def run_tleap_to_make_params(inMol2: FilePath,
                             molFrcmod: FilePath,
                               outDir: DirectoryPath,
-                                moleculeName: str):
+                                moleculeName: str) -> FilePath:
     """
     Uses TLEAP to create a prmtop inpcrd pair
 
@@ -83,7 +83,7 @@ def find_default_amber_parameters(amberHome: DirectoryPath) -> tuple[FilePath, F
 
 def create_frcmod_file(mol2File: FilePath,
                         frcmodFile: FilePath,
-                          gaff2Dat: FilePath) -> FilePath:
+                          gaff2Dat: FilePath) -> None:
     """
     uses parmchk2 to create a frcmod file from a mol2 file
 
@@ -224,6 +224,18 @@ def assign_missing_dihedrals(missingParams: CharmmParameterSet,
                         parmedPsf: CharmmPsfFile,
                           nameToCgenffType: dict,
                             completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+    """
+    Check for missing dihedral parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing dihedral parameters.
+    """
     # Check for missing dihedral parameters
     for dihedral in parmedPsf.dihedrals:
         atomNames=[dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name]
@@ -336,7 +348,7 @@ def get_cgenff_atom_types(parmedPsf: CharmmPsfFile, nameToDesiredType: dict) -> 
     Get the original CGenFF atom types for atoms to be retyped.
 
     Args:
-        psf: ParmEd CharmmPsfFile object with CGenFF types.
+        parmedPsf: ParmEd CharmmPsfFile object with CGenFF types.
         nameToDesiredType: Dictionary mapping atom names to new CHARMM36m types.
 
     Returns:

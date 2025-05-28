@@ -50,8 +50,7 @@ def find_tip3p_water_params() -> FilePath:
     Args:
         None
     Returns:
-        nmePdb (FilePath): path to NME.pdb
-        acePdb (FilePath): path to ACE.pdb
+        tip3pParams (FilePath): path to TIP3P.ORCAFF.prms
     """
     ## get location of this file
     chargeSrcDir = p.dirname(p.abspath(__file__))
@@ -61,7 +60,14 @@ def find_tip3p_water_params() -> FilePath:
 def get_qm_atoms_for_solvated_system(xyzFile: FilePath, config:dict) -> dict:
     """
     Simple function that gets a contiguous list of atom indexes (starting with 0)
-    for orca to use as a qm region. 
+    for orca to use as a qm region. Updates the config with this information.
+
+    Args:
+        xyzFile: Path to the XYZ file.
+        config: Configuration dictionary.
+
+    Returns:
+        Updated configuration dictionary.
     """
     xyzDf = file_parsers.xyz2df(xyzFile)
     nAtoms = len(xyzDf.index)
@@ -71,10 +77,10 @@ def get_qm_atoms_for_solvated_system(xyzFile: FilePath, config:dict) -> dict:
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def how_many_waters_for_solvator(conformerXyzs: list[FilePath],
-                                  conformerPdb: FilePath,
-                                    outDir: DirectoryPath,
-                                    nWatersPerNmSquared: int = 25) -> int:
+def how_many_waters_for_solvator(conformer_xyzs: list[FilePath],
+                                  conformer_pdb: FilePath,
+                                    out_dir: DirectoryPath,
+                                    n_waters_per_nm_squared: int = 25) -> int:
     """
     Simple function that decides how many water molecules to add in a SOLVATOR calculation
     Currently we just do 2 x nHeavyAtoms
@@ -88,7 +94,7 @@ def how_many_waters_for_solvator(conformerXyzs: list[FilePath],
         nWaters (int):  how many water molecules to add in a SOLVATOR calculation
     """
     ## convert XYZs to PDBs so we can load them into mdtraj
-    conformerPdbs = file_parsers.convert_traj_xyz_to_pdb(conformerXyzs, conformerPdb, outDir)
+    conformerPdbs = file_parsers.convert_traj_xyz_to_pdb(conformer_xyzs, conformer_pdb, out_dir)
 
     totalSasas = []
     for pdbFile in conformerPdbs:
@@ -98,7 +104,7 @@ def how_many_waters_for_solvator(conformerXyzs: list[FilePath],
         totalSasas.append(totalSasa)
     meanTotalSasa = sum(totalSasas)/len(totalSasas)
 
-    nWaters = round(meanTotalSasa * nWatersPerNmSquared)
+    nWaters = round(meanTotalSasa * n_waters_per_nm_squared)
 
     ## clean up
     for pdbFile in conformerPdbs:
@@ -106,7 +112,7 @@ def how_many_waters_for_solvator(conformerXyzs: list[FilePath],
     
     return nWaters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> FilePath:
+def generate_charge_constraints_file(config: dict, out_dir: DirectoryPath) -> FilePath:
     """
     Uses charge groups from config to generate charge constraints file to be used by MultiWFN
 
@@ -122,7 +128,7 @@ def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> Fil
     chargeGroups: dict = config["runtimeInfo"]["madeByCharges"]["chargeGroups"]
 
 
-    chargeConstraintsTxt = p.join(outDir, "charge_group_constraints.txt")
+    chargeConstraintsTxt = p.join(out_dir, "charge_group_constraints.txt")
     with open(chargeConstraintsTxt, "w") as f:
         for _, chargeGroupData in chargeGroups.items():
             indexes = chargeGroupData["indexes"]
@@ -135,8 +141,8 @@ def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> Fil
 
     return chargeConstraintsTxt
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
-                                  chargeFittingDir: DirectoryPath) -> FilePath:
+def generate_conformer_list_file(orca_calculations_dir: DirectoryPath,
+                                  charge_fitting_dir: DirectoryPath) -> FilePath:
     """
     Reads through single point calculations for each conformer 
     and gets the single-point energies
@@ -152,10 +158,10 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
     """
 
     singlePointData = {}
-    for conformerName in os.listdir(orcaCalculationsDir):
+    for conformerName in os.listdir(orca_calculations_dir):
         singlePointData[conformerName] = {}
-        calculationDir = p.join(orcaCalculationsDir, conformerName)
-        if not p.isdir:
+        calculationDir = p.join(orca_calculations_dir, conformerName)
+        if not p.isdir(calculationDir): # Corrected to check path isdir
             continue
         ## find ORCA.out file
         singlePointOutFile = [p.join(calculationDir, file) for file
@@ -164,13 +170,13 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
         singlePointEnergy = find_final_single_point_energy(singlePointOutFile)
        
         singlePointData[conformerName]["Energy"] = singlePointEnergy
-        singlePointData[conformerName]["Path"] = p.join(chargeFittingDir, f"{conformerName}.molden.input")
+        singlePointData[conformerName]["Path"] = p.join(charge_fitting_dir, f"{conformerName}.molden.input")
 
     singlePointDf =pd.DataFrame.from_dict(singlePointData, orient='index')
 
-    singlePointDf = calculate_boltzmann_probabilities(singlePointDf)
+    singlePointDf = calculate_boltzmann_probabilities(singlePointDf) # type: ignore
 
-    conformerListTxt = p.join(chargeFittingDir, "conformer_list.txt")
+    conformerListTxt = p.join(charge_fitting_dir, "conformer_list.txt")
     with open(conformerListTxt, "w") as f:
         for _, row in singlePointDf.iterrows():
             f.write(f"{row['Path']} {str(row['Probability'])}\n")
@@ -178,7 +184,7 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
     return conformerListTxt
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_boltzmann_probabilities(df, temperature=298.15):
+def calculate_boltzmann_probabilities(df: pd.DataFrame, temperature: float = 298.15) -> pd.DataFrame:
     boltzmannConstant = 0.0083144621  # kJ/(mol*K)
     energies = df['Energy'].values
     minEnergy = np.min(energies)
@@ -190,16 +196,17 @@ def calculate_boltzmann_probabilities(df, temperature=298.15):
     return df    
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def find_final_single_point_energy(outFilePath):
-    with open(outFilePath, 'r') as file:
+def find_final_single_point_energy(out_file_path: FilePath) -> Optional[float]:
+    with open(out_file_path, 'r') as file: # type: ignore
         for line in file:
             if "FINAL SINGLE POINT ENERGY" in line:
                 return float(line.split()[-1])
+    return None # Added to handle case where line is not found
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def apply_resp2_weighted_average(solvatedDf: pd.DataFrame,
-                                  gasPhaseDf: pd.DataFrame,
+def apply_resp2_weighted_average(solvated_df: pd.DataFrame,
+                                  gas_phase_df: pd.DataFrame,
                                     proportions: list[float] = [0.6, 0.4]) -> pd.DataFrame:
     """
     Takes charges that have been calculated with and without solvation
@@ -215,8 +222,8 @@ def apply_resp2_weighted_average(solvatedDf: pd.DataFrame,
     """
 
     resp2Df = pd.DataFrame()
-    resp2Df[["atomIndex","atomElement"]] = solvatedDf[["atomIndex","atomElement"]]
-    resp2Df["Charge"] = proportions[0] * solvatedDf["Charge"] + proportions[1] * gasPhaseDf["Charge"]
+    resp2Df[["atomIndex","atomElement"]] = solvated_df[["atomIndex","atomElement"]]
+    resp2Df["Charge"] = proportions[0] * solvated_df["Charge"] + proportions[1] * gas_phase_df["Charge"]
     return resp2Df
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def set_up_directories(config: dict, protocol: str) -> dict:

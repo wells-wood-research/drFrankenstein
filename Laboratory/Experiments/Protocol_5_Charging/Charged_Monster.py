@@ -22,9 +22,20 @@ class DirectoryPath:
     pass
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_qmmm_opt(qmmmOptArgs):
+def run_qmmm_opt(qmmm_opt_args: tuple) -> FilePath:
+    """
+    Runs a QM/MM optimization for a given solvated conformer.
+
+    Args:
+        qmmm_opt_args: A tuple containing (solvatedXyz, singlepointDir, config).
+                       solvatedXyz (FilePath): Path to the solvated XYZ file.
+                       singlepointDir (DirectoryPath): Directory for QMMM optimization outputs.
+                       config (dict): Configuration dictionary.
+    Returns:
+        FilePath to the optimized solvated XYZ file.
+    """
     ## unpack args
-    solvatedXyz, singlepointDir, config = qmmmOptArgs
+    solvatedXyz, singlepointDir, config = qmmm_opt_args
 
     ## unpack config
     qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
@@ -55,10 +66,19 @@ def run_qmmm_opt(qmmmOptArgs):
     return solvatedOptXyz
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_qmmm_singlepoint(qmmmSinglepointArgs):
+def run_qmmm_singlepoint(qmmm_singlepoint_args: tuple) -> None:
+    """
+    Runs a QM/MM single point calculation and generates a MOLDEN file.
 
+    Args:
+        qmmm_singlepoint_args: A tuple containing (solvatedOptXyz, singlepointDir, fittingDir, config).
+                               solvatedOptXyz (FilePath): Path to the optimized solvated XYZ file.
+                               singlepointDir (DirectoryPath): Directory for QMMM single point outputs.
+                               fittingDir (DirectoryPath): Directory where MOLDEN files will be copied.
+                               config (dict): Configuration dictionary.
+    """
     ## unpack args
-    solvatedOptXyz, singlepointDir, fittingDir, config = qmmmSinglepointArgs 
+    solvatedOptXyz, singlepointDir, fittingDir, config = qmmm_singlepoint_args 
     ## unpack config
     qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
     solvatedParams = config["runtimeInfo"]["madeByCharges"]["solvatedParams"]
@@ -88,7 +108,7 @@ def run_qmmm_singlepoint(qmmmSinglepointArgs):
     copy(singlePointMolden, destMolden)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
+def create_orca_ff_parameters(unsolvated_xyz: FilePath, config:dict) -> dict:
     """
     Creates an ORCAFF.prms file for a solvated XYZ file
     1. Use orca_mm -makeff to make a forcefield file for just the unsolvated molecule
@@ -96,7 +116,7 @@ def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
     3. Ise orca_mm -mergeff to combine the results of steps 1 and 2   
 
     Args:
-        unsolvatedXyz (FilePath): Path to a conformerXYZ moved to the qmmmParameters dir
+        unsolvated_xyz (FilePath): Path to a conformerXYZ moved to the qmmmParameters dir
         config (dict): Contains all run information
     Returns:
         config (dict): updated config
@@ -107,7 +127,7 @@ def create_orca_ff_parameters(unsolvatedXyz: FilePath, config:dict) -> dict:
     nWaters  = config["runtimeInfo"]["madeByCharges"]["nWaters"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     ## Create a dummy parameter set for the molecule without solvating waters
-    makeffCommand = ["orca_mm", "-makeff", unsolvatedXyz]
+    makeffCommand = ["orca_mm", "-makeff", unsolvated_xyz]
     call(makeffCommand)
     unsolvatedParams = p.join(qmmmParameterDir, "unsolvated.ORCAFF.prms")
 
@@ -175,8 +195,8 @@ def run_orca_solvator_for_charge_calculations(args: tuple) -> FilePath:
     return solvatedXyz
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_orca_singlepoint_for_charge_calculations(args) -> None: 
-    conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config = args
+def run_orca_singlepoint_for_charge_calculations(charge_calculation_args: tuple) -> None: 
+    conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config = charge_calculation_args
     conformerName = p.basename(conformerXyz).split(".")[0]
     
     conformerQmDir = p.join(orcaDir, conformerName)
@@ -220,12 +240,12 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
 
     copy(singlePointMolden, destMolden)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def parse_multiwfn_output(rawMultiWfnOutputs: FilePath) -> pd.DataFrame:
+def parse_multiwfn_output(raw_multiwfn_outputs: FilePath) -> pd.DataFrame:
     """
     Parses the output from Multiwfn to extract atomic charges.
 
     Args:
-        rawMultiwfnOutputs (FilePath): Path to the file containing the raw Multiwfn output.
+        raw_multiwfn_outputs (FilePath): Path to the file containing the raw Multiwfn output.
 
     Returns:
         chargesDf (pd.DataFrame) : A DataFrame containing columns 'atomIndex', 'atomElement', and 'Charge', 
@@ -236,7 +256,7 @@ def parse_multiwfn_output(rawMultiWfnOutputs: FilePath) -> pd.DataFrame:
     "Sum of charges:". The extracted data is structured into a DataFrame for further analysis.
     """
 
-    with open(rawMultiWfnOutputs, 'r') as file:
+    with open(raw_multiwfn_outputs, 'r') as file:
         lines = file.readlines()
 
     # Find the index of the line after "Successfully converged!"
@@ -264,7 +284,7 @@ def parse_multiwfn_output(rawMultiWfnOutputs: FilePath) -> pd.DataFrame:
     chargesDf = pd.DataFrame(data)
     return chargesDf
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
+def get_charge_group_indexes(pdb_file: FilePath, config: dict) -> dict:
     """
     Uses user-defined charge groups to construct a complete dictionary of atom indexes for each charge group
     Users do not need to specify hydrogen atoms, this function will find them automatically
@@ -272,14 +292,14 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
     Data is stored in the config dict and returned
 
     Args:
-        pdbFile (FilePath): path to pdb file
+        pdb_file (FilePath): path to pdb file
         config (dict): drFrankenstein config
 
     Returns:
         config (dict): updated config
     """
 
-    pdbDf = pdbUtils.pdb2df(pdbFile)
+    pdbDf = pdbUtils.pdb2df(pdb_file)
 
     chargeGroupsInput = config["moleculeInfo"]["chargeGroups"]
     chargeGroups = deepcopy(chargeGroupsInput)  # Use deepcopy to avoid modifying the original
@@ -337,9 +357,9 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Charge Fitting", "CHARGE_CALCULATIONS")
 def run_charge_fitting(config: dict,
-                        conformerListTxt: FilePath,
-                          chargeConstraintsTxt: FilePath,
-                            fittingDir: DirectoryPath) -> dict:
+                        conformer_list_txt: FilePath,
+                          charge_constraints_txt: FilePath,
+                            fitting_dir: DirectoryPath) -> FilePath:
     """
     Runs MultiWFN to calculate charges for a set of conformers
     Usually, MultiWFN_noGUI uses a silly command-line input style. 
@@ -367,10 +387,10 @@ def run_charge_fitting(config: dict,
         raise FileNotFoundError("Multiwfn_noGUI not found")
 
     ## Get a molden file for the input command
-    moldenFile = glob.glob(p.join(fittingDir, "*.molden.input"))[0]
+    moldenFile = glob.glob(p.join(fitting_dir, "*.molden.input"))[0]
 
     ## Define output file
-    outputFile = p.join(fittingDir, "MultiWfn_raw_outputs.txt")
+    outputFile = p.join(fitting_dir, "MultiWfn_raw_outputs.txt")
 
     ## Open a file object for continuous logging
     with open(outputFile, 'w') as logFile:
@@ -379,8 +399,8 @@ def run_charge_fitting(config: dict,
         logFile.flush()  # Ensure it’s written immediately
 
         ## Spawn the child process with logfile enabled
-        chargeFittingCommand = f"{multiWfnExe} {moldenFile}"
-        child = pexpect.spawn(chargeFittingCommand, encoding='utf-8', logfile=logFile)
+        chargeFittingCommand = f"{multiWfnExe} {moldenFile}" # type: ignore
+        child = pexpect.spawn(chargeFittingCommand, encoding='utf-8', logfile=logFile) # type: ignore
 
         ####### GET TO RESP MAIN MENU #######
         child.expect(r'.*300.*\n?\r?')
@@ -391,23 +411,23 @@ def run_charge_fitting(config: dict,
 
         ###### LOAD CONFORMERS #######
         child.expect(r'.*11.*\n?\r?')
-        child.sendline("-1")
+    child.sendline("-1") # type: ignore
 
-        child.expect(r'.*Input.*\n?\r?')
-        child.sendline(conformerListTxt)
+    child.expect(r'.*Input.*\n?\r?') # type: ignore
+    child.sendline(conformer_list_txt) # type: ignore
 
         ####### LOAD CHARGE CONSTRAINTS #######
-        child.expect(r'.*11.*\n?\r?')
-        child.sendline("6")
+    child.expect(r'.*11.*\n?\r?') # type: ignore
+    child.sendline("6") # type: ignore
 
-        child.expect(r'.*1.*\n?\r?')
-        child.sendline("1")
+    child.expect(r'.*1.*\n?\r?') # type: ignore
+    child.sendline("1") # type: ignore
 
-        child.expect(r'.*Input.*\n?\r?')
-        child.sendline(chargeConstraintsTxt)
+    child.expect(r'.*Input.*\n?\r?') # type: ignore
+    child.sendline(charge_constraints_txt) # type: ignore
 
         ####### RUN CALCULATIONS #######
-        child.expect(r'.*11.*\n?\r?')
+    child.expect(r'.*11.*\n?\r?') # type: ignore
         child.sendline("2")
 
         # Monitor the output for progress updates

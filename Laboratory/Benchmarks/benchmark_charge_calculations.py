@@ -58,8 +58,8 @@ for methodName, methodOptions in methodsToTry.items():
     })
     methodConfig["pathInfo"]["outDir"] = p.join(benchmarkDir,methodName)
     methodYaml = p.join(benchmarkDir, f"{methodName}.yaml")
-    with open(methodYaml, "w") as f:
-        yaml.dump(methodConfig, f, default_flow_style=False)
+    with open(methodYaml, "w") as fileHandler:
+        yaml.dump(methodConfig, fileHandler, default_flow_style=False)
     methodYamls.append(methodYaml)
 
 
@@ -78,6 +78,6 @@ for methodYaml in methodYamls:
     seconds = int(elapsedTime % 60)
     formattedTime = f"{hours:02}:{minutes:02}:{seconds:02}"
 
-    with open(timeReport, "a+") as f:
-        f.write(f"{methodYaml} {formattedTime}\n")
+    with open(timeReport, "a+") as fileHandler:
+        fileHandler.write(f"{methodYaml} {formattedTime}\n")
 

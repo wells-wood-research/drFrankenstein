@@ -18,6 +18,8 @@ class FilePath:
 class DirectoryPath:
     pass
 
+from typing import List, Tuple, Optional, Dict # Added for type hinting
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
@@ -39,22 +41,28 @@ def copy_final_prm(config: dict) -> None:
     copy(moleculePrm, finalPrm)
 
 
-def create_final_rtf(config):
-    ## unpack config
-    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
+def create_final_rtf(config: dict) -> None:
+    """
+    Creates the final RTF (Residue Topology File) for the uncapped molecule,
+    adding BONDs for termini and CMAP terms if specified.
 
+    Args:
+        config: Configuration dictionary containing paths and molecule information.
+    """
+    ## unpack config
+    finalCreationDir: DirectoryPath = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"] # type: ignore
+    moleculeRtf: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"] # type: ignore
     
-    moleculeName = config["moleculeInfo"]["moleculeName"]
-    nTerminialAtoms = config["moleculeInfo"]["nTermini"]
-    cTerminalAtoms = config["moleculeInfo"]["cTermini"]
-    donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
-    finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
+    moleculeName: str = config["moleculeInfo"]["moleculeName"]
+    nTerminalAtoms: List[str] = config["moleculeInfo"]["nTermini"]
+    cTerminalAtoms: List[str] = config["moleculeInfo"]["cTermini"]
+    donorAcceptors: Dict[str, List[Tuple[str, str]]] = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
+    finalRtf: FilePath = p.join(finalCreationDir, f"{moleculeName}.rtf") # type: ignore
 
     cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
 
     terminalSectionWritten = False
-    with open(moleculeRtf, "r") as inRtf, open(finalRtf, "w") as outRtf:
+    with open(moleculeRtf, "r") as inRtf, open(finalRtf, "w") as outRtf: # type: ignore
         for line in inRtf.readlines():
             if line.startswith("END"): 
                 continue
@@ -63,7 +71,7 @@ def create_final_rtf(config):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
-                for atomName in nTerminialAtoms:
+                for atomName in nTerminalAtoms:
                     outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
@@ -82,11 +90,18 @@ def create_final_rtf(config):
         ##TODO: CMAP for Phi/Psi torsion angles if possible
 
 
-def create_cmap_terms(config: dict) -> dict:
-    backboneAliases = config["moleculeInfo"]["backboneAliases"]
-    cmapTerms = []
-    for nAtom, caAtom, cAtom in zip(backboneAliases["N"], backboneAliases["CA"], backboneAliases["C"]):
-        cmapTerms.append("CMAP -C "+nAtom+" "+caAtom+" "+cAtom+ " N CA C +N")
+def create_cmap_terms(config: dict) -> List[str]:
+    """Creates CMAP term strings based on backbone atom aliases."""
+    backboneAliases: Dict[str, List[str]] = config["moleculeInfo"]["backboneAliases"]
+    cmapTerms: List[str] = []
+    # Ensure all lists have the same length before zipping
+    min_len = min(len(backboneAliases.get("N", [])), len(backboneAliases.get("CA", [])), len(backboneAliases.get("C", [])))
+    
+    for i in range(min_len):
+        nAtom = backboneAliases["N"][i]
+        caAtom = backboneAliases["CA"][i]
+        cAtom = backboneAliases["C"][i]
+        cmapTerms.append(f"CMAP -C {nAtom} {caAtom} {cAtom} N CA C +N")
     return cmapTerms
     
 
@@ -114,16 +129,16 @@ def get_donor_acceptors(config: dict, debug:bool = True) -> dict:
     hydrogenBondDir = p.join(chargeDir, "05_donor_acceptors")
     os.makedirs(hydrogenBondDir, exist_ok=True)
     config["runtimeInfo"]["madeByCharges"]["hydrogenBondDir"] = hydrogenBondDir
-    solvatedOptimisedXyzs = config["runtimeInfo"]["madeByCharges"]["solvatedOptimisedXyzs"]
+    solvatedOptimisedXyzs: List[FilePath] = config["runtimeInfo"]["madeByCharges"]["solvatedOptimisedXyzs"]
     config, solvatedDf = pad_pdb_with_waters(config)
 
-    allDonors = []
-    allAcceptors = []
+    allDonors: List[Tuple[str, str]] = []
+    allAcceptors: List[Tuple[str, str]] = []
 
     ## run serial
     if debug:
-        for solvatedOptXyz in solvatedOptimisedXyzs:
-            donors, acceptors = detect_hydrogen_bonds_construct_donor_acceptors(solvatedOptXyz, solvatedDf, moleculeName)
+        for solvatedOptXyz_item in solvatedOptimisedXyzs: # Renamed loop variable
+            donors, acceptors = detect_hydrogen_bonds_construct_donor_acceptors(solvated_opt_xyz=solvatedOptXyz_item, solvated_df=solvatedDf, molecule_name=moleculeName)
             allDonors.extend(donors)
             allAcceptors.extend(acceptors)
     ## run in parallel
@@ -139,56 +154,56 @@ def get_donor_acceptors(config: dict, debug:bool = True) -> dict:
             "dynamic_ncols": True,
         }
         ## construct an arglist to pass to multiprocessing
-        argsList = [(solvatedOptXyz, solvatedDf, moleculeName) for solvatedOptXyz in solvatedOptimisedXyzs]
+        argsList = [(solvatedOptXyz, solvatedDf, moleculeName) for solvatedOptXyz in solvatedOptimisedXyzs] # solvatedOptXyz is fine here as it's local to list comprehension
         nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
         with mp.Pool(processes=nCpus) as pool:
             results = pool.starmap(detect_hydrogen_bonds_construct_donor_acceptors, argsList)
-        for donors, acceptors in results:
-            allDonors.extend(donors)
-            allAcceptors.extend(acceptors)
+        for donors_list, acceptors_list in results: # Renamed to avoid conflict
+            allDonors.extend(donors_list)
+            allAcceptors.extend(acceptors_list)
 
 
     uniqueDonors = list(set(allDonors))
     uniqueAcceptors = list(set(allAcceptors))
 
-    donorAcceptors = {"DONORS": uniqueDonors,
-                      "ACCEPTORS": uniqueAcceptors}
+    donorAcceptorsDict: Dict[str, List[Tuple[str, str]]] = {"DONORS": uniqueDonors, # Renamed for clarity
+                                                           "ACCEPTORS": uniqueAcceptors}
     
         
-    config["runtimeInfo"]["madeByCreator"]["donorAcceptors"] = donorAcceptors
+    config["runtimeInfo"]["madeByCreator"]["donorAcceptors"] = donorAcceptorsDict
 
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def detect_hydrogen_bonds_construct_donor_acceptors(solvatedOptXyz: FilePath,
-                                                     solvatedDf: pd.DataFrame,
-                                                       moleculeName: str) -> tuple:
-    xyzDf = file_parsers.xyz2df(solvatedOptXyz)
-    hBonds = detect_hydrogen_bonds(xyzDf)
-    donors, acceptors = construct_donor_acceptors(hBonds, solvatedDf, moleculeName)
+def detect_hydrogen_bonds_construct_donor_acceptors(solvated_opt_xyz: FilePath,
+                                                     solvated_df: pd.DataFrame,
+                                                       molecule_name: str) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    xyzDf = file_parsers.xyz2df(solvated_opt_xyz)
+    hBonds = detect_hydrogen_bonds(xyz_df=xyzDf)
+    donors, acceptors = construct_donor_acceptors(h_bonds=hBonds, pdb_df=solvated_df, molecule_name=molecule_name)
 
     return donors, acceptors
 
 
 
-def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: str) -> dict:
-    donors = []
-    acceptors = []
-    for hBond in hBonds:
-        donorDf = pdbDf.iloc[hBond[0]]
-        hydrogenDf = pdbDf.iloc[hBond[1]]
-        acceptorDf = pdbDf.iloc[hBond[2]]
-        if donorDf["RES_NAME"] == moleculeName:
-            donorPair = (hydrogenDf["ATOM_NAME"], donorDf["ATOM_NAME"])
+def construct_donor_acceptors(h_bonds: list, pdb_df: pd.DataFrame, molecule_name: str) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    donors: List[Tuple[str,str]] = []
+    acceptors: List[Tuple[str,str]] = []
+    for hBond_tuple in h_bonds: # Renamed loop variable
+        donorDf = pdb_df.iloc[hBond_tuple[0]]
+        hydrogenDf = pdb_df.iloc[hBond_tuple[1]]
+        acceptorDf = pdb_df.iloc[hBond_tuple[2]]
+        if donorDf["RES_NAME"] == molecule_name:
+            donorPair = (str(hydrogenDf["ATOM_NAME"]), str(donorDf["ATOM_NAME"]))
             donors.append(donorPair)
-        if acceptorDf["RES_NAME"] == moleculeName:
-            bondedAtoms = Capping_Assistant.find_bonded_atoms(pdbDf, acceptorDf["ATOM_NAME"])
+        if acceptorDf["RES_NAME"] == molecule_name:
+            bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf=pdb_df, atomName=str(acceptorDf["ATOM_NAME"])) # type: ignore
             ## exclude tri-valent (or more!) Nitrogen atoms
             if acceptorDf["ELEMENT"] == "N" and len(bondedAtoms) > 2:
                 continue
-            bondedAtom = choose_bonded_atom_for_acceptor(bondedAtoms, pdbDf, moleculeName)
-            acceptorPair = (acceptorDf["ATOM_NAME"], bondedAtom)
+            bondedAtom = choose_bonded_atom_for_acceptor(bonded_atoms=bondedAtoms, pdb_df=pdb_df, molecule_name=molecule_name)
+            acceptorPair = (str(acceptorDf["ATOM_NAME"]), bondedAtom)
             acceptors.append(acceptorPair)
 
     donors = list(set(donors))
@@ -198,45 +213,46 @@ def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: s
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def choose_bonded_atom_for_acceptor(bondedAtoms, pdbDf, moleculeName):
-    bondedAtoms = [atom for atom in bondedAtoms if not atom.startswith("H")]
+def choose_bonded_atom_for_acceptor(bonded_atoms: List[str], pdb_df: pd.DataFrame, molecule_name: str) -> str:
+    """Selects a non-hydrogen bonded atom for an acceptor from a list of bonded atoms."""
+    bondedAtomsFiltered = [atom for atom in bonded_atoms if not atom.startswith("H")] # Renamed
     ## remove 
-    bondedAtomDf = pdbDf[pdbDf["ATOM_NAME"].isin(bondedAtoms)]
-    bondedAtomDf = bondedAtomDf[bondedAtomDf["RES_NAME"] == moleculeName]
+    bondedAtomDf = pdb_df[pdb_df["ATOM_NAME"].isin(bondedAtomsFiltered)]
+    bondedAtomDf = bondedAtomDf[bondedAtomDf["RES_NAME"] == molecule_name]
     chosenBondedAtom = bondedAtomDf["ATOM_NAME"].to_list()[0]
-    return chosenBondedAtom
+    return str(chosenBondedAtom)
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float = 3.5, hydrogenBondAngleCutoff: float = 120.0):
+def detect_hydrogen_bonds(xyz_df: pd.DataFrame, hydrogen_bond_distance_cutoff: float = 3.5, hydrogen_bond_angle_cutoff: float = 120.0) -> List[Tuple[int, int, int]]:
     """
     Detect hydrogen bonds based on geometric criteria.
     Criteria: D-H...A where D is donor (O, N), A is acceptor (O, N),
     H...A distance < distance_cutoff (Angstroms), D-H...A angle > angle_cutoff (degrees).
     Returns list of (donor_idx, hydrogen_idx, acceptor_idx) tuples.
     """
-    hBonds = []
+    hBonds: List[Tuple[int, int, int]] = []
     donorAcceptorTypes = ["N", "O", "F"]  # Exclude C and N
     
     # Find potential donors (O, N) and hydrogens
-    for indexAtomA, rowAtomA in  xyzDf.iterrows():
-        coordsA = rowAtomA[["x", "y", "z"]].values
+    for indexAtomA, rowAtomA in  xyz_df.iterrows():
+        coordsA: np.ndarray = rowAtomA[["x", "y", "z"]].values
         if rowAtomA["element"]  in donorAcceptorTypes:  # Potential donor
             # Look for bonded hydrogens (simple distance-based check)
-            for indexAtomB, rowAtomB in  xyzDf.iterrows():
-                coordsB = rowAtomB[["x", "y", "z"]].values
+            for indexAtomB, rowAtomB in  xyz_df.iterrows():
+                coordsB: np.ndarray = rowAtomB[["x", "y", "z"]].values
                 if rowAtomB["element"] == 'H':
-                    protonBondLength = calculate_distance(coordsA, coordsB)
+                    protonBondLength = calculate_distance(coord1=coordsA, coord2=coordsB)
                     if 0.8 < protonBondLength < 1.2:  # Typical D-H bond length
                         # Found D-H pair, now look for acceptors
-                        for indexAtomC, rowAtomC in  xyzDf.iterrows():
-                            coordsC = rowAtomC[["x", "y", "z"]].values
+                        for indexAtomC, rowAtomC in  xyz_df.iterrows():
+                            coordsC: np.ndarray = rowAtomC[["x", "y", "z"]].values
                             if rowAtomC["element"]  in donorAcceptorTypes and indexAtomC != indexAtomA:  # Potential acceptor
-                                hydrogenBondLength = calculate_distance(coordsB, coordsC)
-                                if hydrogenBondLength < hydrogenBondDistanceCutoff:  # H...A distance check
-                                    angle_dha = calculate_angle(coordsA, coordsB, coordsC)
-                                    if angle_dha > hydrogenBondAngleCutoff:  # D-H...A angle check
-                                        hBonds.append((indexAtomA, indexAtomB, indexAtomC))
+                                hydrogenBondLength = calculate_distance(coord1=coordsB, coord2=coordsC)
+                                if hydrogenBondLength < hydrogen_bond_distance_cutoff:  # H...A distance check
+                                    angleDha = calculate_angle(coord1=coordsA, coord2=coordsB, coord3=coordsC) # Renamed
+                                    if angleDha > hydrogen_bond_angle_cutoff:  # D-H...A angle check
+                                        hBonds.append((int(indexAtomA), int(indexAtomB), int(indexAtomC))) # Ensure int
 
     return hBonds
 
@@ -244,28 +260,28 @@ def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_distance(coord1, coord2):
+def calculate_distance(coord1: np.ndarray, coord2: np.ndarray) -> float:
     """Calculate Euclidean distance between two points."""
-    return np.linalg.norm(coord1 - coord2)
+    return float(np.linalg.norm(coord1 - coord2))
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_angle(coord1, coord2, coord3):
+def calculate_angle(coord1: np.ndarray, coord2: np.ndarray, coord3: np.ndarray) -> float:
     """Calculate angle (in degrees) between three points (coord2 is vertex)."""
-    vec1 = coord1 - coord2
-    vec2 = coord3 - coord2
+    vec1: np.ndarray = coord1 - coord2
+    vec2: np.ndarray = coord3 - coord2
     
-    norm1 = np.linalg.norm(vec1)
-    norm2 = np.linalg.norm(vec2)
+    norm1: float = np.linalg.norm(vec1)
+    norm2: float = np.linalg.norm(vec2)
     
     # Check for zero-length vectors
     if norm1 == 0 or norm2 == 0:
         return 0.0  # Default to 0 degrees for undefined cases
     
-    vec1_norm = vec1 / norm1
-    vec2_norm = vec2 / norm2
-    cos_theta = np.clip(np.dot(vec1_norm, vec2_norm), -1.0, 1.0)
-    return np.degrees(np.arccos(cos_theta))
+    vec1Norm: np.ndarray = vec1 / norm1 # Renamed
+    vec2Norm: np.ndarray = vec2 / norm2 # Renamed
+    cosTheta: float = np.clip(np.dot(vec1Norm, vec2Norm), -1.0, 1.0) # Renamed
+    return float(np.degrees(np.arccos(cosTheta)))
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def pad_pdb_with_waters(config: dict) -> FilePath:
+def pad_pdb_with_waters(config: dict) -> Tuple[dict, pd.DataFrame]:
     """
     Takes original capped PDB file and adds water molecules with dummy coords
     

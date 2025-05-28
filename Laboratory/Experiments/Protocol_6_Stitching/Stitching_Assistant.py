@@ -45,51 +45,51 @@ from OperatingTools import file_parsers
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-def shuffle_torsion_tags(torsionTags: list[str]) -> list[str]:
+def shuffle_torsion_tags(torsion_tags: list[str]) -> list[str]:
     """
     Re-orders the torsion tags in a random order
     
     Args:
-        torsionTags (list[str]): the torsion tags associated with our torsions
+        torsion_tags (list[str]): the torsion tags associated with our torsions
     Returns:
-        shuffledTorsionTags: torsionTags re-ordered
+        shuffled_torsion_tags: torsion_tags re-ordered
     """
-    shuffledTorsionTags = torsionTags
+    shuffledTorsionTags = torsion_tags # Variable name is already camelCase, matches return doc.
     random.shuffle(shuffledTorsionTags)
 
     return shuffledTorsionTags
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def pdb2mol2(inPdb: FilePath,
-              outMol2: FilePath,
-                workingDir: DirectoryPath) -> None:
+def pdb2mol2(in_pdb: FilePath,
+              out_mol2: FilePath,
+                working_dir: DirectoryPath) -> None:
     """
     Uses antechamber to convert pdb to mol2
     Writes some unwanted temporary files
     TODO: clean these up
 
     Args:
-        inPdb (FilePath): input file in PDB format
-        outPdb (FilePath): output file in MOL2 format
-        workingDir (DirectoryPath): working directory (vital for cleanup)
+        in_pdb (FilePath): input file in PDB format
+        out_mol2 (FilePath): output file in MOL2 format
+        working_dir (DirectoryPath): working directory (vital for cleanup)
 
     Returns:
-        None (outMol2 has already been defined!)
+        None (out_mol2 has already been defined!)
     
     """
-    os.chdir(workingDir)
+    os.chdir(working_dir)
 
     ## set RES_ID to 1 for all atoms to keep antechamber happy
-    pdbDf = pdbUtils.pdb2df(inPdb)
+    pdbDf = pdbUtils.pdb2df(in_pdb)
     pdbDf["RES_ID"] = 1
-    tmpPdb = p.join(workingDir, "tmp.pdb")
+    tmpPdb = p.join(working_dir, "tmp.pdb")
     pdbUtils.df2pdb(pdbDf, tmpPdb)
     ## get index, set path for antechamber to write outputs
-    index: str = p.basename(inPdb).split("_")[1].split(".")[0]
-    antechamberOut: FilePath = p.join(workingDir, f"antechamber_{index}.out")
+    index: str = p.basename(in_pdb).split("_")[1].split(".")[0]
+    antechamberOut: FilePath = p.join(working_dir, f"antechamber_{index}.out")
     ## run antechamber to create MOL2 file from PDB
     antechamberCommand: list = [
-        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
+        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", out_mol2,
         "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
     ]
     with open(antechamberOut, 'w') as outfile:
@@ -98,8 +98,8 @@ def pdb2mol2(inPdb: FilePath,
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def edit_mo2_atom_types(inMol2: FilePath,
-                         outMol2: FilePath) -> None:
+def edit_mol2_atom_types(in_mol2: FilePath,
+                         out_mol2: FilePath) -> None: # Renamed function
     
     """
     Edits the atom types in a MOL2 file to make compatable with gaff2
@@ -107,18 +107,18 @@ def edit_mo2_atom_types(inMol2: FilePath,
     from antechamber
 
     Args:
-        inMol2 (FilePath): input MOL2 file
-        outMol2 (FilePath): output MOL2 file
+        in_mol2 (FilePath): input MOL2 file
+        out_mol2 (FilePath): output MOL2 file
 
     Returns:
-        None (outMol2 is already defined!)
+        None (out_mol2 is already defined!)
     """
 
 
-    ## open inMol2 for reading and outMol2 for writing
-    with open(inMol2, 'r') as inMol2, open(outMol2, "w") as outMol2:
-        ## loop through inMol2 until we get to the atom section
-        mol2Lines = inMol2.readlines()
+    ## open in_mol2 for reading and out_mol2 for writing
+    with open(in_mol2, 'r') as inMol2File, open(out_mol2, "w") as outMol2File: # Renamed file handlers
+        ## loop through in_mol2 until we get to the atom section
+        mol2Lines = inMol2File.readlines()
         isAtomLine = False
         for line in mol2Lines:
             if line.strip() == "@<TRIPOS>ATOM":
@@ -136,27 +136,27 @@ def edit_mo2_atom_types(inMol2: FilePath,
                 line = re.sub(r'(\s)os(\s)', r'\1o \2', line)
                 line = re.sub(r'(\s)n7(\s)', r'\1ns\2', line)
                 line = re.sub(r'(\s)h1(\s)', r'\1hc\2', line)
-            outMol2.write(line)
-
+            outMol2File.write(line)
+        ## loop through inMol2 until we get to the atom section
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def create_atom_type_map(inMol2: FilePath) -> dict:
+def create_atom_type_map(in_mol2: FilePath) -> dict:
     """
     Creates a dict that maps atom names to atom types
     using a MOL2 file
 
     Args:
-        inMol2 (FilePath): input MOL2 file
+        in_mol2 (FilePath): input MOL2 file
 
     Returns:
-        atomTypeMape (dict): dict mapping atom names to atom types
+        atom_type_map (dict): dict mapping atom names to atom types
     
     """
     ## init empty dict
     atomTypeMap = {}
-    ## open inMol2 for reading
-    with open(inMol2, 'r') as inMol2:
-        ## loop through inMol2 until we get to the atoms section
-        mol2Lines = inMol2.readlines()
+    ## open in_mol2 for reading
+    with open(in_mol2, 'r') as inMol2File: # Renamed file handler
+        ## loop through in_mol2 until we get to the atoms section
+        mol2Lines = inMol2File.readlines()
         isAtomLine = False
         for line in mol2Lines:
             if line.strip() == "@<TRIPOS>ATOM":
@@ -173,7 +173,7 @@ def create_atom_type_map(inMol2: FilePath) -> dict:
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def sort_out_directories(config) -> dict:
+def sort_out_directories(config: dict) -> dict:
     """
     Makes directories for the parameter fitting stage
     Adds these paths to the "pathInfo" section of config
@@ -205,7 +205,7 @@ def sort_out_directories(config) -> dict:
     
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
+def get_completed_torsion_scan_dirs(config: dict, torsion_tag:str) -> List[DirectoryPath]:
     """
     Looks through ORCA scan directories 
     Works out whether scan completed
@@ -225,10 +225,10 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
     ## find dir where ORCA torsion scans were performed
     torsionTopDir: DirectoryPath = config["runtimeInfo"]["madeByTwisting"]["torsionDir"]
 
-    torsionDir: DirectoryPath = p.join(torsionTopDir, f"torsion_{torsionTag}")
+    torsionDir: DirectoryPath = p.join(torsionTopDir, f"torsion_{torsion_tag}")
 
     ## loop through batches of scans
-    for conformerName in os.listdir(torsionDir):
+    for conformerName in os.listdir(torsionDir): # conformerName is already camelCase
         if not "conformer" in conformerName:
             continue
         ## find conformer dir
@@ -243,7 +243,7 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
     return completedTorsionScanDirs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
+def get_scan_angles_from_orca_inp(scan_dir: DirectoryPath) -> np.ndarray:
     """
     Read through an ORCA input file and find start and end angles of a dihedral scan
     Creates a range between these
@@ -255,11 +255,11 @@ def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
         angleRange (list): list of angles between start and end angles
     """
     ## find orca input
-    orcaInp = p.join(scanDir, "orca_scan.inp")
+    orcaInp = p.join(scan_dir, "orca_scan.inp")
     if not p.isfile(orcaInp):
-        raise FileNotFoundError(f"orca_scan.inp not found in {scanDir}")
+        raise FileNotFoundError(f"orca_scan.inp not found in {scan_dir}")
     ## open orca input for reading
-    with open(orcaInp, "r") as f:
+    with open(orcaInp, "r") as f: # f is already short and conventional
         for line in f:
             ## find dihedral scan, get start, end angle
             if line.startswith("D"):
@@ -276,7 +276,7 @@ def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
     
     return angleRange
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def rescale_angles_0_360(angle: np.array) -> np.array:
+def rescale_angles_0_360(angle: np.ndarray) -> np.ndarray:
     """
     puts angles on a -180 to +180 scale
     """
@@ -285,7 +285,7 @@ def rescale_angles_0_360(angle: np.array) -> np.array:
     #     angle -= 360  # Shift angles greater than 180 to the negative side
     return angle
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
+def merge_energy_dfs(energy_dfs: List[Optional[pd.DataFrame]]) -> pd.DataFrame:
     """
     merges energy DataFrames on the Angle column
 
@@ -296,13 +296,18 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
         mergedDf (pd.DataFrame): merged DataFrame
     """
     ##TODO: is this efficient?
-    energyDfs = [df for df in energyDfs if not df is None]
+    energyDfsValid = [df for df in energy_dfs if df is not None] # Renamed to avoid confusion
 
-    mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
+    if not energyDfsValid:
+        # Or handle as an error: raise ValueError("No valid DataFrames to merge.")
+        return pd.DataFrame(columns=['Angle']) 
+
+
+    mergedDf = energyDfsValid[0][['Angle', 'Energy']].rename(
         columns={'Energy': 'Energy_0'}
     )
 
-    for i, df in enumerate(energyDfs[1:], start=1):
+    for i, df in enumerate(energyDfsValid[1:], start=1):
         mergedDf = mergedDf.merge(
             df[['Angle', 'Energy']],
             on='Angle',
@@ -313,25 +318,25 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
 
     return mergedDf
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
+def update_pdb_coords(in_pdb: FilePath, xyz_file: FilePath, out_pdb: FilePath) -> None:
     """
     updates PDB file with XYZ coords
     
     Args:
-        inPdb (FilePath): input PDB file
-        xyzFile (FilePath): input XYZ file
-        outPdb (FilePath): output PDB file
+        in_pdb (FilePath): input PDB file
+        xyz_file (FilePath): input XYZ file
+        out_pdb (FilePath): output PDB file
 
     Returns:
-        None (outPdb already defined!)
+        None (out_pdb already defined!)
     """
 
-    inDf = pdbUtils.pdb2df(inPdb)
-    xyzDf = file_parsers.xyz2df(xyzFile)
+    inDf = pdbUtils.pdb2df(in_pdb)
+    xyzDf = file_parsers.xyz2df(xyz_file)
 
     inDf["X"] = xyzDf["x"]
     inDf["Y"] = xyzDf["y"]
     inDf["Z"] = xyzDf["z"]
 
-    pdbUtils.df2pdb(inDf, outPdb)
+    pdbUtils.df2pdb(inDf, out_pdb)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

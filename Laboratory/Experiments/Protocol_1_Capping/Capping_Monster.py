@@ -19,7 +19,7 @@ from . import Capping_Assistant
 from OperatingTools import drOrca
 from OperatingTools import file_parsers
 
-def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
+def optimize_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
     """
     Runs a quick ORCA XTB2 optimisation of the capped structure
     This avoids odd distances between the capping groups and the rest of the molecule
@@ -95,7 +95,7 @@ def trim_termini(molDf: pd.DataFrame,
     return molDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_CC1(cappedDf: pd.DataFrame,
+def place_cc1(cappedDf: pd.DataFrame,
                nTerminalAtom: str,
                  aceDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -141,7 +141,7 @@ def place_CC1(cappedDf: pd.DataFrame,
 
     return aceDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_OC(cappedDf: pd.DataFrame,
+def place_oc(cappedDf: pd.DataFrame,
               nTerminalAtom: str,
                 aceDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -178,7 +178,7 @@ def place_OC(cappedDf: pd.DataFrame,
 
     return aceDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_CC2(cappedDf: pd.DataFrame,
+def place_cc2(cappedDf: pd.DataFrame,
                nTerminalAtom: str,
                  aceDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -207,7 +207,7 @@ def place_CC2(cappedDf: pd.DataFrame,
     return aceDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_NN(cappedDf: pd.DataFrame,
+def place_nn(cappedDf: pd.DataFrame,
               cTerminalAtom: str,
                 nmeDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -242,7 +242,7 @@ def place_NN(cappedDf: pd.DataFrame,
     
     return nmeDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_HNN1(cappedDf: pd.DataFrame,
+def place_hnn1(cappedDf: pd.DataFrame,
                 cTerminalAtom: str,
                   nmeDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -275,7 +275,7 @@ def place_HNN1(cappedDf: pd.DataFrame,
 
     return nmeDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_CN(cappedDf: pd.DataFrame,
+def place_cn(cappedDf: pd.DataFrame,
               cTerminalAtom: str,
                 nmeDf: pd.DataFrame) -> pd.DataFrame:
     """

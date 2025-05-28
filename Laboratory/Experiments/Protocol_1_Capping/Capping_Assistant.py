@@ -118,7 +118,7 @@ def  decide_atom_to_delete_C_terminal_proton(atomNames: list) -> str:
 def calculate_distance(row: pd.Series,
                         atomX: float,
                           atomY: float,
-                            atomZ: float):
+                            atomZ: float) -> float:
     """
     Calculates distance between a row of a pdb dataframe and a set of coords
     Used in an apply function
@@ -172,8 +172,8 @@ def apply_transformation(pdbDf: pd.DataFrame,
         pdbDf (pd.DataFrame): PDB DataFrame
     """
     coords = pdbDf[['X', 'Y', 'Z']].values
-    transformed_coords = np.dot(coords, rotationMatrix) + translationVector
-    pdbDf[['X', 'Y', 'Z']] = transformed_coords
+    transformedCoords = np.dot(coords, rotationMatrix) + translationVector
+    pdbDf[['X', 'Y', 'Z']] = transformedCoords
     return pdbDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -209,10 +209,10 @@ def calculate_transformation(originalDf: pd.DataFrame,
     targetCoordsCentered = targetCoords - targetCentroid
 
     # Compute covariance matrix
-    covariance_matrix = np.dot(originalCoordsCentered.T, targetCoordsCentered)
+    covarianceMatrix = np.dot(originalCoordsCentered.T, targetCoordsCentered)
 
     # Singular Value Decomposition
-    V, S, Wt = np.linalg.svd(covariance_matrix)
+    V, S, Wt = np.linalg.svd(covarianceMatrix)
     rotationMatrix = np.dot(V, Wt)
 
     # Ensure a proper rotation (determinant should be 1)

@@ -9,3 +9,6 @@ dependencies:
   - pip
   - pip:
     - -r requirements.txt
+  # External Software (manual installation required):
+  #  - orca # Quantum chemistry software, see official website for installation
+  #  - multiwfn # Wavefunction analysis software, see official website for installation

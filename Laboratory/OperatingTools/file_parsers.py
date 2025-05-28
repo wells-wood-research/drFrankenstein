@@ -11,83 +11,88 @@ class FilePath:
 class DirectoryPath:
     pass
 
-def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
-                             cappedPdb: FilePath,
-                               outDir: DirectoryPath) -> list[FilePath]:
+from typing import List, Dict, Tuple, Any, Optional # Added for type hinting
+
+def convert_traj_xyz_to_pdb(traj_xyzs: list[FilePath],
+                             capped_pdb: FilePath,
+                               out_dir: DirectoryPath) -> list[FilePath]:
     """
-    Effectively converts a list of XYZ files to PDB
-    In practice, updates a static PDB file with coords from a list of XYZ files
+    Effectively converts a list of XYZ files to PDB files.
+    In practice, updates a static PDB file's coordinates with coordinates from each XYZ file in a list,
+    saving each as a new PDB file.
 
     Args:
-        trajXyzs (list[FilePath]): a list of XYZ files
-        cappedPdb (FilePath): a PDB file containing correct atom data
-        fittingRoundDir (DirectoryPath): the output dir for this function
+        traj_xyzs: A list of paths to XYZ files.
+        capped_pdb: Path to a PDB file containing correct atom data (topology).
+        out_dir: The output directory where new PDB files will be saved.
     
+    Returns:
+        A list of paths to the created PDB files.
     """
-    trajPdbs = []
-    for trajXyz in trajXyzs:
-        fileName = p.splitext(p.basename(trajXyz))[0]
-        trajPdb = p.join(outDir, f"{fileName}.pdb")
-        update_pdb_coords(cappedPdb, trajXyz, trajPdb)
+    trajPdbs: List[FilePath] = []
+    for trajXyz_item in traj_xyzs: # Renamed loop variable
+        fileName = p.splitext(p.basename(trajXyz_item))[0]
+        trajPdb: FilePath = p.join(out_dir, f"{fileName}.pdb") # type: ignore
+        update_pdb_coords(in_pdb=capped_pdb, xyz_file=trajXyz_item, out_pdb=trajPdb)
         trajPdbs.append(trajPdb)
 
     return trajPdbs
 
 ####################
-def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
+def update_pdb_coords(in_pdb: FilePath, xyz_file: FilePath, out_pdb: FilePath) -> None:
     """
-    updates PDB file with XYZ coords
+    Updates coordinates in a PDB file with coordinates from an XYZ file.
     
     Args:
-        inPdb (FilePath): input PDB file
-        xyzFile (FilePath): input XYZ file
-        outPdb (FilePath): output PDB file
+        in_pdb: Path to the input PDB file (template for topology).
+        xyz_file: Path to the input XYZ file (source of new coordinates).
+        out_pdb: Path to save the output PDB file with updated coordinates.
 
     Returns:
-        None (outPdb already defined!)
+        None (out_pdb is written to).
     """
 
-    inDf = pdbUtils.pdb2df(inPdb)
-    xyzDf = xyz2df(xyzFile)
+    inDf = pdbUtils.pdb2df(in_pdb)
+    xyzDf = xyz2df(xyz_file=xyz_file)
 
     inDf["X"] = xyzDf["x"]
     inDf["Y"] = xyzDf["y"]
     inDf["Z"] = xyzDf["z"]
 
-    pdbUtils.df2pdb(inDf, outPdb)
+    pdbUtils.df2pdb(inDf, out_pdb)
 
-def pdb2xyz(pdbFile: FilePath, xyzFile: FilePath) -> None:
+def pdb2xyz(pdb_file: FilePath, xyz_file: FilePath) -> None:
     """
     Uses OpenBabel to convert a PDB file into an XYZ file
 
     Args:
-        pdbFile (FilePath): path to PDB file
-        xyzFile (FilePath): path to XYZ file to be created
+        pdb_file (FilePath): path to PDB file
+        xyz_file (FilePath): path to XYZ file to be created
 
     Returns:
-        None [xyzFile has already been defined]
+        None [xyz_file has already been defined]
 
     """
-    obabelCommand = ["obabel", pdbFile, "-O", xyzFile]
+    obabelCommand: List[str] = ["obabel", pdb_file, "-O", xyz_file] # type: ignore
     run(obabelCommand, stdout=PIPE, stderr=PIPE)
 
-def pdb2mol2(pdbFile: FilePath, mol2File: FilePath) -> None:
+def pdb2mol2(pdb_file: FilePath, mol2_file: FilePath) -> None:
     """
     Uses OpenBabel to convert a PDB file into a MOL2 file
 
     Args:
-        pdbFile (FilePath): path to PDB file
-        mol2File (FilePath): path to MOL2 file to be created
+        pdb_file (FilePath): path to PDB file
+        mol2_file (FilePath): path to MOL2 file to be created
 
     Returns:
-        None [mol2File has already been defined]
+        None [mol2_file has already been defined]
 
     """
-    obabelCommand = ["obabel", pdbFile, "-O", mol2File]
+    obabelCommand: List[str] = ["obabel", pdb_file, "-O", mol2_file] # type: ignore
     run(obabelCommand, stdout=PIPE, stderr=PIPE)
     
 
-def parse_rtf(filePath: str) -> dict:
+def parse_rtf(file_path: str) -> Dict[str, Any]:
     """
     Parse a CHARMM RTF file into a structured dictionary.
     
@@ -97,7 +102,7 @@ def parse_rtf(filePath: str) -> dict:
     Returns:
         Dict: Parsed RTF data with sections for mass, residues, and other declarations.
     """
-    rtfData = {
+    rtfData: Dict[str, Any] = {
         "mass": [],  # List of mass entries
         "declarations": [],  # DECL statements
         "defaults": {},  # DEFA statements
@@ -105,11 +110,11 @@ def parse_rtf(filePath: str) -> dict:
         "auto": []  # AUTO statements
     }
     
-    currentResidue = None
-    currentGroup = None
-    parsingIc = False
+    currentResidue: Optional[Dict[str, Any]] = None
+    currentGroup: Optional[List[str]] = None
+    # parsingIc = False # This variable was unused
     
-    with open(filePath, 'r') as file:
+    with open(file_path, 'r') as file:
         lines = file.readlines()
     
     for line in lines:
@@ -239,8 +244,8 @@ def parse_rtf(filePath: str) -> dict:
 
 
 
-def write_rtf(data, output_file):
-    with open(output_file, 'w') as f:
+def write_rtf(data: Dict[str, Any], output_file: FilePath) -> None:
+    with open(output_file, 'w') as f: # type: ignore
         # Write header
         f.write('* Toppar stream file generated by\n')
         f.write('* CHARMM General Force Field (CGenFF) program version 4.0\n')
@@ -309,20 +314,20 @@ def write_rtf(data, output_file):
 # data = your_dictionary
 # write_cgenff_topology(data, 'output.top')
 
-def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
+def xyz2df(xyz_file: FilePath) -> pd.DataFrame:
     """
     converts an xyz file to a pd.DataFrame
 
     Args:
-        xyzFile (FilePath): input XYZ file
+        xyz_file (FilePath): input XYZ file
 
     Returns:
         xyzDf (pd.DataFrame): dataframe containing index, element and coords
     """
 
-    xyzData = []
+    xyzData: List[Dict[str, Any]] = []
     atomIndex = 0
-    with open(xyzFile, "r") as f:
+    with open(xyz_file, "r") as f: # type: ignore
         lines = f.readlines()[2:]
         for line in lines:
             atomIndex +=1
@@ -336,13 +341,24 @@ def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
 
 
 
-def parse_mol2(mol2File):
-    atomData = []
-    bondData = []
+def parse_mol2(mol2_file: FilePath) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Parses a MOL2 file to extract atom and bond information into pandas DataFrames.
+
+    Args:
+        mol2_file: Path to the MOL2 file.
+
+    Returns:
+        A tuple containing two DataFrames: (atom_df, bond_df).
+        atom_df columns: "ATOM_ID", "ATOM_NAME", "X", "Y", "Z", "ATOM_TYPE", "RES_ID", "RES_NAME", "CHARGE"
+        bond_df columns: "BOND_ID", "ATOM_A_ID", "ATOM_B_ID", "BOND_ORDER"
+    """
+    atomData: List[List[str]] = []
+    bondData: List[List[str]] = []
     readingAtoms = False
     readingBonds = False
 
-    with open(mol2File, "r") as mol2:
+    with open(mol2_file, "r") as mol2: # type: ignore
         for line in mol2:
             if line.strip() == "":
                 continue

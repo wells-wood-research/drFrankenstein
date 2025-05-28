@@ -13,3 +13,9 @@ imageio==2.37.0
 mdtraj==1.10.3
 networkx
 argpass
+
+# External Dependencies:
+# The following software packages are required but must be installed manually.
+# Please refer to their respective websites for installation instructions.
+# - ORCA (Quantum chemistry software)
+# - MultiWFN (Wavefunction analysis software)

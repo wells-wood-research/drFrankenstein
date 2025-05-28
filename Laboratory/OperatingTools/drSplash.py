@@ -3,13 +3,20 @@ from os import path as p
 import time
 import sys
 import re
+from typing import List, Dict, Optional, Any # Added for type hinting
 
-def strip_ansi_codes(text):
+# Placeholder classes (extend if needed)
+class FilePath:
+    pass
+class DirectoryPath:
+    pass
+
+def strip_ansi_codes(text: str) -> str:
     """Remove ANSI color codes from a string."""
     ansi_pattern = re.compile(r'\033\[[0-9;]*m')
     return ansi_pattern.sub('', text)
 
-def show_getting_mm_total(torsionTag):
+def show_getting_mm_total(torsion_tag: str) -> None:
     greenText = "\033[32m"
     redText = "\033[31m"
     orangeText = "\033[38;5;172m"
@@ -29,7 +36,7 @@ def show_getting_mm_total(torsionTag):
 
 
 
-def show_need_cgenff_str(cappedMol2) -> None:
+def show_need_cgenff_str(capped_mol2: FilePath) -> None: # type: ignore
     ## using font ANSI Shadow
     greenText = "\033[32m"
     orangeText = "\033[38;5;172m"
@@ -196,17 +203,17 @@ def show_charge_splash() -> None:
              lightningBar + resetTextColor)
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def show_torsion_being_scanned(torsionTag, torsionIndex, nTorsions) -> None:
+def show_torsion_being_scanned(torsion_tag: str, torsion_index: int, n_torsions: int) -> None:
     greenText = "\033[32m"
-    redText = "\033[31m"
-    orangeText = "\033[38;5;172m"
+    redText = "\033[31m" # Unused
+    orangeText = "\033[38;5;172m" # Unused
     yellowText = "\033[33m"
     resetTextColor = "\033[0m"
-    tealText = "\033[38;5;37m"    
+    tealText = "\033[38;5;37m"    # Unused
 
     textToPrint = f"{yellowText}🗲 🗲{' '*8}SCANNING TORSION:{' '*8}\
-[{' '*1}{greenText}{torsionTag}{yellowText}{' '*1}]{' '*8}\
-{resetTextColor}({torsionIndex+1}/{nTorsions}){yellowText}"
+[{' '*1}{greenText}{torsion_tag}{yellowText}{' '*1}]{' '*8}\
+{resetTextColor}({torsion_index+1}/{n_torsions}){yellowText}"
     
     visible_text = strip_ansi_codes(textToPrint)
 
@@ -287,11 +294,11 @@ import time
 import os
 import sys
 
-def show_what_have_we_created(config):
+def show_what_have_we_created(config: dict) -> None:
     ## unpack config ##
-    moleculeName = config["moleculeInfo"]["moleculeName"]
-    reportHtml = config["runtimeInfo"]["madeByReporting"]["reportHtml"]
-    forcefield = config["parameterFittingInfo"]["forceField"]
+    moleculeName: str = config["moleculeInfo"]["moleculeName"]
+    reportHtml: FilePath = config["runtimeInfo"]["madeByReporting"]["reportHtml"] # type: ignore
+    forcefield: str = config["parameterFittingInfo"]["forceField"]
 
 
     # Your ASCII art stored in a list of lines
@@ -329,7 +336,8 @@ def show_what_have_we_created(config):
     
     
     # Clear terminal function that works cross-platform
-    def clear_terminal():
+    def clear_terminal() -> None:
+        """Clears the terminal screen."""
         os.system('cls' if os.name == 'nt' else 'clear')
     
     # Animation parameters

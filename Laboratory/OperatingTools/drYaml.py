@@ -10,8 +10,20 @@ class FilePath:
 class DirectoryPath:
     pass
 
+from typing import Union, Dict, Any # For type hints
+from ruamel.yaml.comments import CommentedMap # For specific dict type
 
-def initialise_runtime_info(config):
+def initialize_runtime_info(config: CommentedMap) -> CommentedMap: # Renamed function
+    """
+    Initializes the 'runtimeInfo' section in the configuration if it doesn't exist,
+    and adds a descriptive banner comment before it.
+
+    Args:
+        config: The configuration object (ruamel.yaml.comments.CommentedMap).
+
+    Returns:
+        The modified configuration object.
+    """
     runtimeBanner = '\n'.join([
         "##########################################################################################################################",                                     
         "                                    _     _                      ___            __                                       #",         
@@ -35,18 +47,46 @@ def initialise_runtime_info(config):
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_config_with_checkpoints(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+def read_config_with_checkpoints(config: CommentedMap, out_dir: DirectoryPath) -> CommentedMap:
+    """
+    Reads the drFrankenstein.yaml file from the output directory if it exists,
+    effectively loading checkpointed configuration.
+
+    Args:
+        config: The current configuration object.
+        out_dir: The output directory where drFrankenstein.yaml might be located.
+
+    Returns:
+        The loaded configuration if the file exists, otherwise the original config.
+    """
+    drFrankensteinYaml: FilePath = p.join(out_dir, "drFrankenstein.yaml") # type: ignore
     ruamelParser = ruamel.YAML()
     ruamelParser.preserve_quotes = True  # Ensure quotes are preserved
 
     if p.isfile(drFrankensteinYaml):
         with open(drFrankensteinYaml, "r") as f:
-            config = ruamelParser.load(f)
+            loaded_config = ruamelParser.load(f)
+            if isinstance(loaded_config, dict): # Ensure loaded content is a dict/CommentedMap
+                 return loaded_config # type: ignore
+            # Optionally handle cases where the file is empty or not valid YAML
+            # For now, returning original config if load fails to produce a dict
+            return config # type: ignore
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def init_config_checkpoints(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+def init_config_checkpoints(config: CommentedMap, out_dir: DirectoryPath) -> CommentedMap:
+    """
+    Initializes the 'checkpointInfo' section in the configuration if a
+    drFrankenstein.yaml file doesn't already exist in the output directory.
+    Adds a descriptive banner comment before it.
+
+    Args:
+        config: The configuration object.
+        out_dir: The output directory.
+
+    Returns:
+        The modified configuration object.
+    """
+    drFrankensteinYaml: FilePath = p.join(out_dir, "drFrankenstein.yaml") # type: ignore
     checkpointBanner = '\n'.join([
         "##########################################################################################################################",                                     
         "                                                                                                                         #",
@@ -74,12 +114,19 @@ def init_config_checkpoints(config, outDir):
         }
         config.yaml_set_comment_before_after_key("checkpointInfo", before=checkpointBanner)
 
-        return config
+        return config # type: ignore
     else:
-        return config
+        return config # type: ignore
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def write_config_to_yaml(config, outDir):
-    drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
+def write_config_to_yaml(config: CommentedMap, out_dir: DirectoryPath) -> None:
+    """
+    Writes the configuration object to drFrankenstein.yaml in the output directory.
+
+    Args:
+        config: The configuration object to write.
+        out_dir: The output directory.
+    """
+    drFrankensteinYaml: FilePath = p.join(out_dir, "drFrankenstein.yaml") # type: ignore
     ruamelParser = ruamel.YAML()
     ruamelParser.indent(mapping=2, sequence=4, offset=2)
     ruamelParser.default_flow_style = None
@@ -111,7 +158,7 @@ def get_config_input_arg() -> FilePath:
     return configFile
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def read_input_yaml(configFile: FilePath) -> dict:
+def read_input_yaml(config_file: FilePath) -> CommentedMap:
     """
     Reads YAML file into a dict
 
@@ -119,7 +166,7 @@ def read_input_yaml(configFile: FilePath) -> dict:
     - configFile (str): Path to the YAML configuration file.
 
     Returns:
-    - config (dict): Parsed YAML content as a dictionary.
+    # config (CommentedMap): Parsed YAML content as a CommentedMap.
     """
     yellow = "\033[33m"
     reset = "\033[0m"
@@ -127,16 +174,18 @@ def read_input_yaml(configFile: FilePath) -> dict:
     try:
         ruamelParser = ruamel.YAML()
         ruamelParser.preserve_quotes = True  # Ensure quotes are preserved
-        with open(configFile, "r") as yamlFile:
-            config: dict = ruamelParser.load(yamlFile)
+        with open(config_file, "r") as yamlFile: # type: ignore
+            config: CommentedMap = ruamelParser.load(yamlFile)
+            if not isinstance(config, dict): # Check if loading returned a dict-like object
+                raise ruamel.YAMLError(f"YAML content in {config_file} did not parse as a dictionary.")
             return config
         
 
     except FileNotFoundError:
-        print(f"-->{' '*4}Config file {configFile} not found.")
-        exit(1)
+        print(f"-->{' '*4}Config file {config_file} not found.")
+        exit(1) # Consider raising FileNotFoundError for library usage
     except ruamel.YAMLError as exc:
-        print(f"-->{' '*4}{yellow}Error while parsing YAML file:{reset}")
+        print(f"-->{' '*4}{yellow}Error while parsing YAML file: {config_file}{reset}")
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
             print(f"{' '*7}Problem found at line {mark.line + 1}, column {mark.column + 1}:")

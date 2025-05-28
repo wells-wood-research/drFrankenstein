@@ -1,57 +1,63 @@
 import os
 from typing import Dict, Any, List, Union, Optional, Tuple
 from OperatingTools import drSplash
+from typing import Dict, Any, List, Union, Optional, Tuple # Ensure all necessary types are imported
 
+# Placeholder classes (extend if needed)
+class FilePath:
+    pass
+class DirectoryPath:
+    pass
 
-def _add_error(errors: Dict[str, str], keyPath: str, message: str):
+def _add_error(errors: Dict[str, str], key_path: str, message: str) -> None: # Added return type hint
     """Adds an error message to the errors dictionary."""
-    errors[keyPath] = message
+    errors[key_path] = message
 
-def _check_key_exists(data: Dict[str, Any], key: str, sectionPath: str, errors: Dict[str, str]) -> bool:
+def _check_key_exists(data: Dict[str, Any], key: str, section_path: str, errors: Dict[str, str]) -> bool:
     """Checks if a key exists in the dictionary. Adds error if missing."""
     if key not in data:
-        _add_error(errors, f"{sectionPath}.{key}", f"Missing required key '{key}'")
+        _add_error(errors, f"{section_path}.{key}", f"Missing required key '{key}'")
         return False
     return True
 
-def _validate_type(value: Any, expectedType: Union[type, Tuple[type, ...]], keyPath: str, errors: Dict[str, str]) -> bool:
+def _validate_type(value: Any, expected_type: Union[type, Tuple[type, ...]], key_path: str, errors: Dict[str, str]) -> bool:
     """Checks if the value's type matches the expected type(s). Adds error if mismatched."""
-    if not isinstance(value, expectedType):
+    if not isinstance(value, expected_type):
         # Improved error message formatting for None/NoneType
-        if isinstance(expectedType, type):
-            expectedTypeStr = 'None' if expectedType is type(None) else expectedType.__name__
+        if isinstance(expected_type, type):
+            expectedTypeStr = 'None' if expected_type is type(None) else expected_type.__name__
         else: # It's a tuple
             typeNames = []
-            for t in expectedType:
+            for t in expected_type:
                 typeNames.append('None' if t is type(None) else t.__name__)
             expectedTypeStr = ' or '.join(typeNames)
 
-        _add_error(errors, keyPath, f"Invalid type. Expected {expectedTypeStr}, but got {type(value).__name__}")
+        _add_error(errors, key_path, f"Invalid type. Expected {expectedTypeStr}, but got {type(value).__name__}")
         return False
     return True
 
-def _validate_allowed_values(value: Any, allowedValues: List[Any], keyPath: str, errors: Dict[str, str]) -> bool:
+def _validate_allowed_values(value: Any, allowed_values: List[Any], key_path: str, errors: Dict[str, str]) -> bool:
     """Checks if the value is within the list of allowed values. Adds error if not."""
     # Skip check if value is None, as None might be allowed by type but not explicitly in allowedValues list
     if value is None:
         return True # Assume type check already validated None if it was allowed
-    if value not in allowedValues:
+    if value not in allowed_values:
         # Filter out None from displayed allowed values if it's present, as it's handled by type check
-        displayAllowed = [v for v in allowedValues if v is not None]
-        _add_error(errors, keyPath, f"Invalid value '{value}'. Allowed values are: {displayAllowed}")
+        displayAllowed = [v for v in allowed_values if v is not None]
+        _add_error(errors, key_path, f"Invalid value '{value}'. Allowed values are: {displayAllowed}")
         return False
     return True
 
 # --- Section Validators (snake_case names) ---
 
-def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_path_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the pathInfo section."""
-    if sectionData is None:
-        _add_error(errors, sectionName, "Missing required section 'pathInfo'")
+    if section_data is None:
+        _add_error(errors, section_name, "Missing required section 'pathInfo'")
         return
 
-    if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+    if not isinstance(section_data, dict):
+         _add_error(errors, section_name, f"Section '{section_name}' should be a dictionary, but got {type(section_data).__name__}")
          return
 
     # Keys here match the expected config structure, not changing them to camelCase
@@ -63,11 +69,11 @@ def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "gaff2Dat": str,
     }
 
-    for key, expectedType in expectedKeys.items():
-        keyPath = f"{sectionName}.{key}"
-        if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
+    for key, expectedType_val in expectedKeys.items(): # Renamed expectedType to avoid conflict
+        keyPath = f"{section_name}.{key}"
+        if _check_key_exists(section_data, key, section_name, errors):
+            value = section_data[key]
+            _validate_type(value, expectedType_val, keyPath, errors)
             # Optional: Add os.path.exists checks here if needed
             # if key in ["inputDir", "multiWfnDir", "orcaExe", "gaff2Dat"]:
             #     if isinstance(value, str) and not os.path.exists(value):
@@ -78,14 +84,14 @@ def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
             #          _add_error(errors, keyPath, f"Output directory's parent is not writable: '{parentDir}'")
 
 
-def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_molecule_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the moleculeInfo section."""
-    if sectionData is None:
-        _add_error(errors, sectionName, "Missing required section 'moleculeInfo'")
+    if section_data is None:
+        _add_error(errors, section_name, "Missing required section 'moleculeInfo'")
         return
 
-    if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+    if not isinstance(section_data, dict):
+         _add_error(errors, section_name, f"Section '{section_name}' should be a dictionary, but got {type(section_data).__name__}")
          return
 
     # Keys here match the expected config structure
@@ -99,18 +105,18 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
         "chargeGroups": dict,
     }
 
-    for key, expectedType in expectedKeys.items():
-        keyPath = f"{sectionName}.{key}"
-        if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            if _validate_type(value, expectedType, keyPath, errors):
+    for key, expectedType_val in expectedKeys.items(): # Renamed expectedType
+        keyPath = f"{section_name}.{key}"
+        if _check_key_exists(section_data, key, section_name, errors):
+            value = section_data[key]
+            if _validate_type(value, expectedType_val, keyPath, errors):
                 # Specific validations for list/dict contents
                 if key in ["nTermini", "cTermini"]:
-                    if not all(isinstance(item, str) for item in value):
+                    if not all(isinstance(item, str) for item in value): # type: ignore
                          _add_error(errors, keyPath, f"All items in list '{key}' must be strings.")
                 elif key == "chargeGroups":
                     # value is the chargeGroups dictionary
-                    for groupName, groupData in value.items():
+                    for groupName, groupData in value.items(): # type: ignore
                         groupKeyPath = f"{keyPath}.{groupName}"
                         if not isinstance(groupData, dict):
                             _add_error(errors, groupKeyPath, f"Charge group '{groupName}' must be a dictionary.")
@@ -121,7 +127,7 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
                             atomsValue = groupData["atoms"]
                             atomsKeyPath = f"{groupKeyPath}.atoms"
                             if _validate_type(atomsValue, list, atomsKeyPath, errors):
-                                if not all(isinstance(item, str) for item in atomsValue):
+                                if not all(isinstance(item, str) for item in atomsValue): # type: ignore
                                     _add_error(errors, atomsKeyPath, "All items in 'atoms' list must be strings.")
 
                         # Check 'charge' key within the group
@@ -131,14 +137,14 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
                             _validate_type(chargeValue, int, chargeKeyPath, errors)
 
 
-def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_torsion_scan_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the torsionScanInfo section."""
-    if sectionData is None:
-        _add_error(errors, sectionName, "Missing required section 'torsionScanInfo'")
+    if section_data is None:
+        _add_error(errors, section_name, "Missing required section 'torsionScanInfo'")
         return
 
-    if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+    if not isinstance(section_data, dict):
+         _add_error(errors, section_name, f"Section '{section_name}' should be a dictionary, but got {type(section_data).__name__}")
          return
 
     # Keys here match the expected config structure
@@ -154,11 +160,11 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
         "skipPhiPSi": bool,
     }
 
-    for key, expectedType in expectedKeys.items():
-        keyPath = f"{sectionName}.{key}"
-        if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            if _validate_type(value, expectedType, keyPath, errors):
+    for key, expectedType_val in expectedKeys.items(): # Renamed expectedType
+        keyPath = f"{section_name}.{key}"
+        if _check_key_exists(section_data, key, section_name, errors):
+            value = section_data[key]
+            if _validate_type(value, expectedType_val, keyPath, errors):
                 # Value range/specific value checks (only if type validation passed)
                 if key == "nConformers" and isinstance(value, int) and value < -1:
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
@@ -168,14 +174,14 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
                      _validate_allowed_values(value, ["all"], keyPath, errors)
 
 
-def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_charge_fitting_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the chargeFittingInfo section."""
-    if sectionData is None:
-        _add_error(errors, sectionName, "Missing required section 'chargeFittingInfo'")
+    if section_data is None:
+        _add_error(errors, section_name, "Missing required section 'chargeFittingInfo'")
         return
 
-    if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+    if not isinstance(section_data, dict):
+         _add_error(errors, section_name, f"Section '{section_name}' should be a dictionary, but got {type(section_data).__name__}")
          return
 
     # Keys here match the expected config structure
@@ -193,11 +199,11 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
     allowedProtocols = ["RESP", "RESP2", "SOLVATOR"]
     # allowedQmmmSolvation = ["TIP3P"] # Context specific check removed for generality
 
-    for key, expectedType in expectedKeys.items():
-        keyPath = f"{sectionName}.{key}"
-        if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            if _validate_type(value, expectedType, keyPath, errors):
+    for key, expectedType_val in expectedKeys.items(): # Renamed expectedType
+        keyPath = f"{section_name}.{key}"
+        if _check_key_exists(section_data, key, section_name, errors):
+            value = section_data[key]
+            if _validate_type(value, expectedType_val, keyPath, errors):
                  # Value range/specific value checks (only if type validation passed)
                 if key == "chargeFittingProtocol" and isinstance(value, str):
                     _validate_allowed_values(value, allowedProtocols, keyPath, errors)
@@ -207,14 +213,14 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
                      _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
 
 
-def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_parameter_fitting_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the parameterFittingInfo section."""
-    if sectionData is None:
-        _add_error(errors, sectionName, "Missing required section 'parameterFittingInfo'")
+    if section_data is None:
+        _add_error(errors, section_name, "Missing required section 'parameterFittingInfo'")
         return
 
-    if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+    if not isinstance(section_data, dict):
+         _add_error(errors, section_name, f"Section '{section_name}' should be a dictionary, but got {type(section_data).__name__}")
          return
 
     # Keys here match the expected config structure
@@ -225,11 +231,11 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
     }
     allowedForceFields = ["CHARMM", "AMBER"]
 
-    for key, expectedType in expectedKeys.items():
-        keyPath = f"{sectionName}.{key}"
-        if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            if _validate_type(value, expectedType, keyPath, errors):
+    for key, expectedType_val in expectedKeys.items(): # Renamed expectedType
+        keyPath = f"{section_name}.{key}"
+        if _check_key_exists(section_data, key, section_name, errors):
+            value = section_data[key]
+            if _validate_type(value, expectedType_val, keyPath, errors):
                 # Value range/specific value checks (only if type validation passed)
                 if key == "forceField" and isinstance(value, str):
                     _validate_allowed_values(value, allowedForceFields, keyPath, errors)
@@ -239,7 +245,7 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
 
 
-def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_misc_info(section_data: Optional[Dict[str, Any]], section_name: str, errors: Dict[str, str]) -> None:
     """Validates the miscInfo section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'miscInfo'")

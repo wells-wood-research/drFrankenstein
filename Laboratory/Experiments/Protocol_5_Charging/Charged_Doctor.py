@@ -357,10 +357,10 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
 
     """
     ## create output directories for orca single-point calculations and MultiWFN charge fitting
-    orcaDir = p.join(outDir, "orca_calculations")
+    orcaDir = p.join(outDir, "01_orca_calculations")
     os.makedirs(orcaDir, exist_ok=True)
 
-    fittingDir = p.join(outDir, "charge_fitting")
+    fittingDir = p.join(outDir, "02_charge_fitting")
     os.makedirs(fittingDir, exist_ok=True)
 
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
@@ -375,8 +375,13 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     ## create input files for MultiWFN
     conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir, fittingDir)
     chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
+    symmetryConstraintsTxt = Charged_Assistant.generate_symmetry_constraints_file(config, fittingDir)
     ## run MultiWFN RESP charge fitting
-    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config, conformerListTxt, chargeConstraintsTxt, fittingDir)
+    rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config=config,
+                                                            conformerListTxt= conformerListTxt,
+                                                             chargeConstraintsTxt = chargeConstraintsTxt,
+                                                             symmetryConstraintsTxt=symmetryConstraintsTxt,
+                                                              fittingDir = fittingDir)
     ## parse MultiWFN output, write to CSV file
     chargesDf = Charged_Monster.parse_multiwfn_output(rawMultiWfnOutputs)
     chargesCsv = p.join(fittingDir, "charges.csv")
@@ -440,7 +445,7 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
             Charged_Monster.run_orca_singlepoint_for_charge_calculations(arg)
     ## run in parallel
     else:
-        nCpus = min(len(argsList), config[["miscInfo"]]["availableCpus"])
+        nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
         with WorkerPool(n_jobs = nCpus) as pool:        
 
             pool.map(Charged_Monster.run_orca_singlepoint_for_charge_calculations,

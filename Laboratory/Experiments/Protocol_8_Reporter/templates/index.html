@@ -7,13 +7,20 @@
     <style>
         body {
             font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
-            margin: 20px;
-            background-color: #1a1a1a;
+            margin: 20px; /* This margin will show the #1a1a1a around the image if image doesn't fill completely, or if you want space around your content before the image edge */
+                           /* If you want the image to touch the very edges of the browser, set margin: 0; */
+            background-color: #1a1a1a; /* Fallback color if image doesn't load */
+            background-image: url('Images/Lightning.jpg'); /* Path to your image */
+            background-repeat: no-repeat;       /* Prevent the image from tiling */
+            background-position: center center; /* Center the image */
+            background-attachment: fixed;       /* Keep the image fixed during scroll */
+            background-size: cover;           /* Scale the image to cover the entire viewport */
+            min-height: 100vh;                /* Ensure body takes at least full viewport height for background-size:cover to work well */
         }
         .tab-container {
             width: 80%;
             margin: 0 auto;
-            background-color: #333;
+            background-color: #333; /* This will overlay the body background, which is good for readability */
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 8px;
             overflow: hidden; /* Important for rounded corners with tabs */
@@ -52,6 +59,7 @@
             display: none; /* Hide all tab content by default */
             padding: 20px;
             color: white; /* Default text color for tab content */
+            /* background-color: rgba(51, 51, 51, 0.9); /* Optional: slightly transparent background for content if needed over the image, but tab-container already has a solid bg */
         }
         .tab-content.active {
             display: block; /* Show active tab content */
@@ -60,6 +68,7 @@
             text-align: center;
             color: yellow;
             margin-bottom: 20px;
+            text-shadow: 6px 6px 12px #000;
         }
         h2 { /* USE FOR SUB HEADINGS*/
             color: white;
@@ -111,12 +120,11 @@
             color: #e0e0e0; /* Lighter text for info box */
         }
         .protocol-content-text {
-        white-space: pre-wrap; /* Preserve line breaks and spaces, wrap text */
-        word-wrap: break-word;   /* Break long words if necessary */
-        color: #888;         /* Ensures consistent text color, matches .info default */
-        font-style: italic;    /* Makes text italic */
-
-    }
+            white-space: pre-wrap; /* Preserve line breaks and spaces, wrap text */
+            word-wrap: break-word;   /* Break long words if necessary */
+            color: #888;         /* Ensures consistent text color, matches .info default */
+            font-style: italic;    /* Makes text italic */
+        }
 
     </style>
 </head>

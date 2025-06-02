@@ -1,6 +1,24 @@
 ## REPORT
 
-### Gantt Chart
-put group labels on the LHS of the chart, rather than on on the chart itself
-OR 
-Have Number labels above the Gantt bars and have a legend at the TRS of the chart
+
+### Torsion Scanning
+[] put atom labels on interactive molecule for torsion atoms
+
+### capping step page
+
+### methods page
+[] create a page
+[] put methods for each section 
+[x] gather citations for ORCA
+[] hard-code citations for:
+    [] MultiWFN
+    [] RESP
+    [] RESP2
+    [] CGenFF
+    [] Antechamber
+    [] OpenMM
+    [] Various MD methods used in OpenMM single point
+    [] Fourier Transform?
+
+
+[] put citations on methods page

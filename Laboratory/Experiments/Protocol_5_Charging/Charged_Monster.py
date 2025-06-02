@@ -204,7 +204,7 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                                 outDir = conformerQmDir,
                                                                 moleculeInfo = moleculeInfo,
                                                                 qmMethod = chargeFittingInfo["singlePointMethod"],
-                                                            solvationMethod = singlePointSolvation)
+                                                                solvationMethod = singlePointSolvation)
     
     orcaSinglePointOutput = p.join(conformerQmDir, "orca_sp.out")
     if not p.isfile(orcaSinglePointOutput):

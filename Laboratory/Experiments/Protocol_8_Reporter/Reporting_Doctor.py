@@ -42,10 +42,11 @@ def reporter_protocol(config: dict) -> None:
     chargesData     = Reporting_Monster.process_charges_results(config)
     fittingData     = Reporting_Monster.process_fitting_results(config)
     methodsData = Shelly.methods_writer_protocol(config)
+    citationsData = Shelly.gather_citations(config)
 
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
-    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, reportHtml)
+    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
 
     ## update config
     # config["checkpointInfo"]["reportingComplete"] = True
@@ -53,7 +54,7 @@ def reporter_protocol(config: dict) -> None:
     return config
 
 
-def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, reportHtml):
+def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
 
     template_dir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(template_dir):
@@ -78,7 +79,8 @@ def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingD
         torsion_data=twistData,
         charge_data=chargesData,
         fitting_data=fittingData,
-        methods_data= methodsData
+        methods_data= methodsData,
+        citation_data = citationsData
     )
 
     # Save the rendered HTML to a file

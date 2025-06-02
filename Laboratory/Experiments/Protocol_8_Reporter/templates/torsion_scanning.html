@@ -179,16 +179,6 @@
 
 </style>
 
-<!-- NEW: Torsion Scanning Protocol Section -->
-{% if methods_data and methods_data.scanningMethods %}
-    <h2>Torsion Scanning Protocol</h2>
-    <div class="info"> <!-- Using .info class for consistent box styling -->
-        <div class="protocol-content-text">
-            {{ methods_data.scanningMethods }}
-        </div>
-    </div>
-{% endif %}
-<!-- End of NEW Section -->
 
 <h2>Torsion Scanning Summary</h2>
 
@@ -283,6 +273,60 @@
 {% else %}
     <p>No torsion scanning data available.</p>
 {% endif %}
+
+{% if methods_data and methods_data.scanningMethods %}
+    <h2>Charge Calculation Methods</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.scanningMethods }}
+        </div>
+
+        {% if citation_data and citation_data.forTorsions %}
+
+            {# Essential Papers Section #}
+            {% if citation_data.forTorsions.essential_papers %}
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                {% for paper in citation_data.forTorsions.essential_papers %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# High Priority Papers Section #}
+            {% if citation_data.forTorsions.high_priority_papers %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                {% for paper in citation_data.forTorsions.high_priority_papers %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Suggested Additional Citations Section #}
+            {% if citation_data.forTorsions.suggested_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                {% for paper in citation_data.forTorsions.suggested_additional_citations %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Optional Additional Citations Section #}
+            {% if citation_data.forTorsions.optional_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                {% for paper in citation_data.forTorsions.optional_additional_citations %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+        {% endif %} {# Closes: if citation_data and citation_data.forTorsions #}
+
+    </div> <!-- Closes: div class="info" -->
+{% endif %} {# Closes: if methods_data and methods_data.scanningMethods #}
 
 <script>
     function openDihedralSubTab(evt, subTabName) {

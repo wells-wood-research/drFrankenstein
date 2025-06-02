@@ -36,14 +36,7 @@
         border: 1px solid #1a1a1a1a;
     }
 </style>
-{% if methods_data and methods_data.scanningMethods %}
-    <h2>Conformer Generation Protocol</h2>
-    <div class="info"> <!-- Using .info class for consistent box styling -->
-        <div class="protocol-content-text">
-            {{ methods_data.conformerMethods }}
-        </div>
-    </div>
-{% endif %}
+
 <h2>Conformer Generation Summary</h2>
 
 {% if conformer_data %}
@@ -72,6 +65,62 @@
         <p>Conformer visualization HTML files not available.</p>
     {% endif %}
 
+{% if methods_data and methods_data.conformerMethods %}
+    <h2>Conformer Generation Protocol</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.conformerMethods }}
+        </div>
+
+        {% if citation_data and citation_data.forConformers %}
+
+            {# Essential Papers Section #}
+            {% if citation_data.forConformers.essential_papers %}
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                {% for paper in citation_data.forConformers.essential_papers %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# High Priority Papers Section #}
+            {% if citation_data.forConformers.high_priority_papers %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                {% for paper in citation_data.forConformers.high_priority_papers %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Suggested Additional Citations Section #}
+            {% if citation_data.forConformers.suggested_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                {% for paper in citation_data.forConformers.suggested_additional_citations %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Optional Additional Citations Section #}
+            {% if citation_data.forConformers.optional_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                {% for paper in citation_data.forConformers.optional_additional_citations %}
+                    {% set authors_list = paper.authors.split(';') %}
+                    {% set last_author = authors_list[-1].strip() %}
+                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+        {% endif %} {# Closes: if citation_data and citation_data.forConformers #}
+
+    </div> <!-- Closes: div class="info" -->
+{% endif %} {# Closes: if methods_data and methods_data.scanningMethods #}
+
+
 {% else %}
     <p>No conformer generation data available.</p>
 {% endif %}
+

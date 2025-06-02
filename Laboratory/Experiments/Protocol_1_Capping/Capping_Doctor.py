@@ -34,10 +34,10 @@ def capping_protocol(config: dict) -> dict:
     
     """
     ## unpack config ##
+    inputDir = config["pathInfo"]["inputDir"]
     outputDir = config["pathInfo"]["outputDir"]
-    molPdb = config["moleculeInfo"]["moleculePdb"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
-
+    molPdb = p.join(inputDir, f"{moleculeName}.pdb")
     ## create an entry in runtimeInfo for capping
     config["runtimeInfo"]["madeByCapping"] = {}
 

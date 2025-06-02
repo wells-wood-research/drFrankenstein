@@ -267,11 +267,12 @@ def set_up_directories(config: dict, protocol: str) -> dict:
 
     #### FOR RESP FITTING, just run once ##
     if protocol == "RESP":
-        orcaCalculationsDir: DirectoryPath = p.join(chargeDir, "01_orca_calculations")
-        os.makedirs(orcaCalculationsDir, exist_ok=True)
-        chargeFittingDir: DirectoryPath = p.join(chargeDir, "02_charge_fitting")
-        os.makedirs(chargeFittingDir, exist_ok=True)
-        config["runtimeInfo"]["madeByCharges"]["chargeDir"] = chargeFittingDir
+        # orcaCalculationsDir: DirectoryPath = p.join(chargeDir, "01_orca_calculations")
+        # os.makedirs(orcaCalculationsDir, exist_ok=True)
+        # chargeFittingDir: DirectoryPath = p.join(chargeDir, "02_charge_fitting")
+        # os.makedirs(chargeFittingDir, exist_ok=True)
+        # config["runtimeInfo"]["madeByCharges"]["chargeDir"] = chargeFittingDir
+        config["runtimeInfo"]["madeByCharges"]["chargeDir"] = chargeDir
         return config
     
     elif protocol == "RESP2":

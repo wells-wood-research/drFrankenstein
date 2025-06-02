@@ -151,6 +151,8 @@ def clean_up_singlepoint_dir(spDir: DirectoryPath, config: dict, keepGbw: bool =
     elif cleanUpLevel == 1:
         keepFiles = ["orca_sp.inp", "orca_sp.out", "ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]
         keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".molden.input")])
+        keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".out")])
+
         if keepGbw:
             keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".gbw")])
         for file in os.listdir(spDir):

@@ -35,7 +35,7 @@ def get_data(benchmarkDir):
     
 def plot_swarm(df, outPng):
     # Melt the DataFrame to long format for seaborn
-    melted_df = df.melt(id_vars=['atomIndex', 'atomElement'], 
+    meltedDf = df.melt(id_vars=['atomIndex', 'atomElement'],
                         value_vars=['XTB2-revPBE-SVP', 'XTB2-HF', 
                                     'XTB2-revPBE-TZVP', 'HF-HF'],
                         var_name='Method', value_name='Value')
@@ -45,14 +45,14 @@ def plot_swarm(df, outPng):
     plt.figure(figsize=(12, 6))
     # Plot each atom element with its specific marker and color
     for element in colors.keys():
-        subset = melted_df[melted_df['atomElement'] == element]
+        subset = meltedDf[meltedDf['atomElement'] == element]
         sns.swarmplot(x='Method', y='Value', data=subset,
                        color=colors[element], marker=markers[element],
                       label=element, dodge=True, size = 10)
     # Customize the legend to show only unique values
     handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), title='Atom Element')
+    byLabel = dict(zip(labels, handles))
+    plt.legend(byLabel.values(), byLabel.keys(), title='Atom Element')
 
 
     # Customize the plot

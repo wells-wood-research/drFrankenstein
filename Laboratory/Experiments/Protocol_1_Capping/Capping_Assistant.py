@@ -174,8 +174,8 @@ def apply_transformation(pdbDf: pd.DataFrame,
         pdbDf (pd.DataFrame): PDB DataFrame
     """
     coords = pdbDf[['X', 'Y', 'Z']].values
-    transformed_coords = np.dot(coords, rotationMatrix) + translationVector
-    pdbDf[['X', 'Y', 'Z']] = transformed_coords
+    transformedCoords = np.dot(coords, rotationMatrix) + translationVector
+    pdbDf[['X', 'Y', 'Z']] = transformedCoords
     return pdbDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -211,10 +211,10 @@ def calculate_transformation(originalDf: pd.DataFrame,
     targetCoordsCentered = targetCoords - targetCentroid
 
     # Compute covariance matrix
-    covariance_matrix = np.dot(originalCoordsCentered.T, targetCoordsCentered)
+    covarianceMatrix = np.dot(originalCoordsCentered.T, targetCoordsCentered)
 
     # Singular Value Decomposition
-    V, S, Wt = np.linalg.svd(covariance_matrix)
+    V, S, Wt = np.linalg.svd(covarianceMatrix)
     rotationMatrix = np.dot(V, Wt)
 
     # Ensure a proper rotation (determinant should be 1)

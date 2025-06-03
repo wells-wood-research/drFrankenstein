@@ -15,7 +15,7 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forcefeild = "AMBER", l2Damping = 0.1):
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):
     
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
@@ -33,11 +33,11 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     ## convert data to dataframe
     fourierDf: pd.DataFrame = convert_fourier_params_to_df(frequencies, amplitudes, phases)
     paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
-    if forcefeild == "AMBER":
+    if forceField == "AMBER":
         ## construct cosine components from parameters
         reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxFunctions)
 
-    elif forcefeild == "CHARMM":
+    elif forceField == "CHARMM":
         reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxFunctions)
 
         ## write data to csv file
@@ -105,11 +105,11 @@ def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
     periods = charmmParamDf["Period"]
     phases = charmmParamDf["Phase"]
 
-    sample_spacing = 10
+    sampleSpacing = 10
     signalLength = 36
     
     # Angle array
-    angle = np.arange(signalLength) * sample_spacing  # Shape: (N,)
+    angle = np.arange(signalLength) * sampleSpacing  # Shape: (N,)
     
     # Initialize reconstructed signal
     reconstructedSignal = np.zeros(signalLength)
@@ -141,11 +141,11 @@ def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
     amplitudes = amberParamDf["Amplitude"]
     phases = amberParamDf["Phase"]
 
-    sample_spacing = 10
+    sampleSpacing = 10
     signalLength = 36
     
     # Angle array
-    angle = np.arange(signalLength) * sample_spacing  # Shape: (N,)
+    angle = np.arange(signalLength) * sampleSpacing  # Shape: (N,)
     
     # Initialize reconstructed signal
     reconstructedSignal = np.zeros(signalLength)

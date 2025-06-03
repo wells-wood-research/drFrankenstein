@@ -58,23 +58,23 @@ def reporter_protocol(config: dict) -> None:
 
 def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
 
-    template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-    if not os.path.exists(template_dir):
+    templateDir = os.path.join(os.path.dirname(__file__), 'templates')
+    if not os.path.exists(templateDir):
         # Fallback if templates are in current working dir (e.g. running from parent)
-        template_dir = 'templates'
-        if not os.path.exists(template_dir):
-            print(f"Error: Template directory '{template_dir}' not found.")
+        templateDir = 'templates'
+        if not os.path.exists(templateDir):
+            print(f"Error: Template directory '{templateDir}' not found.")
             exit()
 
-    file_loader = FileSystemLoader(template_dir)
-    env = Environment(loader=file_loader)
+    fileLoader = FileSystemLoader(templateDir)
+    env = Environment(loader=fileLoader)
 
     # Load the main template
     template = env.get_template('index.html')
 
 
     # The {% include %} directive will make these variables available to the included files.
-    rendered_html = template.render(
+    renderedHtml = template.render(
         job_name=moleculeName,
         timeGanttPng=timeGanttPng,
         conformer_data=wriggleData,
@@ -87,4 +87,4 @@ def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingD
 
     # Save the rendered HTML to a file
     with open(reportHtml, 'w', encoding='utf-8') as f:
-        f.write(rendered_html)
+        f.write(renderedHtml)

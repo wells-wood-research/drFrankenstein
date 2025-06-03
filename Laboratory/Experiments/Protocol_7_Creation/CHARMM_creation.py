@@ -45,7 +45,7 @@ def create_final_rtf(config):
 
     
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    nTerminialAtoms = config["moleculeInfo"]["nTermini"]
+    nTerminalAtoms = config["moleculeInfo"]["nTermini"]
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
     donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
     finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
@@ -62,7 +62,7 @@ def create_final_rtf(config):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
-                for atomName in nTerminialAtoms:
+                for atomName in nTerminalAtoms:
                     outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
@@ -233,8 +233,8 @@ def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float
                             if rowAtomC["element"]  in donorAcceptorTypes and indexAtomC != indexAtomA:  # Potential acceptor
                                 hydrogenBondLength = calculate_distance(coordsB, coordsC)
                                 if hydrogenBondLength < hydrogenBondDistanceCutoff:  # H...A distance check
-                                    angle_dha = calculate_angle(coordsA, coordsB, coordsC)
-                                    if angle_dha > hydrogenBondAngleCutoff:  # D-H...A angle check
+                                    angleDha = calculate_angle(coordsA, coordsB, coordsC)
+                                    if angleDha > hydrogenBondAngleCutoff:  # D-H...A angle check
                                         hBonds.append((indexAtomA, indexAtomB, indexAtomC))
 
     return hBonds
@@ -259,10 +259,10 @@ def calculate_angle(coord1, coord2, coord3):
     if norm1 == 0 or norm2 == 0:
         return 0.0  # Default to 0 degrees for undefined cases
     
-    vec1_norm = vec1 / norm1
-    vec2_norm = vec2 / norm2
-    cos_theta = np.clip(np.dot(vec1_norm, vec2_norm), -1.0, 1.0)
-    return np.degrees(np.arccos(cos_theta))
+    vec1Norm = vec1 / norm1
+    vec2Norm = vec2 / norm2
+    cosTheta = np.clip(np.dot(vec1Norm, vec2Norm), -1.0, 1.0)
+    return np.degrees(np.arccos(cosTheta))
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_pdb_with_waters(config: dict) -> FilePath:
     """

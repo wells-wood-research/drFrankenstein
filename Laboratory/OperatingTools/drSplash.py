@@ -6,8 +6,8 @@ import re
 
 def strip_ansi_codes(text):
     """Remove ANSI color codes from a string."""
-    ansi_pattern = re.compile(r'\033\[[0-9;]*m')
-    return ansi_pattern.sub('', text)
+    ansiPattern = re.compile(r'\033\[[0-9;]*m')
+    return ansiPattern.sub('', text)
 
 def show_getting_mm_total(torsionTag):
     greenText = "\033[32m"
@@ -20,8 +20,8 @@ def show_getting_mm_total(torsionTag):
 
     text = f"{yellowText}🗲🗲{resetTextColor}{' '*8}Fitting torsion parameters for {greenText}{torsionTag}"
   # Calculate visible length (excluding ANSI codes)
-    visible_text = strip_ansi_codes(text)
-    nSpaces = 102 - len(visible_text) - 3  # Account for trailing spaces and 🗲🗲
+    visibleText = strip_ansi_codes(text)
+    nSpaces = 102 - len(visibleText) - 3  # Account for trailing spaces and 🗲🗲
     text += f"{' '*nSpaces}{yellowText}🗲🗲{resetTextColor}"
 
     sys.stdout.write("\r\033[K" + text)  # \r: move to start of line, \033[K: clear line
@@ -208,10 +208,10 @@ def show_torsion_being_scanned(torsionTag, torsionIndex, nTorsions) -> None:
 [{' '*1}{greenText}{torsionTag}{yellowText}{' '*1}]{' '*8}\
 {resetTextColor}({torsionIndex+1}/{nTorsions}){yellowText}"
     
-    visible_text = strip_ansi_codes(textToPrint)
+    visibleText = strip_ansi_codes(textToPrint)
 
     
-    nSpaces = 124 - len(visible_text) - 3  # Account for trailing spaces and 🗲🗲
+    nSpaces = 124 - len(visibleText) - 3  # Account for trailing spaces and 🗲🗲
     textToPrint += f"{' '*nSpaces}{yellowText}🗲🗲{resetTextColor}"
     print(textToPrint)
 

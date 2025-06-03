@@ -53,7 +53,7 @@ def capping_protocol(config: dict) -> dict:
     ## get capping PDBs from the drCapper directory
     nmePdb, acePdb = Capping_Assistant.find_capping_pdbs()
     ## add N-Methyl (NCH3) caps to each C-Terminus
-    nmeCappedDf = add_nMethyl_caps(molDf, nmePdb, config)
+    nmeCappedDf = add_nmethyl_caps(molDf, nmePdb, config)
     ## add Acetyl (COCH3) caps to each N-Terminus
     aceCappedDf = add_acetyl_caps(nmeCappedDf, acePdb, config)
     ## edit the ATOM_ID column to make it 1 -> N
@@ -74,8 +74,8 @@ def capping_protocol(config: dict) -> dict:
     return config
 
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def add_nMethyl_caps(molDf: pd.DataFrame,
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲𗲲🗲🗲🗲🗲🗲🗲🗲🗲
+def add_nmethyl_caps(molDf: pd.DataFrame,
                       nmePdb: FilePath,
                         config: dict) -> pd.DataFrame:
     """
@@ -93,7 +93,7 @@ def add_nMethyl_caps(molDf: pd.DataFrame,
     cappedDf = molDf.copy()
     cTerminalAtoms = config["moleculeInfo"]["cTermini"]
     nmeDf = pdbUtils.pdb2df(nmePdb)
-    orginalNmeDf = nmeDf.copy()
+    originalNmeDf = nmeDf.copy()
 
     dfsToConcat = [molDf]
 
@@ -102,7 +102,7 @@ def add_nMethyl_caps(molDf: pd.DataFrame,
         tmpNmeDf = Capping_Monster.place_NN(cappedDf, cTerminalAtom, nmeDf)
         tmpNmeDf = Capping_Monster.place_HNN1(cappedDf, cTerminalAtom, tmpNmeDf)
         tmpNmeDf = Capping_Monster.place_CN(cappedDf, cTerminalAtom, tmpNmeDf)
-        tmpNmeDf = Capping_Assistant.transform_whole(orginalNmeDf, tmpNmeDf, atomNames=["NN", "HNN1", "CN"])
+        tmpNmeDf = Capping_Assistant.transform_whole(originalNmeDf, tmpNmeDf, atomNames=["NN", "HNN1", "CN"])
         tmpNmeDf["RES_ID"] = maxResId + i + 1
         dfsToConcat.append(tmpNmeDf)
 

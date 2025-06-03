@@ -63,10 +63,10 @@ def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
     for cappingHeteroAtomName in cappingHeteroAtomNames:
         heteroAtomId = atomDf[atomDf["ATOM_NAME"]==cappingHeteroAtomName]["ATOM_ID"].to_list()[0]
 
-        bondedToHeteroAtom_A = bondDf[(bondDf["ATOM_A_ID"] == heteroAtomId)]["ATOM_B_ID"].to_list()
-        bondedToHeteroAtom_B = bondDf[(bondDf["ATOM_B_ID"] == heteroAtomId)]["ATOM_A_ID"].to_list()
+        bondedToHeteroAtomA = bondDf[(bondDf["ATOM_A_ID"] == heteroAtomId)]["ATOM_B_ID"].to_list()
+        bondedToHeteroAtomB = bondDf[(bondDf["ATOM_B_ID"] == heteroAtomId)]["ATOM_A_ID"].to_list()
 
-        bondedToHeteroAtomIds = bondedToHeteroAtom_A + bondedToHeteroAtom_B
+        bondedToHeteroAtomIds = bondedToHeteroAtomA + bondedToHeteroAtomB
         protonIds = atomDf[atomDf["ATOM_ID"].isin(bondedToHeteroAtomIds) & atomDf["ATOM_TYPE"].str.startswith("h")]["ATOM_ID"].values
         cappingProtonIds.extend(protonIds)
 

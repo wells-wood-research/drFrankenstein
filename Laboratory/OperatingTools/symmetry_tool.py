@@ -37,9 +37,9 @@ def pdb2graph(pdbFile: FilePath) -> nx.Graph:
 
     # Add all nodes (including hydrogens)
     for _, row in df.iterrows():
-        node_id = f"{row['CHAIN_ID']}:{row['ATOM_ID']-1}"  # 0-based indexing
+        nodeId = f"{row['CHAIN_ID']}:{row['ATOM_ID']-1}"  # 0-based indexing
         graph.add_node(
-            node_id,
+            nodeId,
             element=row["ELEMENT"],
             coords=np.array([row["X"], row["Y"], row["Z"]]),
             atom_name=row["ATOM_NAME"],
@@ -62,10 +62,10 @@ def find_symmetric_atoms(graph: nx.Graph) -> tuple[List[List[str]], List[List[st
     Returns a list of lists, where each sublist contains the ATOM_NAME of equivalent atoms.
     """
     # Define a node match function to ensure atoms have the same element
-    node_match = lambda n1, n2: n1["element"] == n2["element"]
+    nodeMatch = lambda n1, n2: n1["element"] == n2["element"]
 
     # Find all automorphisms (symmetry operations) of the graph
-    gm = isomorphism.GraphMatcher(graph, graph, node_match=node_match)
+    gm = isomorphism.GraphMatcher(graph, graph, node_match=nodeMatch)
     automorphisms = list(gm.isomorphisms_iter())
 
     if not automorphisms:
@@ -74,17 +74,17 @@ def find_symmetric_atoms(graph: nx.Graph) -> tuple[List[List[str]], List[List[st
         return [[graph.nodes[n]["atom_name"] for n in graph.nodes()]]
 
     # Group atoms by their equivalence under automorphisms
-    symmetry_groups = {}
+    symmetryGroups = {}
     for node in graph.nodes():
-        equiv_set = set()
+        equivSet = set()
         for mapping in automorphisms:
-            equiv_set.add(mapping[node])
-        symmetry_groups[frozenset(equiv_set)] = list(equiv_set)
+            equivSet.add(mapping[node])
+        symmetryGroups[frozenset(equivSet)] = list(equivSet)
 
     # Convert to a list of ATOM_NAMEs
     symmetricAtoms = []
     symmetricIds = []
-    for group in symmetry_groups.values():
+    for group in symmetryGroups.values():
         # Extract ATOM_NAME directly from node attributes
         atomNames = [graph.nodes[n]["atom_name"] for n in group]
         atomIds = [graph.nodes[n]["atom_index"] for n in group]

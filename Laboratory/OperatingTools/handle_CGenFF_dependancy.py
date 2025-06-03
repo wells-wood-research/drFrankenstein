@@ -4,7 +4,7 @@ from os import path as p
 from OperatingTools import drSplash
 from OperatingTools import file_parsers
 
-def handle_CGenFF_dependancy(config):
+def handle_cgenff_dependancy(config):
     if config["pathInfo"]["cgenffExe"] == None:
         inputDir = config["pathInfo"]["inputDir"]
         moleculeName = config["moleculeInfo"]["moleculeName"]

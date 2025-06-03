@@ -20,15 +20,12 @@ import random
 import parmed
 from parmed.charmm import CharmmParameterSet, CharmmPsfFile
 
-## CLEAN CODE CLASSES ##
 class FilePath:
     pass
+
 class DirectoryPath:
     pass
 from typing import List, Tuple
-
-
-
 from OperatingTools import drOrca
 
 def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) -> dict:
@@ -43,92 +40,65 @@ def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) ->
     Returns:
         config (dict): updated config
     """
-
-    globalMinimaAngle = averagesDf["Angle"].loc[averagesDf[torsionTag].idxmin()]
+    globalMinimaAngle = averagesDf['Angle'].loc[averagesDf[torsionTag].idxmin()]
     globalMinimaEnergy = averagesDf[torsionTag].loc[averagesDf[torsionTag].idxmin()]
     globalMaximaEnergy = averagesDf[torsionTag].loc[averagesDf[torsionTag].idxmax()]
-
-
-
     barrierHeight = round(globalMaximaEnergy - globalMinimaEnergy, 3)
-
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["globalMinimaAngle"] = int(globalMinimaAngle)
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["barrierHeight"] = float(barrierHeight)
-
-
+    config['runtimeInfo']['madeByTwisting']['rotatableDihedrals'][torsionTag]['globalMinimaAngle'] = int(globalMinimaAngle)
+    config['runtimeInfo']['madeByTwisting']['rotatableDihedrals'][torsionTag]['barrierHeight'] = float(barrierHeight)
     return config
 
 def load_amber_params(config):
-    ## unpack config
-    assembledPrmtop = config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"]
-
+    assembledPrmtop = config['runtimeInfo']['madeByAssembly']['assembledPrmtop']
     parmedPrmtop = parmed.load_file(assembledPrmtop)
-
     return parmedPrmtop
 
 def load_charmm_params(config):
-    ## unpack config
-    assembledPsf = config["runtimeInfo"]["madeByAssembly"]["assembledPsf"]
-    assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
-    assembledRtf = config["runtimeInfo"]["madeByAssembly"]["assembledRtf"]
-
+    assembledPsf = config['runtimeInfo']['madeByAssembly']['assembledPsf']
+    assembledPrm = config['runtimeInfo']['madeByAssembly']['assembledPrm']
+    assembledRtf = config['runtimeInfo']['madeByAssembly']['assembledRtf']
     parmedPsf = CharmmPsfFile(assembledPsf)
     parmedPsf.load_parameters(CharmmParameterSet(assembledPrm, assembledRtf))
-
     return parmedPsf
 
-def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[int,int,int,int]]:
-
-    if mode == "AMBER":
+def identify_rotatable_bonds(config: dict, mode: str='AMBER') -> List[Tuple[int, int, int, int]]:
+    if mode == 'AMBER':
         moleculeParams = load_amber_params(config)
     else:
         moleculeParams = load_charmm_params(config)
-
     rotatableDihedrals = []
     aromaticDihedrals = []
     nonAromaticRingDihedrals = []
     terminalDihedrals = []
-
     rings = find_ring_atoms(moleculeParams)
     adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
-
-    aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
-
+    (aromaticRings, nonAromaticRings) = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
     for dihedral in moleculeParams.dihedrals:
         atomNames = extract_dihedral_atom_names(dihedral)
         atomTypes = extract_dihedral_atom_types(dihedral)
         atomIndexes = extract_dihedral_atom_indexes(dihedral)
-        ## skip amide dihedrals
         if _is_amide_dihedral(dihedral):
             continue
-        ## store terminal non-polar dihedrals
         if _is_terminal_non_polar_dihedral(dihedral):
             terminalDihedrals.append((atomTypes, atomNames, atomIndexes))
             continue
-        ## store aromatic dihedrals
         if _is_a_ring_dihedral(dihedral, rings):
             if _is_a_ring_dihedral(dihedral, aromaticRings):
                 aromaticDihedrals.append((atomTypes, atomNames, atomIndexes))
                 continue
             else:
-                ## store non-aromatic ring dihedrals
                 nonAromaticRingDihedrals.append((atomTypes, atomNames, atomIndexes))
                 continue
-        ## store rotatable dihedrals
         rotatableDihedrals.append((atomTypes, atomNames, atomIndexes))
-        
     taggedRotatableDihedrals = assign_torsion_tags(rotatableDihedrals)
     taggedAromaticDihedrals = assign_torsion_tags(aromaticDihedrals)
     taggedNonAromaticRingDihedrals = assign_torsion_tags(nonAromaticRingDihedrals)
     taggedTerminalDihedrals = assign_torsion_tags(terminalDihedrals)
-
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"] = taggedRotatableDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["aromaticDihedrals"] = taggedAromaticDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["nonAromaticRingDihedrals"] = taggedNonAromaticRingDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["terminalDihedrals"] = taggedTerminalDihedrals
-
+    config['runtimeInfo']['madeByTwisting']['rotatableDihedrals'] = taggedRotatableDihedrals
+    config['runtimeInfo']['madeByTwisting']['aromaticDihedrals'] = taggedAromaticDihedrals
+    config['runtimeInfo']['madeByTwisting']['nonAromaticRingDihedrals'] = taggedNonAromaticRingDihedrals
+    config['runtimeInfo']['madeByTwisting']['terminalDihedrals'] = taggedTerminalDihedrals
     return config
-
 
 def exclude_backbone_torsions(config: dict) -> dict:
     """
@@ -140,229 +110,163 @@ def exclude_backbone_torsions(config: dict) -> dict:
     Returns:
         config (dict): the config dict updated
     """
-    ## unpack config
-    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
-    forceFeild = config["parameterFittingInfo"]["forceField"]
-    if forceFeild == "CHARMM":
-        phiCenterTypes = ("NH1", "CT1") ## C N CA C
-        psiCenterTypes = ("CT1", "C") ## N CA C N
-    elif forceFeild == "AMBER":
-        phiCenterTypes = ("N", "CT") ## C N CA C
-        psiCenterTypes = ("CT", "C") ## N CA C N    
-
+    uniqueRotatableDihedrals = config['runtimeInfo']['madeByTwisting']['rotatableDihedrals']
+    forceFeild = config['parameterFittingInfo']['forceField']
+    if forceFeild == 'CHARMM':
+        phiCenterTypes = ('NH1', 'CT1')
+        psiCenterTypes = ('CT1', 'C')
+    elif forceFeild == 'AMBER':
+        phiCenterTypes = ('N', 'CT')
+        psiCenterTypes = ('CT', 'C')
     tagsToRemove = []
-    for torsionTag, dihedralData in uniqueRotatableDihedrals.items():
-        dihedralCenterTypes = dihedralData["ATOM_TYPES"][1:3]
+    for (torsionTag, dihedralData) in uniqueRotatableDihedrals.items():
+        dihedralCenterTypes = dihedralData['ATOM_TYPES'][1:3]
         if dihedralCenterTypes == phiCenterTypes or dihedralCenterTypes == phiCenterTypes[::-1]:
             tagsToRemove.append(torsionTag)
         elif dihedralCenterTypes == psiCenterTypes or dihedralCenterTypes == psiCenterTypes[::-1]:
             tagsToRemove.append(torsionTag)
-
     for torsionTag in tagsToRemove:
         uniqueRotatableDihedrals.pop(torsionTag)
-    config["runtimeInfo"]["madeByTwisting"]["uniqueRotatableDihedrals"] = uniqueRotatableDihedrals
+    config['runtimeInfo']['madeByTwisting']['uniqueRotatableDihedrals'] = uniqueRotatableDihedrals
     return config
 
-        
-        
-
-
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_conformer_xyzs(config, seed = 1818):
-    ## get conformer XYZ files
-    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
-    nConformers = config["torsionScanInfo"]["nConformers"]
-
+def get_conformer_xyzs(config, seed=1818):
+    conformerXyzs = config['runtimeInfo']['madeByConformers']['conformerXyzs']
+    nConformers = config['torsionScanInfo']['nConformers']
     if nConformers == -1 or nConformers > len(conformerXyzs):
         pass
     elif nConformers < len(conformerXyzs):
         random.seed(seed)
         conformerXyzs = random.sample(conformerXyzs, nConformers)
-        
     return conformerXyzs
 
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
 def create_orca_terminated_flag(orcaDir, orcaOut):
-
     if drOrca.did_orca_finish_normallly(orcaOut):
-        with open(p.join(orcaDir, "ORCA_FINISHED_NORMALLY"), "w") as f:
-            f.write("ORCA FINISHED NORMALLY")
+        with open(p.join(orcaDir, 'ORCA_FINISHED_NORMALLY'), 'w') as f:
+            f.write('ORCA FINISHED NORMALLY')
     else:
-        with open(p.join(orcaDir, "ORCA_CRASHED"), "w") as f:
-            f.write("ORCA CRASHED")
+        with open(p.join(orcaDir, 'ORCA_CRASHED'), 'w') as f:
+            f.write('ORCA CRASHED')
 
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def read_singlepoint_energy(spOrcaOutput):
-    with open(spOrcaOutput, "r") as f:
+    with open(spOrcaOutput, 'r') as f:
         for line in f:
-            if line.startswith("FINAL SINGLE POINT ENERGY"):
+            if line.startswith('FINAL SINGLE POINT ENERGY'):
                 singlePointEnergy = float(line.split()[-1])
                 return singlePointEnergy
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def add_mid_points(indexes: np.array):
     newIndexes = []
-    for i, indexA in enumerate(indexes[:-1]):
+    for (i, indexA) in enumerate(indexes[:-1]):
         newIndexes.append(indexA)
-        indexB = indexes[i+1]
+        indexB = indexes[i + 1]
         midPointIndex = (indexA + indexB) // 2
         newIndexes.append(midPointIndex)
     newIndexes.append(indexes[-1])
-    
     return newIndexes
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def find_local_extrema(energies):
-    # Convert the energies to a numpy array
     energiesArray = energies.to_numpy()
-
-    # Extend the array to handle periodicity
-    extendedEnergies = np.concatenate(
-        (energiesArray[-1:], energiesArray, energiesArray[:1])
-    )
-
-    # Find local minima
+    extendedEnergies = np.concatenate((energiesArray[-1:], energiesArray, energiesArray[:1]))
     localMinimaIndexes = argrelextrema(extendedEnergies, np.less)[0] - 1
-
-    # Find local maxima
     localMaximaIndexes = argrelextrema(extendedEnergies, np.greater)[0] - 1
-
-    # Filter out-of-bound indices
-    localMinimaIndexes = localMinimaIndexes[
-        (localMinimaIndexes >= 0) & (localMinimaIndexes < len(energiesArray))
-    ]
-    localMaximaIndexes = localMaximaIndexes[
-        (localMaximaIndexes >= 0) & (localMaximaIndexes < len(energiesArray))
-    ]
-
-    combinedExtremaIndexes = sorted(
-        np.concatenate((localMinimaIndexes, localMaximaIndexes))
-    )
+    localMinimaIndexes = localMinimaIndexes[(localMinimaIndexes >= 0) & (localMinimaIndexes < len(energiesArray))]
+    localMaximaIndexes = localMaximaIndexes[(localMaximaIndexes >= 0) & (localMaximaIndexes < len(energiesArray))]
+    combinedExtremaIndexes = sorted(np.concatenate((localMinimaIndexes, localMaximaIndexes)))
     return [int(index) for index in combinedExtremaIndexes]
 
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def find_scan_xyz_files(scanDir: DirectoryPath, expectedNumberOfFiles: int):
     scanXyzs = sorted([xyzFile for xyzFile in glob.glob(p.join(scanDir, 'orca_scan.[0-9][0-9][0-9].xyz'))])
     if not len(scanXyzs) == expectedNumberOfFiles:
-        raise(ValueError(f"Number of scan xyz files ({len(scanXyzs)}) does not match expected ({expectedNumberOfFiles})"))
-
+        raise ValueError(f'Number of scan xyz files ({len(scanXyzs)}) does not match expected ({expectedNumberOfFiles})')
     return scanXyzs
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def process_energy_outputs(energyDf):
     energyDf = rescale_and_sort_energy_angles(energyDf)
     energyDf = take_min_duplicate_angles(energyDf)
-
-    energyDf["Energy"] = energyDf["Energy"].apply(hartree_to_kcal_per_mol)
+    energyDf['Energy'] = energyDf['Energy'].apply(hartree_to_kcal_per_mol)
     return energyDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def hartree_to_kcal_per_mol(energy):
     return energy * 627.5095
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def rescale_torsion_angles(angle):
-    angle = angle % 360  # reduce the angle to the 0-360 range
+    angle = angle % 360
     return angle
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def rescale_and_sort_energy_angles(energyDf):
-    energyDf["Energy"] = energyDf["Energy"] - energyDf["Energy"].min()
-    energyDf["Angle"] = energyDf["Angle"].apply(rescale_torsion_angles)
-    energyDf = energyDf.sort_values(by="Angle", ascending=True)
+    energyDf['Energy'] = energyDf['Energy'] - energyDf['Energy'].min()
+    energyDf['Angle'] = energyDf['Angle'].apply(rescale_torsion_angles)
+    energyDf = energyDf.sort_values(by='Angle', ascending=True)
     return energyDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def take_min_duplicate_angles(energyDf):
     energyDf['Angle'] = energyDf['Angle'].round(0)
-    # Find the index of the minimum energy for each unique Angle
-    minEnergyIndexes = energyDf.groupby('Angle')["Energy"].idxmin()
-
+    minEnergyIndexes = energyDf.groupby('Angle')['Energy'].idxmin()
     minEnergyIndexes = minEnergyIndexes.dropna()
-
-    # Select the rows with the minimum energy for each Angle
     return energyDf.loc[minEnergyIndexes].reset_index(drop=True)
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_scan_energy_data(conformertorsionScanDir):
-    scanDat: FilePath = p.join(conformertorsionScanDir, "orca_scan.relaxscanact.dat")
-    if not os.path.exists(scanDat):
-        raise FileNotFoundError(f"Scan data not found in {conformertorsionScanDir}")
-    scanDf: pd.DataFrame = pd.read_csv(scanDat, sep='\s+', header=None)
-    return scanDf
-    
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def find_final_xyz(conformertorsionScanDir):
-    allXyzFiles = glob.glob(p.join(conformertorsionScanDir, "*.xyz"))
-    scanXYZFiles = sorted([f for f in allXyzFiles if re.match(r'orca_scan\.\d+\.xyz$', os.path.basename(f))])
 
+def read_scan_energy_data(conformertorsionScanDir):
+    scanDat: FilePath = p.join(conformertorsionScanDir, 'orca_scan.relaxscanact.dat')
+    if not os.path.exists(scanDat):
+        raise FileNotFoundError(f'Scan data not found in {conformertorsionScanDir}')
+    scanDf: pd.DataFrame = pd.read_csv(scanDat, sep='\\s+', header=None)
+    return scanDf
+
+def find_final_xyz(conformertorsionScanDir):
+    allXyzFiles = glob.glob(p.join(conformertorsionScanDir, '*.xyz'))
+    scanXYZFiles = sorted([f for f in allXyzFiles if re.match('orca_scan\\.\\d+\\.xyz$', os.path.basename(f))])
     finalXyzFile = scanXYZFiles[-1]
     return finalXyzFile
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def measure_current_torsion_angle(conformerXyz, torsionIndexes):
     atomCoords = xyz_to_np_array(conformerXyz)
     torsionAngle = calculate_torsion_angle(atomCoords, torsionIndexes)
     roundedToTenAngle = round(torsionAngle, -1)
     return roundedToTenAngle
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def xyz_to_np_array(filePath):
     with open(filePath, 'r') as file:
         lines = file.readlines()
-
-    # Skip the first two lines (atom count and comment)
     dataLines = lines[2:]
-
-    # Parse the coordinates
     coords = []
     for line in dataLines:
         parts = line.split()
         if len(parts) >= 4:
-            x, y, z = map(float, parts[1:4])
+            (x, y, z) = map(float, parts[1:4])
             coords.append([x, y, z])
-
     return np.array(coords)
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
 def calculate_torsion_angle(coords, torsionIndexes):
-    # Vectors between points
     b1 = coords[torsionIndexes[1]] - coords[torsionIndexes[0]]
     b2 = coords[torsionIndexes[2]] - coords[torsionIndexes[1]]
     b3 = coords[torsionIndexes[3]] - coords[torsionIndexes[2]]
-
-    # Normal vectors to the planes
     n1 = np.cross(b1, b2)
     n2 = np.cross(b2, b3)
-
-    # Normalize the normal vectors
     n1 /= np.linalg.norm(n1)
     n2 /= np.linalg.norm(n2)
-
-    # Calculate the angle
     angleInRadians = np.arctan2(np.dot(np.cross(n1, n2), b2 / np.linalg.norm(b2)), np.dot(n1, n2))
-
-    # Convert from radians to degrees
     angleIdDegrees = np.degrees(angleInRadians)
-
     return angleIdDegrees
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
 def set_up_directories(config: dict) -> dict:
-    outputDir = config["pathInfo"]["outputDir"]
-    torsionTopDir = p.join(outputDir, "04_torsion_scanning")
+    outputDir = config['pathInfo']['outputDir']
+    torsionTopDir = p.join(outputDir, '04_torsion_scanning')
     os.makedirs(torsionTopDir, exist_ok=True)
-    config["runtimeInfo"]["madeByTwisting"]["torsionDir"] = torsionTopDir
-
+    config['runtimeInfo']['madeByTwisting']['torsionDir'] = torsionTopDir
     return config
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def assign_torsion_tags(dihedrals: list[tuple[tuple[str], tuple[str]]]) -> dict[tuple[str], tuple[str], tuple[str]]:
     taggedDihedrals = {}
     seenTags = set()
     for dihedralData in dihedrals:
-        torsionTag = "-".join(dihedralData[0])
+        torsionTag = '-'.join(dihedralData[0])
         if torsionTag not in seenTags:
             seenTags.add(torsionTag)
-            taggedDihedrals[torsionTag] = {"ATOM_TYPES": dihedralData[0], "ATOM_NAMES": dihedralData[1], "ATOM_INDEXES": dihedralData[2]}
+            taggedDihedrals[torsionTag] = {'ATOM_TYPES': dihedralData[0], 'ATOM_NAMES': dihedralData[1], 'ATOM_INDEXES': dihedralData[2]}
         else:
-           continue
+            continue
     return taggedDihedrals
-
-
 
 def get_unique_dihedrals(dihedralGroup: list[tuple[tuple[str], tuple[str]]]):
     uniqueDihedrals = {}
@@ -371,17 +275,16 @@ def get_unique_dihedrals(dihedralGroup: list[tuple[tuple[str], tuple[str]]]):
             uniqueDihedrals[dihedralData[0]] = [dihedralData[1]]
         else:
             uniqueDihedrals[dihedralData[0]].append(dihedralData[1])
-
     return uniqueDihedrals
-
 
 def _is_amide_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
     atomTypes = extract_dihedral_atom_types(dihedral)
-    if atomTypes[1] in ["N","NH1"] and atomTypes[2] == "C":
+    if atomTypes[1] in ['N', 'NH1'] and atomTypes[2] == 'C':
         return True
-    elif atomTypes[2] in ["N","NH1"] and atomTypes[1] == "C":
+    elif atomTypes[2] in ['N', 'NH1'] and atomTypes[1] == 'C':
         return True
     return False
+
 def _is_a_ring_dihedral(dihedral: parmed.topologyobjects.Dihedral, rings: List[set[int]]) -> bool:
     atomIndexes = extract_dihedral_atom_indexes(dihedral)
     for ring in rings:
@@ -389,30 +292,19 @@ def _is_a_ring_dihedral(dihedral: parmed.topologyobjects.Dihedral, rings: List[s
             return True
     return False
 
-
 def classify_rings_aromatic(rings: List[set[int]], parmedPsf: CharmmPsfFile, adjacencyMatrix: defaultdict) -> Tuple[List[set[int]], List[set[int]]]:
-    aromaticValenceCheck = {
-                        6 : [3],        ## Carbons MUST have 3 bonded atoms
-                        7 : [2,3],      ## Nitrogens MUST have 2 or 3 bonded atoms
-                        8 : [2]         ## Oxygens MUST have 2 bonded atoms
-
-    }
-    
+    aromaticValenceCheck = {6: [3], 7: [2, 3], 8: [2]}
     aromaticRings = []
     nonAromaticRings = []
     for ringIndex in rings:
         ringElements = [parmedPsf.atoms[idx].element for idx in ringIndex]
-        ringValences = [len(adjacencyMatrix[idx]) for idx in ringIndex]  
-
-        # possibleAromaticValences = [aromaticValenceCheck.get(element, (0)) for element in ringElements]
-
-        passedCheckAtoms = [valence in aromaticValenceCheck.get(element, (0))
-                            for valence, element in zip(ringValences, ringElements)]
+        ringValences = [len(adjacencyMatrix[idx]) for idx in ringIndex]
+        passedCheckAtoms = [valence in aromaticValenceCheck.get(element, 0) for (valence, element) in zip(ringValences, ringElements)]
         if all(passedCheckAtoms):
             aromaticRings.append(ringIndex)
         else:
             nonAromaticRings.append(ringIndex)
-    return aromaticRings, nonAromaticRings
+    return (aromaticRings, nonAromaticRings)
 
 def find_ring_atoms(structure):
     """
@@ -423,59 +315,43 @@ def find_ring_atoms(structure):
     Returns:
         list: List of sets, where each set contains atom indices (atom.idx) for a ring.
     """
-    def dfs(current_atom, parent_atom, visited, path, rings, start_atom):
+
+    def dfs(currentAtom, parentAtom, visited, path, rings, startAtom):
         """
         DFS to detect cycles and collect atoms in rings.
         """
-        visited.add(current_atom)
-        path.append(current_atom)
-
-        for bond in current_atom.bonds:
-            neighbor = bond.atom1 if bond.atom2 == current_atom else bond.atom2
-            if neighbor == parent_atom:
+        visited.add(currentAtom)
+        path.append(currentAtom)
+        for bond in currentAtom.bonds:
+            neighbor = bond.atom1 if bond.atom2 == currentAtom else bond.atom2
+            if neighbor == parentAtom:
                 continue
-            # If neighbor is in path and not the immediate parent, we found a cycle
             if neighbor in path:
-                cycle_start_idx = path.index(neighbor)
-                # Extract atoms from path back to neighbor
-                cycle_atoms = path[cycle_start_idx:]
-                # Store as a set of atom indices
-                ring = set(atom.idx for atom in cycle_atoms)
-                # Only add if not already found (avoid duplicates)
+                cycleStartIdx = path.index(neighbor)
+                cycleAtoms = path[cycleStartIdx:]
+                ring = set((atom.idx for atom in cycleAtoms))
                 if ring not in rings:
                     rings.append(ring)
             elif neighbor not in visited:
-                # Continue DFS if neighbor hasn't been visited
-                dfs(neighbor, current_atom, visited, path, rings, start_atom)
-
+                dfs(neighbor, currentAtom, visited, path, rings, startAtom)
         path.pop()
-        # Allow revisiting atoms for detecting multiple rings
-        visited.remove(current_atom) # Uncomment if needed for complex graphs
-
+        visited.remove(currentAtom)
     rings = []
     visited = set()
-
-    # Run DFS from each atom to find all cycles
     for atom in structure.atoms:
         if atom not in visited:
             dfs(atom, None, visited.copy(), [], rings, atom)
-
     return rings
 
-
 def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
-    # Build adjacency list for graph representation
     adjacency = defaultdict(list)
     for bond in parmedPsf.bonds:
-        idx1, idx2 = bond.atom1.idx, bond.atom2.idx
+        (idx1, idx2) = (bond.atom1.idx, bond.atom2.idx)
         adjacency[idx1].append(idx2)
         adjacency[idx2].append(idx1)
-
     return adjacency
 
-
 def _is_terminal_non_polar_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
-
     atomElements = extract_dihedral_atom_elements(dihedral)
     if atomElements[0] == 1 and atomElements[1] == 6:
         return True
@@ -484,71 +360,42 @@ def _is_terminal_non_polar_dihedral(dihedral: parmed.topologyobjects.Dihedral) -
     else:
         return False
 
-def extract_dihedral_atom_types(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
-    return dihedral.atom1.type, dihedral.atom2.type, dihedral.atom3.type, dihedral.atom4.type
+def extract_dihedral_atom_types(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str, str, str, str]:
+    return (dihedral.atom1.type, dihedral.atom2.type, dihedral.atom3.type, dihedral.atom4.type)
 
-def extract_dihedral_atom_elements(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
-    return dihedral.atom1.element, dihedral.atom2.element, dihedral.atom3.element, dihedral.atom4.element
+def extract_dihedral_atom_elements(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str, str, str, str]:
+    return (dihedral.atom1.element, dihedral.atom2.element, dihedral.atom3.element, dihedral.atom4.element)
 
-def extract_dihedral_atom_indexes(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
-    return dihedral.atom1.idx, dihedral.atom2.idx, dihedral.atom3.idx, dihedral.atom4.idx
+def extract_dihedral_atom_indexes(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str, str, str, str]:
+    return (dihedral.atom1.idx, dihedral.atom2.idx, dihedral.atom3.idx, dihedral.atom4.idx)
 
-def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str,str,str,str]:
-    return dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name
+def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tuple[str, str, str, str]:
+    return (dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name)
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-def process_scan_data(scanDfs: List[pd.DataFrame],
-                       torsionTopDir: DirectoryPath,
-                       torsionTag: str):
-
-    ## make a dir to store output csv files
-    dataDir = p.join(torsionTopDir, "scan_data")
+def process_scan_data(scanDfs: List[pd.DataFrame], torsionTopDir: DirectoryPath, torsionTag: str):
+    dataDir = p.join(torsionTopDir, 'scan_data')
     os.makedirs(dataDir, exist_ok=True)
-
-    ## merge scan dataframes
-    # scanDfs = [process_energy_outputs(scanDf) for scanDf in scanDfs]
     mergedDf = merge_scan_dfs(scanDfs)
- 
-    ## remove cols with large jumps in energy
     mergedDf = detect_jumps_in_data(mergedDf)
-
-    ## write to csv
-    mergedScanCsv = p.join(dataDir, f"scan_energies.csv")
+    mergedScanCsv = p.join(dataDir, f'scan_energies.csv')
     mergedDf.to_csv(mergedScanCsv, index=False)
-
     scanAverageDf = pd.DataFrame()
-    scanAverageDf["Angle"] = mergedDf["Angle"]
-
-    ## calculate averages
-    finalScanEnergiesCsv = p.join(dataDir, "final_scan_energies.csv")
-    scanAverageDf[torsionTag] = mergedDf.drop(columns="Angle").mean(axis=1)
+    scanAverageDf['Angle'] = mergedDf['Angle']
+    finalScanEnergiesCsv = p.join(dataDir, 'final_scan_energies.csv')
+    scanAverageDf[torsionTag] = mergedDf.drop(columns='Angle').mean(axis=1)
     scanAverageDf.to_csv(finalScanEnergiesCsv, index=False)
-
-    return finalScanEnergiesCsv, scanAverageDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+    return (finalScanEnergiesCsv, scanAverageDf)
 
 def merge_scan_dfs(scanDfs):
     mergedDf = pd.DataFrame()
-    mergedDf["Angle"] = np.arange(0,360,10)
-    for colIndex, scanDf in enumerate(scanDfs):
-        mergedDf = mergedDf.merge(scanDf[["Angle", "Energy"]], on = "Angle", how= "left")
-        mergedDf.rename(columns={"Energy":f"Energy_{colIndex + 1}"}, inplace=True)
+    mergedDf['Angle'] = np.arange(0, 360, 10)
+    for (colIndex, scanDf) in enumerate(scanDfs):
+        mergedDf = mergedDf.merge(scanDf[['Angle', 'Energy']], on='Angle', how='left')
+        mergedDf.rename(columns={'Energy': f'Energy_{colIndex + 1}'}, inplace=True)
     return mergedDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def detect_jumps_in_data(df):
-    # Calculate differences between consecutive values
     diffDf = df.drop(columns='Angle').diff().abs()
-    
-    # Identify columns with any difference greater than the threshold
-    jumpyCols = diffDf.columns[((diffDf > 10).any())]
-    
-    # Drop these columns from the original DataFrame
+    jumpyCols = diffDf.columns[(diffDf > 10).any()]
     cleanDf = df.drop(columns=jumpyCols)
-    
     return cleanDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-
-

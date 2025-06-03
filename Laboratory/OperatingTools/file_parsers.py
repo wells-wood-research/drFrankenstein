@@ -1,19 +1,16 @@
-## BASIC IMPORTS ##
 from os import path as p
 import os
 import pandas as pd
 from subprocess import run, PIPE
-
 from pdbUtils import pdbUtils
-## CLEAN CODE ##
+
 class FilePath:
     pass
+
 class DirectoryPath:
     pass
 
-def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
-                             cappedPdb: FilePath,
-                               outDir: DirectoryPath) -> list[FilePath]:
+def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath], cappedPdb: FilePath, outDir: DirectoryPath) -> list[FilePath]:
     """
     Effectively converts a list of XYZ files to PDB
     In practice, updates a static PDB file with coords from a list of XYZ files
@@ -27,13 +24,11 @@ def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
     trajPdbs = []
     for trajXyz in trajXyzs:
         fileName = p.splitext(p.basename(trajXyz))[0]
-        trajPdb = p.join(outDir, f"{fileName}.pdb")
+        trajPdb = p.join(outDir, f'{fileName}.pdb')
         update_pdb_coords(cappedPdb, trajXyz, trajPdb)
         trajPdbs.append(trajPdb)
-
     return trajPdbs
 
-####################
 def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
     """
     updates PDB file with XYZ coords
@@ -46,14 +41,11 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
     Returns:
         None (outPdb already defined!)
     """
-
     inDf = pdbUtils.pdb2df(inPdb)
     xyzDf = xyz2df(xyzFile)
-
-    inDf["X"] = xyzDf["x"]
-    inDf["Y"] = xyzDf["y"]
-    inDf["Z"] = xyzDf["z"]
-
+    inDf['X'] = xyzDf['x']
+    inDf['Y'] = xyzDf['y']
+    inDf['Z'] = xyzDf['z']
     pdbUtils.df2pdb(inDf, outPdb)
 
 def pdb2xyz(pdbFile: FilePath, xyzFile: FilePath) -> None:
@@ -68,7 +60,7 @@ def pdb2xyz(pdbFile: FilePath, xyzFile: FilePath) -> None:
         None [xyzFile has already been defined]
 
     """
-    obabelCommand = ["obabel", pdbFile, "-O", xyzFile]
+    obabelCommand = ['obabel', pdbFile, '-O', xyzFile]
     run(obabelCommand, stdout=PIPE, stderr=PIPE)
 
 def pdb2mol2(pdbFile: FilePath, mol2File: FilePath) -> None:
@@ -83,9 +75,8 @@ def pdb2mol2(pdbFile: FilePath, mol2File: FilePath) -> None:
         None [mol2File has already been defined]
 
     """
-    obabelCommand = ["obabel", pdbFile, "-O", mol2File]
+    obabelCommand = ['obabel', pdbFile, '-O', mol2File]
     run(obabelCommand, stdout=PIPE, stderr=PIPE)
-    
 
 def parse_rtf(filePath: str) -> dict:
     """
@@ -97,151 +88,77 @@ def parse_rtf(filePath: str) -> dict:
     Returns:
         Dict: Parsed RTF data with sections for mass, residues, and other declarations.
     """
-    rtfData = {
-        "mass": [],  # List of mass entries
-        "declarations": [],  # DECL statements
-        "defaults": {},  # DEFA statements
-        "residues": {},  # RESI definitions
-        "auto": []  # AUTO statements
-    }
-    
+    rtfData = {'mass': [], 'declarations': [], 'defaults': {}, 'residues': {}, 'auto': []}
     currentResidue = None
     currentGroup = None
     parsingIc = False
-    
     with open(filePath, 'r') as file:
         lines = file.readlines()
-    
     for line in lines:
         line = line.strip()
-        if not line or line.startswith('*'):  # Skip empty lines and comments
+        if not line or line.startswith('*'):
             continue
-        
-        # Parse MASS entries
         if line.startswith('MASS'):
             parts = line.split()
             if len(parts) >= 4:
-                massEntry = {
-                    "index": parts[1],
-                    "atomType": parts[2],
-                    "mass": float(parts[3]),
-                    "comment": ' '.join(parts[4:]) if len(parts) > 4 else ''
-                }
-                rtfData["mass"].append(massEntry)
-        
-        # Parse DECL statements
+                massEntry = {'index': parts[1], 'atomType': parts[2], 'mass': float(parts[3]), 'comment': ' '.join(parts[4:]) if len(parts) > 4 else ''}
+                rtfData['mass'].append(massEntry)
         elif line.startswith('DECL'):
-            rtfData["declarations"].append(line.split()[1])
-        
-        # Parse DEFA statements
+            rtfData['declarations'].append(line.split()[1])
         elif line.startswith('DEFA'):
             parts = line.split()
-            rtfData["defaults"] = {
-                "first": parts[1] if len(parts) > 1 else '',
-                "last": parts[3] if len(parts) > 3 else ''
-            }
-        
-        # Parse AUTO statements
+            rtfData['defaults'] = {'first': parts[1] if len(parts) > 1 else '', 'last': parts[3] if len(parts) > 3 else ''}
         elif line.startswith('AUTO'):
-            rtfData["auto"].extend(line.split()[1:])
-        
-        # Parse RESI (residue) definitions
+            rtfData['auto'].extend(line.split()[1:])
         elif line.startswith('RESI'):
             parts = line.split()
             residueName = parts[1]
             charge = float(parts[2]) if len(parts) > 2 else 0.0
-            currentResidue = {
-                "name": residueName,
-                "charge": charge,
-                "groups": [],
-                "atoms": [],
-                "bonds": [],
-                "doubleBonds": [],
-                "impropers": [],
-                "cmap": [],
-                "donors": [],
-                "acceptors": [],
-                "ic": []
-            }
-            rtfData["residues"][residueName] = currentResidue
-        
-        # Parse GROUP within residue
+            currentResidue = {'name': residueName, 'charge': charge, 'groups': [], 'atoms': [], 'bonds': [], 'doubleBonds': [], 'impropers': [], 'cmap': [], 'donors': [], 'acceptors': [], 'ic': []}
+            rtfData['residues'][residueName] = currentResidue
         elif line.startswith('GROUP') and currentResidue:
             currentGroup = []
-            currentResidue["groups"].append(currentGroup)
-        
-        # Parse ATOM within residue
+            currentResidue['groups'].append(currentGroup)
         elif line.startswith('ATOM') and currentResidue:
             parts = line.split()
             if len(parts) >= 4:
-                atom = {
-                    "name": parts[1],
-                    "type": parts[2],
-                    "charge": float(parts[3]),
-                    "comment": ' '.join(parts[4:]) if len(parts) > 4 else ''
-                }
-                currentResidue["atoms"].append(atom)
+                atom = {'name': parts[1], 'type': parts[2], 'charge': float(parts[3]), 'comment': ' '.join(parts[4:]) if len(parts) > 4 else ''}
+                currentResidue['atoms'].append(atom)
                 if currentGroup is not None:
-                    currentGroup.append(atom["name"])
-        
-        # Parse BOND
+                    currentGroup.append(atom['name'])
         elif line.startswith('BOND') and currentResidue:
             parts = line.split()[1:]
             for i in range(0, len(parts), 2):
                 if i + 1 < len(parts):
-                    currentResidue["bonds"].append((parts[i], parts[i + 1]))
-        
-        # Parse DOUBLE (double bonds)
+                    currentResidue['bonds'].append((parts[i], parts[i + 1]))
         elif line.startswith('DOUBLE') and currentResidue:
             parts = line.split()[1:]
             for i in range(0, len(parts), 2):
                 if i + 1 < len(parts):
-                    currentResidue["doubleBonds"].append((parts[i], parts[i + 1]))
-        
-        # Parse IMPR (improper dihedrals)
+                    currentResidue['doubleBonds'].append((parts[i], parts[i + 1]))
         elif line.startswith('IMPR') and currentResidue:
             parts = line.split()[1:]
             for i in range(0, len(parts), 4):
                 if i + 3 < len(parts):
-                    currentResidue["impropers"].append(parts[i:i + 4])
-        
-        # Parse CMAP
+                    currentResidue['impropers'].append(parts[i:i + 4])
         elif line.startswith('CMAP') and currentResidue:
             parts = line.split()[1:]
-            currentResidue["cmap"].append(parts)
-        
-        # Parse DONOR
+            currentResidue['cmap'].append(parts)
         elif line.startswith('DONOR') and currentResidue:
             parts = line.split()[1:]
-            currentResidue["donors"].append(parts)
-        
-        # Parse ACCEPTOR
+            currentResidue['donors'].append(parts)
         elif line.startswith('ACCEPTOR') and currentResidue:
             parts = line.split()[1:]
-            currentResidue["acceptors"].append(parts)
-        
-        # Parse IC (internal coordinates)
+            currentResidue['acceptors'].append(parts)
         elif line.startswith('IC') and currentResidue:
             parts = line.split()
             if len(parts) == 9:
-                icEntry = {
-                    "atoms": parts[1:5],
-                    "star": parts[2] if parts[2].startswith('*') else None,
-                    "dist": float(parts[5]),
-                    "angle1": float(parts[6]),
-                    "dihedral": float(parts[7]),
-                    "angle2": float(parts[8]),
-                    "dist2": float(parts[9])
-                }
-                currentResidue["ic"].append(icEntry)
-    
+                icEntry = {'atoms': parts[1:5], 'star': parts[2] if parts[2].startswith('*') else None, 'dist': float(parts[5]), 'angle1': float(parts[6]), 'dihedral': float(parts[7]), 'angle2': float(parts[8]), 'dist2': float(parts[9])}
+                currentResidue['ic'].append(icEntry)
     return rtfData
 
-
-
-def write_rtf(data, output_file):
-    with open(output_file, 'w') as f:
-        # Write header
+def write_rtf(data, outputFile):
+    with open(outputFile, 'w') as f:
         f.write('* Toppar stream file generated by\n')
         f.write('* CHARMM General Force Field (CGenFF) program version 4.0\n')
         f.write('* For use with CGenFF version 4.6\n')
@@ -251,33 +168,23 @@ def write_rtf(data, output_file):
         f.write('* CHARMM General Force Field (CGenFF) program version 4.0\n')
         f.write('*\n')
         f.write('36 1\n\n')
-        
-        # Write penalty comment
         f.write('! "penalty" is the highest penalty score of the associated parameters.\n')
         f.write('! Penalties lower than 10 indicate the analogy is fair; penalties between 10\n')
         f.write('! and 50 mean some basic validation is recommended; penalties higher than\n')
         f.write('! 50 indicate poor analogy and mandate extensive validation/optimization.\n\n')
-        
-        # Write residue information
-        resi_name = list(data['residues'].keys())[0]
-        resi_data = data['residues'][resi_name]
-        charge = resi_data['charge']
-        charge_penalty = max(atom['comment'].split()[1] for atom in resi_data['atoms'])
-        f.write(f'RESI {resi_name:<15} {charge:.3f} ! param penalty=   5.000 ; charge penalty= {charge_penalty}\n')
-        
-        # Write ring comment
-        group_atoms = resi_data['groups'][0]
-        ring_atoms = [atom for atom in group_atoms if atom.startswith(('CB', 'CG1', 'CG2', 'CD1', 'CD2', 'CE'))]
-        if ring_atoms:
-            f.write(f'!RING * 6 {" ".join(ring_atoms)}\n')
-        
-        # Write GROUP header
+        resiName = list(data['residues'].keys())[0]
+        resiData = data['residues'][resiName]
+        charge = resiData['charge']
+        chargePenalty = max((atom['comment'].split()[1] for atom in resiData['atoms']))
+        f.write(f'RESI {resiName:<15} {charge:.3f} ! param penalty=   5.000 ; charge penalty= {chargePenalty}\n')
+        groupAtoms = resiData['groups'][0]
+        ringAtoms = [atom for atom in groupAtoms if atom.startswith(('CB', 'CG1', 'CG2', 'CD1', 'CD2', 'CE'))]
+        if ringAtoms:
+            f.write(f"!RING * 6 {' '.join(ringAtoms)}\n")
         f.write('GROUP            ! CHARGE   CH_PENALTY Z   EL   NB NBE RNG1 TYP RNG2 TYP RNG3 TYP\n')
-        
-        # Write atoms
-        for atom in resi_data['atoms']:
+        for atom in resiData['atoms']:
             name = atom['name']
-            atom_type = atom['type']
+            atomType = atom['type']
             charge = atom['charge']
             comment = atom['comment'].split()
             penalty = comment[1]
@@ -286,28 +193,17 @@ def write_rtf(data, output_file):
             nb = comment[4]
             nbe = comment[5]
             extra = ' '.join(comment[6:]) if len(comment) > 6 else ''
-            f.write(f'ATOM {name:<7} {atom_type:<6} {charge:>6.3f} ! {penalty:>8} {z:>3} {el:<4} {nb:>2} {nbe:<3} {extra}\n')
-        
-        # Write bonds
+            f.write(f'ATOM {name:<7} {atomType:<6} {charge:>6.3f} ! {penalty:>8} {z:>3} {el:<4} {nb:>2} {nbe:<3} {extra}\n')
         f.write('               ! TYP INR\n')
-        for bond in resi_data['bonds']:
+        for bond in resiData['bonds']:
             if bond[0] == '!':
                 continue
-            atom1, atom2 = bond
-            # Determine bond type (1 for single, 2 for double)
-            bond_type = '2' if (atom1, atom2) in resi_data.get('doubleBonds', []) or (atom2, atom1) in resi_data.get('doubleBonds', []) else '1'
-            f.write(f'BOND {atom1:<4} {atom2:<4} ! {bond_type:<2} 0\n')
-        
-        # Write impropers
-        for improper in resi_data['impropers']:
-            f.write(f'IMPR {" ".join(f"{atom:<6}" for atom in improper)}\n')
-        
-        # Write footer
+            (atom1, atom2) = bond
+            bondType = '2' if (atom1, atom2) in resiData.get('doubleBonds', []) or (atom2, atom1) in resiData.get('doubleBonds', []) else '1'
+            f.write(f'BOND {atom1:<4} {atom2:<4} ! {bondType:<2} 0\n')
+        for improper in resiData['impropers']:
+            f.write(f"IMPR {' '.join((f'{atom:<6}' for atom in improper))}\n")
         f.write('\nEND\n')
-
-# Example usage:
-# data = your_dictionary
-# write_cgenff_topology(data, 'output.top')
 
 def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
     """
@@ -319,52 +215,40 @@ def xyz2df(xyzFile: FilePath) -> pd.DataFrame:
     Returns:
         xyzDf (pd.DataFrame): dataframe containing index, element and coords
     """
-
     xyzData = []
     atomIndex = 0
-    with open(xyzFile, "r") as f:
+    with open(xyzFile, 'r') as f:
         lines = f.readlines()[2:]
         for line in lines:
-            atomIndex +=1
+            atomIndex += 1
             lineData = line.split()
-            xyzData.append({"index": atomIndex,
-                            "element": lineData[0],
-                              "x": float(lineData[1]), 
-                              "y": float(lineData[2]),
-                                "z": float(lineData[3])})
+            xyzData.append({'index': atomIndex, 'element': lineData[0], 'x': float(lineData[1]), 'y': float(lineData[2]), 'z': float(lineData[3])})
     return pd.DataFrame(xyzData)
-
-
 
 def parse_mol2(mol2File):
     atomData = []
     bondData = []
     readingAtoms = False
     readingBonds = False
-
-    with open(mol2File, "r") as mol2:
+    with open(mol2File, 'r') as mol2:
         for line in mol2:
-            if line.strip() == "":
+            if line.strip() == '':
                 continue
-            if line.startswith("@<TRIPOS>ATOM"):
-                readingAtoms=True
+            if line.startswith('@<TRIPOS>ATOM'):
+                readingAtoms = True
                 continue
-            if line.startswith("@<TRIPOS>BOND"):
-                readingBonds=True
-                readingAtoms=False
+            if line.startswith('@<TRIPOS>BOND'):
+                readingBonds = True
+                readingAtoms = False
                 continue
-            if line.startswith("@<TRIPOS>SUBSTRUCTURE"):
+            if line.startswith('@<TRIPOS>SUBSTRUCTURE'):
                 break
             if readingAtoms:
                 atomData.append(line.split())
             elif readingBonds:
                 bondData.append(line.split())
-
-
-        
-    atomDataColumns = ["ATOM_ID", "ATOM_NAME", "X", "Y", "Z", "ATOM_TYPE", "RES_ID", "RES_NAME", "CHARGE"]
+    atomDataColumns = ['ATOM_ID', 'ATOM_NAME', 'X', 'Y', 'Z', 'ATOM_TYPE', 'RES_ID', 'RES_NAME', 'CHARGE']
     atomDf = pd.DataFrame(atomData, columns=atomDataColumns)
-    bondDataColumns = ["BOND_ID", "ATOM_A_ID", "ATOM_B_ID", "BOND_ORDER"]
+    bondDataColumns = ['BOND_ID', 'ATOM_A_ID', 'ATOM_B_ID', 'BOND_ORDER']
     bondDf = pd.DataFrame(bondData, columns=bondDataColumns)
-
-    return atomDf, bondDf
+    return (atomDf, bondDf)

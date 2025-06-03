@@ -5,33 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculation Summary</title>
     <style>
+        /* Updated and New Styles */
         body {
             font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
-            margin: 20px; /* This margin will show the #1a1a1a around the image if image doesn't fill completely, or if you want space around your content before the image edge */
-                           /* If you want the image to touch the very edges of the browser, set margin: 0; */
-            background-color: #1a1a1a; /* Fallback color if image doesn't load */
-            background-image: url('Images/Lightning.jpg'); /* Path to your image */
-            background-repeat: no-repeat;       /* Prevent the image from tiling */
-            background-position: center center; /* Center the image */
-            background-attachment: fixed;       /* Keep the image fixed during scroll */
-            background-size: cover;           /* Scale the image to cover the entire viewport */
-            min-height: 100vh;                /* Ensure body takes at least full viewport height for background-size:cover to work well */
+            margin: 0; /* Changed: Let parallax container handle full viewport */
+            background-color: #1a1a1a; /* Fallback for area outside parallax, if any */
+            color: #f0f0f0; /* A general text color for elements outside tab-container */
+        }
+        .parallax-viewport {
+            width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            perspective: 300px; /* Keep the perspective for parallax effect */
+            position: relative;
+            min-height: 100vh; /* Ensure at least full viewport height, but allow expansion */
+        }
+
+        .parallax-background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            min-height: 100%; /* Ensure background covers at least the viewport height */
+            z-index: -1;
+            background-image: url('Images/Lightning.jpg');
+            background-repeat: no-repeat;
+            background-position: center top; /* Center the background image */
+            background-size: cover; /* Cover the entire area */
+            background-attachment: fixed; /* Overridden by transform, kept for compatibility */
+            transform: translateZ(-600px) scale(4); /* Maintain parallax effect */
+        }
+
+        .page-content-wrapper {
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+            min-height: 110vh; /* For testing parallax */
         }
         .tab-container {
             width: 80%;
-            margin: 0 auto;
-            background-color: #333; /* This will overlay the body background, which is good for readability */
+            margin: 0 auto; /* Centered within page-content-wrapper */
+            background-color: #333;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 8px;
-            overflow: hidden; /* Important for rounded corners with tabs */
-
+            overflow: hidden;
         }
         .tab-nav {
             display: flex;
-            background-color: #00FF00; /* This creates the green bar behind the buttons */
+            background-color: #00FF00;
         }
         .tab-nav button {
-            background-color: #333; /* Default background for tab buttons */
+            background-color: #333;
             color: #ffffff;
             border: none;
             padding: 15px 25px;
@@ -41,160 +65,152 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
-            flex-grow: 1; /* Make buttons fill the space */
-            font-family: Consolas, "Courier New", Monaco, Menlo, monospace; /* Add this line */
-            border-right: 1px solid #444; /* Optional: add a separator between buttons */
+            flex-grow: 1;
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
+            border-right: 1px solid #444;
         }
         .tab-nav button:last-child {
-            border-right: none; /* Remove border for the last button */
+            border-right: none;
         }
         .tab-nav button:hover {
             background-color: #555;
         }
         .tab-nav button.active {
-            background-color: #00FF00; /* Active tab background */
-            color: rgb(0, 0, 0); /* Active tab text color */
+            background-color: #00FF00;
+            color: rgb(0, 0, 0);
         }
         .tab-content {
-            display: none; /* Hide all tab content by default */
+            display: none;
             padding: 20px;
-            color: white; /* Default text color for tab content */
-            /* background-color: rgba(51, 51, 51, 0.9); /* Optional: slightly transparent background for content if needed over the image, but tab-container already has a solid bg */
+            color: white;
         }
         .tab-content.active {
-            display: block; /* Show active tab content */
+            display: block;
         }
-        h1 { /* USE FOR MAIN TITLE*/
+        h1 {
             text-align: center;
             color: yellow;
-            margin-bottom: 20px;
+            margin-bottom: 20px; /* This will now be margin from top of page-content-wrapper or previous element */
             text-shadow: 6px 6px 12px #000;
         }
-        h2 { /* USE FOR SUB HEADINGS*/
+        h2 {
             color: white;
-            border-bottom: 2px solid #000000; /* Changed to black for better visibility on dark content bg */
+            border-bottom: 2px solid #000000;
             padding-bottom: 5px;
             margin-top: 0;
         }
-        h3 { /* USE FOR INFO SECTIONS */
-            color: #e0e0e0; /* Lighter color for h3 text on dark background */
+        h3 {
+            color: #e0e0e0;
             margin-top: 0;
             font-size: 1.2em;
             font-weight: 400;
         }
-
-        h3 strong { /* USE FOR INFO SECTIONS */
+        h3 strong {
             font-weight: 700;
-            color: #00FF00; /* Green to make it pop, or yellow */
+            color: #00FF00;
         }
-        h4 { /* USE FOR YELLOW-ON-BLACK */
+        h4 {
             color: yellow;
         }
-        h5 { /* USE FOR WHITE-ON-BLACK */
+        h5 {
             color: white;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
-            color: #ccc; /* Lighter text color for table content */
+            color: #ccc;
         }
         th, td {
-            border: 1px solid #555; /* Darker border for table */
+            border: 1px solid #555;
             padding: 8px;
             text-align: left;
         }
         th {
-            background-color: #444; /* Darker background for table header */
-            color: #00FF00; /* Green text for table header */
+            background-color: #444;
+            color: #00FF00;
         }
         td {
-            background-color: #383838; /* Slightly lighter than content bg for cells */
+            background-color: #383838;
         }
         .info {
-            background-color: #2c2c2c; /* Darker info box background */
+            background-color: #2c2c2c;
             border-left: 6px solid #00FF00;
             padding: 10px;
             margin-bottom: 15px;
-            color: #e0e0e0; /* Lighter text for info box */
+            color: #e0e0e0;
         }
         .protocol-content-text {
-            white-space: pre-wrap; /* Preserve line breaks and spaces, wrap text */
-            word-wrap: break-word;   /* Break long words if necessary */
-            color: #888;         /* Ensures consistent text color, matches .info default */
-            font-style: italic;    /* Makes text italic */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #888;
+            font-style: italic;
         }
+
+        /* FOR TESTING: Ensure one of your tabs has enough content to scroll */
+        /* For example:
+        #conformerGen.tab-content.active {
+            min-height: 150vh;
+        }
+        */
 
     </style>
 </head>
 <body>
 
-    <h1>drFrankenstein Report for Molecule: {{ job_name }}</h1>
+    <div class="parallax-viewport">
+        <div class="parallax-background-layer"></div>
 
-    <div class="tab-container">
-        <div class="tab-nav">
-            <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer Generation</button>
-            <button class="tab-button" onclick="openTab(event, 'torsionScan')">Torsion Scanning</button>
-            <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
-            <button class="tab-button" onclick="openTab(event, 'paramFit')">Parameter Fitting</button>
-            <button class="tab-button" onclick="openTab(event, 'timeReport')">Time Report</button>
-        </div>
+        <div class="page-content-wrapper">
+            <h1>drFrankenstein Report for Molecule: {{ job_name }}</h1>
 
-        <div id="conformerGen" class="tab-content active">
-            {% include 'conformer_generation.html' %}
-        </div>
+            <div class="tab-container">
+                <div class="tab-nav">
+                    <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer Generation</button>
+                    <button class="tab-button" onclick="openTab(event, 'torsionScan')">Torsion Scanning</button>
+                    <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
+                    <button class="tab-button" onclick="openTab(event, 'paramFit')">Parameter Fitting</button>
+                    <button class="tab-button" onclick="openTab(event, 'timeReport')">Time Report</button>
+                </div>
 
-        <div id="torsionScan" class="tab-content">
-            {% include 'torsion_scanning.html' %}
-        </div>
+                <div id="conformerGen" class="tab-content active">
+                    {% include 'conformer_generation.html' %}
+                </div>
 
-        <div id="chargeCalc" class="tab-content">
-            {% include 'charge_calculations.html' %}
-        </div>
+                <div id="torsionScan" class="tab-content">
+                    {% include 'torsion_scanning.html' %}
+                </div>
 
-        <div id="paramFit" class="tab-content">
-            {% include 'parameter_fitting.html' %}
-        </div>
+                <div id="chargeCalc" class="tab-content">
+                    {% include 'charge_calculations.html' %}
+                </div>
 
-        <!-- Corrected Time Report Tab Content -->
-        <div id="timeReport" class="tab-content">
-            {% include 'time_report.html' %}
-        </div>
-        <!-- End of Corrected Time Report Tab Content -->
+                <div id="paramFit" class="tab-content">
+                    {% include 'parameter_fitting.html' %}
+                </div>
 
-    </div>
+                <div id="timeReport" class="tab-content">
+                    {% include 'time_report.html' %}
+                </div>
+            </div> <!-- End of tab-container -->
+        </div> <!-- End of page-content-wrapper -->
+    </div> <!-- End of parallax-viewport -->
 
     <script>
         function openTab(evt, tabName) {
-            // Get all elements with class="tab-content" and hide them
             var tabcontent = document.getElementsByClassName("tab-content");
             for (var i = 0; i < tabcontent.length; i++) {
                 tabcontent[i].style.display = "none";
                 tabcontent[i].classList.remove("active");
             }
-
-            // Get all elements with class="tab-button" and remove the class "active"
             var tabbuttons = document.getElementsByClassName("tab-button");
             for (var i = 0; i < tabbuttons.length; i++) {
                 tabbuttons[i].classList.remove("active");
             }
-
-            // Show the current tab, and add an "active" class to the button that opened the tab
             document.getElementById(tabName).style.display = "block";
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
         }
-
-        // Optional: Open the first tab by default if needed.
-        // The CSS already handles making the first tab active by default with "active" class
-        // on the button and the content div.
-        // If you wanted to do it purely with JS after load:
-        // document.addEventListener("DOMContentLoaded", function() {
-        //    if(document.querySelector('.tab-button')) { // Check if buttons exist
-        //        document.querySelector('.tab-button').click(); // Click the first tab
-        //    }
-        // });
     </script>
 
 </body>

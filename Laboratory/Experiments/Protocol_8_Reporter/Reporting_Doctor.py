@@ -35,6 +35,8 @@ def reporter_protocol(config: dict) -> None:
     config["runtimeInfo"]["madeByReporting"]["reporterDir"] = reporterDir
     config["runtimeInfo"]["madeByReporting"]["imagesDir"] = imagesDir
 
+    Reporting_Assistant.copy_images(config)
+
     ## run protocols
     timeGanttPng    = Reporting_Assistant.generate_gantt_chart(config)
     wriggleData     = Reporting_Monster.process_wriggle_results(config)

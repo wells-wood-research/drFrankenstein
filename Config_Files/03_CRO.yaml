@@ -27,7 +27,6 @@ pathInfo:
 moleculeInfo:
   charge: 0
   multiplicity: 1
-  moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/CRO_h.pdb
   moleculeName: CRO
   nTermini: [N1]
   cTermini: [C3]

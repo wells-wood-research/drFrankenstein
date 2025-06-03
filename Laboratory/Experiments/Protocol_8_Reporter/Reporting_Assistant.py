@@ -1,6 +1,7 @@
 import pandas as pd
 import py3Dmol
 from pdbUtils import pdbUtils # Your custom PDB parsing utility
+from shutil import copy
 import os
 from os import path as p
 import matplotlib.pyplot as plt
@@ -569,3 +570,11 @@ def make_highlighted_torsion_visualisations(config, outDir):
         htmlFiles[torsionTag] = relativePath
 
     return htmlFiles
+
+def copy_images(config):
+    imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
+    
+    thisDir = os.path.dirname(os.path.abspath(__file__))
+    LightningJpg = p.join(thisDir, "templates", "Lightning.jpg")
+    LightningJpgDest = p.join(imagesDir, "Lightning.jpg")
+    copy(LightningJpg, LightningJpgDest)

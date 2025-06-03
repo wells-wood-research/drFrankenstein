@@ -36,8 +36,6 @@ moleculeInfo:
   charge: 0
   ## spin multiplicity (2S+1)
   multiplicity: 1
-  ## Full path to input molecule PDB, can be in H2N -- COOH or H2N -- COO format
-  moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/PHG.pdb
   ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
   moleculeName: PHG
   ## List of terminal atoms

@@ -10,15 +10,15 @@
 ##########################################################################################################################
 pathInfo:
   ## full path to input files
-  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
+  inputDir: /home/eugene/drFrankenstein/Inputs
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/05_AIB_outputs_CHARMM
+  outputDir: /home/eugene/drFrankenstein/01_AIB_AMBER
   ## full path to Multiwfn install directory
-  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
+  multiWfnDir: /home/eugene/bin/Multiwfn_3.8_dev_bin_Linux_noGUI
   ## full path to ORCA executable
-  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
+  orcaExe: /home/eugene/bin/orca_6_0_1/orca
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
-  amberHome: /home/esp/anaconda3/envs/Igor/
+  amberHome: /home/eugene/.conda/envs/Igor
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null
 
@@ -36,8 +36,6 @@ moleculeInfo:
   charge: 0
   ## spin multiplicity (2S+1)
   multiplicity: 1
-  ## Full path to input molecule PDB, can be in H2N -- COOH or H2N -- COO format
-  moleculePdb: /home/esp/scriptDevelopment/drFrankenstein/Inputs/AIB.pdb
   ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
   moleculeName: AIB
   ## List of terminal atoms
@@ -80,7 +78,7 @@ torsionScanInfo:
   preserveBackboneTorsions: false
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
   nConformers: -1
-  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!)
+  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!) 
   nScanSteps: 37
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
@@ -108,9 +106,9 @@ chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
   chargeFittingProtocol: RESP2
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: 4
+  nConformers: -1
   ## number of cores for charge fitting
-  nCoresPerCalculation: 8
+  nCoresPerCalculation: 4
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
   optMethod: XTB2
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
@@ -132,7 +130,7 @@ chargeFittingInfo:
 ############################################################################################################################
 parameterFittingInfo:
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
-  forceField: CHARMM
+  forceField: AMBER
   ## maximum cosine functions to be used to fit each torsion parameter
   maxCosineFunctions: 3
   ## how many rounds of parameter fitting do you want to perform (more is better?)

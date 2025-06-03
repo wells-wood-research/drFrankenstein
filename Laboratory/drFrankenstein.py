@@ -66,7 +66,7 @@ def main():
     ## run assembly protocol
     if not checkpointInfo["assemblyComplete"]:
         if config["parameterFittingInfo"]["forceField"] == "CHARMM":
-            config = handle_CGenFF_dependancy.handle_CGenFF_dependancy(config)
+            config = handle_CGenFF_dependancy.handle_cgenff_dependancy(config)
             drYaml.write_config_to_yaml(config, outputDir)
             config = Assembly_Doctor.charmm_assembly_protocol(config=config)
             drYaml.write_config_to_yaml(config, outputDir)  

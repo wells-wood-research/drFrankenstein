@@ -159,8 +159,8 @@ def pdb2mol2(inPdb: FilePath,
 
     ## clean up temporary files
     os.remove(tmpPdb)
-    filesTtoRemove = [f for f in os.listdir(workingDir) if f.startswith("ANTECHAMBER")]
-    for f in filesTtoRemove:
+    filesToRemove = [f for f in os.listdir(workingDir) if f.startswith("ANTECHAMBER")]
+    for f in filesToRemove:
         os.remove(p.join(workingDir, f))
     return None
 

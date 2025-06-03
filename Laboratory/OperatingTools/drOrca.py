@@ -11,9 +11,9 @@ from OperatingTools import file_parsers
 def run_orca(orcaInput, orcaOutput, config):
     orcaExe = config["pathInfo"]["orcaExe"]
     orcaCommand = [orcaExe, orcaInput]
-    with open(orcaOutput, 'w') as output_file:
+    with open(orcaOutput, 'w') as outputFile:
         try:
-            call(orcaCommand, stdout=output_file, stderr=output_file)
+            call(orcaCommand, stdout=outputFile, stderr=outputFile)
         except Exception as e:
             raise(e)
 ########################################

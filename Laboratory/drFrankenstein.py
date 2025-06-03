@@ -122,11 +122,11 @@ def handle_exceptions(e, pdbName):
     if tb:
         tb.reverse()
         fullTraceBack = [f"{frame.filename}:{frame.lineno} in {frame.name}" for frame in tb]
-        last_frame = tb[-1]
-        functionName = last_frame.name
-        lineNumber = last_frame.lineno
-        lineOfCode = last_frame.line
-        scriptName = last_frame.filename
+        lastFrame = tb[-1]
+        functionName = lastFrame.name
+        lineNumber = lastFrame.lineno
+        lineOfCode = lastFrame.line
+        scriptName = lastFrame.filename
     else:
         functionName = 'Unknown'
         lineNumber = 'Unknown'

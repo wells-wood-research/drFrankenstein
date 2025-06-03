@@ -188,7 +188,7 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
     """
     # Define CHARMM36m atom type mapping
     ## TODO: Automate using config input
-    nameToDesiredType_mol = {
+    nameToDesiredTypeMol = {
                     "N" : "NH1",
                     "HN": "H",
                     "CA": "CT1",
@@ -196,7 +196,7 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
                     "C" : "C",
                     "O" : "O" }
 
-    nameToDesiredType_bb = {                    
+    nameToDesiredTypeBb = {
                     "NN": "NH1",
                     "HNN1": "H",
                     "CN": "CT1", 
@@ -210,7 +210,7 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
                     "HC2": "HB1",
                     "HC3": "HB1"}
     
-    nameToDesiredType = {**nameToDesiredType_bb, **nameToDesiredType_mol}
+    nameToDesiredType = {**nameToDesiredTypeBb, **nameToDesiredTypeMol}
     nameToCgenffType = Assembly_Assistant.get_cgenff_atom_types(parmedPsf, nameToDesiredType)
 
     parmedPsf = Assembly_Assistant.update_psf_atom_types(parmedPsf, nameToDesiredType)

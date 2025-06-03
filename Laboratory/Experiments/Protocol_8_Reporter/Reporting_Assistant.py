@@ -575,6 +575,6 @@ def copy_images(config):
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     
     thisDir = os.path.dirname(os.path.abspath(__file__))
-    LightningJpg = p.join(thisDir, "templates", "Lightning.jpg")
-    LightningJpgDest = p.join(imagesDir, "Lightning.jpg")
-    copy(LightningJpg, LightningJpgDest)
+    lightningJpg = p.join(thisDir, "templates", "Lightning.jpg")
+    lightningJpgDest = p.join(imagesDir, "Lightning.jpg")
+    copy(lightningJpg, lightningJpgDest)

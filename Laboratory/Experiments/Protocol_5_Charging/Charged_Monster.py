@@ -240,12 +240,12 @@ def parse_multiwfn_output(rawMultiWfnOutputs: FilePath) -> pd.DataFrame:
         lines = file.readlines()
 
     # Find the index of the line after "Successfully converged!"
-    start_index = next(i for i, line in enumerate(lines) 
+    startIndex = next(i for i, line in enumerate(lines)
                        if "Successfully converged!" in line) + 3
 
     # Extract the charge data lines
     chargeDataLines = []
-    for line in lines[start_index:]:
+    for line in lines[startIndex:]:
         if "Sum of charges:" in line.strip():
             break
         chargeDataLines.append(line.strip())

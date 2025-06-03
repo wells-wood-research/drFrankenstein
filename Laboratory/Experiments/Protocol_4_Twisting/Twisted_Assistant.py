@@ -142,11 +142,11 @@ def exclude_backbone_torsions(config: dict) -> dict:
     """
     ## unpack config
     uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
-    forceFeild = config["parameterFittingInfo"]["forceField"]
-    if forceFeild == "CHARMM":
+    forceField = config["parameterFittingInfo"]["forceField"]
+    if forceField == "CHARMM":
         phiCenterTypes = ("NH1", "CT1") ## C N CA C
         psiCenterTypes = ("CT1", "C") ## N CA C N
-    elif forceFeild == "AMBER":
+    elif forceField == "AMBER":
         phiCenterTypes = ("N", "CT") ## C N CA C
         psiCenterTypes = ("CT", "C") ## N CA C N    
 
@@ -279,19 +279,19 @@ def take_min_duplicate_angles(energyDf):
     # Select the rows with the minimum energy for each Angle
     return energyDf.loc[minEnergyIndexes].reset_index(drop=True)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_scan_energy_data(conformertorsionScanDir):
-    scanDat: FilePath = p.join(conformertorsionScanDir, "orca_scan.relaxscanact.dat")
+def read_scan_energy_data(conformerTorsionScanDir):
+    scanDat: FilePath = p.join(conformerTorsionScanDir, "orca_scan.relaxscanact.dat")
     if not os.path.exists(scanDat):
-        raise FileNotFoundError(f"Scan data not found in {conformertorsionScanDir}")
+        raise FileNotFoundError(f"Scan data not found in {conformerTorsionScanDir}")
     scanDf: pd.DataFrame = pd.read_csv(scanDat, sep='\s+', header=None)
     return scanDf
     
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def find_final_xyz(conformertorsionScanDir):
-    allXyzFiles = glob.glob(p.join(conformertorsionScanDir, "*.xyz"))
-    scanXYZFiles = sorted([f for f in allXyzFiles if re.match(r'orca_scan\.\d+\.xyz$', os.path.basename(f))])
+def find_final_xyz(conformerTorsionScanDir):
+    allXyzFiles = glob.glob(p.join(conformerTorsionScanDir, "*.xyz"))
+    scanXyzFiles = sorted([f for f in allXyzFiles if re.match(r'orca_scan\.\d+\.xyz$', os.path.basename(f))])
 
-    finalXyzFile = scanXYZFiles[-1]
+    finalXyzFile = scanXyzFiles[-1]
     return finalXyzFile
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def measure_current_torsion_angle(conformerXyz, torsionIndexes):
@@ -335,9 +335,9 @@ def calculate_torsion_angle(coords, torsionIndexes):
     angleInRadians = np.arctan2(np.dot(np.cross(n1, n2), b2 / np.linalg.norm(b2)), np.dot(n1, n2))
 
     # Convert from radians to degrees
-    angleIdDegrees = np.degrees(angleInRadians)
+    angleInDegrees = np.degrees(angleInRadians)
 
-    return angleIdDegrees
+    return angleInDegrees
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 

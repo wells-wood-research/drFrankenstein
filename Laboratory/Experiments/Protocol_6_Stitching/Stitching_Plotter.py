@@ -105,8 +105,8 @@ def plot_qmmm_energies(qmTotalEnergy,
     axis[1].plot(angles, mmTorsionEnergy, label='MM', linewidth=2, color=brightCyan)
 
     ## plot cosine components
-    for freq, cosine_component in cosineComponents.items():
-        axis[1].plot(angles, cosine_component, linestyle='--',
+    for freq, cosineComponent in cosineComponents.items():
+        axis[1].plot(angles, cosineComponent, linestyle='--',
                      label=f'Cosine Component {freq:.0f}', color=white, alpha=0.5)
     # Dummy plot for legend
     axis[1].plot([], [], linestyle='--', color=white, alpha=0.5,

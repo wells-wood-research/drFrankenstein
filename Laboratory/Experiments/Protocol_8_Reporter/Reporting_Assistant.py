@@ -172,7 +172,7 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
         )
         ax.add_patch(rect)
 
-        labelXPos = rectXStartMinutes + rectWidthMinutes + 1 
+        labelXPos = rectXStartMinutes + rectWidthMinutes + 0.1
         labelYPos = rectYStart + rectHeight / 2
 
         groupIdToDisplay = str(groupIdx + 1) 
@@ -540,7 +540,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
 
     htmlFiles = {}
     for torsionTag, dihedralData in uniqueRotatableDihedrals.items():
-        view = py3Dmol.view(width=300, height=300)
+        view = py3Dmol.view(width=600, height=300)
         view.addModel(pdbBlock, "pdb",  {"keepH": True})
 
         view.setStyle({},{
@@ -560,6 +560,14 @@ def make_highlighted_torsion_visualisations(config, outDir):
                 'radius': 0.2
             }
         })
+
+        for atomName, atomIndex in zip(dihedralData["ATOM_NAMES"], dihedralData["ATOM_INDEXES"]):
+            view.addLabel(atomName,
+                            {'fontSize': 10, 'fontColor': 'yellow', 
+                            'showBackground': True, 'backgroundOpacity': 1, 'backgroundColor': 'black',
+                            'alignment': 'center'},
+                            {'serial': atomIndex + 1}) 
+
         view.setBackgroundColor("black")
 
         htmlFile = p.join(outDir, f"{torsionTag}.html")

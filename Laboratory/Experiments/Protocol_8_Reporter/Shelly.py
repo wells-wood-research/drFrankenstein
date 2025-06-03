@@ -268,7 +268,6 @@ This process was repeated {nShuffles} times, each time the order of the torsions
 
 
 def extract_citations(orcaOut: FilePath) -> dict:
-    print(orcaOut)
     with open(orcaOut, "r") as f:
         fileContent = f.read()
     # Variable names in camelCase
@@ -486,7 +485,29 @@ def gather_citations(config: dict) -> dict:
         for orcaOut in orcaOutFiles[tag]:
             citationsDict = extract_citations(orcaOut)
             citations[tag] = citationsDict
+            if tag == "forCharges":
+                citations[tag]["essential_papers"].extend(manual_charges_citations())
+            
     return citations
+
+
+
+def manual_charges_citations():
+    manualChargeCitations = [{
+                    "authors": "Tian Lu, Feiwu Chen",
+                    "title": "Multiwfn: A Multifunctional Wavefunction Analyzer",
+                    "journal_info": "J. Comput. Chem.",
+                    "doi": "doi.org/10.1002/jcc.22885"
+                            },
+                            {
+                    "authors": "Jun Zhang, Tian Lu",
+                    "title": "Efficient Evaluation of Electrostatic Potential with Computerized Optimized Code",
+                    "journal_info": "Phys. Chem. Chem. Phys.",
+                    "doi": "doi.org/10.1039/D1CP02805G"
+                            },
+                ]
+    
+    return manualChargeCitations
 
 
 if __name__ == "__main__":
@@ -497,13 +518,6 @@ if __name__ == "__main__":
     methods_writer_protocol(config)
 
     orcaOutFiles = find_orca_output_files(config)
-    for tag in orcaOutFiles:
-        for orcaOut in orcaOutFiles[tag]:
-            citationsDict = extract_citations(orcaOut)
-            for categoryKey in citationsDict:
-                print(f"{categoryKey}:")
-                for citation in citationsDict[categoryKey]:
-                    print(citation["authors"].split(";")[-1])
-                    print(f"    {citation['authors']}")
+    gather_citations(config)
 
     exit()

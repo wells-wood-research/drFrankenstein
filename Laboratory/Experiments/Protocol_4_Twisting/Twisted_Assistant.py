@@ -619,9 +619,6 @@ def process_scan_data(scanDfs: List[pd.DataFrame],
     ## merge scan dataframes
     # scanDfs = [process_energy_outputs(scanDf) for scanDf in scanDfs]
     mergedDf = merge_scan_dfs(scanDfs)
- 
-    ## remove cols with large jumps in energy
-    mergedDf = detect_jumps_in_data(mergedDf)
 
     ## write to csv
     mergedScanCsv = p.join(dataDir, f"scan_energies.csv")
@@ -647,18 +644,6 @@ def merge_scan_dfs(scanDfs):
     return mergedDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def detect_jumps_in_data(df):
-    # Calculate differences between consecutive values
-    diffDf = df.drop(columns='Angle').diff().abs()
-    
-    # Identify columns with any difference greater than the threshold
-    jumpyCols = diffDf.columns[((diffDf > 10).any())]
-    
-    # Drop these columns from the original DataFrame
-    cleanDf = df.drop(columns=jumpyCols)
-    
-    return cleanDf
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 
 

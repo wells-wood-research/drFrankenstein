@@ -157,7 +157,7 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Scan Single Points (serial)", "TORSION_SCANS")
 def single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag, config):
-    argsList = [(scanDir, scanDf, torsionDir, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
+    argsList = [(scanDir, scanDf, torsionTag, config) for scanDir, scanDf in zip(scanDirs, scanDfs)]
     singlePointDfs = []
     for args in argsList:
         singlePointDf = do_the_single_point_worker(args)
@@ -238,7 +238,13 @@ def do_the_twist(conformerXyz: FilePath,
 
     scanForwardsDf, forwardsXyz, forwardsDir = Twisted_Monster.run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config)
 
+    if Twisted_Assistant.have_scans_exploded(forwardsDir, config):
+        return None, None, None, None
+
     scanBackwardsDf, backwardsDir = Twisted_Monster.run_backwards_scan_step(forwardsXyz, initialTorsionAngle, torsionIndexes, conformerScanDir, conformerId, config)
+
+    if Twisted_Assistant.have_scans_exploded(backwardsDir, config):
+        return None, None, None, None
 
     scanForwardsDf = Twisted_Assistant.process_energy_outputs(scanForwardsDf)
     scanBackwardsDf = Twisted_Assistant.process_energy_outputs(scanBackwardsDf)

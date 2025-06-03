@@ -30,6 +30,114 @@ from typing import List, Tuple
 
 
 from OperatingTools import drOrca
+from OperatingTools import file_parsers
+
+
+def get_unique_bonds(adjacencyMatrix: defaultdict):
+    """
+    Processes the adjacency matrix to get a stable list of unique bond pairs
+    (atomIdx1, atomIdx2) assuming 0-based indexing consistent with xyz2df.
+    """
+    uniqueBondPairs = [] 
+    processedBondsSet = set()
+
+    sortedAtom1Indices = sorted(adjacencyMatrix.keys())
+
+    for atom1 in sortedAtom1Indices:
+        sortedNeighbors = sorted(adjacencyMatrix[atom1])
+        for atom2 in sortedNeighbors:
+            canonicalPair = tuple(sorted((atom1, atom2))) # e.g. (0,1) not (1,0)
+            if canonicalPair not in processedBondsSet:
+                processedBondsSet.add(canonicalPair)
+                uniqueBondPairs.append(canonicalPair) # Store the (smaller_idx, larger_idx) pair
+    return uniqueBondPairs
+
+def calculate_bond_lengths_for_frame_vectorized(
+    uniqueBondPairs: list[tuple[int, int]], 
+    coordsDf: pd.DataFrame
+) -> dict[str, float]:
+    """
+    Calculates bond lengths for a single geometry frame using vectorized operations.
+    """
+    if not uniqueBondPairs:
+        return {}
+
+    atom1Indices = [pair[0] for pair in uniqueBondPairs]
+    atom2Indices = [pair[1] for pair in uniqueBondPairs]
+
+    coords1 = coordsDf.loc[atom1Indices, ['x', 'y', 'z']].values
+    coords2 = coordsDf.loc[atom2Indices, ['x', 'y', 'z']].values
+    
+    diffSq = (coords1 - coords2)**2
+    distances = np.sqrt(np.sum(diffSq, axis=1))
+    
+    bondLengthsDict = {}
+    for i, pair in enumerate(uniqueBondPairs):
+        # Create bond label from the canonical pair used for indexing
+        bondLabel = f"{pair[0]}-{pair[1]}" 
+        bondLengthsDict[bondLabel] = distances[i]
+        
+    return bondLengthsDict
+
+def have_scans_exploded(scanDir: DirectoryPath, configDict: dict, tolerance: float = 0.5):
+    adjacencyMatrix = configDict["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"]
+    orcaScanXyzs = sorted(glob.glob(p.join(scanDir, "orca_scan.[0-9][0-9][0-9].xyz")))
+
+    if not orcaScanXyzs:
+        return False 
+
+    # Assumes adjacencyMatrix uses 0-based indexing for atoms
+    uniqueBondPairs = get_unique_bonds(adjacencyMatrix)
+
+    if not uniqueBondPairs:
+        return False 
+
+    minLengthsSoFar = {}
+    maxLengthsSoFar = {}
+
+    # Process first file to initialize min/max
+    firstXyzDf = file_parsers.xyz2df(orcaScanXyzs[0])
+    currentBondLengths = calculate_bond_lengths_for_frame_vectorized(uniqueBondPairs, firstXyzDf)
+        
+    for pair in uniqueBondPairs: # Iterate using the definitive list of bonds
+        bondLabel = f"{pair[0]}-{pair[1]}"
+        length = currentBondLengths.get(bondLabel)
+        if length is not None:
+            minLengthsSoFar[bondLabel] = length
+            maxLengthsSoFar[bondLabel] = length
+    
+    if len(orcaScanXyzs) < 2: # Need at least two frames to check for variation
+         return False
+
+    for xyzFile in orcaScanXyzs[1:]:
+        xyzDf = file_parsers.xyz2df(xyzFile)
+        currentBondLengths = calculate_bond_lengths_for_frame_vectorized(uniqueBondPairs, xyzDf)
+
+        for bondLabelInFrame, length in currentBondLengths.items():
+            # Only process bonds that were successfully defined and calculated from uniqueBondPairs
+            if bondLabelInFrame not in minLengthsSoFar: 
+                # This case implies a bond defined by uniqueBondPairs was not in the first frame's currentBondLengths
+                # but appeared later, or a bond not in uniqueBondPairs appeared (latter filtered by current logic)
+                # For simplicity, we assume all bonds in uniqueBondPairs are trackable from the start.
+                # If a bond from uniqueBondPairs was NOT in the first frame, this would be an issue.
+                # However, current_bond_lengths keys are derived from uniqueBondPairs, so this should be fine.
+                minLengthsSoFar[bondLabelInFrame] = length
+                maxLengthsSoFar[bondLabelInFrame] = length
+            else:
+                minLengthsSoFar[bondLabelInFrame] = min(minLengthsSoFar[bondLabelInFrame], length)
+                maxLengthsSoFar[bondLabelInFrame] = max(maxLengthsSoFar[bondLabelInFrame], length)
+
+            minL = minLengthsSoFar[bondLabelInFrame]
+            maxL = maxLengthsSoFar[bondLabelInFrame]
+            
+            # Check for explosion condition for this bond immediately
+            if maxL > minL * (1.0 + tolerance):
+                return True # Explosion detected
+    
+    return False # No explosion detected after checking all files and bonds
+
+
+
 
 def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) -> dict:
     """
@@ -122,6 +230,8 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     taggedNonAromaticRingDihedrals = assign_torsion_tags(nonAromaticRingDihedrals)
     taggedTerminalDihedrals = assign_torsion_tags(terminalDihedrals)
 
+
+    config["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"] = dict(adjacencyMatrix)
     config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"] = taggedRotatableDihedrals
     config["runtimeInfo"]["madeByTwisting"]["aromaticDihedrals"] = taggedAromaticDihedrals
     config["runtimeInfo"]["madeByTwisting"]["nonAromaticRingDihedrals"] = taggedNonAromaticRingDihedrals

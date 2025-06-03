@@ -87,7 +87,7 @@ chargeFittingInfo:
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
   nConformers: 4
   ## number of cores for charge fitting
-  nCoresPerCalculation: 8
+  nCoresPerCalculation: 1
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
   optMethod: XTB2
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation

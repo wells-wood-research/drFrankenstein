@@ -161,4 +161,6 @@ def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
         scanDf[["scan_index", "Angle"]], on="scan_index", how="left")
     singlePointEnergyDf = Twisted_Assistant.process_energy_outputs(singlePointEnergyDf)
     singlePointEnergyDf.to_csv(p.join(spTopDir, f"SP_{conformerId}_{tag}.csv"), index=False)
+
+    
     return singlePointEnergyDf

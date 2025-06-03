@@ -268,7 +268,7 @@ This process was repeated {nShuffles} times, each time the order of the torsions
 
 
 def extract_citations(orcaOut: FilePath) -> dict:
-
+    print(orcaOut)
     with open(orcaOut, "r") as f:
         fileContent = f.read()
     # Variable names in camelCase
@@ -425,7 +425,7 @@ def find_orca_output_files(config: dict) -> dict:
     if chargeCalculationProtocol == "SOLVATOR":
         solvatorDir = p.join(chargeDir, "01_solvator_calculations")
         conformerDir = [p.join(solvatorDir, dirName) for dirName in os.listdir(solvatorDir) if "conformer" in dirName][0]
-        solvatorOut = p.join(conformerDir, "SOLVATOR_opt.out")
+        solvatorOut = p.join(conformerDir, "SOLVATOR_orca.out")
         if not p.isfile(solvatorOut):
             solvatorOut = None
         ##
@@ -483,11 +483,11 @@ def gather_citations(config: dict) -> dict:
 
     citations = {}
     for tag in orcaOutFiles:
-        print("###########", tag, "###########")
         for orcaOut in orcaOutFiles[tag]:
             citationsDict = extract_citations(orcaOut)
             citations[tag] = citationsDict
     return citations
+
 
 if __name__ == "__main__":
     configFile = "/home/esp/scriptDevelopment/drFrankenstein/04_GLY_CHARMM/drFrankenstein.yaml"
@@ -498,7 +498,6 @@ if __name__ == "__main__":
 
     orcaOutFiles = find_orca_output_files(config)
     for tag in orcaOutFiles:
-        print("###########", tag, "###########")
         for orcaOut in orcaOutFiles[tag]:
             citationsDict = extract_citations(orcaOut)
             for categoryKey in citationsDict:

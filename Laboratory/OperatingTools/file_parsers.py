@@ -11,6 +11,10 @@ class FilePath:
 class DirectoryPath:
     pass
 
+
+
+
+
 def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
                              cappedPdb: FilePath,
                                outDir: DirectoryPath) -> list[FilePath]:

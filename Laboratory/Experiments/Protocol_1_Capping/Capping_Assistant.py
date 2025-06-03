@@ -2,7 +2,7 @@ import os
 from os import path as p
 import pandas as pd
 import numpy as np
-
+from pathlib import Path
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -147,13 +147,15 @@ def find_capping_pdbs() -> Tuple[FilePath, FilePath]:
         acePdb (FilePath): path to ACE.pdb
     """
     ## get location of this file
-    drCapperDir = p.dirname(p.abspath(__file__))
-    nmePdb = p.join(drCapperDir, "NME.pdb")
-    acePdb = p.join(drCapperDir, "ACE.pdb")
+    thisDir = Path(__file__).parent
+    labDir = thisDir.parents[1]
+    cappingGroupsDir = p.join(labDir, "Ingredients", "Capping_groups")
+    nmePdb = p.join(cappingGroupsDir, "NME.pdb")
+    acePdb = p.join(cappingGroupsDir, "ACE.pdb")
     if not p.isfile(nmePdb):
-        raise FileNotFoundError(f"Could not find NME.pdb in {drCapperDir}")
+        raise FileNotFoundError(f"Could not find NME.pdb in {cappingGroupsDir}")
     if not p.isfile(acePdb):
-        raise FileNotFoundError(f"Could not find ACE.pdb in {drCapperDir}")
+        raise FileNotFoundError(f"Could not find ACE.pdb in {cappingGroupsDir}")
     return nmePdb, acePdb
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

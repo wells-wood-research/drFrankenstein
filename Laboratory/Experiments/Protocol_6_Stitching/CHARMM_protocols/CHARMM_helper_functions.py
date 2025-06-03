@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from pdbUtils import pdbUtils
 from shutil import move, copy
+from pathlib import Path
 ## PARMED LIBRARIES ##
 import parmed
 from parmed.charmm import CharmmParameterSet
@@ -129,69 +130,6 @@ def update_prm(config: dict,
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-# def update_prm(config: dict, 
-#                torsionTag: str,
-#                torsionParamDf: pd.DataFrame) -> dict:
-#     """
-#     Updates a CHARMM prm file with a torsion parameter block
-    
-#     Args:
-#         config (dict): the drFrankenstein config containing all run information
-#         torsionTag (str): the torsion tag for the torsion we are updating
-#         torsionParamDf (pd.DataFrame): the torsion parameters for the torsion we are updating
-#     Returns:    
-#         config (dict): updated config
-#     """
-
-#     ## unpack config
-#     inPrm  = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
-#     tmpPrm = p.splitext(inPrm)[0] + "_tmp.prm"
-
-#     ## construct torsion identifier forwards and reversed for finding line in frcmod ##
-
-#     rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
-#     atomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
-#     atomTypesReversed = atomTypes[::-1]
-#     torsionIdentifier = f"{atomTypes[0]:<7}{atomTypes[1]:<7}{atomTypes[2]:<7}{atomTypes[3]:<7}"
-#     torsionIdentifierReversed = f"{atomTypes[3]:<7}{atomTypes[2]:<7}{atomTypes[1]:<7}{atomTypes[0]:<7}"
-
-#     ## init a bool to determine whether to write lines to prm file
-#     writeLines = False
-#     ## init new torsion block as an empty string
-#     newTorsionBlock = ""
-
-
-#     ## read through torsionParamDf and write new torsion block to add to prm
-#     for _, row in torsionParamDf.iterrows():
-#         amplitude = f"{row['Amplitude']:.4f}"
-#         phase = f"{row['Phase']:.2f}"
-#         period = f"{int(row['Period'])}"
-#         newTorsionBlock += (f"{torsionIdentifier:<32}{amplitude:<8}"
-#                             f"{period:<4}{phase:>6}"
-#                             f" !\t\tMADE BY drFRANKENSTEIN\n")
-#     ## init a bool to determine whether to write lines to frcmod
-#     writeLines = False
-#     ## read through frcmod and write to tmp frcmod
-#     with open(inPrm, "r") as f, open(tmpPrm, "w") as tmp:
-#         for line in f:
-#             ## dont copy params for this torsion
-#             if  line.startswith(torsionIdentifier) or line.startswith(torsionIdentifierReversed):
-#                 continue
-#             elif line.startswith("DIHEDRALS"):
-#                 writeLines = True
-#                 tmp.write(line)
-#             elif writeLines:
-#                 tmp.write(newTorsionBlock)
-#                 writeLines = False
-#                 tmp.write(line)
-#             else:
-#                 tmp.write(line)
-#     ## owerwrite frcmod
-#     move(tmpPrm, inPrm)
-#     return config
-
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def parse_prm(moleculePrm: FilePath) -> dict:
     """
     Reads through a CHARMM 
@@ -291,38 +229,6 @@ read param card flex append
         f.write("END\nRETURN")
 
 
-
-
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-# def create_initial_CHARMM_parameters(config: dict) -> dict:
-#     """
-#     Given a STR file (made by CGenFF)
-#     1. Splits STR -> PRM + RTF
-#     2. Edits RTF Charges 
-#     2. Uses PSFGen to create a PSF file
-
-#     Args: 
-#         config (dict): contains all run info
-#     Returns:
-#         config (dict): updated config 
-    
-#     """
-#     ## find cgenff RTF and PRM files
-#     config = find_cgenff_params(config)
-#     ## split STR file into RTF and PRM for OpenMM
-#     config = split_charmm_str(config)
-#     ## update charges in RTF file 
-#     edit_rtf_charges(config)
-#     ## set capping groups to CHARMM defaults (NH1, H, C, O etc)
-#     ##TODO: WIP
-#     # set_capping_types_to_charmm_defaults(config)
-#     ## create a PSF file from PRM and RTF file
-#     config = make_charmm_psf(config)
-#     ## create an atom type map
-#     config = create_atom_type_map(config)
-
-#     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def set_capping_types_to_charmm_defaults(config: dict) -> None:
@@ -521,9 +427,14 @@ def find_cgenff_params(config: dict) -> dict:
         config (dict): updated config 
     """
 
-    stitchingSrcDir =  p.dirname(p.abspath(__file__))
-    cgenffPrm = p.join(stitchingSrcDir, "par_all36_cgenff.prm")
-    cgenffRtf = p.join(stitchingSrcDir, "top_all36_cgenff.rtf")
+
+    thisDir = Path(__file__).parent
+    labDir =  thisDir.parents[4]
+
+
+    charmmParamDir = p.join(labDir, "Ingredients", "CHARMM", "toppar")
+    cgenffPrm = p.join(charmmParamDir, "par_all36_cgenff.prm")
+    cgenffRtf = p.join(charmmParamDir, "top_all36_cgenff.rtf")
 
     if not p.isfile(cgenffPrm):
         raise FileNotFoundError(f"Cannot find CGenFF PRM file at {cgenffPrm}")

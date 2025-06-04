@@ -254,9 +254,10 @@ For each rotatable dihedral the QM(torsion) energy is calculated as:\n\
 QM(torsion) = QM(total) - MM(total) + MM(torsion)\n\
 QM(total) is the scan energies obtained in the previous torsion-scanning step. \
 MM(total) is obtained by performing single-point energy calculations at the MM level on the geometries from the torsion-scanning step, \
-these calculations were performed in OpenMM. \
+these calculations were performed in OpenMM using the Langevin integrator. \
 MM(torsion) is obtained directly as a sum of cosine components described in the current parameter file for the torsion of interest. \
-Once the QM(torsion) energies have been calculated, a maximum of {maxCosineFunctions} cosine functions were fit to the energy profile using the Fourier transform method. 
+Once the QM(torsion) energies have been calculated, a maximum of {maxCosineFunctions} cosine functions were fit to the energy profile \
+using the Fast Fourier transform method implemented in the numpy library. 
 The amplitudes, phases and periodicities of the cosine functions were then used to update the parameters for the torsion of interest. \
 As this iterative fitting process proceeds, the evaluation of QM(torsion) for each torsion is calculated using the updated parameters. \
 This process was repeated {nShuffles} times, each time the order of the torsions was shuffled to remove any artifacts from the arbitrary order of the torsions. \
@@ -478,6 +479,10 @@ def find_orca_output_files(config: dict) -> dict:
 
 
 def gather_citations(config: dict) -> dict:
+    ##unpack config
+    chargeFittingProtocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
+    forcefield = config["parameterFittingInfo"]["forceField"]
+
     orcaOutFiles = find_orca_output_files(config)
 
     citations = {}
@@ -486,28 +491,114 @@ def gather_citations(config: dict) -> dict:
             citationsDict = extract_citations(orcaOut)
             citations[tag] = citationsDict
             if tag == "forCharges":
-                citations[tag]["essential_papers"].extend(manual_charges_citations())
-            
+                citations[tag]["essential_papers"].extend(manual_charges_citations(chargeFittingProtocol))
+    citations["forStitching"] = {}
+    citations["forStitching"] = manual_stitching_citations(forcefield)
+
+
+    citations = get_last_authors(citations)
+
+    return citations
+
+
+def get_last_authors(citations: dict) -> dict:
+    for tag in citations:
+        for level in citations[tag]:
+            for paper in citations[tag][level]:
+                authors_list = paper["authors"].split(";")
+                last_author = authors_list[-1].strip()
+                paper["last_author"] = last_author
+
     return citations
 
 
 
-def manual_charges_citations():
+def manual_stitching_citations(forcefield: str) -> list[dict]:
+    essential_papers = [{
+            "authors": "P. Eastman; R. Galvelis; R. P. Peláez; C. R. A. Abreu; S. E. Farr; E. Gallicchio; A. Gorenko; M. M. Henry; F. Hu; J. Huang; A. Krämer; J. Michel; J. A. Mitchell; V. S. Pande; \
+                  J. PGLM Rodrigues; J. Rodriguez-Guerra; A. C. Simmonett; S. Singh; J. Swails; P. Turner; Y. Wang; I. Zhang; J. D. Chodera; G. De Fabritiis; T. E. Markland",
+            "title": "OpenMM 8: Molecular Dynamics Simulation with Machine Learning Potentials",
+            "journal_info": "J. Phys. Chem. B",
+            "doi": "doi.org/10.1021/acs.jpcb.3c06662"      
+
+    }]
+
+    suggested_additional_citations = [
+          {         
+            "authors": "J A Izaguirre; C R Sweet; V S Pande",
+            "title": "Multiscale Dynamics of Macromolecules Using Normal Mode Langevin",
+            "journal_info": " Pac Symp Biocomput.",
+            "doi": "doi.org/10.1142/9789814295291"     
+            },
+            {
+            "authors": "Charles R. Harris; K. Jarrod Millman; Stéfan J. van der Walt; Ralf Gommers; Pauli Virtanen; David Cournapeau; \
+                Eric Wieser; Julian Taylor; Sebastian Berg; Nathaniel J. Smith; Robert Kern; Matti Picus; Stephan Hoyer; Marten H. van Kerkwijk; \
+                    Matthew Brett; Allan Haldane; Jaime Fernández del Río; Mark Wiebe; Pearu Peterson; Pierre Gérard-Marchant; \
+                        Kevin Sheppard; Tyler Reddy; Warren Weckesser; Hameer Abbasi; Christoph Gohlke; Travis E. Oliphant",
+            "title": "Array programming with NumPy",
+            "journal_info": "Nature",
+            "doi": "doi.org/10.1038/s41586-020-2649-2"     
+            }
+                ]
+
+    if forcefield == "AMBER":
+        essential_papers.append({
+            "authors": "David A. Case; Hasan Metin Aktulg; Kellon Belfon; David S. Cerutti; G. Andrés Cisneros; Vinícius Wilian D. Cruzeiro; Negin Forouzesh; Timothy J. Giese; \
+                Andreas W. Götz; Holger Gohlke; Saeed Izadi; Koushik Kasavajhala; Mehmet C. Kaymak; Edward King; Tom Kurtzman; Tai-Sung Lee; Pengfei Li; Jian Liu; Tyler Luchko; \
+                    Ray Luo; Madushanka Manathunga; Matias R. Machado; Hai Minh Nguyen; Kurt A. O’Hearn; Alexey V. Onufriev; Feng Pan; Sergio Pantano; Ruxi Qi; Ali Rahnamoun; \
+                        Ali Risheh; Stephan Schott-Verdugo; Akhil Shajan; Jason Swails; Junmei Wang; Haixin Wei; Xiongwu Wu; Yongxian Wu; Shi Zhang; Shiji Zhao; Qiang Zhu; Thomas E. Cheatham III; \
+                            Daniel R. Roe; Adrian Roitberg; Carlos Simmerling; Darrin M. York; Maria C. Nagan; Kenneth M. Merz Jr.",
+            "title": "AmberTools",
+            "journal_info": "J. Chem. Inf. Model.",
+            "doi": "doi.org/10.1021/acs.jcim.3c01153"        
+            })
+    elif forcefield == "CHARMM":
+        essential_papers.append({
+            "authors": "K Vanommeslaeghe; E Hatcher; C Acharya; S Kundu; S Zhong; J Shim; E Darian; O Guvench; P Lopes; I Vorobyov; A D MacKerell Jr",
+            "title": "CHARMM General Force Field (CGenFF): A force field for drug-like molecules compatible with the CHARMM all-atom additive biological force fields",
+            "journal_info": "J. Comput. Chem.",
+            "doi": "doi.org/10.1002/jcc.21367"            
+        })
+
+    manualStitchingCitations = {
+        "essential_papers": essential_papers,
+        "suggested_additional_citations": suggested_additional_citations
+    }
+
+    return manualStitchingCitations
+
+def manual_charges_citations(chargeFittingProtocol: str) -> list[dict]:
     manualChargeCitations = [{
-                    "authors": "Tian Lu, Feiwu Chen",
+                    "authors": "Tian Lu; Feiwu Chen",
                     "title": "Multiwfn: A Multifunctional Wavefunction Analyzer",
                     "journal_info": "J. Comput. Chem.",
                     "doi": "doi.org/10.1002/jcc.22885"
                             },
                             {
-                    "authors": "Jun Zhang, Tian Lu",
+                    "authors": "Jun Zhang; Tian Lu",
                     "title": "Efficient Evaluation of Electrostatic Potential with Computerized Optimized Code",
                     "journal_info": "Phys. Chem. Chem. Phys.",
                     "doi": "doi.org/10.1039/D1CP02805G"
                             },
+                            {
+                    "authors": "Wendy D. Cornell; Piotr Cieplak; Christopher I. Bayly; Peter A. Kollman",
+                    "title": "Application of RESP charges to calculate conformational energies, hydrogen bond energies, and free energies of solvation",
+                    "journal_info": "Journal of American Chemical Society",
+                    "doi": "doi.org/10.1021/ja00074a030"
+                            },
                 ]
     
+    if chargeFittingProtocol == "RESP2":
+        manualChargeCitations.append({
+                    "authors": "Michael Schauperl; Paul S. Nerenberg; Hyesu Jang; Lee-Ping Wang; Christopher I. Bayly; David L. Mobley; Michael K. Gilson",
+                    "title": "Non-bonded force field model with advanced restrained electrostatic potential charges (RESP2)",
+                    "journal_info": "Commun Chem.",
+                    "doi": "doi.org/10.1038/s42004-020-0291-4"
+        })
+    
     return manualChargeCitations
+
+
 
 
 if __name__ == "__main__":

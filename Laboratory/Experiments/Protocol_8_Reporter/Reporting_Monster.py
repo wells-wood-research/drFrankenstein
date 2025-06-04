@@ -116,8 +116,6 @@ def process_twist_results(config: dict) -> dict:
             else:
                 pngFile = torsionData[pngTag]
                 destPng = p.join(torsionImagesDir, f"{torsionTag}_{pngTag}.png")
-                print(pngFile)
-                print(destPng)
                 copy(pngFile, destPng)  
                 relativePath = p.relpath(destPng, reporterDir)
                 twistData["rotatableDihedrals"][torsionTag][pngTag] = relativePath

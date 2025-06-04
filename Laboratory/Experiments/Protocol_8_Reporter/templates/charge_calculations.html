@@ -235,9 +235,7 @@
             {% if citation_data.forCharges.essential_papers %}
                 <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
                 {% for paper in citation_data.forCharges.essential_papers %}
-                    {% set authors_list = paper.authors.split(';') %}
-                    {% set last_author = authors_list[-1].strip() %}
-                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
@@ -245,9 +243,7 @@
             {% if citation_data.forCharges.high_priority_papers %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
                 {% for paper in citation_data.forCharges.high_priority_papers %}
-                    {% set authors_list = paper.authors.split(';') %}
-                    {% set last_author = authors_list[-1].strip() %}
-                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
@@ -255,9 +251,7 @@
             {% if citation_data.forCharges.suggested_additional_citations %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
                 {% for paper in citation_data.forCharges.suggested_additional_citations %}
-                    {% set authors_list = paper.authors.split(';') %}
-                    {% set last_author = authors_list[-1].strip() %}
-                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
@@ -265,9 +259,7 @@
             {% if citation_data.forCharges.optional_additional_citations %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
                 {% for paper in citation_data.forCharges.optional_additional_citations %}
-                    {% set authors_list = paper.authors.split(';') %}
-                    {% set last_author = authors_list[-1].strip() %}
-                    <div class="protocol-content-text">Last Author: {{ last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 

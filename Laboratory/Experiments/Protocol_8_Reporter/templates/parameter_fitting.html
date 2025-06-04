@@ -137,21 +137,13 @@
         border-radius: 3px; /* Optional */
     }
 </style>
-{% if methods_data and methods_data.scanningMethods %}
-    <h2>Parameter Fitting Protocol</h2>
-    <div class="info"> <!-- Using .info class for consistent box styling -->
-        <div class="protocol-content-text">
-            {{ methods_data.fittingMethods }}
-        </div>
-    </div>
-{% endif %}
+
 <h2>Parameter Fitting Summary</h2>
 
 {% if fitting_data %}
     <div class="info">
         <h3><strong>Number of Shuffles:</strong> {{ fitting_data.nShuffles | default('N/A') }}</h3>
         <h3><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</h3>
-
     </div>
 
     {% if fitting_data.rotatableDihedrals and fitting_data.rotatableDihedrals|length > 0 %}
@@ -187,11 +179,11 @@
                                 </thead>
                                 <tbody>
                                     {% for param_set in current_final_params %}
-                                    <tr>
-                                        <td>{{ param_set.Amplitude | round(4) | default('N/A') }}</td>
-                                        <td>{{ param_set.Period | default('N/A') }}</td>
-                                        <td>{{ param_set.Phase | round(2) | default('N/A') }}</td>
-                                    </tr>
+                                        <tr>
+                                            <td>{{ param_set.Amplitude | round(4) | default('N/A') }}</td>
+                                            <td>{{ param_set.Period | default('N/A') }}</td>
+                                            <td>{{ param_set.Phase | round(2) | default('N/A') }}</td>
+                                        </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -204,32 +196,77 @@
                 <div class="fitting-images-container">
                     {% set current_images = fitting_data.fittingImages.get(dihedral_name) %}
                     {% if current_images and current_images.fittingGif %}
-                    <div class="image-holder">
-                        <p><strong>Fitting Process (GIF)</strong></p>
-                        <img src="{{ current_images.fittingGif }}" alt="Fitting process for {{ dihedral_name }}">
-                    </div>
+                        <div class="image-holder">
+                            <p><strong>Fitting Process (GIF)</strong></p>
+                            <img src="{{ current_images.fittingGif }}" alt="Fitting process for {{ dihedral_name }}">
+                        </div>
                     {% else %}
-                    <div class="image-holder"><p>Fitting GIF not available.</p></div>
+                        <div class="image-holder"><p>Fitting GIF not available.</p></div>
                     {% endif %}
 
                     {% if current_images and current_images.finalPng %}
-                    <div class="image-holder">
-                        <p><strong>Final Fit (PNG)</strong></p>
-                        <img src="{{ current_images.finalPng }}" alt="Final fit for {{ dihedral_name }}">
-                    </div>
+                        <div class="image-holder">
+                            <p><strong>Final Fit (PNG)</strong></p>
+                            <img src="{{ current_images.finalPng }}" alt="Final fit for {{ dihedral_name }}">
+                        </div>
                     {% else %}
-                    <div class="image-holder"><p>Final PNG not available.</p></div>
+                        <div class="image-holder"><p>Final PNG not available.</p></div>
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
-
     {% else %}
         <p>No unique rotatable dihedrals data available or processed for parameter fitting details.</p>
     {% endif %}
 {% else %}
     <p>No parameter fitting data available.</p>
 {% endif %}
+
+{% if methods_data and methods_data.fittingMethods %}
+    <h2>Charge Calculation Methods</h2>
+    <div class="info"> <!-- Using .info class for consistent box styling -->
+        <div class="protocol-content-text">
+            {{ methods_data.fittingMethods }}
+        </div>
+
+        {% if citation_data and citation_data.forStitching %}
+
+            {# Essential Papers Section #}
+            {% if citation_data.forStitching.essential_papers %}
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                {% for paper in citation_data.forStitching.essential_papers %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# High Priority Papers Section #}
+            {% if citation_data.forStitching.high_priority_papers %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                {% for paper in citation_data.forStitching.high_priority_papers %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Suggested Additional Citations Section #}
+            {% if citation_data.forStitching.suggested_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                {% for paper in citation_data.forStitching.suggested_additional_citations %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {# Optional Additional Citations Section #}
+            {% if citation_data.forStitching.optional_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                {% for paper in citation_data.forStitching.optional_additional_citations %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+        {% endif %} {# Closes: if citation_data and citation_data.forStitching #}
+
+    </div> <!-- Closes: div class="info" -->
+{% endif %} 
 
 <script>
     function open_fitting_sub_tab(evt, subTabName) {

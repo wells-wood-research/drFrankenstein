@@ -44,11 +44,30 @@
         }
         .tab-container {
             width: 80%;
-            margin: 0 auto; /* Centered within page-content-wrapper */
-            background-color: #333;
+            margin: 0 auto;
+            background-image: url('Images/Gothic_Cobble.jpg');
+            background-repeat: repeat;
+            background-color: #333; /* Fallback for the image itself */
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 8px;
             overflow: hidden;
+            position: relative; /* Crucial for positioning the pseudo-element */
+            z-index: 0; /* Establishes a stacking context */
+        }
+
+        .tab-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8); /* Adjust 0.5 for darkness */
+            border-radius: inherit; /* Inherit border-radius from parent */
+            z-index: -1; /* Place it behind the container's content but on top of its actual background */
+                        /* OR z-index: 1; and content inside .tab-container z-index: 2; */
+                        /* A simpler approach might be to remove z-index here and ensure content
+                            within .tab-container has position:relative and z-index:1 if needed */
         }
         .tab-nav {
             display: flex;

@@ -1,8 +1,9 @@
 ## REPORT
-
+## Time GANTT
+[] cope with mins/ hours / days for x-axis depending on how long it took
 
 ### Torsion Scanning
-[] put atom labels on interactive molecule for torsion atoms
+[x] put atom labels on interactive molecule for torsion atoms
 
 ### capping step page
 
@@ -27,4 +28,5 @@
 
 ## debug AMBER protocols
 [] issues with symmetry and charge fitting - equivalent atoms in different groups??
-[] issues with final creation - wrong config keys?
+[x] issues with final creation - wrong config keys?
+

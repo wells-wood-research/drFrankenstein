@@ -250,7 +250,6 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     """Applies final styling to the plot (labels, ticks, limits, grid, spines, and group legend)."""
     numFunctions = len(timeDf)
 
-    ax.set_xlabel('Time (minutes)', fontsize=defaultFontSize, labelpad=15, color=textColor)
     ax.set_title('Function Execution Gantt Chart', fontsize=24, pad=20, weight='bold', color=textColor)
 
     if numFunctions > 0:
@@ -266,14 +265,28 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
         maxEndTimeValSeconds = timeDf['endTimeSeconds'].max()
         if pd.isna(maxEndTimeValSeconds): 
             maxEndTimeValSeconds = 0.0
-            
+    ## decide if xTicks will be in hours or minutes
     xLimUpperMinutes = 1.0 
-    if maxEndTimeValSeconds > 0:
-        xLimUpperMinutes = (maxEndTimeValSeconds / 60) * 1.05 
-    
-    ax.set_xlim(0, xLimUpperMinutes)
-    
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(base=60))
+
+    time_data_seconds = np.linspace(0, maxEndTimeValSeconds, 200)
+    if maxEndTimeValSeconds < 18000:  # 5 hours (5 * 3600 = 18000 seconds)
+        print("Plotting: less than 5 hours, using minutes")
+        # Convert data and limits to minutes
+        xLimUpperDisplay = (maxEndTimeValSeconds / 60.0) * 1.05
+
+        ax.set_xlim(0, xLimUpperDisplay)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=30))  # Ticks every 30 minutes
+        ax.set_xlabel('Time (minutes)', fontsize=defaultFontSize, labelpad=15, color=textColor)
+
+    else:  # >= 5 hours
+        print("Plotting: more than 5 hours, using hours")
+        # Convert data and limits to hours
+        xLimUpperDisplay = (maxEndTimeValSeconds / 3600.0) * 1.05
+
+        ax.set_xlim(0, xLimUpperDisplay)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(base=1))  # Ticks every 1 hour
+        ax.set_xlabel('Time (hours)', fontsize=defaultFontSize, labelpad=15, color=textColor)
+
 
     currentYLimBottom, _ = ax.get_ylim() 
     ax.set_ylim(currentYLimBottom, yMaxForPlot)
@@ -583,6 +596,11 @@ def copy_images(config):
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     
     thisDir = os.path.dirname(os.path.abspath(__file__))
+    
     lightningJpg = p.join(thisDir, "templates", "Lightning.jpg")
     lightningJpgDest = p.join(imagesDir, "Lightning.jpg")
     copy(lightningJpg, lightningJpgDest)
+
+    cobbleJpg = p.join(thisDir, "templates", "Gothic_Cobble.jpg")
+    cobbleJpgDest = p.join(imagesDir, "Gothic_Cobble.jpg")
+    copy(cobbleJpg, cobbleJpgDest)

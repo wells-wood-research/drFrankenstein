@@ -9,6 +9,7 @@ from os import path as p
 
 from . import Reporting_Monster
 from . import Reporting_Assistant
+from . import plot_time_gantt
 from . import Shelly
 
 def reporter_protocol(config: dict) -> None:
@@ -38,7 +39,7 @@ def reporter_protocol(config: dict) -> None:
     Reporting_Assistant.copy_images(config)
 
     ## run protocols
-    timeGanttPng    = Reporting_Assistant.generate_gantt_chart(config)
+    timeGanttPng    = plot_time_gantt.generate_gantt_chart(config)
     wriggleData     = Reporting_Monster.process_wriggle_results(config)
     twistData       = Reporting_Monster.process_twist_results(config)
     chargesData     = Reporting_Monster.process_charges_results(config)

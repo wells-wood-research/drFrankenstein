@@ -18,29 +18,18 @@ class DirectoryPath:
 
 
 from OperatingTools import file_parsers
-# # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-# def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
-#                              cappedPdb: FilePath,
-#                                fittingRoundDir: DirectoryPath) -> list[FilePath]:
-#     """
-#     Effectively converts a list of XYZ files to PDB
-#     In practice, updates a static PDB file with coords from a list of XYZ files
+def remove_exploded_torsions(config: dict) -> None:
+    """
+    TODO: write this
+    """
 
-#     Args:
-#         trajXyzs (list[FilePath]): a list of XYZ files
-#         cappedPdb (FilePath): a PDB file containing correct atom data
-#         fittingRoundDir (DirectoryPath): the output dir for this function
-    
-#     """
-#     trajPdbs = []
-#     for trajXyz in trajXyzs:
-#         trajIndex = trajXyz.split(".")[1]
-#         trajPdb = p.join(fittingRoundDir, f"orca.{trajIndex}.pdb")
-#         update_pdb_coords(cappedPdb, trajXyz, trajPdb)
-#         trajPdbs.append(trajPdb)
-
-#     return trajPdbs
-
+    torsionTags = []
+    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    for torsionTag, torsionData in rotatableDihedrals.items():
+        if torsionData["globalMinimaAngle"] is None:
+            continue
+        torsionTags.append(torsionTag)
+    return torsionTags
 
 
 
@@ -295,8 +284,11 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
     Returns:
         mergedDf (pd.DataFrame): merged DataFrame
     """
+
     ##TODO: is this efficient?
     energyDfs = [df for df in energyDfs if not df is None]
+
+
 
     mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
         columns={'Energy': 'Energy_0'}

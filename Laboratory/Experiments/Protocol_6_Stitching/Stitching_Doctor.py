@@ -70,6 +70,10 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
 
     ## get torsion tags from config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
+
+    torsionTags = Stitching_Assistant.remove_exploded_torsions(config)
+
+    ## TODO: handle case where torsion energy is none in the case that the scan has failed
     
     nShuffles = config["parameterFittingInfo"]["nShuffles"]
     shuffledTorsionTags = []
@@ -79,7 +83,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
 
     currentParameters = {}
     counter = 1
-    shuffleIndex = 0
+    shuffleIndex = 1
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not counter == 1:
@@ -88,11 +92,15 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
         mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
         mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
         torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
-        currentParameters[torsionTag] = torsionParameterDf.to_dict()
+        currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
         if counter % len(torsionTags) == 0:
             shuffleIndex += 1
         counter += 1
+
+        print("\n"+config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] )
+        print(config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"] )
+
     config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
     config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
     ## make gif out of the torsion fitting
@@ -154,7 +162,7 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     }
     currentParameters = {}
     counter = 1
-    shuffleIndex = 0
+    shuffleIndex = 1
     ## run the torsion fitting protocol, each time, shuffle the torsion order
     for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not counter == 1:

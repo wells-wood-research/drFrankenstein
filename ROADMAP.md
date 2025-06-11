@@ -17,9 +17,14 @@
     [x] CGenFF
     [x] Antechamber
     [x] OpenMM
-    [x] LangevinIntegrator
     [>] Various MD methods used in OpenMM single point
-    [] Fourier Transform?
+        [x] LangevinIntegrator
+    [x] Fourier Transform?
 
 
 [] put citations on methods page
+
+
+## debug AMBER protocols
+[] issues with symmetry and charge fitting - equivalent atoms in different groups??
+[] issues with final creation - wrong config keys?

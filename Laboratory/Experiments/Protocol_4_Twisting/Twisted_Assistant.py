@@ -151,6 +151,14 @@ def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) ->
     Returns:
         config (dict): updated config
     """
+    ## If no data was found for this torsion, skip
+    if averagesDf.empty or any(pd.isna(averagesDf[torsionTag])):
+
+        print(f"Skipping torsion {torsionTag} because no data was found.")
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["globalMinimaAngle"] = None
+        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["barrierHeight"] = None
+        return config
+
 
     globalMinimaAngle = averagesDf["Angle"].loc[averagesDf[torsionTag].idxmin()]
     globalMinimaEnergy = averagesDf[torsionTag].loc[averagesDf[torsionTag].idxmin()]

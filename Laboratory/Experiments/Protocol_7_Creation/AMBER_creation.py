@@ -9,12 +9,12 @@ from OperatingTools import file_parsers
 ################################################################################
 def copy_final_frcmod(config):
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-    proposedFrcmod = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
+    moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     finalFrcmod = p.join(finalCreationDir, f"{moleculeName}.frcmod")
 
-    copy(proposedFrcmod, finalFrcmod)
+    copy(moleculeFrcmod, finalFrcmod)
     
 ################################################################################
 def get_capping_atom_ids(config):
@@ -30,8 +30,7 @@ def get_capping_atom_ids(config):
 ################################################################################
 
 def create_final_lib_and_mol2(cappingAtomIds, config):
-    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
-
+    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     finalMol2 = p.join(finalCreationDir, f"{moleculeName}.mol2")

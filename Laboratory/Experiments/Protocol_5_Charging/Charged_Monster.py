@@ -407,15 +407,16 @@ def run_charge_fitting(config: dict,
         child.expect(r'.*Input.*\n?\r?')
         child.sendline(chargeConstraintsTxt)
 
+        if not symmetryConstraintsTxt is None:
         ####### LOAD SYMMETRY CONSTRAINTS #######
-        child.expect(r'.*11.*\n?\r?')
-        child.sendline("5")
+            child.expect(r'.*11.*\n?\r?')
+            child.sendline("5")
 
-        child.expect(r'.*1.*\n?\r?')
-        child.sendline("1")
+            child.expect(r'.*1.*\n?\r?')
+            child.sendline("1")
 
-        child.expect(r'.*Input.*\n?\r?')
-        child.sendline(symmetryConstraintsTxt)
+            child.expect(r'.*Input.*\n?\r?')
+            child.sendline(symmetryConstraintsTxt)
 
         ####### RUN CALCULATIONS #######
         child.expect(r'.*11.*\n?\r?')

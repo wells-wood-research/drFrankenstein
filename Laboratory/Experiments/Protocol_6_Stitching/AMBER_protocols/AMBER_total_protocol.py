@@ -24,6 +24,7 @@ import  openmm.unit  as unit
 ## drFRANKENSTEIN LIBRARIES ##
 from .. import Stitching_Assistant
 from . import AMBER_helper_functions
+from OperatingTools import file_parsers
 
 from OperatingTools import drSplash
 ## CLEAN CODE CLASSES ##
@@ -120,7 +121,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
                         if re.match(r'^orca_scan\.\d\d\d\.xyz$', file)])
 
 
-    trajPdbs = Stitching_Assistant.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
+    trajPdbs = file_parsers.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
     singlePointEnergies = run_mm_singlepoints(trajPdbs, moleculePrmtop)
 
     singlePointEnergyDf = pd.DataFrame(singlePointEnergies, columns=["TrajIndex", "Energy"])

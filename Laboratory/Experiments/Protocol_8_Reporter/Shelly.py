@@ -269,6 +269,7 @@ This process was repeated {nShuffles} times, each time the order of the torsions
 
 
 def extract_citations(orcaOut: FilePath) -> dict:
+
     with open(orcaOut, "r") as f:
         fileContent = f.read()
     # Variable names in camelCase
@@ -410,10 +411,13 @@ def find_orca_output_files(config: dict) -> dict:
     if not p.isfile(torsionScanOut):
         torsionScanOut = None
 
-    spTopDir = [p.join(conformerDir, dirName) for dirName in os.listdir(conformerDir) if "SP" in dirName][0]
-    spDir = [p.join(spTopDir, dirName) for dirName in os.listdir(spTopDir) if "SP" in dirName][0]
-    torsionScanSpOut = p.join(spDir, "orca_sp.out")
-    if not p.isfile(torsionScanSpOut):
+    if not config["torsionScanInfo"]["singlePointMethod"] is None:
+        spTopDir = [p.join(conformerDir, dirName) for dirName in os.listdir(conformerDir) if "SP" in dirName][0]
+        spDir = [p.join(spTopDir, dirName) for dirName in os.listdir(spTopDir) if "SP" in dirName][0]
+        torsionScanSpOut = p.join(spDir, "orca_sp.out")
+        if not p.isfile(torsionScanSpOut):
+            torsionScanSpOut = None
+    else:
         torsionScanSpOut = None
 
     forTorsions = [torsionScanOut, torsionScanSpOut]
@@ -488,6 +492,8 @@ def gather_citations(config: dict) -> dict:
     citations = {}
     for tag in orcaOutFiles:
         for orcaOut in orcaOutFiles[tag]:
+            if orcaOut is None:
+                continue
             citationsDict = extract_citations(orcaOut)
             citations[tag] = citationsDict
             if tag == "forCharges":

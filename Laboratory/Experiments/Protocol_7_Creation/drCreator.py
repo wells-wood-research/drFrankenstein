@@ -26,7 +26,9 @@ def create_the_monster(config):
     if forceField == "AMBER":
         cappingAtomIds = AMBER_creation.get_capping_atom_ids(config)
         AMBER_creation.create_final_lib_and_mol2(cappingAtomIds, config)
-        AMBER_creation.copy_final_frcmod(config)
+        config = AMBER_creation.copy_final_frcmod(config)
+        AMBER_creation.duplicate_capping_parameters(config)
+
     elif forceField == "CHARMM":
         config = CHARMM_creation.get_donor_acceptors(config)
         CHARMM_creation.create_final_rtf(config)

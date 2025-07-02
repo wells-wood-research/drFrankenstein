@@ -98,9 +98,6 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
             shuffleIndex += 1
         counter += 1
 
-        print("\n"+config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] )
-        print(config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"] )
-
     config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
     config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
     ## make gif out of the torsion fitting

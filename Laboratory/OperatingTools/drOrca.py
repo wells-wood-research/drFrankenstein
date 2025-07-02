@@ -24,6 +24,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
                                 qmAtoms: str,
                                 parameterFile: FilePath,
                                 nCpus: int) -> FilePath:
+
     ## write QM/MM opt orca input file
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -33,7 +34,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
         f.write(" #  QM/MM Optimisation               #\n")
         f.write(" # --------------------------------- #\n")  
         ## simpleinput line for method and QMMM flag      
-        f.write(f"! QMMM {qmMethod} Opt\n")
+        f.write(f"! QMMM {qmMethod} L-Opt\n")
         f.write(f"%pal nprocs {nCpus}\nend\n")
         ## qmmmm options
         f.write("%qmmm\n")
@@ -41,6 +42,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
         f.write(f"{' '*4}ORCAFFFilename \"{parameterFile}\"\n")
         f.write("Rigid_MM_Water TRUE\n")
         f.write("end\n")
+        f.write("%geom\n  maxIter 500\nend\n")
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n")
     return qmmmOptOrcaInput
 

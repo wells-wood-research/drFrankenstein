@@ -3,18 +3,80 @@ from os import path as p
 import pandas as pd
 from subprocess import call, PIPE
 from shutil import copy
+from copy import copy as object_copy
+import sys
 
-
+import parmed as pmd
 from OperatingTools import file_parsers
+
+
+def duplicate_capping_parameters(config: dict) -> dict:
+    """
+    Loads a frcmod file, identifies parameters containing the 'CX' atom type,
+    duplicates them by creating new, distinct parameter objects for 'CT' and 'XC',
+    and writes a new frcmod file.
+
+    Args:
+        config (dict): A dictionary containing the configuration, including the
+                       path to the input frcmod file.
+    """
+    finalFrcMod = config["runtimeInfo"]["madeByCreator"]["finalFrcmod"]
+
+    params = pmd.load_file(finalFrcMod)
+
+    newParamSections = {
+        'bond': params.bond_types,
+        'angle': params.angle_types,
+        'dihedral': params.dihedral_types,
+        'improper': params.improper_types,
+    }
+
+    # --- 1. Identify and duplicate parameters containing 'CX' ---
+    for section_name, param_dict in newParamSections.items():
+        newParams = {}
+
+        for atomTypes, paramObject in param_dict.items():
+            if "CX" in atomTypes:
+                for newAtomType in ["CT", "XC"]:
+                    newAtomNames = tuple(
+                        [newAtomType if atomType == "CX" else atomType for atomType in atomTypes]
+                    )
+                    
+                    newParams[newAtomNames] = object_copy(paramObject)
+
+        # --- 2. Update the main parameter set with the new ones ---
+        if newParams:
+            param_dict.update(newParams)
+
+    # --- 3. Write the new frcmod file ---
+
+    params.write(finalFrcMod, style="frcmod")
+
+    
+    return config
+
+
 ################################################################################
-def copy_final_frcmod(config):
+def copy_final_frcmod(config: dict) -> dict:
+    """
+    Copies the final frcmod file from the Stitching directory to the Creator directory.
+
+    Args:
+        config (dict): The configuration dictionary.
+
+    Returns:
+        config (dict): The updated configuration dictionary.
+    """
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     finalFrcmod = p.join(finalCreationDir, f"{moleculeName}.frcmod")
+    config["runtimeInfo"]["madeByCreator"]["finalFrcmod"] = finalFrcmod
 
     copy(moleculeFrcmod, finalFrcmod)
+
+    return config
     
 ################################################################################
 def get_capping_atom_ids(config):
@@ -66,7 +128,7 @@ def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
         bondedToHeteroAtomB = bondDf[(bondDf["ATOM_B_ID"] == heteroAtomId)]["ATOM_A_ID"].to_list()
 
         bondedToHeteroAtomIds = bondedToHeteroAtomA + bondedToHeteroAtomB
-        protonIds = atomDf[atomDf["ATOM_ID"].isin(bondedToHeteroAtomIds) & atomDf["ATOM_TYPE"].str.startswith("h")]["ATOM_ID"].values
+        protonIds = atomDf[atomDf["ATOM_ID"].isin(bondedToHeteroAtomIds) & atomDf["atomType"].str.startswith("h")]["ATOM_ID"].values
         cappingProtonIds.extend(protonIds)
 
     return cappingProtonIds

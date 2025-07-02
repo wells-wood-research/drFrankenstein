@@ -68,6 +68,43 @@ def replace_parameters(moleculeFrcmod: FilePath,
     molParams.write(moleculeFrcmod, style="frcmod")
     return None
 
+def change_capping_types_amber(mol2File: FilePath, config: dict) -> None:
+    """
+    Uses a map to change capping atom types from auto-assigned gaff2
+    to protein-style amber types
+
+    Args:
+        mol2File (FilePath): path to mol2 file
+        config (dict): config dict
+
+    Returns:
+        None
+    """
+    # Define AMBER19ff atom type mapping
+    amberDefaultMap = {
+                    "NN": "N",
+                    "HNN1": "H",
+                    "CN": "CX", 
+                    "HCN1": "H3",
+                    "HCN2": "H3",
+                    "HCN3": "H3",
+                    "CC1": "C",
+                    "OC": "O",
+                    "CC2": "CX", 
+                    "HC1": "H3",
+                    "HC2": "H3",
+                    "HC3": "H3"
+    }
+    
+    parmedStructure = parmed.load_file(mol2File)
+    for atom in parmedStructure.atoms:
+        if atom.name in amberDefaultMap:
+            atom.type = amberDefaultMap[atom.name]
+
+    parmedStructure.save(mol2File, overwrite=True)
+
+    return None
+
 def change_backbone_types_amber(mol2File: FilePath, config: dict) -> None:
     """
     Uses a map to change backbone atom types from auto-assigned gaff2
@@ -82,7 +119,7 @@ def change_backbone_types_amber(mol2File: FilePath, config: dict) -> None:
 
     """
 
-    # Define CHARMM36m atom type mapping
+    # Define AMBER19ff atom type mapping
     amberDefaultMap = {
                     "N" : "N",
                     "HN": "H",

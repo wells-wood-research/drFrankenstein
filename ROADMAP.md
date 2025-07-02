@@ -30,3 +30,17 @@
 [] issues with symmetry and charge fitting - equivalent atoms in different groups??
 [x] issues with final creation - wrong config keys?
 
+## making functional params
+PROBLEM: BONDS, ANGLES, DIHEDRALS not defined for ncAA -- capping groups
+        For now, we are using custom types for capping groups, these need to be the standard UPPERCASE types
+
+SOLUTION:
+[x] AMBER: enforce this during the assembly stage [N -> N, C -> C, CA -> CX]
+[]  CHARMM: work out whether this is a problem in CHARMM at all
+
+PROBLEM: parameters for interactions between NCAA and adjacent amino acids works, but not when adjacent AA is terminal (XC or CT)
+
+SOLUTION:
+[x] AMBER: duplicate all parameters that involve CX, replacing CX with XC and CT
+[] CHARMM: work out whether this is a problem in CHARMM at all
+

@@ -43,6 +43,10 @@ def amber_assembly_protocol(config:dict) -> dict:
     if config["torsionScanInfo"]["preserveBackboneTorsions"]:
         ## reset backbone atom types to AMBER defaults
         Assembly_Monster.change_backbone_types_amber(moleculeMol2, config)
+    else:
+        ## reset backbone atom types to gaff2 defaults
+        Assembly_Monster.change_capping_types_amber(moleculeMol2, config)
+
     ## create frcmod file
     moleculeFrcmod = p.join(assemblyDir, f"{moleculeName}_capped.frcmod")
     Assembly_Assistant.create_frcmod_file(moleculeMol2, moleculeFrcmod, gaff2Dat)

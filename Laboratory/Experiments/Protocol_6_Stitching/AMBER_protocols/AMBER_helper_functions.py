@@ -92,7 +92,6 @@ def update_frcmod(config: dict,
 
     # Define output path and write the updated frcmod file
     outputFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_{shuffleIndex}.frcmod")
-    print("OUT:" + outputFrcmod)
     # Use save method, explicitly setting format and allowing overwrite
     parmedFrcmod.write(outputFrcmod, style='frcmod')
 

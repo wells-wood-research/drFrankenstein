@@ -59,7 +59,7 @@ def main():
     ## TODO: cope with staples etc. that need 2 or more capping groups
     checkpointInfo = config["checkpointInfo"]
     if not checkpointInfo["cappingComplete"]:
-        print("Running Capping Protocol")
+        drSplash.show_capping_splash()
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 

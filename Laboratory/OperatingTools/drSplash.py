@@ -453,10 +453,28 @@ def print_botched(errorReport) -> None:
 
 
 if __name__ == "__main__":
+    show_capping_splash()
     show_wriggle_splash()
     show_twist_splash()
     show_charge_splash()
     show_torsion_being_scanned("N-C-CA-CB", 1, 10)
     show_stitch_splash()
     show_creation_splash()
-    show_what_have_we_created("ALANINE")
+
+    config = {
+        "moleculeInfo": {
+            "moleculeName": "ALA"
+        },
+        "runtimeInfo": {
+            "madeByReporting": {
+                "reportHtml": "/path/to/report/html"
+            },
+      
+        },
+        "parameterFittingInfo": {
+            "forceField": "AMBER"
+            }
+    }
+
+
+    # show_what_have_we_created(config)

@@ -45,7 +45,7 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     forwardsDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_forwards")
     os.makedirs(forwardsDir, exist_ok=True)
     forwardsScanAngle = initialTorsionAngle + 360
-    forwardsScanText = f"{str(initialTorsionAngle)}, {str(forwardsScanAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
+    forwardsScanText = f"{str(initialTorsionAngle)}, {str(forwardsScanAngle)}, 37"
 
 
     forwardsOrcaInput: FilePath = drOrca.make_orca_input_for_scan(inputXyz=optXyz,
@@ -84,7 +84,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
     os.makedirs(backwardsDir, exist_ok=True)
     forwardsScanAngle = initialTorsionAngle + 360 
 
-    backwardsScanText = f"{str(forwardsScanAngle)}, {str(initialTorsionAngle)}, {str(config['torsionScanInfo']['nScanSteps'])}"
+    backwardsScanText = f"{str(forwardsScanAngle)}, {str(initialTorsionAngle)}, 37"
 
     backwardsOrcaInput: FilePath = drOrca.make_orca_input_for_scan(inputXyz=forwardsScanXyz,
                                                         outDir = backwardsDir,
@@ -116,7 +116,7 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
 
-    scanXyzs = Twisted_Assistant.find_scan_xyz_files(scanDir, expectedNumberOfFiles=config["torsionScanInfo"]["nScanSteps"])
+    scanXyzs = Twisted_Assistant.find_scan_xyz_files(scanDir, 37)
     singlePointsOn = config["torsionScanInfo"]["scanSinglePointsOn"]
     if singlePointsOn == "all":
         stationaryPointScanIndexes = scanDf["scan_index"].to_list()

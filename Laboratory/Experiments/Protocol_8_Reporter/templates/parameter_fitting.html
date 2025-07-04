@@ -146,12 +146,12 @@
         <h3><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</h3>
     </div>
 
-    {% if fitting_data.rotatableDihedrals and fitting_data.rotatableDihedrals|length > 0 %}
+    {% if fitting_data.torsionsToScan and fitting_data.torsionsToScan|length > 0 %}
         <h2>Data for Individual Dihedrals</h2>
 
         <!-- Sub-Tab Navigation for Dihedrals -->
         <div class="fitting-sub-tab-nav">
-            {% for dihedral_name, details in fitting_data.rotatableDihedrals.items() %}
+            {% for dihedral_name, details in fitting_data.torsionsToScan.items() %}
                 <button class="fitting-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="open_fitting_sub_tab(event, 'fitting_sub_tab_{{ loop.index }}')">
                     {{ dihedral_name }}
@@ -160,7 +160,7 @@
         </div>
 
         <!-- Sub-Tab Content Panes for Dihedrals -->
-        {% for dihedral_name, _ in fitting_data.rotatableDihedrals.items() %}
+        {% for dihedral_name, _ in fitting_data.torsionsToScan.items() %}
             <div id="fitting_sub_tab_{{ loop.index }}" class="fitting-sub-tab-content {% if loop.first %}active{% endif %}">
                 <h4>Dihedral: {{ dihedral_name }}</h4>
 

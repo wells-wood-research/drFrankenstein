@@ -58,11 +58,11 @@ def update_frcmod(config: dict,
     Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
     """
     moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
-    targetAtomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+    targetAtomTypes = tuple(torsionsToScan[torsionTag]["ATOM_TYPES"])
 
     # Prepare new dihedral types from DataFrame
     new_dihedral_types = [

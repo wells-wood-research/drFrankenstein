@@ -123,7 +123,6 @@ def write_torsion_scanning_method(config: dict) -> str:
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
     nConformersGenerated = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
     nConformers = config["torsionScanInfo"]["nConformers"]
-    preserveBackboneTorsions = config["torsionScanInfo"]["preserveBackboneTorsions"]
     scanMethod = config["torsionScanInfo"]["scanMethod"]
     scanSolvationMethod = config["torsionScanInfo"]["scanSolvationMethod"]
     singlePointMethod = config["torsionScanInfo"]["singlePointMethod"]
@@ -137,7 +136,7 @@ def write_torsion_scanning_method(config: dict) -> str:
         nConformersUsed = nConformers
 
     torsionMethod = dedent(f"""
-Torsion scans were performed on all rotatable bonds in {moleculeName}{", except those represented by backbone Phi and Psi angles" if preserveBackboneTorsions else ""}. \
+Torsion scans were performed on all rotatable bonds in {moleculeName}. \
 For each rotatable dihedral full 360 degree relaxed scan was performed in the forwards and backwards directions. Each scan was conducted using 10 degree increments. \
 Scans were performed at the {scanMethod} level{" with the " + scanSolvationMethod + " solvation method" if scanSolvationMethod is not None else ""}. \
                             """)

@@ -54,8 +54,8 @@ def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dic
     molPrmtop = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
     parmedPrmtop  = parmed.load_file(molPrmtop, structure=True)
 
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
-    atomNames = tuple(rotatableDihedrals[torsionTag]["ATOM_NAMES"])
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
+    atomNames = tuple(torsionsToScan[torsionTag]["ATOM_NAMES"])
 
     torsionParameters = []
     for dihedral in parmedPrmtop.dihedrals:
@@ -81,14 +81,14 @@ def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str) -> dic
     Returns:
         mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
     """
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
 
 
     molParams = parmed.load_file(molFrcmod)
 
 
-    atomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+    atomTypes = tuple(torsionsToScan[torsionTag]["ATOM_TYPES"])
 
     torsionParameters = []
     # Replace DIHEDRAL parameters

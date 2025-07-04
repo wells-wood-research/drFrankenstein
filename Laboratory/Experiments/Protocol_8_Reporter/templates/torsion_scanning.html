@@ -222,10 +222,10 @@
     </div>
     <h2>Data for Individual Dihedrals</h2>
 
-    {% if torsion_data.rotatableDihedrals and torsion_data.rotatableDihedrals|length > 0 %}
+    {% if torsion_data.torsionsToScan and torsion_data.torsionsToScan|length > 0 %}
         <!-- Sub-Tab Navigation for Dihedrals -->
         <div class="torsion-sub-tab-nav">
-            {% for dihedral_name, details in torsion_data.rotatableDihedrals.items() %}
+            {% for dihedral_name, details in torsion_data.torsionsToScan.items() %}
                 <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="openDihedralSubTab(event, 'dihedral_sub_tab_{{ loop.index }}')">
                     {{ dihedral_name }}
@@ -233,7 +233,7 @@
             {% endfor %}
         </div>
         <!-- Sub-Tab Content Panes for Dihedrals -->
-        {% for dihedral_name, details in torsion_data.rotatableDihedrals.items() %}
+        {% for dihedral_name, details in torsion_data.torsionsToScan.items() %}
             <div id="dihedral_sub_tab_{{ loop.index }}" class="torsion-sub-tab-content {% if loop.first %}active{% endif %}">
                 <!-- NEW: Wrapper for side-by-side dihedral info and visualization -->
                 <div class="dihedral-top-section">

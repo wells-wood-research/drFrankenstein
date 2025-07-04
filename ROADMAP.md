@@ -1,6 +1,6 @@
 ## REPORT
 ## Time GANTT
-[] cope with mins/ hours / days for x-axis depending on how long it took
+[x] cope with mins/ hours / days for x-axis depending on how long it took
 
 ### Torsion Scanning
 [x] put atom labels on interactive molecule for torsion atoms
@@ -8,8 +8,8 @@
 ### capping step page
 
 ### methods page
-[] create a page
-[] put methods for each section 
+[x] create a page
+[x] put methods for each section 
 [x] gather citations for ORCA
 [] hard-code citations for:
     [x] MultiWFN
@@ -23,7 +23,7 @@
     [x] Fourier Transform?
 
 
-[] put citations on methods page
+[x] put citations on methods page
 
 
 ## debug AMBER protocols
@@ -44,3 +44,8 @@ SOLUTION:
 [x] AMBER: duplicate all parameters that involve CX, replacing CX with XC and CT
 [] CHARMM: work out whether this is a problem in CHARMM at all
 
+
+
+## CAPPING PROTOCOL
+[] use backboneAliases to simplify capping protocol
+[] remove cTermini and nTermini from config - can use backboneAliases instead

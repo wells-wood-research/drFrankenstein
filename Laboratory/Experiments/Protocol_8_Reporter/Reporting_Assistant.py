@@ -546,7 +546,7 @@ def make_conformer_visualisations(config, outDir):
 
 def make_highlighted_torsion_visualisations(config, outDir):
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     reporterDir =     config["runtimeInfo"]["madeByReporting"]["reporterDir"]
 
     pdbBlock = pdb_to_string(cappedPdb)

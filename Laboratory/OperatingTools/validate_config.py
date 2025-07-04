@@ -145,7 +145,6 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
     # Use tuple (str, type(None)) for solvation methods to allow None
     expectedKeys = {
         "nConformers": int,
-        "nScanSteps": int,
         "scanMethod": str,
         "scanSolvationMethod": (str, type(None)),  # Allow str or None
         "singlePointMethod": str,
@@ -162,8 +161,6 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
                 # Value range/specific value checks (only if type validation passed)
                 if key == "nConformers" and isinstance(value, int) and value < -1:
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
-                elif key == "nScanSteps" and isinstance(value, int) and value != 37:
-                    _add_error(errors, keyPath, f"Value for '{key}' must be 37 (based on config comment), but got {value}.")
                 elif key == "scanSinglePointsOn" and isinstance(value, str):
                      _validate_allowed_values(value, ["all"], keyPath, errors)
 

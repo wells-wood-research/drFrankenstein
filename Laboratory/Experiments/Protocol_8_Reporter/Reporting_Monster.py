@@ -18,7 +18,7 @@ def process_fitting_results(config: dict) -> dict:
 
     fittingData = {
         "nShuffles": nShuffles,
-        "rotatableDihedrals": config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"],
+        "torsionsToScan": config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"],
         "finalParameters": config["runtimeInfo"]["madeByStitching"]["finalParameters"],
         "maxCosineFunctions": config["parameterFittingInfo"]["maxCosineFunctions"],
     }
@@ -100,16 +100,16 @@ def process_twist_results(config: dict) -> dict:
         "singlePointMethod": config["torsionScanInfo"]["singlePointMethod"],
         "singlePointSolvationMethod": config["torsionScanInfo"]["singlePointSolvationMethod"],
         "nRotatableBonds": config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"],
-        "rotatableDihedrals": deepcopy(config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"])  # Deep copy
+        "torsionsToScan": deepcopy(config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"])  # Deep copy
     }
     if config["torsionScanInfo"]["nConformers"] == -1:
         twistData["nConformers"] = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
     else:
         twistData["nConformers"] = config["torsionScanInfo"]["nConformers"]
 
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
 
-    for torsionTag, torsionData in rotatableDihedrals.items():
+    for torsionTag, torsionData in torsionsToScan.items():
         for pngTag in ["scanPng", "spPng", "scanVsSpPng"]:
             if torsionData[pngTag] is None:
                 continue
@@ -118,7 +118,7 @@ def process_twist_results(config: dict) -> dict:
                 destPng = p.join(torsionImagesDir, f"{torsionTag}_{pngTag}.png")
                 copy(pngFile, destPng)  
                 relativePath = p.relpath(destPng, reporterDir)
-                twistData["rotatableDihedrals"][torsionTag][pngTag] = relativePath
+                twistData["torsionsToScan"][torsionTag][pngTag] = relativePath
 
     torsionHtmls = Reporting_Assistant.make_highlighted_torsion_visualisations(config, torsionImagesDir)
     twistData["torsionHtmls"] = torsionHtmls    

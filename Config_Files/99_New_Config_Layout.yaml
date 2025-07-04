@@ -1,0 +1,87 @@
+##########################################################################################################################
+#                         _     _       ___            __                                                                #
+#        _ __     __ _  | |_  | |__   |_ _|  _ __    / _|   ___                                                          #
+#       | '_ \   / _` | | __| | '_ \   | |  | '_ \  | |_   / _ \                                                         #
+#       | |_) | | (_| | | |_  | | | |  | |  | | | | |  _| | (_) |                                                        #
+#       | .__/   \__,_|  \__| |_| |_| |___| |_| |_| |_|    \___/                                                         #
+#       |_|                                                                                                              #
+#                                                                                                                        #
+#        Where are your files?                                                                                           #   
+##########################################################################################################################
+## Happy with pathInfo
+pathInfo:
+  ## full path to input files
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs           ## DEFAULT == cwd
+  ## full path to output files (will be created if it doesn't exist)  
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/09_SP8_AMBER    ## DEFAULT == cwd/outputs
+  ## full path to Multiwfn install directory
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/          ## MANDATORY NO DEFAULT
+  ## full path to ORCA executable
+  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca   ## MANDATORY NO DEFAULT
+  ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
+  amberHome: /home/esp/anaconda3/envs/Igor/             ## DEFAULT == $AMBERHOME or Null if ff == CHARMM
+  ## full path to CGenFF Exe (or Null if absent)
+  cgenffExe: Null                                       ## DEFAULT == Null 
+
+moleculeInfo:
+  ## total formal charge of the molecule
+  charge: -1                                      ## MANDATORY no Default
+  ## spin multiplicity (2S+1)
+  multiplicity: 1                                 ## MANDATORY no Default 
+  ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
+  moleculeName: SP8                             ## MANDATORY no Default
+  ## List of terminal atoms
+  nTermini: [N]                               ## DEFAULT == Null (will not add capping groups)
+  cTermini: [C]                               ## DEFAULT == Null (will not add capping groups)
+  ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
+  ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
+  chargeGroups:   ## DEFAULT == Null, will just put all charges in one group
+    CO: 
+      atoms: [C, O]
+      charge: 0
+    CAN:
+      atoms: [CA, N]
+      charge: 0
+    CB1_C28:
+      atoms: [CB, OG, P24, O23, O26, O27, C28]
+      charge: -1
+    C29_C37:
+      atoms: [C29, C30, C31, C32, O33, C34, O35, N36, C37]
+      charge: 0
+    C38_C42:
+      atoms: [C38, C39, O40, N41, C42]
+      charge: 0
+    ## rest will be filled in automatically
+    
+  backboneAliases: ## DEFAULT use CA, HA, C, N, O and H 
+    CA: [CA]
+    HA: [HA]
+    C: [C]
+    N: [N]
+    O: [O]
+    H: [HN]      
+
+torsionScanInfo:
+  runScansOn:
+    phiPsi : true         ## DEFAULT TRUE
+    polarProtons : true   ## DEFAULT TRUE
+    nonPolarProtons : true  ## DEFAULT FALSE
+    amides: false   ## PLACEHOLDER, MUST BE FALSE
+    nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
+
+  preserveBackboneTorsions: true
+  ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
+  nConformers: 10
+  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!) 
+  nScanSteps: 37
+  ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
+  scanMethod: XTB2
+  ## Solvation method for torsion scanning, set to Null for no solvation
+  scanSolvationMethod :  ALPB(water) 
+  ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
+  singlePointMethod: Null
+  ## Solvation method for single point calculations, set to Null for no solvation
+  singlePointSolvationMethod: Null
+  ## Do you want to perform single point calculations on all conformers? (WARNING, only works for "all" at the moment!)
+  scanSinglePointsOn: all
+

@@ -86,12 +86,12 @@ def update_prm(config: dict,
     ## unpack config
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
     ## get atom types from previously made dict
-    targetAtomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+    targetAtomTypes = tuple(torsionsToScan[torsionTag]["ATOM_TYPES"])
 
     # Prepare new dihedral types from DataFrame
     newDihedralTypes = [

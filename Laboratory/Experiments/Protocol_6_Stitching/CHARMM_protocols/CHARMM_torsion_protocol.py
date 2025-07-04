@@ -57,10 +57,10 @@ def extract_torsion_parameters_from_prm(config: dict, torsionTag: str) -> dict:
     ## unpack config
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     
     ## get atom types from previously made dict
-    targetAtomTypes = tuple(rotatableDihedrals[torsionTag]["ATOM_TYPES"])
+    targetAtomTypes = tuple(torsionsToScan[torsionTag]["ATOM_TYPES"])
 
     ## load PRM and RTF in to Parmed
     parmedPrm = CharmmParameterSet(moleculePrm, moleculeRtf)

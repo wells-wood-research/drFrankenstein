@@ -24,12 +24,12 @@ def twist_plotting_protocol(scanDf, scanAveragesDf, spDf, spAveragesDf, outDir, 
         scanQmMethod = scanMethod + " [ " + scanSolvation + " ]"
 
     scanPng = plot_individual_vs_average(scanDf, scanAveragesDf, scanPlotDir, torsionTag, "scan", scanQmMethod)
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanPng"] = scanPng
+    config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["scanPng"] = scanPng
 
 
     if  config["torsionScanInfo"]["singlePointMethod"] is None:
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["spPng"] = None
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanVsSpPng"] = None
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["spPng"] = None
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["scanVsSpPng"] = None
 
     else:
         ## extract qm method for single point
@@ -42,8 +42,8 @@ def twist_plotting_protocol(scanDf, scanAveragesDf, spDf, spAveragesDf, outDir, 
 
         spPng = plot_individual_vs_average(spDf, spAveragesDf, scanPlotDir, torsionTag, "SP", singlepointQmMethod)
         scanVsSpPng = plot_scan_singlepoint_comparison(scanAveragesDf, spAveragesDf, scanPlotDir, torsionTag, scanQmMethod, singlepointQmMethod)
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["spPng"] = spPng
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["scanVsSpPng"] = scanVsSpPng
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["spPng"] = spPng
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["scanVsSpPng"] = scanVsSpPng
 
     return config
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

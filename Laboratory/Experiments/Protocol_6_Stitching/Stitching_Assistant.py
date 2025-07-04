@@ -24,8 +24,8 @@ def remove_exploded_torsions(config: dict) -> None:
     """
 
     torsionTags = []
-    rotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
-    for torsionTag, torsionData in rotatableDihedrals.items():
+    torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
+    for torsionTag, torsionData in torsionsToScan.items():
         if torsionData["globalMinimaAngle"] is None:
             continue
         torsionTags.append(torsionTag)

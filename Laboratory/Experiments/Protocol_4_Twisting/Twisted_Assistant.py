@@ -33,6 +33,36 @@ from OperatingTools import drOrca
 from OperatingTools import file_parsers
 
 
+
+def choose_torsions_to_scan(config: dict) -> dict:
+    """
+    Uses the "runScansOn" entry in the "torsionScanInfo" entry in config to choose what torsions to scan
+
+    Args:
+        config (dict): the config dict
+    
+    Returns:    
+        config (dict): the config dict updated
+    """
+    ## unpack config
+    runScansOn = config["torsionScanInfo"]["runScansOn"]
+    allDihedrals = config["runtimeInfo"]["madeByTwisting"]["allDihedrals"]
+
+    torsionsToScan = allDihedrals["remainingDihedrals"]
+
+    if runScansOn["phiPsi"]:
+        torsionsToScan = {**torsionsToScan, **allDihedrals["phiPsiDihedrals"]}
+    if runScansOn["nonPolarProtons"]:
+        torsionsToScan = {**torsionsToScan, **allDihedrals["nonPolarProtonsDihedrals"]}
+    if runScansOn["polarProtons"]:
+        torsionsToScan = {**torsionsToScan, **allDihedrals["polarProtonDihedrals"]}
+    if runScansOn["nonAromaticRings"]:
+        torsionsToScan = {**torsionsToScan, **allDihedrals["nonAromaticRingDihedrals"]}
+
+
+    config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"] = torsionsToScan
+    return config
+
 def get_unique_bonds(adjacencyMatrix: defaultdict):
     """
     Processes the adjacency matrix to get a stable list of unique bond pairs
@@ -116,11 +146,6 @@ def have_scans_exploded(scanDir: DirectoryPath, configDict: dict, tolerance: flo
         for bondLabelInFrame, length in currentBondLengths.items():
             # Only process bonds that were successfully defined and calculated from uniqueBondPairs
             if bondLabelInFrame not in minLengthsSoFar: 
-                # This case implies a bond defined by uniqueBondPairs was not in the first frame's currentBondLengths
-                # but appeared later, or a bond not in uniqueBondPairs appeared (latter filtered by current logic)
-                # For simplicity, we assume all bonds in uniqueBondPairs are trackable from the start.
-                # If a bond from uniqueBondPairs was NOT in the first frame, this would be an issue.
-                # However, current_bond_lengths keys are derived from uniqueBondPairs, so this should be fine.
                 minLengthsSoFar[bondLabelInFrame] = length
                 maxLengthsSoFar[bondLabelInFrame] = length
             else:
@@ -155,8 +180,8 @@ def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) ->
     if averagesDf.empty or any(pd.isna(averagesDf[torsionTag])):
 
         print(f"Skipping torsion {torsionTag} because no data was found.")
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["globalMinimaAngle"] = None
-        config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["barrierHeight"] = None
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["globalMinimaAngle"] = None
+        config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["barrierHeight"] = None
         return config
 
 
@@ -168,8 +193,8 @@ def gather_scan_data(averagesDf: pd.DataFrame, torsionTag: str, config: dict) ->
 
     barrierHeight = round(globalMaximaEnergy - globalMinimaEnergy, 3)
 
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["globalMinimaAngle"] = int(globalMinimaAngle)
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"][torsionTag]["barrierHeight"] = float(barrierHeight)
+    config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["globalMinimaAngle"] = int(globalMinimaAngle)
+    config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["barrierHeight"] = float(barrierHeight)
 
 
     return config
@@ -197,13 +222,17 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
 
     if mode == "AMBER":
         moleculeParams = load_amber_params(config)
-    else:
+    elif mode == "CHARMM":
         moleculeParams = load_charmm_params(config)
-
-    rotatableDihedrals = []
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
+    ## init empty lists
     aromaticDihedrals = []
-    nonAromaticRingDihedrals = []
-    terminalDihedrals = []
+    nonAromaticRingDihedrals = []       
+    nonPolarProtonsDihedrals = []         ## eg N - C - C - H
+    polarProtonDihedrals = []           ## eg N - C - N - H
+    remainingDihedrals = []             ## store remaining rotatable bonds
+    phiPsiDihedrals = []
 
     rings = find_ring_atoms(moleculeParams)
     adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
@@ -217,12 +246,16 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
         ## skip amide dihedrals
         if _is_amide_dihedral(dihedral):
             continue
-        ## store terminal non-polar dihedrals
-        if _is_terminal_non_polar_dihedral(dihedral):
-            terminalDihedrals.append((atomTypes, atomNames, atomIndexes))
+        ## store dihedrals that end with a non-polar proton
+        if _is_non_polar_proton_dihedral(dihedral):
+            nonPolarProtonsDihedrals.append((atomTypes, atomNames, atomIndexes))
             continue
-        ## store aromatic dihedrals
+        ## store dihedrals that end with a polar proton
+        if _is_polar_proton_dihedral(dihedral):
+            polarProtonDihedrals.append((atomTypes, atomNames, atomIndexes))
+        ## deal with rings
         if _is_a_ring_dihedral(dihedral, rings):
+            ## store aromatic dihedrals
             if _is_a_ring_dihedral(dihedral, aromaticRings):
                 aromaticDihedrals.append((atomTypes, atomNames, atomIndexes))
                 continue
@@ -230,23 +263,61 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
                 ## store non-aromatic ring dihedrals
                 nonAromaticRingDihedrals.append((atomTypes, atomNames, atomIndexes))
                 continue
-        ## store rotatable dihedrals
-        rotatableDihedrals.append((atomTypes, atomNames, atomIndexes))
-        
-    taggedRotatableDihedrals = assign_torsion_tags(rotatableDihedrals)
+
+        ## deal with phi / psi dihedrals
+        backboneAliases = config["moleculeInfo"].get("backboneAliases", None)
+        if backboneAliases is not None:
+            if _is_a_phi_dihedral(dihedral, backboneAliases):
+                ## store phi dihedrals
+                phiPsiDihedrals.append((atomTypes, atomNames, atomIndexes))
+                continue
+            elif _is_a_psi_dihedral(dihedral, backboneAliases):
+                ## store psi dihedrals
+                phiPsiDihedrals.append((atomTypes, atomNames, atomIndexes))
+                continue
+
+        ## store remaining rotatable dihedrals
+        remainingDihedrals.append((atomTypes, atomNames, atomIndexes))
+    ## assign torsion tags to the dihedrals
     taggedAromaticDihedrals = assign_torsion_tags(aromaticDihedrals)
     taggedNonAromaticRingDihedrals = assign_torsion_tags(nonAromaticRingDihedrals)
-    taggedTerminalDihedrals = assign_torsion_tags(terminalDihedrals)
+    taggedPolarProtonDihedrals = assign_torsion_tags(polarProtonDihedrals)
+    taggedNonPolarProtonDihedrals = assign_torsion_tags(nonPolarProtonsDihedrals)
+    taggedPhiPsiDihedrals = assign_torsion_tags(phiPsiDihedrals)
+    taggedRemainingDihedrals = assign_torsion_tags(remainingDihedrals)
 
+    ## update config
+    config["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"]          = dict(adjacencyMatrix)
 
-    config["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"] = dict(adjacencyMatrix)
-    config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"] = taggedRotatableDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["aromaticDihedrals"] = taggedAromaticDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["nonAromaticRingDihedrals"] = taggedNonAromaticRingDihedrals
-    config["runtimeInfo"]["madeByTwisting"]["terminalDihedrals"] = taggedTerminalDihedrals
+    allDihedrals = {}
+    allDihedrals["aromaticDihedrals"] = taggedAromaticDihedrals
+    allDihedrals["nonAromaticRingDihedrals"] = taggedNonAromaticRingDihedrals
+    allDihedrals["polarProtonDihedrals"] = taggedPolarProtonDihedrals
+    allDihedrals["nonPolarProtonsDihedrals"] = taggedNonPolarProtonDihedrals
+    allDihedrals["phiPsiDihedrals"] = taggedPhiPsiDihedrals
+    allDihedrals["remainingDihedrals"] = taggedRemainingDihedrals
+
+    config["runtimeInfo"]["madeByTwisting"]["allDihedrals"]             = allDihedrals
 
     return config
 
+def _is_a_phi_dihedral(dihedral, backboneAliases):
+    dihedralAtomNames = extract_dihedral_atom_names(dihedral)
+    if dihedralAtomNames[1] in backboneAliases["N"] and dihedralAtomNames[2] in backboneAliases["CA"]:
+        return True
+    elif dihedralAtomNames[2] in backboneAliases["N"] and dihedralAtomNames[1] in backboneAliases["CA"]:
+        return True
+    else:
+        return False
+    
+def _is_a_psi_dihedral(dihedral, backboneAliases):
+    dihedralAtomNames = extract_dihedral_atom_names(dihedral)
+    if dihedralAtomNames[1] in backboneAliases["CA"] and dihedralAtomNames[2] in backboneAliases["C"]:
+        return True
+    elif dihedralAtomNames[2] in backboneAliases["CA"] and dihedralAtomNames[1] in backboneAliases["C"]:
+        return True
+    else:
+        return False
 
 def exclude_backbone_torsions(config: dict) -> dict:
     """
@@ -259,7 +330,7 @@ def exclude_backbone_torsions(config: dict) -> dict:
         config (dict): the config dict updated
     """
     ## unpack config
-    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["rotatableDihedrals"]
+    uniqueRotatableDihedrals = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     forceField = config["parameterFittingInfo"]["forceField"]
     if forceField == "CHARMM":
         phiCenterTypes = ("NH1", "CT1") ## C N CA C
@@ -592,7 +663,17 @@ def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
     return adjacency
 
 
-def _is_terminal_non_polar_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+def _is_polar_proton_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+
+    atomElements = extract_dihedral_atom_elements(dihedral)
+    if atomElements[0] == 1 and atomElements[1] != 6:
+        return True
+    elif atomElements[2] != 6 and atomElements[3] == 1:
+        return True
+    else:
+        return False
+
+def _is_non_polar_proton_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
 
     atomElements = extract_dihedral_atom_elements(dihedral)
     if atomElements[0] == 1 and atomElements[1] == 6:

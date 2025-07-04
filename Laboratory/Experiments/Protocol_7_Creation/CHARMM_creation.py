@@ -66,8 +66,8 @@ def create_final_rtf(config):
                     outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
-
-        if config["torsionScanInfo"]["preserveBackboneTorsions"]:
+        
+        if config["moleculeInfo"]["backBoneAliases"] is not None:
             cmapTerms = create_cmap_terms(config)
             for cmapTerm in cmapTerms:
                 outRtf.write(f"{cmapTerm}\n")

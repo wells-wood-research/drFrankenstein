@@ -71,8 +71,8 @@ def trim_termini(molDf: pd.DataFrame,
     
     """
     ## unpack config ##
-    nTerminalAtoms = config["moleculeInfo"]["nTermini"]
-    cTerminalAtoms = config["moleculeInfo"]["cTermini"]
+    nTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["N"]
+    cTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["C"]
     ## get the proton (or equivalent) atoms bound to N-Terminus
     allAtomsToDelete = []
     for nTerminalAtom in nTerminalAtoms:

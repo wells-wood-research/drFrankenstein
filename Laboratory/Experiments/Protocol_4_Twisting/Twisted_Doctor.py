@@ -110,7 +110,7 @@ def run_torsion_scanning(torsionTag: str,
         # run torsion scans in parallel
         scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], torsionTag, config = config)
         ## run single point scans in parallel
-        if config["torsionScanInfo"]["scanSinglePointsOn"] is None or config["torsionScanInfo"]["singlePointMethod"] == None:
+        if config["torsionScanInfo"]["singlePointMethod"] == None:
             singlePointDfs = None
         else:
             singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, torsionTag, config = config)

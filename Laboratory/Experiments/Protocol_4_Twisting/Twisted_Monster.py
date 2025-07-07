@@ -117,21 +117,6 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
 def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
 
     scanXyzs = Twisted_Assistant.find_scan_xyz_files(scanDir, 37)
-    singlePointsOn = config["torsionScanInfo"]["scanSinglePointsOn"]
-    if singlePointsOn == "all":
-        stationaryPointScanIndexes = scanDf["scan_index"].to_list()
-
-    elif singlePointsOn == "minMaxOnly":
-        stationaryPointsIndexes = Twisted_Assistant.find_local_extrema(scanDf["Energy"])
-        stationaryPointScanIndexes = scanDf.loc[stationaryPointsIndexes, "scan_index"].to_list()
-        scanXyzs = [scanXyz for scanXyz in scanXyzs if scanXyz.split(".")[1] in stationaryPointScanIndexes]
-
-    elif singlePointsOn == "minMaxMiddle":
-        stationaryPointsIndexes = Twisted_Assistant.find_local_extrema(scanDf["Energy"])
-        stationaryAndMidPointIndexes = Twisted_Assistant.add_mid_points(stationaryPointsIndexes)
-        stationaryPointScanIndexes = scanDf.loc[stationaryAndMidPointIndexes, "scan_index"].to_list()
-        scanXyzs = [scanXyz for scanXyz in scanXyzs if scanXyz.split(".")[1] in stationaryPointScanIndexes]
-
 
     conformerScanDir = p.dirname(scanDir)
     tag = scanDir.split("_")[-1]

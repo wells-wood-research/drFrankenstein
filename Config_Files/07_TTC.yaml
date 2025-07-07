@@ -69,11 +69,15 @@ moleculeInfo:
 #     How do you want to run torsion scanning?                                                                           #                                          
 ##########################################################################################################################
 torsionScanInfo:
-  preserveBackboneTorsions: false
+  ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
+  runScansOn:
+    phiPsi : true         ## DEFAULT TRUE
+    polarProtons : false   ## DEFAULT TRUE
+    nonPolarProtons : false  ## DEFAULT FALSE
+    amides: false   ## PLACEHOLDER, MUST BE FALSE
+    nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
   nConformers: -1
-  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!)
-  nScanSteps: 37
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation

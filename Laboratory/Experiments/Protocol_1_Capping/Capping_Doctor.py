@@ -91,7 +91,7 @@ def add_nmethyl_caps(molDf: pd.DataFrame,
     
     """
     cappedDf = molDf.copy()
-    cTerminalAtoms = config["moleculeInfo"]["cTermini"]
+    cTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["C"]
     nmeDf = pdbUtils.pdb2df(nmePdb)
     originalNmeDf = nmeDf.copy()
 
@@ -125,7 +125,7 @@ def add_acetyl_caps(molDf: pd.DataFrame,
     
     """
     cappedDf = molDf.copy()
-    nTerminalAtoms = config["moleculeInfo"]["nTermini"]
+    nTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["N"]
     aceDf = pdbUtils.pdb2df(acePdb)
 
     dfsToConcat = [molDf]

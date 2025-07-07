@@ -93,7 +93,7 @@ def write_conformer_method(config: dict) -> str:
     """
     ## unpack config ##
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
-    nTermini: list = config["moleculeInfo"]["nTermini"]
+    nTermini: list = config["moleculeInfo"]["backboneAliases"]["N"]
     nConformersGenerated = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
     isCapped = False
     if len(nTermini) != 0:

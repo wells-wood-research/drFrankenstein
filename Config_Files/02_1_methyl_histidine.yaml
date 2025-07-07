@@ -37,9 +37,7 @@ moleculeInfo:
   multiplicity: 1
   ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
   moleculeName: NMH
-  ## List of terminal atoms
-  nTermini: [N]
-  cTermini: [C]
+ 
   ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
   ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
   chargeGroups:
@@ -72,7 +70,7 @@ moleculeInfo:
 torsionScanInfo:
   ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
   runScansOn:
-    phiPsi : true         ## DEFAULT TRUE
+    phiPsi : false         ## DEFAULT TRUE
     polarProtons : true   ## DEFAULT TRUE
     nonPolarProtons : true  ## DEFAULT FALSE
     amides: false   ## PLACEHOLDER, MUST BE FALSE
@@ -89,8 +87,7 @@ torsionScanInfo:
   singlePointMethod: Null
   ## Solvation method for single point calculations, set to Null for no solvation
   singlePointSolvationMethod: Null
-  ## Do you want to perform single point calculations on all conformers? (WARNING, only works for "all" at the moment!)
-  scanSinglePointsOn: all
+
 
 
 ##########################################################################################################################

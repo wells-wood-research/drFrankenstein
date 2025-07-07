@@ -54,22 +54,25 @@ moleculeInfo:
 #     How do you want to run torsion scanning?                                                                           #                                          
 ##########################################################################################################################
 torsionScanInfo:
-  preserveBackboneTorsions: false
+  ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
+  runScansOn:
+    phiPsi : true         ## DEFAULT TRUE
+    polarProtons : true   ## DEFAULT TRUE
+    nonPolarProtons : true  ## DEFAULT FALSE
+    amides: false   ## PLACEHOLDER, MUST BE FALSE
+    nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
   nConformers: -1
-  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!)
+  ## number of steps for torsion scanning (WARNING, only 37 works at the moment!) 
   nScanSteps: 37
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
-  scanSolvationMethod :  Null 
+  scanSolvationMethod :  ALPB(water) 
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: XTB2
+  singlePointMethod: Null
   ## Solvation method for single point calculations, set to Null for no solvation
-  singlePointSolvationMethod: ALPB(water) 
-  ## Do you want to perform single point calculations on all conformers? (WARNING, only works for "all" at the moment!)
-  scanSinglePointsOn: all
-
+  singlePointSolvationMethod: Null
 
 ##########################################################################################################################
 #          _                                     _____   _   _     _     _                   ___            __           #

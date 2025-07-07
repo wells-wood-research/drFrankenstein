@@ -45,8 +45,8 @@ def create_final_rtf(config):
 
     
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    nTerminalAtoms = config["moleculeInfo"]["nTermini"]
-    cTerminalAtoms = config["moleculeInfo"]["cTermini"]
+    nTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["N"]
+    cTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["C"]
     donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
     finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
 

@@ -1,6 +1,0 @@
- # --------------------------------- #
- #  Geometry Optimisation            #
- # --------------------------------- #
-! XTB2 ALPB(water) Opt
-*xyzfile 0 1 /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_24.xyz
-

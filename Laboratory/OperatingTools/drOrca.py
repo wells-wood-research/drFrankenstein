@@ -128,7 +128,12 @@ def write_goat_input(conformerDir, cappedXyz, config):
     return goatOrcaInput
 
 ########################################
-def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+def make_orca_input_for_opt(inputXyz: FilePath,
+                             outDir: DirectoryPath,
+                               moleculeInfo: dict,
+                                 qmMethod: str,
+                                   solvationMethod: str,
+                                     geomOptions:str = None) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -143,6 +148,9 @@ def make_orca_input_for_opt(inputXyz, outDir, moleculeInfo, qmMethod, solvationM
             f.write(f"! {qmMethod} Opt\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} Opt\n") 
+
+        if not geomOptions is None:
+            f.write(f"%geom\n{geomOptions}\nend\n")
         ## GEOMETRY
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
 

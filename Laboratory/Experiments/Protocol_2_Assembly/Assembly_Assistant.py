@@ -219,12 +219,56 @@ def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dic
     config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = outPsf 
 
     return config
+def assign_missing_impropers(missingParams: CharmmParameterSet,
+                        parmedPsf: CharmmPsfFile,
+                          nameToCgenffType: dict,
+                            completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+        
+    """
+    Check for missing improper parameters and assign from CGenFF parameters.
 
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing improper parameters.
+    """
+    for improper in parmedPsf.impropers:
+        atomNames=[improper.atom1.name, improper.atom2.name, improper.atom3.name, improper.atom4.name]
+        newTypes = [improper.atom1.type, improper.atom2.type, improper.atom3.type, improper.atom4.type]
+        origTypes = [nameToCgenffType.get(name, atomType) for name, atomType in zip(atomNames, newTypes)]
+
+        improperKey = tuple(newTypes)
+        if improperKey not in completeParameterSet.improper_types and improperKey not in missingParams.improper_types:
+            origImproperKey = tuple(origTypes)
+            if origImproperKey in completeParameterSet.improper_types:
+                improperTypes = completeParameterSet.improper_types[origImproperKey]
+                missingParams.improper_types[improperKey] = improperTypes
+            else:
+                raise ValueError(f"Warning: No CGenFF improper parameters for \n" \
+                    f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
+
+    return missingParams
 def assign_missing_dihedrals(missingParams: CharmmParameterSet,
                         parmedPsf: CharmmPsfFile,
                           nameToCgenffType: dict,
                             completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
     # Check for missing dihedral parameters
+    """
+    Check for missing dihedral parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing dihedral parameters.
+    """
     for dihedral in parmedPsf.dihedrals:
         atomNames=[dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name]
         newTypes = [dihedral.atom1.type, dihedral.atom2.type, dihedral.atom3.type, dihedral.atom4.type]
@@ -241,7 +285,7 @@ def assign_missing_dihedrals(missingParams: CharmmParameterSet,
                 dihedralTypes = completeParameterSet.dihedral_types[origDihedralKeyRev]
                 missingParams.dihedral_types[dihedralKey] = dihedralTypes
             else:
-                raise ValueError(f"Warning: No CGenFF angle parameters for \n" \
+                raise ValueError(f"Warning: No CGenFF dihedral parameters for \n" \
                     f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
 
     return missingParams

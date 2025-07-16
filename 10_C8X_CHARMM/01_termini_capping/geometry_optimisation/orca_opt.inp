@@ -1,0 +1,9 @@
+ # --------------------------------- #
+ #  Geometry Optimisation            #
+ # --------------------------------- #
+! XTB2 ALPB(water) Opt
+%geom
+MaxIter 10
+end
+*xyzfile 2 1 /home/esp/scriptDevelopment/drFrankenstein/10_C8X_CHARMM/01_termini_capping/geometry_optimisation/C8X_capped.xyz
+

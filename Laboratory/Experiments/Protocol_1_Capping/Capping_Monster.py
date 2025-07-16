@@ -47,7 +47,8 @@ def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
                                                    outDir = optDir,
                                                    moleculeInfo=config["moleculeInfo"],
                                                    qmMethod="XTB2",
-                                                    solvationMethod=None)
+                                                    solvationMethod="ALPB(water)",
+                                                    geomOptions="MaxIter 10")
     optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
     drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
 

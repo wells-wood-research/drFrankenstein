@@ -49,3 +49,7 @@ SOLUTION:
 ## CAPPING PROTOCOL
 [] use backboneAliases to simplify capping protocol
 [] remove cTermini and nTermini from config - can use backboneAliases instead
+
+## INSTALLATION
+[] test it again on a different server
+[] update ORCA to 6.1.0 

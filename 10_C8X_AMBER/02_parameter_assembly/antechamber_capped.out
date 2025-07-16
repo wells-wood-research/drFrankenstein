@@ -1,0 +1,23 @@
+
+Welcome to antechamber 22.0: molecular input file processor.
+
+Info: acdoctor mode is on: check and diagnose problems in the input file.
+Info: The atom type is set to gaff2; the options available to the -at flag are
+      gaff, gaff2, amber, bcc, and sybyl.
+
+-- Check Format for pdb File --
+   Status: pass
+Info: Determining atomic numbers from atomic symbols which are case sensitive.
+-- Check Unusual Elements --
+Warning: Unusual element (Pd) for atom (ID: 33, Name: Pd).
+/home/esp/anaconda3/envs/Igor/bin/wrapped_progs/antechamber: Fatal Error!
+GAFF does not have sufficient parameters for molecules having unusual
+       elements (those other than H,C,N,O,S,P and halogens).
+       To ensure antechamber works properly, one may need to designate
+       bond types for bonds involved with unusual elements.
+       To do so, simply freeze the bond types by appending "F" or "f" 
+       to the corresponding bond types in ac or mol2 files
+       and rerun antechamber without unusual element checking via:
+       antechamber -dr no 
+       Alternatively for metals, see metalpdb2mol2.py in MCPB. 
+

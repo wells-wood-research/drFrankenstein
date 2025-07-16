@@ -1,0 +1,14 @@
+/home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/04_torsion_scanning/torsion_NH1-CT1-CG321-CG2R61/scans_PCY_conformer_46/PCY_conformer_46_forwards/orca_scan.gbw 
+1 
+1 
+0 
+$constraints
+ 0
+ 0
+ 1 6
+      3     18     16     14     13      2   4.88692191
+
+
+$autoAddFragBonds
+ 10
+   5.00000000

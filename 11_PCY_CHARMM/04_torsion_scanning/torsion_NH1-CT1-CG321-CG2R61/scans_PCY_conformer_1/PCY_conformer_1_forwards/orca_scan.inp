@@ -1,0 +1,10 @@
+ # --------------------------------- #
+ #  Torsion Scan                     #
+ # --------------------------------- #
+! XTB2 ALPB(water) Opt
+%geom Scan
+D 13 14 16 18 = 120.0, 480.0, 37
+end
+end
+*xyzfile 0 1 /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/04_torsion_scanning/torsion_NH1-CT1-CG321-CG2R61/scans_PCY_conformer_1/PCY_conformer_1_opt/orca_opt.xyz
+

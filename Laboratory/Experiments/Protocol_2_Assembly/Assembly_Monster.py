@@ -194,13 +194,18 @@ def create_missing_prm(parmedPsf: CharmmPsfFile,
                                                              parmedPsf,
                                                                nameToCgenffType,
                                                                  completeParameterSet)
+    
+    missingParams = Assembly_Assistant.assign_missing_impropers(missingParams,
+                                                             parmedPsf,
+                                                               nameToCgenffType,
+                                                                 completeParameterSet)
 
 
 
     missingPrm = p.join(assemblyDir, f"{moleculeName}_missing.prm")
     # Write missing parameters to PRM file
     with open(missingPrm, "w") as f:
-        if missingParams.bond_types or missingParams.angle_types or missingParams.dihedral_types:
+        if missingParams.bond_types or missingParams.angle_types or missingParams.dihedral_types or missingParams.improper_types:
             missingParams.write(par=f.name)
         else:
             pass
@@ -223,15 +228,18 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
         nameToCgenffType (dict): Dictionary mapping atom names to their original CGenFF types.
 
     """
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+
+
     # Define CHARMM36m atom type mapping
     ## TODO: Automate using config input
     nameToDesiredTypeMol = {
-                    "N" : "NH1",
-                    "HN": "H",
-                    "CA": "CT1",
-                    "HA": "HB1",
-                    "C" : "C",
-                    "O" : "O" }
+                    backboneAliases["N"][0] : "NH1",
+                    backboneAliases["H"][0]: "H",
+                    backboneAliases["CA"][0]: "CT1",
+                    backboneAliases["HA"][0]: "HB1",
+                    backboneAliases["C"][0] : "C",
+                    backboneAliases["O"][0] : "O" }
 
     nameToDesiredTypeBb = {
                     "NN": "NH1",
@@ -249,7 +257,6 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
     
     nameToDesiredType = {**nameToDesiredTypeBb, **nameToDesiredTypeMol}
     nameToCgenffType = Assembly_Assistant.get_cgenff_atom_types(parmedPsf, nameToDesiredType)
-
     parmedPsf = Assembly_Assistant.update_psf_atom_types(parmedPsf, nameToDesiredType)
 
     return parmedPsf, nameToCgenffType, nameToDesiredType

@@ -78,6 +78,7 @@ def charmm_assembly_protocol(config:dict) -> dict:
     """
     ## create an empty dict in config
     config["runtimeInfo"]["madeByAssembly"] = {}
+    runScansOn = config["torsionScanInfo"]["runScansOn"]
 
     ## make a dir for assembly of initial parameters
     assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
@@ -97,20 +98,27 @@ def charmm_assembly_protocol(config:dict) -> dict:
                                                                 charmmDefaultParams["cgenffPrm"],
                                                                 cappedRtf, cappedPrm))
     
-    parmedPsf, nameToCgenffType, nameToDesiredType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
-                                                                           config)
+    ## we will assign CGenFF types to backbone atoms (if present!) and parameterize them
+    if runScansOn["phiPsi"]:
+            completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, *charmmDefaultParams.values())
+
+    ## we will reset the backbone atom types to CHARMM36m defaults and not reparameterize them!
+    else:
+        parmedPsf, nameToCgenffType, nameToDesiredType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
+                                                                            config)
 
 
-    missingPrm = Assembly_Monster.create_missing_prm(parmedPsf = parmedPsf,
-                                                cappedRtf = cappedRtf,
-                                                cappedPrm = cappedPrm,
-                                                charmmDefaultParams = charmmDefaultParams,
-                                                nameToCgenffType = nameToCgenffType,
-                                                config = config)
-    
-    completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, missingPrm, *charmmDefaultParams.values())
+        missingPrm = Assembly_Monster.create_missing_prm(parmedPsf = parmedPsf,
+                                                    cappedRtf = cappedRtf,
+                                                    cappedPrm = cappedPrm,
+                                                    charmmDefaultParams = charmmDefaultParams,
+                                                    nameToCgenffType = nameToCgenffType,
+                                                    config = config)
+        
+        completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, missingPrm, *charmmDefaultParams.values())
+
+    ## load parameters back in to parmed PSF  
     parmedPsf.load_parameters(completeParameterSet)
-
 
 
     config = Assembly_Assistant.save_modified_parameter_files(parmedPsf, config)

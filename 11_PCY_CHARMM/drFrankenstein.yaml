@@ -1,0 +1,267 @@
+##########################################################################################################################
+#                         _     _       ___            __                                                                #
+#        _ __     __ _  | |_  | |__   |_ _|  _ __    / _|   ___                                                          #
+#       | '_ \   / _` | | __| | '_ \   | |  | '_ \  | |_   / _ \                                                         #
+#       | |_) | | (_| | | |_  | | | |  | |  | | | | |  _| | (_) |                                                        #
+#       | .__/   \__,_|  \__| |_| |_| |___| |_| |_| |_|    \___/                                                         #
+#       |_|                                                                                                              #
+#                                                                                                                        #
+#        Where are your files?                                                                                           #   
+##########################################################################################################################
+pathInfo:
+  ## full path to input files
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
+  ## full path to output files (will be created if it doesn't exist)
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM
+  ## full path to Multiwfn install directory
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
+  ## full path to ORCA executable
+  orcaExe: /home/esp/bin/orca_6_1_0/orca
+  ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
+  amberHome: /home/esp/anaconda3/envs/Igor/
+  ## full path to CGenFF Exe (or Null if absent)
+  cgenffExe: null
+
+
+##########################################################################################################################
+#                       _                         _          ___            __                                           #
+#   _ __ ___     ___   | |   ___    ___   _   _  | |   ___  |_ _|  _ __    / _|   ___                                    #
+#  | '_ ` _ \   / _ \  | |  / _ \  / __| | | | | | |  / _ \  | |  | '_ \  | |_   / _ \                                   #
+#  | | | | | | | (_) | | | |  __/ | (__  | |_| | | | |  __/  | |  | | | | |  _| | (_) |                                  #
+#  |_| |_| |_|  \___/  |_|  \___|  \___|  \__,_| |_|  \___| |___| |_| |_| |_|    \___/                                   #
+#                                                                                                                        #                                                              
+#        What is your molecule?                                                                                          #
+##########################################################################################################################
+moleculeInfo:
+  ## total formal charge of the molecule
+  charge: 0
+  ## spin multiplicity (2S+1)
+  multiplicity: 1
+  ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
+  moleculeName: PCY
+  ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
+  ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
+  chargeGroups:
+    CO:
+      atoms: [C, O]
+      charge: 0
+    CAN:
+      atoms: [CA, N]
+      charge: 0
+    Tyr:
+      atoms: [CB, CG, CD1, CD2, CE1, CE2, CZ, OH, CT]
+      charge: 0
+    NO2:
+      atoms: [CI, CK1, CK2, CL1, CL2, CM, NO, ON1, ON2]
+      charge: 0
+
+  backboneAliases:
+    CA: [CA]
+    HA: [HA]
+    C: [C]
+    N: [N]
+    O: [O]
+    H: [H]
+
+
+##########################################################################################################################
+#   _                          _                   ____                           ___            __                      #
+#  | |_    ___    _ __   ___  (_)   ___    _ __   / ___|    ___    __ _   _ __   |_ _|  _ __    / _|   ___               #
+#  | __|  / _ \  | '__| / __| | |  / _ \  | '_ \  \___ \   / __|  / _` | | '_ \   | |  | '_ \  | |_   / _ \              #
+#  | |_  | (_) | | |    \__ \ | | | (_) | | | | |  ___) | | (__  | (_| | | | | |  | |  | | | | |  _| | (_) |             #
+#   \__|  \___/  |_|    |___/ |_|  \___/  |_| |_| |____/   \___|  \__,_| |_| |_| |___| |_| |_| |_|    \___/              #
+#                                                                                                                        #
+#     How do you want to run torsion scanning?                                                                           #                                          
+##########################################################################################################################
+torsionScanInfo:
+  ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
+  runScansOn:
+    phiPsi: false          ## DEFAULT TRUE
+    polarProtons: false    ## DEFAULT TRUE
+    nonPolarProtons: false   ## DEFAULT FALSE
+    amides: false   ## PLACEHOLDER, MUST BE FALSE
+    nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
+  ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
+  nConformers: 10
+  ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
+  scanMethod: XTB2
+  ## Solvation method for torsion scanning, set to Null for no solvation
+  scanSolvationMethod: ALPB(water)
+  ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
+  singlePointMethod: revPBE def2-SVP D3BJ
+  ## Solvation method for single point calculations, set to Null for no solvation
+  singlePointSolvationMethod: CPCM(water)
+
+
+##########################################################################################################################
+#          _                                     _____   _   _     _     _                   ___            __           #
+#    ___  | |__     __ _   _ __    __ _    ___  |  ___| (_) | |_  | |_  (_)  _ __     __ _  |_ _|  _ __    / _|   ___    #
+#   / __| | '_ \   / _` | | '__|  / _` |  / _ \ | |_    | | | __| | __| | | | '_ \   / _` |  | |  | '_ \  | |_   / _ \   #
+#  | (__  | | | | | (_| | | |    | (_| | |  __/ |  _|   | | | |_  | |_  | | | | | | | (_| |  | |  | | | | |  _| | (_) |  #
+#   \___| |_| |_|  \__,_| |_|     \__, |  \___| |_|     |_|  \__|  \__| |_| |_| |_|  \__, | |___| |_| |_| |_|    \___/   #
+#                                 |___/                                              |___/                               #
+#                                                                                                                        #
+#     How do you want to run charge fitting?                                                                             #
+##########################################################################################################################
+chargeFittingInfo:
+  ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
+  chargeFittingProtocol: SOLVATOR
+  ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
+  nConformers: 10
+  ## number of cores for charge fitting
+  nCoresPerCalculation: 1
+  ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
+  optMethod: XTB2
+  ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
+  optSolvationMethod: ALPB(water)
+  ## QM method for single point calculations (TIP, this should be more accurate than your optimisation method)
+  singlePointMethod: revPBE def2-SVP D3BJ
+  ## Solvation method for single point calculations, set to Null for no solvation
+  ## for QM/MM protocol, set to "TIP3P" alongside the chargeFittingProtocol being set to "SOLVATOR"
+  singlePointSolvationMethod: CPCM(water)
+  ## number of water molecules to add per NM^2 of surface area, only used fro SOLVATOR protocol
+  waterDensity: 10
+############################################################################################################################
+#                                              _               _____  _  _    _    _                ___          __        #
+#   _ __    __ _  _ __  __ _  _ __ ___    ___ | |_  ___  _ __ |  ___|(_)| |_ | |_ (_) _ __    __ _ |_ _| _ __   / _|  ___  #
+#  | '_ \  / _` || '__|/ _` || '_ ` _ \  / _ \| __|/ _ \| '__|| |_   | || __|| __|| || '_ \  / _` | | | | '_ \ | |_  / _ \ #
+#  | |_) || (_| || |  | (_| || | | | | ||  __/| |_|  __/| |   |  _|  | || |_ | |_ | || | | || (_| | | | | | | ||  _|| (_) |#
+#  | .__/  \__,_||_|   \__,_||_| |_| |_| \___| \__|\___||_|   |_|    |_| \__| \__||_||_| |_| \__, ||___||_| |_||_|   \___/ #
+#  |_|                                                                                       |___/                         #
+#        How do you want to run parameter fitting?                                                                         #   
+############################################################################################################################
+parameterFittingInfo:
+  ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
+  forceField: CHARMM
+  ## maximum cosine functions to be used to fit each torsion parameter
+  maxCosineFunctions: 3
+  ## how many rounds of parameter fitting do you want to perform (more is better?)
+  nShuffles: 50
+
+#####################################################
+#              _             ___          __        #
+#   _ __ ___  (_) ___   ___ |_ _| _ __   / _|  ___  #
+#  | '_ ` _ \ | |/ __| / __| | | | '_ \ | |_  / _ \ #
+#  | | | | | || |\__ \| (__  | | | | | ||  _|| (_) |#
+#  |_| |_| |_||_||___/ \___||___||_| |_||_|   \___/ #
+#       Other settings for drFrankenstein           #
+#####################################################
+miscInfo:
+  ## the maximum number of cores that will be used
+  availableCpus: 30
+  ## How many file do you want to delete? Accepts integers 0, 1, 2, 3
+  cleanUpLevel: 1
+# ##########################################################################################################################
+#                                                                                                                          #
+#                _                     _                      _           _     ___            __                          #
+#          ___  | |__     ___    ___  | | __  _ __     ___   (_)  _ __   | |_  |_ _|  _ __    / _|   ___                   #
+#         / __| | '_ \   / _ \  / __| | |/ / | '_ \   / _ \  | | | '_ \  | __|  | |  | '_ \  | |_   / _ \                  #
+#        | (__  | | | | |  __/ | (__  |   <  | |_) | | (_) | | | | | | | | |_   | |  | | | | |  _| | (_) |                 #
+#         \___| |_| |_|  \___|  \___| |_|\_\ | .__/   \___/  |_| |_| |_|  \__| |___| |_| |_| |_|    \___/                  #
+#                                            |_|                                                                           #
+#                                                                                                                          #
+# ##########################################################################################################################
+checkpointInfo: {cappingComplete: true, assemblyComplete: false, conformersComplete: true,
+  scanningComplete: false, chargesComplete: false, torsionFittingComplete: false,
+  finalCreationComplete: false, reportingComplete: false}
+# ##########################################################################################################################
+#                                     _     _                      ___            __                                       #
+#              _ __   _   _   _ __   | |_  (_)  _ __ ___     ___  |_ _|  _ __    / _|   ___                                #
+#             | '__| | | | | | '_ \  | __| | | | '_ ` _ \   / _ \  | |  | '_ \  | |_   / _ \                               #
+#             | |    | |_| | | | | | | |_  | | | | | | | | |  __/  | |  | | | | |  _| | (_) |                              #
+#             |_|     \__,_| |_| |_|  \__| |_| |_| |_| |_|  \___| |___| |_| |_| |_|    \___/                               #
+#                                                                                                                          #
+# ##########################################################################################################################
+runtimeInfo:
+  madeByCapping: {cappingDir: /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/01_termini_capping,
+    cappedPdb: 
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/01_termini_capping/geometry_optimisation/PCY_capped_opt.pdb,
+    cappedMoleculeStr: /home/esp/scriptDevelopment/drFrankenstein/Inputs/PCY_capped.str}
+  timeInfo:
+    capping_protocol: {functionAlias: Termini Capping, executionTime: 0.8873543739318848,
+      functionGroup: TERMINI_CAPPING}
+    conformer_generation_protocol: {functionAlias: Conformer Generation, executionTime: 1483.3848340511322,
+      functionGroup: CONFORMER_GENERATION}
+  madeByAssembly: {assemblyDir: /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/02_parameter_assembly,
+    assembledPrm: 
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/02_parameter_assembly/PCY_assembled.prm,
+    assembledPsf: 
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/02_parameter_assembly/PCY_assembled.psf,
+    assembledRtf: 
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/02_parameter_assembly/PCY_assembled.rtf}
+  madeByConformers:
+    conformerDir: /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers
+    conformerXyzs: [
+          /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_9.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_14.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_8.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_20.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_44.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_33.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_27.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_10.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_23.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_41.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_18.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_6.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_30.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_53.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_34.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_32.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_16.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_15.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_45.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_51.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_56.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_1.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_31.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_17.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_40.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_22.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_12.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_43.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_11.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_13.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_47.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_2.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_4.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_49.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_46.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_29.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_36.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_54.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_37.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_39.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_50.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_38.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_52.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_55.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_42.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_57.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_25.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_28.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_5.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_26.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_21.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_7.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_3.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_19.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_35.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_24.xyz,
+      /home/esp/scriptDevelopment/drFrankenstein/11_PCY_CHARMM/03_GOAT_conformers/PCY_conformer_48.xyz]
+    conformerEnergies: {PCY_conformer_9: 1.794, PCY_conformer_14: 2.115, PCY_conformer_8: 1.765,
+      PCY_conformer_20: 2.464, PCY_conformer_44: 4.613, PCY_conformer_33: 3.543, PCY_conformer_27: 3.02,
+      PCY_conformer_10: 1.881, PCY_conformer_23: 2.621, PCY_conformer_41: 4.463, PCY_conformer_18: 2.295,
+      PCY_conformer_6: 1.511, PCY_conformer_30: 3.289, PCY_conformer_53: 5.588, PCY_conformer_34: 3.688,
+      PCY_conformer_32: 3.517, PCY_conformer_16: 2.254, PCY_conformer_15: 2.161, PCY_conformer_45: 4.615,
+      PCY_conformer_51: 5.358, PCY_conformer_56: 5.921, PCY_conformer_1: 0.0, PCY_conformer_31: 3.504,
+      PCY_conformer_17: 2.255, PCY_conformer_40: 4.294, PCY_conformer_22: 2.509, PCY_conformer_12: 2.08,
+      PCY_conformer_43: 4.593, PCY_conformer_11: 1.95, PCY_conformer_13: 2.092, PCY_conformer_47: 4.767,
+      PCY_conformer_2: 1.04, PCY_conformer_4: 1.448, PCY_conformer_49: 4.772, PCY_conformer_46: 4.691,
+      PCY_conformer_29: 3.109, PCY_conformer_36: 3.72, PCY_conformer_54: 5.61, PCY_conformer_37: 3.754,
+      PCY_conformer_39: 4.0, PCY_conformer_50: 5.032, PCY_conformer_38: 3.981, PCY_conformer_52: 5.491,
+      PCY_conformer_55: 5.637, PCY_conformer_42: 4.587, PCY_conformer_57: 5.938, PCY_conformer_25: 2.659,
+      PCY_conformer_28: 3.034, PCY_conformer_5: 1.48, PCY_conformer_26: 2.776, PCY_conformer_21: 2.499,
+      PCY_conformer_7: 1.712, PCY_conformer_3: 1.179, PCY_conformer_19: 2.308, PCY_conformer_35: 3.711,
+      PCY_conformer_24: 2.636, PCY_conformer_48: 4.768}
+    nConformersGenerated: 57

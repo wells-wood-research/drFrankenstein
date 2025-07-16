@@ -134,7 +134,7 @@ def partial_charges_SOLVATOR_protocol(outDir: DirectoryPath,
     rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config = config,
                                                              conformerListTxt = conformerListTxt,
                                                                chargeConstraintsTxt = chargeConstraintsTxt,
-                                                               symmetryConstraintsTxt = symmetryConstraintsTxt,
+                                                               symmetryConstraintsTxt = None,
                                                                fittingDir = fittingDir)
     ## parse MultiWFN output, write to CSV file
     chargesDf = Charged_Monster.parse_multiwfn_output(rawMultiWfnOutputs)

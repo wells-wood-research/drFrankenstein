@@ -27,8 +27,10 @@ def fit_torsion_parameters(config: dict,
                                   shuffleIndex: int,
                                     mmCosineComponents: dict,
                                       debug: bool = False):
-
+    ## unpack config
     qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
+    l2Damping = config["parameterFittingInfo"]["l2DampingFactor"]
+
     qmmmTorsionFittingDir = p.join(qmmmFittingDir, torsionTag)
     os.makedirs(qmmmTorsionFittingDir,exist_ok=True)
 
@@ -45,7 +47,8 @@ def fit_torsion_parameters(config: dict,
     torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy,
                                                                                   torsionTag,
                                                                                     qmmmTorsionFittingDir,
-                                                                                      forceField=config["parameterFittingInfo"]["forceField"])
+                                                                                      forceField=config["parameterFittingInfo"]["forceField"],
+                                                                                        l2Damping=l2Damping)
 
     return torsionParametersDf
 

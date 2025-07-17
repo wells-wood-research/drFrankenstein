@@ -15,8 +15,7 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):
-    
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):    
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)

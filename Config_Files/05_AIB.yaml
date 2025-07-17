@@ -136,6 +136,8 @@ parameterFittingInfo:
   maxCosineFunctions: 3
   ## how many rounds of parameter fitting do you want to perform (more is better?)
   nShuffles: 50
+  ## L2 dampening factor DEFAULT 0.1
+  l2DampingFactor: 0.1
 
 #####################################################
 #              _             ___          __        #

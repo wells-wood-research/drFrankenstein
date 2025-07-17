@@ -67,7 +67,7 @@ def create_final_rtf(config):
                 terminalSectionWritten = True
             outRtf.write(line)
         
-        if config["moleculeInfo"]["backBoneAliases"] is not None:
+        if config["moleculeInfo"]["backboneAliases"] is not None:
             cmapTerms = create_cmap_terms(config)
             for cmapTerm in cmapTerms:
                 outRtf.write(f"{cmapTerm}\n")

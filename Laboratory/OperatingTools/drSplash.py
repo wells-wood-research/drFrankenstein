@@ -4,6 +4,75 @@ import time
 import sys
 import re
 
+
+def print_config_error(configErrors) -> None:
+    """
+    Prints a detailed, color-coded error report for the config file and exits.
+    This is only called when at least one fatal error is found.
+
+    Args:
+        configErrors (dict): A dictionary containing error messages or None.
+    """
+    # -- ANSI Color Codes --
+    redText = "\033[31m"
+    yellowText = "\033[33m"
+    orangeText = "\033[38;5;208m"
+    greenText = "\033[32m"
+    resetTextColor = "\033[0m"
+
+    configErrorAscii = """
+ ▄████▄  ▒█████   ███▄    █   █████▒██▓ ▄████    ▓█████  ██▀███   ██▀███   ▒█████   ██▀███  
+▒██▀ ▀█ ▒██▒  ██▒ ██ ▀█   █ ▓██   ▒▓██▒██▒ ▀█▒   ▓█   ▀ ▓██ ▒ ██▒▓██ ▒ ██▒▒██▒  ██▒▓██ ▒ ██▒
+▒▓█    ▄▒██░  ██▒▓██  ▀█ ██▒▒████ ░▒██▒██░▄▄▄░   ▒███   ▓██ ░▄█ ▒▓██ ░▄█ ▒▒██░  ██▒▓██ ░▄█ ▒
+▒▓▓▄ ▄██▒██   ██░▓██▒  ▐▌██▒░▓█▒  ░░██░▓█  ██▓   ▒▓█  ▄ ▒██▀▀█▄  ▒██▀▀█▄  ▒██   ██░▒██▀▀█▄  
+▒ ▓███▀ ░ ████▓▒░▒██░   ▓██░░▒█░   ░██░▒▓███▀▒   ░▒████▒░██▓ ▒██▒░██▓ ▒██▒░ ████▓▒░░██▓ ▒██▒
+░ ░▒ ▒  ░ ▒░▒░▒░ ░ ▒░   ▒ ▒  ▒ ░   ░▓  ░▒   ▒    ░░ ▒░ ░░ ▒▓ ░▒▓░░ ▒▓ ░▒▓░░ ▒░▒░▒░ ░ ▒▓ ░▒▓░
+  ░  ▒    ░ ▒ ▒░ ░ ░░   ░ ▒░ ░      ▒ ░ ░   ░     ░ ░  ░  ░▒ ░ ▒░  ░▒ ░ ▒░  ░ ▒ ▒░   ░▒ ░ ▒░
+░       ░ ░ ░ ▒     ░   ░ ░  ░ ░    ▒ ░ ░   ░       ░     ░░   ░   ░░   ░ ░ ░ ░ ▒    ░░   ░ 
+░ ░         ░ ░           ░         ░       ░       ░  ░   ░        ░         ░ ░     ░     
+░  
+    """
+    lightningBar = "🗲 "*int((80//2))
+
+
+    print(f"{resetTextColor}Fatal errors were found in your config file. Please fix them to proceed.")
+    print(f"{resetTextColor}Colour Key: | {greenText}Input Correct{resetTextColor} | {orangeText}Non-Fatal Issue (Default Used){resetTextColor} | {redText}Fatal Issue{resetTextColor} |")
+
+    # -- Helper function to print a single line --
+    def print_config_text(argName, argDisorder, textColor, indentationLevel=0) -> None:
+        print(f"{' ' * (indentationLevel * 3 + 2)}{yellowText}{argName}: {textColor}{argDisorder}{resetTextColor}")
+
+    # -- Helper function to recursively print nested dictionaries --
+    def loop_error_dict(argName, disorderDict, indentationLevel=0) -> None:
+        print(f"{'--' * indentationLevel}--> In sub-entry {yellowText}{argName}{resetTextColor}:")
+        for sub_argName, sub_argDisorder in disorderDict.items():
+            if sub_argDisorder is None:
+                print_config_text(sub_argName, "OK", greenText, indentationLevel)
+            elif isinstance(sub_argDisorder, str):
+                textColor = orangeText if "default" in sub_argDisorder.lower() else redText
+                print_config_text(sub_argName, sub_argDisorder, textColor, indentationLevel)
+            elif isinstance(sub_argDisorder, dict):
+                loop_error_dict(sub_argName, sub_argDisorder, indentationLevel + 1)
+
+    # -- Main loop to process the error dictionary --
+    for infoName, infoErrors in configErrors.items():
+        print(f"\n> For the config entry {yellowText}{infoName}{resetTextColor}:")
+        for argName, argDisorder in infoErrors.items():
+            if argDisorder is None:
+                print_config_text(argName, "OK", greenText, 0)
+            elif isinstance(argDisorder, str):
+                textColor = orangeText if "default" in argDisorder.lower() else redText
+                print_config_text(argName, argDisorder, textColor, 0)
+            elif isinstance(argDisorder, dict):
+                loop_error_dict(argName, argDisorder)
+
+    print(f"\n{redText}⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕⚕")
+    print(resetTextColor)
+    exit(1)
+
+
+
+
 def strip_ansi_codes(text):
     """Remove ANSI color codes from a string."""
     ansiPattern = re.compile(r'\033\[[0-9;]*m')

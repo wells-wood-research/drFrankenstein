@@ -15,6 +15,7 @@ from Experiments.Protocol_8_Reporter import Reporting_Doctor
 from OperatingTools import drYaml
 from OperatingTools import drSplash
 from OperatingTools import Timer 
+from OperatingTools import set_config_defaults
 from OperatingTools import validate_config
 from OperatingTools import handle_CGenFF_dependancy
 ## CLEAN CODE ##
@@ -39,7 +40,10 @@ def main():
     configYaml = drYaml.get_config_input_arg()
     ## load into dict, check for bad formatting
     config = drYaml.read_input_yaml(configYaml)
-    ## check config for errors
+
+    config = set_config_defaults.apply_defaults_and_validate(config)
+
+    ## check config for errors#
     ##TODO: re-do once config is settled
     # config = validate_config.validate_config(config)
 

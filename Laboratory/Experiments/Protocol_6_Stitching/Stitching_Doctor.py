@@ -85,7 +85,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
     counter = 1
     shuffleIndex = 1
     ## run the torsion fitting protocol, each time, shuffle the torsion order
-    for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
+    for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not counter == 1:
             config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"] = config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"]
             AMBER_helper_functions.run_tleap_to_make_params(config)
@@ -171,6 +171,7 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf, shuffleIndex)
         currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         if counter % len(torsionTags) == 0:
+            print(counter, shuffleIndex)
             shuffleIndex += 1
         counter += 1
     ## update config moleculePrm

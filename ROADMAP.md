@@ -44,6 +44,8 @@ SOLUTION:
 [x] AMBER: duplicate all parameters that involve CX, replacing CX with XC and CT
 [] CHARMM: work out whether this is a problem in CHARMM at all
 
+## FINAL CREATION
+[] CHARMM: make sure we're getting the right files ie. _51 is not found!
 
 
 ## CAPPING PROTOCOL
@@ -53,3 +55,6 @@ SOLUTION:
 ## INSTALLATION
 [] test it again on a different server
 [] update ORCA to 6.1.0 
+
+## REPORTER
+[] check for config change compatability

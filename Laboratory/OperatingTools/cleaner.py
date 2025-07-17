@@ -170,7 +170,7 @@ def  clean_up_solvator_dir(solvatorDir: DirectoryPath, config: dict) -> None:
     cleanUpLevel = config["miscInfo"]["cleanUpLevel"]
 
     if cleanUpLevel == 0:
-        return
+        keepFiles = [file for file in os.listdir(solvatorDir)]
     elif cleanUpLevel == 1:
         keepFiles = [file for file in os.listdir(solvatorDir) if file.endswith(".inp") 
                      or file.endswith(".out") or file.endswith(".xyz")]

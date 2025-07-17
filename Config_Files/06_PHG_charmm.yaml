@@ -16,7 +16,7 @@ pathInfo:
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
-  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
+  orcaExe: /home/esp/bin/orca_6_1_0/orca
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
   amberHome: /home/esp/anaconda3/envs/Igor/
   ## full path to CGenFF Exe (or Null if absent)
@@ -79,7 +79,7 @@ torsionScanInfo:
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 2
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation

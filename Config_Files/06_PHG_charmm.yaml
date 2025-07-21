@@ -130,9 +130,10 @@ parameterFittingInfo:
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
   forceField: CHARMM
   ## maximum cosine functions to be used to fit each torsion parameter
-  maxCosineFunctions: 3
+  maxCosineFunctions: 10
   ## how many rounds of parameter fitting do you want to perform (more is better?)
   nShuffles: 25
+  l2DampingFactor: 0.5
 
 #####################################################
 #              _             ___          __        #

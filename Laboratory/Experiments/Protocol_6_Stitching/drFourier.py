@@ -15,7 +15,14 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):    
+def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, config):
+                            #    sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):    
+
+    ## unpack config
+    maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
+    l2Damping = config["parameterFittingInfo"]["l2DampingFactor"]
+    forceField = config["parameterFittingInfo"]["forceField"]
+    sampleSpacing = 10
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
     signalLength: int = len(energyDataPadded)
@@ -34,10 +41,10 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, s
     paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
     if forceField == "AMBER":
         ## construct cosine components from parameters
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxFunctions)
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxCosineFunctions)
 
     elif forceField == "CHARMM":
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxFunctions)
+        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxCosineFunctions)
 
         ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")

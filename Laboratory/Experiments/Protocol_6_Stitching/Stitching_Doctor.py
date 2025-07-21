@@ -171,7 +171,6 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf, shuffleIndex)
         currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         if counter % len(torsionTags) == 0:
-            print(counter, shuffleIndex)
             shuffleIndex += 1
         counter += 1
     ## update config moleculePrm

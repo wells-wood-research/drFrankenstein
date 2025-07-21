@@ -45,7 +45,7 @@ SOLUTION:
 [] CHARMM: work out whether this is a problem in CHARMM at all
 
 ## FINAL CREATION
-[] CHARMM: make sure we're getting the right files ie. _51 is not found!
+[x] CHARMM: make sure we're getting the right files ie. _51 is not found!
 
 
 ## CAPPING PROTOCOL

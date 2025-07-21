@@ -47,8 +47,7 @@ def fit_torsion_parameters(config: dict,
     torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy,
                                                                                   torsionTag,
                                                                                     qmmmTorsionFittingDir,
-                                                                                      forceField=config["parameterFittingInfo"]["forceField"],
-                                                                                        l2Damping=l2Damping)
+                                                                                    config=config)
 
     return torsionParametersDf
 

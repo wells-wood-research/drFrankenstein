@@ -38,6 +38,15 @@ def capping_protocol(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     molPdb = p.join(inputDir, f"{moleculeName}.pdb")
+    backboneAliases = config["moleculeInfo"].get("backboneAliases", None)
+    ## Skip for ligands ##
+    if not backboneAliases:
+        optimedPdb = Capping_Monster.optimise_capped_structures(molPdb, config)
+        config["runtimeInfo"]["madeByCapping"]["cappedPdb"] = optimedPdb
+        ## update config, this lets drMD know that capping is complete and lets it skip this step next time
+        config["checkpointInfo"]["cappingComplete"] = True
+        return config
+
     ## create an entry in runtimeInfo for capping
     config["runtimeInfo"]["madeByCapping"] = {}
 
@@ -74,7 +83,7 @@ def capping_protocol(config: dict) -> dict:
     return config
 
 
-#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲𗲲🗲🗲🗲🗲🗲🗲🗲🗲
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def add_nmethyl_caps(molDf: pd.DataFrame,
                       nmePdb: FilePath,
                         config: dict) -> pd.DataFrame:

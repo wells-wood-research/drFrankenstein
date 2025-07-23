@@ -358,18 +358,41 @@ def exclude_backbone_torsions(config: dict) -> dict:
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_conformer_xyzs(config, seed = 1818):
+def get_conformer_xyzs(config, seed=1818, temperature=300):
     ## get conformer XYZ files
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    conformerEnergies = config["runtimeInfo"]["madeByConformers"]["conformerEnergies"]
     nConformers = config["torsionScanInfo"]["nConformers"]
 
-    if nConformers == -1 or nConformers > len(conformerXyzs):
-        pass
-    elif nConformers < len(conformerXyzs):
-        random.seed(seed)
-        conformerXyzs = random.sample(conformerXyzs, nConformers)
-        
-    return conformerXyzs
+    if nConformers == -1 or nConformers >= len(conformerXyzs):
+        return conformerXyzs  # Return all conformers if nConformers is -1 or too large
+
+    # Boltzmann sampling
+    random.seed(seed)
+    kBoltzmann = 0.0019872041  # Boltzmann constant in kcal/mol·K
+    kT = kBoltzmann * temperature
+
+    # Get energies and compute Boltzmann weights
+    energies = [conformerEnergies[key] for key in sorted(conformerEnergies.keys())]
+    boltzmannFactors = [np.exp(-energy / kT) for energy in energies]
+    totalWeight = sum(boltzmannFactors)
+    probabilities = [factor / totalWeight for factor in boltzmannFactors]
+
+    # Ensure conformerXyzs is aligned with sorted energies
+    sortedKeys = sorted(conformerEnergies.keys())
+    sortedConformerXyzs = [conformerXyzs[list(conformerEnergies.keys()).index(key)] for key in sortedKeys]
+
+    # Sample conformers based on Boltzmann probabilities
+    selectedIndices = np.random.choice(
+        len(sortedConformerXyzs),
+        size=nConformers,
+        replace=False,  # No replacement to avoid duplicates
+        p=probabilities
+    )
+    selectedConformerXyzs = [sortedConformerXyzs[i] for i in selectedIndices]
+    print(selectedConformerXyzs)
+
+    return selectedConformerXyzs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
@@ -697,6 +720,20 @@ def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tu
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
+def boltzmann_weighted_average(row: pd.Series):
+
+    ## set constants
+    T = 300
+    kB = 0.0019872041  # Boltzmann constant in kcal/mol·K
+    beta = 1 / (kB * T)
+
+    energies = row.drop(columns="Angle").values
+    boltzmannFactors = np.exp(-beta * energies)
+    weightedAverages = energies * boltzmannFactors  # Compute E_i * exp(-βE_i)
+    boltzmannAverage = np.sum(weightedAverages) / np.sum(boltzmannFactors)
+    return boltzmannAverage
+    
+
 def process_scan_data(scanDfs: List[pd.DataFrame],
                        torsionTopDir: DirectoryPath,
                        torsionTag: str):
@@ -718,7 +755,9 @@ def process_scan_data(scanDfs: List[pd.DataFrame],
 
     ## calculate averages
     finalScanEnergiesCsv = p.join(dataDir, "final_scan_energies.csv")
-    scanAverageDf[torsionTag] = mergedDf.drop(columns="Angle").mean(axis=1)
+    ## swap out arithmetic mean for boltzmann-weighted average
+    # scanAverageDf[torsionTag] = mergedDf.drop(columns="Angle").mean(axis=1)
+    scanAverageDf[torsionTag] = mergedDf.apply(boltzmann_weighted_average, axis=1)
     scanAverageDf.to_csv(finalScanEnergiesCsv, index=False)
 
     return finalScanEnergiesCsv, scanAverageDf

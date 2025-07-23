@@ -19,6 +19,7 @@ class DirectoryPath:
 from OperatingTools import Timer, cleaner
 from . import Charged_Monster
 from . import Charged_Assistant
+from ..Protocol_4_Twisting import Twisted_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def charge_protocol(config: dict, debug: bool = False) -> dict:
@@ -48,10 +49,15 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     ## set up directories for either RESP or RESP2 calculations
     config = Charged_Assistant.set_up_directories(config, protocol)
 
+    ## get conformers via Boltzmann sampling
+    
+    conformerXzysForCharges = Twisted_Assistant.get_conformer_xyzs(config)
+    config["runtimeInfo"]["madeByCharges"]["conformerXzysForCharges"] = conformerXzysForCharges
 
     ## For RESP protocol, just run charge fitting once
     if protocol == "RESP":
-        _, chargesCsv = partial_charge_RESP_protocol(outDir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
+        _, chargesCsv = partial_charge_RESP_protocol(
+            outDir = config["runtimeInfo"]["madeByCharges"]["chargeDir"],
                                 useSolvation = True,
                                  config = config,
                                   debug = debug)
@@ -278,13 +284,16 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
     solvatorDir = config["runtimeInfo"]["madeByCharges"]["solvatorDir"]
 
     moleculeInfo = config["moleculeInfo"]
-    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    conformerXyzs = config["runtimeInfo"]["madeByCharges"]["conformerXzysForCharges"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
     chargeFittingInfo = config["chargeFittingInfo"]
     waterDensity = config["chargeFittingInfo"]["waterDensity"]
 
-    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs, cappedPdb, solvatorDir, nWatersPerNmSquared=waterDensity)
+    nWaters = Charged_Assistant.how_many_waters_for_solvator(conformerXyzs,
+                                                              cappedPdb,
+                                                                solvatorDir,
+                                                                  nWatersPerNmSquared=waterDensity)
 
     ## decide how many conformers to sample
     if nConformers == -1 or nConformers > len(conformerXyzs):
@@ -363,7 +372,7 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     fittingDir = p.join(outDir, "02_charge_fitting")
     os.makedirs(fittingDir, exist_ok=True)
 
-    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    conformerXyzs = config["runtimeInfo"]["madeByCharges"]["conformerXyzsForCharges"]
 
     ## run orca single-point calculations on conformers
     run_qm_calculations_for_RESP(conformerXyzs = conformerXyzs,

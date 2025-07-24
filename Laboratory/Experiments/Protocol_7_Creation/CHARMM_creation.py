@@ -62,8 +62,6 @@ def create_final_rtf(config):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
-                for atomName in nTerminalAtoms:
-                    outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
         

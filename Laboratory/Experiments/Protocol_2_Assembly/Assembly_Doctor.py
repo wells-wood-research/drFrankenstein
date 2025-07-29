@@ -101,6 +101,7 @@ def charmm_assembly_protocol(config:dict) -> dict:
     ## we will assign CGenFF types to backbone atoms (if present!) and parameterize them
     if runScansOn["phiPsi"]:
             completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, *charmmDefaultParams.values())
+            nameToDesiredType = {}
 
     ## we will reset the backbone atom types to CHARMM36m defaults and not reparameterize them!
     else:

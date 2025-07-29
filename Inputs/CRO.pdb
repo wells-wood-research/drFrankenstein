@@ -1,46 +1,40 @@
-CRYST1   51.770   62.850   70.670  90.00  90.00  90.00 P 21 21 21    4
-HETATM    1  CA1 CRO A  66      25.011  26.478  37.078  1.00  7.34      A    C  
-HETATM    2  CA2 CRO A  66      27.197  28.245  39.512  1.00 16.08      A    C  
-HETATM    3  CA3 CRO A  66      23.919  26.721  39.842  1.00 10.87      A    C  
-HETATM    4  CB1 CRO A  66      25.931  26.035  35.930  1.00 10.77      A    C  
-HETATM    5  CB2 CRO A  66      28.329  28.822  39.960  1.00 10.75      A    C  
-HETATM    6  CG1 CRO A  66      25.155  25.422  34.796  1.00 16.67      A    C  
-HETATM    7  CG2 CRO A  66      29.437  29.370  39.124  1.00  7.67      A    C  
-HETATM    8  OG1 CRO A  66      26.679  27.129  35.461  1.00 14.22      A    O  
-HETATM    9  CD1 CRO A  66      29.541  29.103  37.742  1.00 11.31      A    C  
-HETATM   10  CD2 CRO A  66      30.487  30.110  39.805  1.00 10.79      A    C  
-HETATM   11  CE1 CRO A  66      30.707  29.546  37.033  1.00 17.44      A    C  
-HETATM   12  CE2 CRO A  66      31.614  30.563  39.085  1.00 10.01      A    C  
-HETATM   13  CZ  CRO A  66      31.718  30.300  37.721  1.00  9.48      A    C  
-HETATM   14  OH  CRO A  66      32.894  30.804  36.971  1.00 13.84      A    O  
-HETATM   15  C1  CRO A  66      25.730  27.106  38.245  1.00 18.38      A    C  
-HETATM   16  N1  CRO A  66      24.077  27.513  36.610  1.00 11.86      A    N  
-HETATM   17  C2  CRO A  66      26.043  27.875  40.370  1.00  5.46      A    C  
-HETATM   18  N2  CRO A  66      26.975  27.732  38.216  1.00  9.21      A    N  
-HETATM   19  O2  CRO A  66      26.022  27.962  41.566  1.00 13.20      A    O  
-HETATM   20  C3  CRO A  66      23.745  25.326  40.360  1.00 19.28      A    C  
-HETATM   21  N3  CRO A  66      25.274  27.124  39.509  1.00 17.10      A    N  
-HETATM   22  O3  CRO A  66      22.885  25.116  41.193  1.00 15.72      A    O  
-CONECT    1    4   15   16
-CONECT    2    5   17   18
-CONECT    3   20   21
-CONECT    4    1    6    8
-CONECT    5    2    7
-CONECT    6    4
-CONECT    7    5    9   10
-CONECT    8    4
-CONECT    9    7   11
-CONECT   10    7   12
-CONECT   11    9   13
-CONECT   12   10   13
-CONECT   13   11   12   14
-CONECT   14   13
-CONECT   15    1   18   21
-CONECT   16    1
-CONECT   17    2   19   21
-CONECT   18    2   15
-CONECT   19   17
-CONECT   20    3   22
-CONECT   21    3   15   17
-CONECT   22   20
+CRYST1   51.770   62.850   70.670  90.00  90.00  90.00 P 21 21 21     
+HETATM    1  CA1 CRO A   1      25.011  26.478  37.078  1.00  7.34           C  
+HETATM    2  CA2 CRO A   1      27.197  28.245  39.512  1.00 16.08           C  
+HETATM    3  CA3 CRO A   1      23.919  26.721  39.842  1.00 10.87           C  
+HETATM    4  CB1 CRO A   1      25.931  26.035  35.930  1.00 10.77           C  
+HETATM    5  CB2 CRO A   1      28.329  28.822  39.960  1.00 10.75           C  
+HETATM    6  CG1 CRO A   1      25.155  25.422  34.796  1.00 16.67           C  
+HETATM    7  CG2 CRO A   1      29.437  29.370  39.124  1.00  7.67           C  
+HETATM    8  OG1 CRO A   1      26.679  27.129  35.461  1.00 14.22           O  
+HETATM    9  CD1 CRO A   1      29.541  29.103  37.742  1.00 11.31           C  
+HETATM   10  CD2 CRO A   1      30.487  30.110  39.805  1.00 10.79           C  
+HETATM   11  CE1 CRO A   1      30.707  29.546  37.033  1.00 17.44           C  
+HETATM   12  CE2 CRO A   1      31.614  30.563  39.085  1.00 10.01           C  
+HETATM   13  CZ  CRO A   1      31.718  30.300  37.721  1.00  9.48           C  
+HETATM   14  OH  CRO A   1      32.894  30.804  36.971  1.00 13.84           O  
+HETATM   15  C1  CRO A   1      25.730  27.106  38.245  1.00 18.38           C  
+HETATM   16  N1  CRO A   1      24.077  27.513  36.610  1.00 11.86           N  
+HETATM   17  C2  CRO A   1      26.043  27.875  40.370  1.00  5.46           C  
+HETATM   18  N2  CRO A   1      26.975  27.732  38.216  1.00  9.21           N  
+HETATM   19  O2  CRO A   1      26.022  27.962  41.566  1.00 13.20           O  
+HETATM   20  C3  CRO A   1      23.745  25.326  40.360  1.00 19.28           C  
+HETATM   21  N3  CRO A   1      25.274  27.124  39.509  1.00 17.10           N  
+HETATM   22  O3  CRO A   1      22.885  25.116  41.193  1.00 15.72           O  
+HETATM   23 HOG1 CRO A   1      27.105  27.583  36.218  1.00 14.22           H  
+HETATM   24 HN11 CRO A   1      24.110  27.829  35.641  1.00 11.86           H  
+HETATM   25 HG13 CRO A   1      24.613  24.548  35.157  1.00 16.67           H  
+HETATM   26 HG12 CRO A   1      24.446  26.151  34.404  1.00 16.67           H  
+HETATM   27 HG11 CRO A   1      25.842  25.122  34.005  1.00 16.67           H  
+HETATM   28 HA32 CRO A   1      23.531  27.413  40.589  1.00 10.87           H  
+HETATM   29 HA31 CRO A   1      23.301  26.834  38.951  1.00 10.87           H  
+HETATM   30  HOH CRO A   1      33.484  31.296  37.580  1.00 13.84           H  
+HETATM   31  HE2 CRO A   1      32.401  31.118  39.596  1.00 10.01           H  
+HETATM   32  HE1 CRO A   1      30.825  29.311  35.975  1.00 17.44           H  
+HETATM   33  HD2 CRO A   1      30.404  30.315  40.872  1.00 10.79           H  
+HETATM   34  HD1 CRO A   1      28.747  28.568  37.221  1.00 11.31           H  
+HETATM   35  HB2 CRO A   1      28.447  28.896  41.041  1.00 10.75           H  
+HETATM   36  HB1 CRO A   1      26.604  25.273  36.323  1.00 10.77           H  
+HETATM   37  HA1 CRO A   1      24.524  25.558  37.400  1.00  7.34           H  
+HETATM   38  H2  CRO A   1      23.396  27.914  37.255  1.00 11.86           H  
 END

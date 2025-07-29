@@ -49,6 +49,8 @@ def create_final_rtf(config):
     cTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["C"]
     donorAcceptors = config["runtimeInfo"]["madeByCreator"]["donorAcceptors"]
     finalRtf = p.join(finalCreationDir, f"{moleculeName}.rtf")
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+
 
     cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
 
@@ -65,7 +67,7 @@ def create_final_rtf(config):
                 terminalSectionWritten = True
             outRtf.write(line)
         
-        if config["moleculeInfo"]["backboneAliases"] is not None:
+        if all(backboneAliases.get(atomName, None) is not None for atomName in ["N", "H", "CA", "HA", "C", "O"]):
             cmapTerms = create_cmap_terms(config)
             for cmapTerm in cmapTerms:
                 outRtf.write(f"{cmapTerm}\n")

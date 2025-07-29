@@ -302,6 +302,8 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     return config
 
 def _is_a_phi_dihedral(dihedral, backboneAliases):
+    if not ("N" in backboneAliases.keys() and "CA" in backboneAliases.keys()):
+        return False
     dihedralAtomNames = extract_dihedral_atom_names(dihedral)
     if dihedralAtomNames[1] in backboneAliases["N"] and dihedralAtomNames[2] in backboneAliases["CA"]:
         return True
@@ -311,6 +313,8 @@ def _is_a_phi_dihedral(dihedral, backboneAliases):
         return False
     
 def _is_a_psi_dihedral(dihedral, backboneAliases):
+    if not ("CA" in backboneAliases.keys() and "C" in backboneAliases.keys()):
+        return False
     dihedralAtomNames = extract_dihedral_atom_names(dihedral)
     if dihedralAtomNames[1] in backboneAliases["CA"] and dihedralAtomNames[2] in backboneAliases["C"]:
         return True

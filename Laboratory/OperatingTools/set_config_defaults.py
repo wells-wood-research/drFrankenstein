@@ -136,6 +136,7 @@ def apply_defaults_and_validate(config):
     set_default(parameterFittingInfo, 'maxCosineFunctions', 3, errors['parameterFittingInfo'])
     set_default(parameterFittingInfo, 'nShuffles', 50, errors['parameterFittingInfo'])
     set_default(parameterFittingInfo, 'l2DampingFactor', 0.1, errors['parameterFittingInfo'])
+    set_default(parameterFittingInfo, 'sagvolSmoothing', True, errors['parameterFittingInfo'])
 
     # --- Section: miscInfo ---
     errors['miscInfo'] = {}

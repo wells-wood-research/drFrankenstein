@@ -2,8 +2,9 @@ import os
 from os import path as p
 import numpy as np
 import pandas as pd
-
 import sys
+from scipy.signal import savgol_filter
+
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -29,7 +30,7 @@ def fit_torsion_parameters(config: dict,
                                       debug: bool = False):
     ## unpack config
     qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
-    l2Damping = config["parameterFittingInfo"]["l2DampingFactor"]
+    sagvolSmoothing = config["parameterFittingInfo"]["sagvolSmoothing"]
 
     qmmmTorsionFittingDir = p.join(qmmmFittingDir, torsionTag)
     os.makedirs(qmmmTorsionFittingDir,exist_ok=True)
@@ -42,6 +43,10 @@ def fit_torsion_parameters(config: dict,
 
     qmTorsionEnergy = qmTorsionEnergy - qmTorsionEnergy.min()
 
+    if not sagvolSmoothing is None:
+        qmTorsionEnergy = savgol_filter(qmTorsionEnergy, window_length=5, polyorder=2)
+
+    
     Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy, qmTorsionEnergy, mmTotalEnergy, mmTorsionEnergy, mmCosineComponents, qmmmTorsionFittingDir, shuffleIndex)
 
     torsionParametersDf, cosineComponents = drFourier.fourier_transform_protocol(qmTorsionEnergy,

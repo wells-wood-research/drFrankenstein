@@ -498,7 +498,7 @@ def make_charge_color_bar(minCharge, maxCharge, outDir, config):
 
     outputFilePath = os.path.join(outDir, "charge_color_bar.png")
     
-    plt.savefig(outputFilePath, facecolor='black', edgecolor='none')
+    plt.savefig(outputFilePath, facecolor='black', edgecolor='none', bbox_inches='tight')
     plt.close(fig) 
 
     relativePath = p.relpath(outputFilePath, reporterDir)

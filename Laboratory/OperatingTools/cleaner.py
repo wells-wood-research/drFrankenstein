@@ -232,15 +232,18 @@ def clean_up_stitching(config: dict) -> None:
 
         ## DEAL WITH EXTRA PNG FILES ##
         for torsionTag in os.listdir(qmmmParameterFittingDir):
+            dirPath = p.join(qmmmParameterFittingDir, torsionTag)
+            if not p.isdir(dirPath):
+                continue
             ## ZIP PNG FILES ##
             pngsToZip = [p.join(qmmmParameterFittingDir, torsionTag, file) for file in os.listdir(p.join(qmmmParameterFittingDir, torsionTag)) if file.endswith(".png")]
             if cleanUpLevel == 1:
                 zip_files(pngsToZip, p.join(qmmmParameterFittingDir, torsionTag, "PNG_FILES.zip"))
-            ## remove the last PNG file
-            pngsToDelete = [file for file in pngsToZip if not file.endswith(f"_{nShuffles}.png")]
+            ## delete extra PNG files, except the last and MAE ##
+            pngsToDelete = [file for file in pngsToZip if not file.endswith(f"_{nShuffles}.png") and not file.endswith("mean_average_error.png")]
             for png in pngsToDelete:
                 os.remove(p.join(qmmmParameterFittingDir, torsionTag, png))
-        ## zip PRM / FRCMOD files 
+        ## zip PRM / FRCMOD files
         paramFiles = [p.join(moleculeParameterDir, file) for file in os.listdir(moleculeParameterDir) 
                       if file.endswith(".prm") or file.endswith(".frcmod")]
         ## remove the last PRM / FRCMOD file

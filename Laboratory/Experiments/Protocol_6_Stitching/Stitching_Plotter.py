@@ -6,6 +6,83 @@ import matplotlib.pyplot as plt
 import numpy as np
 from subprocess import call, PIPE
 import imageio
+import pandas as pd
+
+
+def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: pd.DataFrame):
+    set_rc_params()
+    ## init some colors to be used
+    white: str = '#FFFFFF'
+    brightGreen: str = '#00FF00'
+    brightOrange: str = '#FFA500'
+    fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(12, 8))  # create figure
+
+    ## plot average MAE with GLOW
+    for n in range(1, 7):
+        axis.plot(maeTorsionDf["All_Torsions"], color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
+    ## plot main traces
+    axis.plot(maeTorsionDf["All_Torsions"], label='Torsion', linewidth=2, color=brightGreen)
+    ## plot subtle traces for individual torsions
+    individualTorsionDf = maeTorsionDf.drop(["All_Torsions"], axis=1)
+    for torsionTag in individualTorsionDf.columns:
+        axis.plot(individualTorsionDf[torsionTag], linewidth=1, color=brightGreen, alpha=0.3)
+
+    ## plot average MAE with GLOW
+    for n in range(1, 7):
+        axis.plot(maeTotalDf["All_Torsions"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
+    ## plot main traces
+    axis.plot(maeTotalDf["All_Torsions"], label='Total', linewidth=2, color=brightOrange)
+    ## plot subtle traces for individual torsions
+    individualTorsionDf = maeTotalDf.drop(["All_Torsions"], axis=1)
+    for torsionTag in individualTorsionDf.columns:
+        axis.plot(individualTorsionDf[torsionTag], linewidth=1, color=brightOrange, alpha=0.3)
+
+    # Add labels and legend
+    axis.set_xlabel('Number of Fitting Shuffles')
+    axis.set_ylabel('Mean Average Error (Kcal / mol)')
+    axis.set_title('Mean Average Error vs Number of Fitting Shuffles')
+
+    # Get handles and labels for the legend
+    handles, labels = axis.get_legend_handles_labels()
+    # Filter to include only "All_Torsions" entries
+    filtered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in ['Torsion', 'Total']]
+    if filtered_handles_labels:
+        handles, labels = zip(*filtered_handles_labels)
+        axis.legend(handles, labels)
+    else:
+        axis.legend()
+
+    plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
+    plt.close()
+
+def plot_mean_average_error(torsionFittingDir, meanAverageErrorTorsions: np.ndarray, meanAverageErrorTotal: np.ndarray):
+    set_rc_params()
+    ## init some colors to be used
+    brightGreen: str = '#00FF00'
+    brightOrange: str = '#FFA500'
+
+    fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(12, 8))  # create figure
+
+    ## plot torsion MAE with GLOW
+    for n in range(1, 7):
+        axis.plot(meanAverageErrorTorsions, color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
+    ## plot main traces
+    axis.plot(meanAverageErrorTorsions, label='Torsion', linewidth=2, color=brightGreen)
+
+    ## plot torsion MAE with GLOW
+    for n in range(1, 7):
+        axis.plot(meanAverageErrorTotal, color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
+    ## plot main traces
+    axis.plot(meanAverageErrorTotal, label='Total', linewidth=2, color=brightOrange)
+
+    # Add labels and legend
+    axis.set_xlabel('Number of Fitting Shuffles')
+    axis.set_ylabel('Mean Average Error (Kcal / mol)')
+    axis.set_title('Mean Average Error vs Number of Fitting Shuffles')
+    axis.legend()
+
+    plt.savefig(p.join(torsionFittingDir, "mean_average_error.png"), bbox_inches='tight')
+    plt.close()
 #####################################################################
 def extract_number(filename):
     # Extract the number from the filename

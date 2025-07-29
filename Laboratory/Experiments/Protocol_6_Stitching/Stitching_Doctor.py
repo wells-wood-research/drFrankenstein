@@ -5,6 +5,7 @@ from os import path as p
 import sys
 import random
 from tqdm import tqdm
+import pandas as pd
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -91,7 +92,7 @@ def torsion_fitting_protocol_AMBER(config: dict) -> dict:
             AMBER_helper_functions.run_tleap_to_make_params(config)
         mmTotalEnergy = AMBER_total_protocol.get_MM_total_energies(config, torsionTag)
         mmTorsionEnergy, mmCosineComponents = AMBER_torsion_protocol.get_MM_torsion_energies(config, torsionTag)
-        torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
+        torsionParameterDf, meanAverageError = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents)
         currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         config = AMBER_helper_functions.update_frcmod(config, torsionTag, torsionParameterDf, shuffleIndex)
         if counter % len(torsionTags) == 0:
@@ -160,14 +161,24 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     currentParameters = {}
     counter = 1
     shuffleIndex = 1
+    ## set up dict to store the mean average error
+    meanAverageErrorTorsion = {}
+    for torsionTag in torsionTags:
+        meanAverageErrorTorsion[torsionTag] = []
+
+    meanAverageErrorTotal = {}
+    for torsionTag in torsionTags:
+        meanAverageErrorTotal[torsionTag] = []
     ## run the torsion fitting protocol, each time, shuffle the torsion order
-    for  torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
+    for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         if not counter == 1:
             config["runtimeInfo"]["madeByStitching"]["moleculePrm"] = config["runtimeInfo"]["madeByStitching"]["proposedPrm"]
         ## run the torsion fitting protocol for each torsion
         mmTotalEnergy = CHARMM_total_protocol.get_MM_total_energies(config, torsionTag, debug)
         mmTorsionEnergy, mmCosineComponents = CHARMM_torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
-        torsionParameterDf = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug)
+        torsionParameterDf, maeTorsion, maeTotal = QMMM_fitting_protocol.fit_torsion_parameters(config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug)
+        meanAverageErrorTorsion[torsionTag].append(maeTorsion)
+        meanAverageErrorTotal[torsionTag].append(maeTotal)
         config = CHARMM_helper_functions.update_prm(config, torsionTag, torsionParameterDf, shuffleIndex)
         currentParameters[torsionTag] = torsionParameterDf.to_dict(orient = "records")
         if counter % len(torsionTags) == 0:
@@ -181,7 +192,15 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, f"torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
-        
+        Stitching_Plotter.plot_mean_average_error(torsionFittingDir, meanAverageErrorTorsion[torsionTag], meanAverageErrorTotal[torsionTag])
+
+    maeTorsionDf = pd.DataFrame(meanAverageErrorTorsion)
+    maeTorsionDf["All_Torsions"] = maeTorsionDf.mean(axis = 1)
+    maeTotalDf = pd.DataFrame(meanAverageErrorTotal)
+    maeTotalDf["All_Torsions"] = maeTotalDf.mean(axis = 1)
+
+    maeTorsionDf.to_csv(p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_error.csv"), index = None)
+    Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeTorsionDf, maeTotalDf)
     ## clean up 
     cleaner.clean_up_stitching(config)
 

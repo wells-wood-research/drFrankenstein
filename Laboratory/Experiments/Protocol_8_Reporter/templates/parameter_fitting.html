@@ -5,12 +5,25 @@
     h2, h3, h4, h5 {
         color: #e0e0e0;
     }
+
+    /* Flex container for the summary section */
+    .summary-flex-container {
+        display: flex;
+        flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+        gap: 20px; /* Creates space between the info box and the plot */
+        align-items: stretch; /* Stretches children to be the same height */
+        margin-bottom: 20px; /* Space below the summary section */
+    }
+
     .info {
         background-color: #1a1a1a;
         padding: 15px;
-        margin-bottom: 20px;
         border-radius: 4px; /* Optional: for softer corners */
+        flex: 1; /* Allows the box to grow */
+        min-width: 300px; /* Prevents the box from becoming too narrow */
+        margin-bottom: 0; /* Margin is now handled by the parent flex container's gap */
     }
+
     .info p, .info table {
         color: #e0e0e0;
         margin-bottom: 10px;
@@ -107,16 +120,27 @@
         color: #ffffff;
     }
 
-    /* Images container and individual image holder styling */
-    .fitting-images-container {
+    /* Shared styles for image containers */
+    .summary-image-container, .fitting-images-container {
         display: flex;
         flex-wrap: wrap;
         gap: 20px; /* Space between images */
-        justify-content: space-around; /* Distribute images */
-        margin-top: 15px;
+        justify-content: center; /* Center single items, distribute multiple */
+        align-content: center;
     }
 
-    .fitting-images-container .image-holder {
+    /* The container for the global MAE plot */
+    .summary-image-container {
+        background-color: #1a1a1a;
+        padding: 15px;
+        border-radius: 4px;
+        flex: 1; /* Allows the box to grow */
+        min-width: 300px; /* Prevents it from getting too small */
+        margin: 0; /* Margins are handled by the parent flex container */
+    }
+
+
+    .image-holder {
         text-align: center;
         flex: 1 1 45%; /* Allow two images side-by-side, with some space */
         max-width: 400px; /* Max width for each image container */
@@ -124,12 +148,12 @@
         background-color: #232323; /* Slightly lighter than tab content bg */
         border-radius: 4px; /* Optional */
     }
-    .fitting-images-container .image-holder p strong {
+    .image-holder p strong {
          display: block;
          margin-bottom: 8px;
     }
 
-    .fitting-images-container img {
+    .image-holder img {
         max-width: 100%; /* Make images responsive */
         max-height: 300px;
         border: 1px solid #333333; /* Dark border for images */
@@ -141,10 +165,25 @@
 <h2>Parameter Fitting Summary</h2>
 
 {% if fitting_data %}
-    <div class="info">
-        <h3><strong>Number of Shuffles:</strong> {{ fitting_data.nShuffles | default('N/A') }}</h3>
-        <h3><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</h3>
+    <div class="summary-flex-container">
+        <div class="info">
+            <h3><strong>Number of Shuffles:</strong> {{ fitting_data.nShuffles | default('N/A') }}</h3>
+            <h3><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</h3>
+            <h3><strong>L2 Damping on MM Torsion Energies:</strong> {{ fitting_data.l2DampingFactor | default('N/A') }}</h3>
+            <h3><strong>Savitzky–Golay filter on QM Torsion Energies:</strong> {{ fitting_data.sagvolSmoothing | default('N/A') }}</h3>
+        </div>
+
+        <!-- Global plot for all torsions, part of the main summary -->
+        {% if fitting_data.allTorsionMaePng %}
+        <div class="summary-image-container">
+            <div class="image-holder">
+                <p><strong>Overall Mean Average Error (PNG)</strong></p>
+                <img src="{{ fitting_data.allTorsionMaePng }}" alt="Mean average error for Torsion and Total energies">
+            </div>
+        </div>
+        {% endif %}
     </div>
+
 
     {% if fitting_data.torsionsToScan and fitting_data.torsionsToScan|length > 0 %}
         <h2>Data for Individual Dihedrals</h2>
@@ -211,6 +250,15 @@
                         </div>
                     {% else %}
                         <div class="image-holder"><p>Final PNG not available.</p></div>
+                    {% endif %}
+
+                    {% if current_images and current_images.maePng %}
+                        <div class="image-holder">
+                            <p><strong>Mean Average Error (PNG)</strong></p>
+                            <img src="{{ current_images.maePng }}" alt="Mean Average Error throughout fitting process{{ dihedral_name }}">
+                        </div>
+                    {% else %}
+                        <div class="image-holder"><p>Mean Average Error plot not available.</p></div>
                     {% endif %}
                 </div>
             </div>

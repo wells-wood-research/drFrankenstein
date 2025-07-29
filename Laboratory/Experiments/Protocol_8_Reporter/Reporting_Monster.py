@@ -16,32 +16,49 @@ def process_fitting_results(config: dict) -> dict:
     fittingImagesDir = p.join(imagesDir, "fitting_images")    
     os.makedirs(fittingImagesDir, exist_ok=True)
 
+
     fittingData = {
         "nShuffles": nShuffles,
         "torsionsToScan": config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"],
         "finalParameters": config["runtimeInfo"]["madeByStitching"]["finalParameters"],
         "maxCosineFunctions": config["parameterFittingInfo"]["maxCosineFunctions"],
+        "sagvolSmoothing": config["parameterFittingInfo"]["sagvolSmoothing"],
+        "l2DampingFactor": config["parameterFittingInfo"]["l2DampingFactor"],
     }
-    ## collect pngs and gifs
 
+    ## collect all torsions mae png
+    allTorsionMaePng = p.join(qmmmParameterFittingDir, "run_mean_average_error.png")
+    destAllMaePng = p.join(fittingImagesDir, "all_torsions_mae.png")
+    copy(allTorsionMaePng, destAllMaePng)
+    relativeAllMaePng = p.relpath(destAllMaePng, reporterDir)
+    fittingData["allTorsionMaePng"] = relativeAllMaePng
+
+
+    ## collect pngs and gifs
     fittingImages = {}
     for torsionTag in os.listdir(qmmmParameterFittingDir):
         torsionFittingDir = p.join(qmmmParameterFittingDir, torsionTag)
+        if not p.isdir(torsionFittingDir):
+            continue
+        maePng = p.join(torsionFittingDir, f"mean_average_error.png")
         finalPng = p.join(torsionFittingDir, f"fitting_shuffle_{nShuffles}.png")
         fittingGif = p.join(torsionFittingDir, f"torsion_fitting.gif")
         destPng = p.join(fittingImagesDir, f"{torsionTag}_final.png")
         destGif = p.join(fittingImagesDir, f"{torsionTag}_fitting.gif")
+        destMaePng = p.join(fittingImagesDir, f"{torsionTag}_mae.png")
         copy(finalPng, destPng)
         copy(fittingGif, destGif)
+        copy(maePng, destMaePng)
         relativePng = p.relpath(destPng, reporterDir)
         relativeGif = p.relpath(destGif, reporterDir)
+        relativeMaePng = p.relpath(destMaePng, reporterDir)
         fittingImages[torsionTag] = {
             "finalPng": relativePng,
-            "fittingGif": relativeGif
+            "fittingGif": relativeGif,
+            "maePng": relativeMaePng,
         }
     fittingData["fittingImages"] = fittingImages
     return fittingData
-
 
 
 

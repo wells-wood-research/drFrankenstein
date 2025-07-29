@@ -46,11 +46,14 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, c
     elif forceField == "CHARMM":
         reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxCosineFunctions)
 
-        ## write data to csv file
+    ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
     paramDf.iloc[:nFunctionsUsed].to_csv(outCsv)
 
-    return paramDf.iloc[:nFunctionsUsed], cosineComponents   
+    ## calculate mean average error
+    meanAverageError = np.mean(np.abs(reconstructedSignal - qmTorsionEnergy))
+
+    return paramDf.iloc[:nFunctionsUsed], cosineComponents, meanAverageError   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:

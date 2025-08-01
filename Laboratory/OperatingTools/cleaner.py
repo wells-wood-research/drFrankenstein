@@ -225,7 +225,8 @@ def clean_up_stitching(config: dict) -> None:
     ## unpack config
     qmmmParameterFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
-    nShuffles = config["parameterFittingInfo"]["nShuffles"]
+    shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
+
 
     if cleanUpLevel in [1, 2, 3]:
         print("\n")
@@ -240,14 +241,14 @@ def clean_up_stitching(config: dict) -> None:
             if cleanUpLevel == 1:
                 zip_files(pngsToZip, p.join(qmmmParameterFittingDir, torsionTag, "PNG_FILES.zip"))
             ## delete extra PNG files, except the last and MAE ##
-            pngsToDelete = [file for file in pngsToZip if not file.endswith(f"_{nShuffles}.png") and not file.endswith("mean_average_error.png")]
+            pngsToDelete = [file for file in pngsToZip if not file.endswith(f"_{shufflesCompleted}.png") and not file.endswith("mean_average_error.png")]
             for png in pngsToDelete:
                 os.remove(p.join(qmmmParameterFittingDir, torsionTag, png))
         ## zip PRM / FRCMOD files
         paramFiles = [p.join(moleculeParameterDir, file) for file in os.listdir(moleculeParameterDir) 
                       if file.endswith(".prm") or file.endswith(".frcmod")]
         ## remove the last PRM / FRCMOD file
-        paramFiles = [file for file in paramFiles if not p.splitext(file)[0].endswith(f"_{nShuffles}")]
+        paramFiles = [file for file in paramFiles if not p.splitext(file)[0].endswith(f"_{shufflesCompleted}")]
                 
         if cleanUpLevel == 1:
             zip_files(paramFiles, p.join(moleculeParameterDir, "PARAM_FILES.zip"))

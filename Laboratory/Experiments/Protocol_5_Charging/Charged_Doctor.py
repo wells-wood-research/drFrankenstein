@@ -50,9 +50,8 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     config = Charged_Assistant.set_up_directories(config, protocol)
 
     ## get conformers via Boltzmann sampling
-    
-    conformerXzysForCharges = Twisted_Assistant.get_conformer_xyzs(config)
-    config["runtimeInfo"]["madeByCharges"]["conformerXzysForCharges"] = conformerXzysForCharges
+    conformerXyzsForCharges = Twisted_Assistant.get_conformer_xyzs(config)
+    config["runtimeInfo"]["madeByCharges"]["conformerXyzsForCharges"] = conformerXyzsForCharges
 
     ## For RESP protocol, just run charge fitting once
     if protocol == "RESP":
@@ -284,7 +283,7 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
     solvatorDir = config["runtimeInfo"]["madeByCharges"]["solvatorDir"]
 
     moleculeInfo = config["moleculeInfo"]
-    conformerXyzs = config["runtimeInfo"]["madeByCharges"]["conformerXzysForCharges"]
+    conformerXyzs = config["runtimeInfo"]["madeByCharges"]["conformerXyzsForCharges"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
     chargeFittingInfo = config["chargeFittingInfo"]

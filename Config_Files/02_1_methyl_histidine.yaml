@@ -16,7 +16,7 @@ pathInfo:
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
-  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
+  orcaExe: /home/esp/bin/orca_6_1_0/orca
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
   amberHome: /home/esp/anaconda3/envs/Igor/
   ## full path to CGenFF Exe (or Null if absent)
@@ -71,8 +71,8 @@ torsionScanInfo:
   ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
   runScansOn:
     phiPsi : false         ## DEFAULT TRUE
-    polarProtons : true   ## DEFAULT TRUE
-    nonPolarProtons : true  ## DEFAULT FALSE
+    polarProtons : false   ## DEFAULT TRUE
+    nonPolarProtons : false  ## DEFAULT FALSE
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
@@ -110,7 +110,7 @@ chargeFittingInfo:
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
   optSolvationMethod: ALPB(water)
   ## QM method for single point calculations (TIP, this should be more accurate than your optimisation method)
-  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointMethod: revPBE def2-TZVP D3BJ
   ## Solvation method for single point calculations, set to Null for no solvation
   ## for QM/MM protocol, set to "TIP3P" alongside the chargeFittingProtocol being set to "SOLVATOR"
   singlePointSolvationMethod: CPCM(water)
@@ -129,9 +129,14 @@ parameterFittingInfo:
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
   forceField: AMBER
   ## maximum cosine functions to be used to fit each torsion parameter
-  maxCosineFunctions: 3
+  maxCosineFunctions: 10
   ## how many rounds of parameter fitting do you want to perform (more is better?)
-  nShuffles: 50
+  maxShuffles: 100
+  minShuffles: 25
+  l2DampingFactor: 0.1
+  sagvolSmoothing: true
+  converganceTolTotal: 0.5
+  converganceTolTorsion: null
 
 #####################################################
 #              _             ___          __        #

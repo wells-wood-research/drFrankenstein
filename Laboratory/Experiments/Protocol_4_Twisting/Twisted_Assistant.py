@@ -234,17 +234,33 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     remainingDihedrals = []             ## store remaining rotatable bonds
     phiPsiDihedrals = []
 
+    # print(dir(moleculeParams))
+    # exit()
+
+    # for d in moleculeParams.dihedral_types:
+    #     print("---")
+    #     print(d)
+    # exit()
+
     rings = find_ring_atoms(moleculeParams)
     adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
 
+
+
     aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
 
-    for dihedral in moleculeParams.dihedrals:
+    for dihedral in moleculeParams.dihedrals_without_h:
         atomNames = extract_dihedral_atom_names(dihedral)
         atomTypes = extract_dihedral_atom_types(dihedral)
         atomIndexes = extract_dihedral_atom_indexes(dihedral)
+        ## exlude impropers
+        if _is_improper_dihedral(dihedral, adjacencyMatrix):
+            continue
         ## skip amide dihedrals
         if _is_amide_dihedral(dihedral):
+            continue
+        ## skip dihedrals with a proton in the middle (weird bug with Parmed?)
+        if _is_proton_in_the_middle(dihedral): 
             continue
         ## store dihedrals that end with a non-polar proton
         if _is_non_polar_proton_dihedral(dihedral):
@@ -278,6 +294,7 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
 
         ## store remaining rotatable dihedrals
         remainingDihedrals.append((atomTypes, atomNames, atomIndexes))
+
     ## assign torsion tags to the dihedrals
     taggedAromaticDihedrals = assign_torsion_tags(aromaticDihedrals)
     taggedNonAromaticRingDihedrals = assign_torsion_tags(nonAromaticRingDihedrals)
@@ -287,7 +304,7 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     taggedRemainingDihedrals = assign_torsion_tags(remainingDihedrals)
 
     ## update config
-    config["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"]          = dict(adjacencyMatrix)
+    config["runtimeInfo"]["madeByTwisting"]["adjacencyMatrix"]   = dict(adjacencyMatrix)
 
     allDihedrals = {}
     allDihedrals["aromaticDihedrals"] = taggedAromaticDihedrals
@@ -300,6 +317,19 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     config["runtimeInfo"]["madeByTwisting"]["allDihedrals"]             = allDihedrals
 
     return config
+
+
+def _is_improper_dihedral(dihedral, adjacencyMatrix):
+    atomIds = extract_dihedral_atom_indexes(dihedral)
+    
+    for centralId in atomIds:
+        neighborsIds = set(adjacencyMatrix[centralId])
+        otherIds = set(atomIds) - {centralId}
+        if otherIds.issubset(neighborsIds):
+            return True
+    return False
+    
+
 
 def _is_a_phi_dihedral(dihedral, backboneAliases):
     if not ("N" in backboneAliases.keys() and "CA" in backboneAliases.keys()):
@@ -689,6 +719,13 @@ def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
 
     return adjacency
 
+
+def _is_proton_in_the_middle(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+    atomElements = extract_dihedral_atom_elements(dihedral)
+    if atomElements[1] == 1 or atomElements[2] == 1:
+        return True
+    else:
+        return False
 
 def _is_polar_proton_dihedral(dihedral: parmed.topologyobjects.Dihedral) -> bool:
 

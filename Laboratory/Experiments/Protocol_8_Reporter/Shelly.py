@@ -245,7 +245,7 @@ The final partial charges were then calculated using a 60:40weighted average bet
 def write_fitting_methods(config: dict) -> str:
     ## unpack config
     maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
-    nShuffles = config["parameterFittingInfo"]["nShuffles"]
+    shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
     fittingMethods = dedent(f"""
 To obtain MM force field parameters that accurately represent the energies obtained in the previous torsion-scanning step, \
 an iterative fitting procedure was performed. \
@@ -259,7 +259,7 @@ Once the QM(torsion) energies have been calculated, a maximum of {maxCosineFunct
 using the Fast Fourier transform method implemented in the numpy library. 
 The amplitudes, phases and periodicities of the cosine functions were then used to update the parameters for the torsion of interest. \
 As this iterative fitting process proceeds, the evaluation of QM(torsion) for each torsion is calculated using the updated parameters. \
-This process was repeated {nShuffles} times, each time the order of the torsions was shuffled to remove any artifacts from the arbitrary order of the torsions. \
+This process was repeated {shufflesCompleted} times, each time the order of the torsions was shuffled to remove any artifacts from the arbitrary order of the torsions. \
                             """)
 
     return fittingMethods

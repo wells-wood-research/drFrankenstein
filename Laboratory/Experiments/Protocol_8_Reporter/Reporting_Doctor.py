@@ -44,8 +44,8 @@ def reporter_protocol(config: dict) -> None:
     twistData       = Reporting_Monster.process_twist_results(config)
     chargesData     = Reporting_Monster.process_charges_results(config)
     fittingData     = Reporting_Monster.process_fitting_results(config)
-    methodsData = Shelly.methods_writer_protocol(config)
-    citationsData = Shelly.gather_citations(config)
+    methodsData     = Shelly.methods_writer_protocol(config)
+    citationsData   = Shelly.gather_citations(config)
 
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")

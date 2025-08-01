@@ -18,6 +18,68 @@ class DirectoryPath:
 
 
 from OperatingTools import file_parsers
+
+
+
+def rms_of_mae_dict(meanAverageErrors: dict[str, float]) -> float:
+    """
+    Calculates the root mean square of the mean average errors
+    used for both the total energy and torsion energy
+    
+    """
+    rms = np.sqrt(sum(meanAverageErrors[torsion][-1] ** 2 for torsion in meanAverageErrors) / len(meanAverageErrors.keys()))
+    return rms
+def init_tqdm_bar_options() -> dict:
+    tqdmBarOptions = {
+        "desc": f"\033[32mRunning Parameter Fitting\033[0m",
+        "ascii": "-🗲→",    
+        "colour": "yellow",
+        "unit":  "scan",
+        "dynamic_ncols": False, 
+        "ncols": 102,
+        "leave": True,
+        "position": 1
+    }
+    return tqdmBarOptions
+
+def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int) -> list[str]:
+    """
+    Re-orders the torsion tags in a random order
+    
+    Args:
+        torsionTags (list[str]): the torsion tags associated with our torsions
+    Returns:
+        shuffledTorsionTags: torsionTags re-ordered
+    """
+    shuffledTorsionTags = []
+    for i in range(maxShuffles):
+        random.shuffle(torsionTags)
+        shuffledTorsionTags.extend(torsionTags)
+
+    return shuffledTorsionTags
+
+def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, converganceTolTorsion: float | None, converganceTolTotal: float | None) -> bool:
+    """
+    Checks Mean Average Errors to see if they have converged
+    
+    Args:
+        maeTotal (float): mean average error for total energy
+        maeTorsion (float): mean average error for torsion energy
+        maeTolTotal (float | None): mean average error tolerance for total energy, None gets ignored
+        maeTolTorsion (float | None): mean average error tolerance for torsion energy, None gets ignored
+    """
+    if converganceTolTotal is not None and converganceTolTorsion is not None:
+        return latestRmsMaeTotal < converganceTolTotal and latestRmsMaeTorsion < converganceTolTorsion
+    elif converganceTolTotal is not None:
+        return latestRmsMaeTotal < converganceTolTotal
+    elif converganceTolTorsion is not None:
+        return latestRmsMaeTorsion < converganceTolTorsion
+    else:
+        return False    
+        
+
+
+
 def remove_exploded_torsions(config: dict) -> None:
     """
     TODO: write this
@@ -32,21 +94,6 @@ def remove_exploded_torsions(config: dict) -> None:
     return torsionTags
 
 
-
-# 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
-def shuffle_torsion_tags(torsionTags: list[str]) -> list[str]:
-    """
-    Re-orders the torsion tags in a random order
-    
-    Args:
-        torsionTags (list[str]): the torsion tags associated with our torsions
-    Returns:
-        shuffledTorsionTags: torsionTags re-ordered
-    """
-    shuffledTorsionTags = torsionTags
-    random.shuffle(shuffledTorsionTags)
-
-    return shuffledTorsionTags
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pdb2mol2(inPdb: FilePath,
@@ -282,7 +329,7 @@ def rescale_angles_0_360(angle: np.array) -> np.array:
     #     angle -= 360  # Shift angles greater than 180 to the negative side
     return angle
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
+def merge_energy_dfs(energyDfs: list[pd.DataFrame]) -> pd.DataFrame:
     """
     merges energy DataFrames on the Angle column
 
@@ -293,14 +340,16 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
         mergedDf (pd.DataFrame): merged DataFrame
     """
 
-    ##TODO: is this efficient?
+    ## remove empty DataFrames
     energyDfs = [df for df in energyDfs if not df is None]
 
-
-
-    mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
-        columns={'Energy': 'Energy_0'}
-    )
+    try:
+        mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
+            columns={'Energy': 'Energy_0'}
+        )
+    except Exception as e:
+        print(energyDfs)
+        raise e
 
     for i, df in enumerate(energyDfs[1:], start=1):
         mergedDf = mergedDf.merge(
@@ -310,6 +359,7 @@ def merge_energy_dfs(energyDfs: list) -> pd.DataFrame:
             suffixes=('', f'_df{i}')
         ).rename(columns={'Energy': f'Energy_{i}'})
     mergedDf = mergedDf.groupby('Angle', as_index=False).first()
+
 
     return mergedDf
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

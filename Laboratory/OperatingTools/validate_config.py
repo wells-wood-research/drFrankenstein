@@ -216,7 +216,10 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
     expectedKeys = {
         "forceField": str,
         "maxCosineFunctions": int,
-        "nShuffles": int,
+        "maxShuffles": int,
+        "minShuffles": int,
+        "l2DampingFactor": float | None,
+        "sagvolSmoothing": bool
     }
     allowedForceFields = ["CHARMM", "AMBER"]
 
@@ -230,9 +233,16 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
                     _validate_allowed_values(value, allowedForceFields, keyPath, errors)
                 elif key == "maxCosineFunctions" and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-                elif key == "nShuffles" and isinstance(value, int) and value <= 0:
+                elif key == "maxShuffles" and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-
+                elif key == "minShuffles" and isinstance(value, int) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
+                elif key == "l2DampingFactor" and isinstance(value, float) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
+                elif key == "sagvolSmoothing" and not isinstance(value, bool):
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
+    if sectionData["minShuffles"] > sectionData["maxShuffles"]:
+        _add_error(errors, f"{sectionName}.minShuffles", f"Value for 'minShuffles' must be less than or equal to 'maxShuffles'.")
 
 def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
     """Validates the miscInfo section."""

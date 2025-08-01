@@ -11,14 +11,15 @@ def process_fitting_results(config: dict) -> dict:
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     qmmmParameterFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"]
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
-    nShuffles = config["parameterFittingInfo"]["nShuffles"]
+    # nShuffles = config["parameterFittingInfo"]["nShuffles"]
+    shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
     ## make directories
     fittingImagesDir = p.join(imagesDir, "fitting_images")    
     os.makedirs(fittingImagesDir, exist_ok=True)
 
 
     fittingData = {
-        "nShuffles": nShuffles,
+        "nShuffles": shufflesCompleted,
         "torsionsToScan": config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"],
         "finalParameters": config["runtimeInfo"]["madeByStitching"]["finalParameters"],
         "maxCosineFunctions": config["parameterFittingInfo"]["maxCosineFunctions"],
@@ -33,7 +34,6 @@ def process_fitting_results(config: dict) -> dict:
     relativeAllMaePng = p.relpath(destAllMaePng, reporterDir)
     fittingData["allTorsionMaePng"] = relativeAllMaePng
 
-
     ## collect pngs and gifs
     fittingImages = {}
     for torsionTag in os.listdir(qmmmParameterFittingDir):
@@ -41,7 +41,7 @@ def process_fitting_results(config: dict) -> dict:
         if not p.isdir(torsionFittingDir):
             continue
         maePng = p.join(torsionFittingDir, f"mean_average_error.png")
-        finalPng = p.join(torsionFittingDir, f"fitting_shuffle_{nShuffles}.png")
+        finalPng = p.join(torsionFittingDir, f"fitting_shuffle_{shufflesCompleted}.png")
         fittingGif = p.join(torsionFittingDir, f"torsion_fitting.gif")
         destPng = p.join(fittingImagesDir, f"{torsionTag}_final.png")
         destGif = p.join(fittingImagesDir, f"{torsionTag}_fitting.gif")

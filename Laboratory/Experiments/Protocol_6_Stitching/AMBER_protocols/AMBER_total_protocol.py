@@ -34,7 +34,7 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config, torsionTag, debug=False):
+def get_MM_total_energies(config, torsionTag, debug=True):
     drSplash.show_getting_mm_total(torsionTag)
 
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
@@ -60,7 +60,6 @@ def get_MM_total_energies(config, torsionTag, debug=False):
         singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop)
     else:
         singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag)
-
 
     ## sort out data
     mergedEnergyDf = Stitching_Assistant.merge_energy_dfs(singlePointEnergyDfs)

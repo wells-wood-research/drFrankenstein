@@ -249,7 +249,7 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
 
     aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
 
-    for dihedral in moleculeParams.dihedrals_without_h:
+    for dihedral in moleculeParams.dihedrals:
         atomNames = extract_dihedral_atom_names(dihedral)
         atomTypes = extract_dihedral_atom_types(dihedral)
         atomIndexes = extract_dihedral_atom_indexes(dihedral)

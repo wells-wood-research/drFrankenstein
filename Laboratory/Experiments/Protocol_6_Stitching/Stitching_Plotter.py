@@ -5,9 +5,16 @@ matplotlib.use('Agg')  # Set the Agg backend before importing pyplot
 import matplotlib.pyplot as plt
 import numpy as np
 from subprocess import call, PIPE
-import imageio
+import os
 import pandas as pd
+from PIL import Image
 
+
+## CLEAN CODE CLASSES ##
+class FilePath:
+    pass
+class DirectoryPath:
+    pass
 
 def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: pd.DataFrame):
     set_rc_params()
@@ -55,7 +62,13 @@ def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: 
     plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
     plt.close()
 
-def plot_mean_average_error(torsionFittingDir, meanAverageErrorTorsions: np.ndarray, meanAverageErrorTotal: np.ndarray):
+def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, torsionTag: str):
+
+    ## get data from csv
+    maeDf = pd.read_csv(maeCsv)
+    torsionMaeDf = maeDf[maeDf["torsion_tag"] == torsionTag]
+    
+
     set_rc_params()
     ## init some colors to be used
     brightGreen: str = '#00FF00'
@@ -65,15 +78,15 @@ def plot_mean_average_error(torsionFittingDir, meanAverageErrorTorsions: np.ndar
 
     ## plot torsion MAE with GLOW
     for n in range(1, 7):
-        axis.plot(meanAverageErrorTorsions, color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
+        axis.plot(torsionMaeDf["mae_torsion"], color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
     ## plot main traces
-    axis.plot(meanAverageErrorTorsions, label='Torsion', linewidth=2, color=brightGreen)
+    axis.plot(torsionMaeDf["mae_torsion"], label='Torsion', linewidth=2, color=brightGreen)
 
     ## plot torsion MAE with GLOW
     for n in range(1, 7):
-        axis.plot(meanAverageErrorTotal, color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
+        axis.plot(torsionMaeDf["mae_total"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
     ## plot main traces
-    axis.plot(meanAverageErrorTotal, label='Total', linewidth=2, color=brightOrange)
+    axis.plot(torsionMaeDf["mae_total"], label='Total', linewidth=2, color=brightOrange)
 
     # Add labels and legend
     axis.set_xlabel('Number of Fitting Shuffles')
@@ -92,16 +105,41 @@ def extract_number(filename):
 
 def make_gif(inDir, outGif):
 
+    """
+    Creates a GIF using Pillow directly in a memory-efficient way
+    by using a generator expression.
+    """
     pngFiles = sorted(
-    [file for file in os.listdir(inDir) 
-     if "fitting_shuffle" in file and file.endswith(".png")],
-    key=extract_number)    
+        [os.path.join(inDir, f) for f in os.listdir(inDir)
+         if "fitting_shuffle" in f and f.endswith(".png")],
+        key=extract_number
+    )
 
-    images = []
-    for file in pngFiles:
-        images.append(imageio.v3.imread(p.join(inDir, file)))
+    if not pngFiles:
+        return
+        
+    
+    try:
+        # Open the first image
+        img_first = Image.open(pngFiles[0])
 
-    imageio.mimwrite(outGif, images, 'GIF', fps=2, loop = 0)
+        # Create a generator for the remaining images
+        # This is the key to low memory usage!
+        # Note the parentheses () instead of square brackets [].
+        img_generator = (Image.open(f) for f in pngFiles[1:])
+
+        # Save the first image, providing the generator for the rest
+        img_first.save(
+            fp=outGif,
+            format='GIF',
+            save_all=True,
+            append_images=img_generator,  # Pass the generator here
+            duration=500,                 # 500ms per frame = 2 FPS
+            loop=0                        # Loop forever
+        )
+
+    except Exception as e:
+        raise(e)
 
 
 

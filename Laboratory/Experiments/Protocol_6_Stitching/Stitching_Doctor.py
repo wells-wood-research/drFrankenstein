@@ -6,6 +6,7 @@ import sys
 import random
 from tqdm import tqdm
 import pandas as pd
+from collections import defaultdict
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -25,8 +26,9 @@ from . import Stitching_Assistant
 from . import Stitching_Plotter
 from OperatingTools import Timer, cleaner
 
-
+from memory_profiler import profile
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@profile
 @Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
 def torsion_fitting_protocol_AMBER(config: dict, debug=False) -> dict:
     """
@@ -201,9 +203,16 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
     ## init counters for shuffling
     counter = 1
     shuffleIndex = 1
-    ## set up dict to store the mean average error for TOTAL andTORSION
-    meanAverageErrorTorsion = {torsionTag: [] for torsionTag in torsionTags}
-    meanAverageErrorTotal = {torsionTag: [] for torsionTag in torsionTags}
+
+    ## set up Mean average error csv
+    maeCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
+    config["runtimeInfo"]["madeByStitching"]["maeCsv"] = maeCsv
+    with open(maeCsv, "w") as f:
+        f.write("shuffle,torsion_tag,mae_torsion,mae_total\n")
+
+    # Initialize your buffers. defaultdict is useful here.
+    meanAverageErrorTorsion = defaultdict(list)
+    meanAverageErrorTotal = defaultdict(list)
     rmsMaeTorsion = []
     rmsMaeTotal = []
     converged = False
@@ -238,6 +247,22 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
             ## caclulate RMS of MAE for torsion and total fits
             rmsMaeTorsion.append(Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion))
             rmsMaeTotal.append(Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal))
+            ## --- NEW: Write buffer to file and clear it ---
+            with open(maeCsv, "a") as f:
+                # Note: Assumes one MAE value per torsion per shuffle. If you run multiple fits
+                # for the same torsion within one shuffle, this logic will need a slight adjustment.
+                for tag in meanAverageErrorTorsion:
+                    # Get the last (and likely only) MAE value for this tag in this shuffle
+                    mae_t = meanAverageErrorTorsion[tag][-1]
+                    mae_tot = meanAverageErrorTotal[tag][-1]
+                    f.write(f"{shuffleIndex},{tag},{mae_t},{mae_tot}\n")
+
+            # Clear the dictionaries to release memory before the next shuffle
+            meanAverageErrorTorsion.clear()
+            meanAverageErrorTotal.clear()
+            # --- END OF NEW CODE ---
+
+
             if Stitching_Assistant.check_mae_convergence(rmsMaeTorsion[-1], rmsMaeTotal[-1], converganceTolTorsion, converganceTolTotal) and shuffleIndex > minShuffles:
                 config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                 converged = True
@@ -259,7 +284,7 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
         ## make a gif for each torsion being fitted - so satisfying!
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
         ## plot mean average errors
-        Stitching_Plotter.plot_mean_average_error(torsionFittingDir, meanAverageErrorTorsion[torsionTag], meanAverageErrorTotal[torsionTag])
+        Stitching_Plotter.plot_mean_average_error(torsionFittingDir, maeCsv, torsionTag)
 
     maeTotalDf = pd.DataFrame.from_dict(meanAverageErrorTotal)
     maeTotalDf["All_Torsions"] = rmsMaeTotal
@@ -272,6 +297,7 @@ def torsion_fitting_protocol_CHARMM(config: dict, debug = False) -> dict:
 
     ## update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
+    exit()
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲####

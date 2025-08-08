@@ -23,6 +23,7 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
+from memory_profiler import profile
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -95,6 +96,7 @@ def main():
         drSplash.show_charge_splash()
         config = Charged_Doctor.charge_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
 
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:

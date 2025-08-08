@@ -234,14 +234,6 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     remainingDihedrals = []             ## store remaining rotatable bonds
     phiPsiDihedrals = []
 
-    # print(dir(moleculeParams))
-    # exit()
-
-    # for d in moleculeParams.dihedral_types:
-    #     print("---")
-    #     print(d)
-    # exit()
-
     rings = find_ring_atoms(moleculeParams)
     adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
 

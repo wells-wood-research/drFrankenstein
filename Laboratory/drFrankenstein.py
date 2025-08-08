@@ -23,7 +23,6 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
-from memory_profiler import profile
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -97,14 +96,15 @@ def main():
         config = Charged_Doctor.charge_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
-
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
-        if config["parameterFittingInfo"]["forceField"] == "AMBER":
-            config = Stitching_Doctor.torsion_fitting_protocol_AMBER(config=config)
-        elif config["parameterFittingInfo"]["forceField"] == "CHARMM":
-            config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
+        config = Stitching_Doctor.torsion_fitting_protocol(config=config)
+
+        # if config["parameterFittingInfo"]["forceField"] == "AMBER":
+        #     config = Stitching_Doctor.torsion_fitting_protocol_AMBER(config=config)
+        # elif config["parameterFittingInfo"]["forceField"] == "CHARMM":
+        #     config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
     ## run final creation

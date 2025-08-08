@@ -13,7 +13,7 @@ class DirectoryPath:
     pass
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_torsion_energies(config: dict, torsionTag: str) -> Tuple[dict, dict]:    
+def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) -> Tuple[dict, dict]:    
     """
     Gets MM[torsion] energy for each torsion we have scanned
     This is done by extracting torsion parameters from FRCMOD file

@@ -6,7 +6,7 @@ import random
 from tqdm import tqdm
 import pandas as pd
 from collections import defaultdict
-
+import gc
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -95,8 +95,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     currentParameters = {}
     meanAverageErrorTorsion = defaultdict(list)
     meanAverageErrorTotal = defaultdict(list)
-    rmsMaeTorsion = []
-    rmsMaeTotal = []
+
     counter = 1
     shuffleIndex = 1
     converged = False
@@ -137,26 +136,31 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         ## At the end of one shuffle, check for convergence
         if counter % len(torsionTags) == 0:
             ## Calculate RMS of MAE for torsion and total fits
-            rmsMaeTorsion.append(Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion))
-            rmsMaeTotal.append(Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal))
+            rmsMaeTorsion = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion)
+            rmsMaeTotal = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal)
 
             ## Write buffer to CSV file and clear it to save memory
             with open(maeCsv, "a") as f:
                 for tag in meanAverageErrorTorsion:
-                    mae_t = meanAverageErrorTorsion[tag][-1]
-                    mae_tot = meanAverageErrorTotal[tag][-1]
-                    f.write(f"{shuffleIndex},{tag},{mae_t},{mae_tot}\n")
+                    maeTorsionTag = meanAverageErrorTorsion[tag][-1]
+                    maeTotalTag = meanAverageErrorTotal[tag][-1]
+                    f.write(f"{shuffleIndex},{tag},{maeTorsionTag},{maeTotalTag}\n")
+                f.write(f"{shuffleIndex},All_Torsions,{rmsMaeTorsion},{rmsMaeTotal}\n")
             
             meanAverageErrorTorsion.clear()
             meanAverageErrorTotal.clear()
+
             
             ## Check for convergence
             if Stitching_Assistant.check_mae_convergence(
-                rmsMaeTorsion[-1], rmsMaeTotal[-1], maeTolTorsion, maeTolTotal
+                rmsMaeTorsion, rmsMaeTotal, maeTolTorsion, maeTolTotal
             ) and shuffleIndex >= minShuffles:
                 config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                 converged = True
                 break
+            del rmsMaeTorsion
+            del rmsMaeTotal
+            gc.collect()
             shuffleIndex += 1
         counter += 1
     ### END OF FITTING LOOP ###
@@ -182,12 +186,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     if os.path.exists(maeCsv):
         full_mae_df = pd.read_csv(maeCsv)
         maeTorsionDf = full_mae_df.pivot(index='shuffle', columns='torsion_tag', values='mae_torsion').reset_index(drop=True)
-        if len(rmsMaeTorsion) == len(maeTorsionDf):
-             maeTorsionDf["All_Torsions"] = rmsMaeTorsion
-       
         maeTotalDf = full_mae_df.pivot(index='shuffle', columns='torsion_tag', values='mae_total').reset_index(drop=True)
-        if len(rmsMaeTotal) == len(maeTotalDf):
-            maeTotalDf["All_Torsions"] = rmsMaeTotal
 
         Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeTorsionDf, maeTotalDf)
 

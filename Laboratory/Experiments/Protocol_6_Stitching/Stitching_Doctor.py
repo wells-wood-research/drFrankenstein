@@ -129,6 +129,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         meanAverageErrorTorsion[torsionTag].append(maeTorsion)
         meanAverageErrorTotal[torsionTag].append(maeTotal)
 
+        ## OPTION 1 only store final params
         ## Update parameter file and store current parameters
         config = update_param_func(config, torsionTag, torsionParameterDf, shuffleIndex)
         currentParameters[torsionTag] = torsionParameterDf.to_dict(orient="records")

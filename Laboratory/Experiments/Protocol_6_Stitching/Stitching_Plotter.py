@@ -5,9 +5,11 @@ matplotlib.use('Agg')  # Set the Agg backend before importing pyplot
 import matplotlib.pyplot as plt
 import numpy as np
 from subprocess import call, PIPE
-import os
 import pandas as pd
 from PIL import Image
+import tempfile
+from itertools import islice
+
 
 
 ## CLEAN CODE CLASSES ##
@@ -97,50 +99,82 @@ def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, 
     plt.savefig(p.join(torsionFittingDir, "mean_average_error.png"), bbox_inches='tight')
     plt.close()
 #####################################################################
-def extract_number(filename):
+def _extract_number(filename):
     # Extract the number from the filename
     return int(filename.split('_')[-1].split('.')[0])
     
 #####################################################################
 
-def make_gif(inDir, outGif):
-
+def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, duration: int = 100):
     """
-    Creates a GIF using Pillow directly in a memory-efficient way
-    by using a generator expression.
+    Creates a GIF from a generator of PNG file paths using a memory-safe,
+    pure Python approach.
+
+    Args:
+        inDir (str): The directory containing the PNG files.
+        outGif (str): The path to save the final GIF file.
+        batchSize (int): The number of images to process in each batch.
+        duration (int): The duration for each frame in the GIF, in milliseconds.
     """
-    pngFiles = sorted(
-        [os.path.join(inDir, f) for f in os.listdir(inDir)
-         if "fitting_shuffle" in f and f.endswith(".png")],
-        key=extract_number
-    )
-
-    if not pngFiles:
-        return
-        
-    
-    try:
-        # Open the first image
-        img_first = Image.open(pngFiles[0])
-
-        # Create a generator for the remaining images
-        # This is the key to low memory usage!
-        # Note the parentheses () instead of square brackets [].
-        img_generator = (Image.open(f) for f in pngFiles[1:])
-
-        # Save the first image, providing the generator for the rest
-        img_first.save(
-            fp=outGif,
-            format='GIF',
-            save_all=True,
-            append_images=img_generator,  # Pass the generator here
-            duration=500,                 # 500ms per frame = 2 FPS
-            loop=0                        # Loop forever
+    pngGenerator = (
+        item for item in sorted(
+            (os.path.join(inDir, f) for f in os.listdir(inDir) if f.endswith(".png") and f.startswith("fitting_shuffle")),
+            key=_extract_number
         )
+    )
+    with tempfile.TemporaryDirectory() as tmpDir:
+        tempGifs = []
+        batchNum = 0
+        
+        # --- Stage 1: Create temporary GIFs in batches (memory-safe) ---
+        while True:
+            batchPngs = list(islice(pngGenerator, batchSize))
+            if not batchPngs:
+                break
+            
+            batchNum += 1
+            tmpGif = p.join(tmpDir, f"batch_{batchNum}.gif")
+            tempGifs.append(tmpGif)
 
-    except Exception as e:
-        raise(e)
+            frames = [Image.open(png) for png in batchPngs]
+            frames[0].save(
+                tmpGif, save_all=True, append_images=frames[1:],
+                optimize=False, duration=duration, loop=0
+            )
+            for frame in frames:
+                frame.close()
 
+        if not tempGifs:
+            return
+
+        # --- Stage 2: Sequentially append frames (truly memory-safe) ---
+        # Open the first temporary GIF to extract its frames and save as the final GIF
+        with Image.open(tempGifs[0]) as first_gif:
+            # Extract all frames from the first GIF
+            first_gif_frames = []
+            for i in range(first_gif.n_frames):
+                first_gif.seek(i)
+                first_gif_frames.append(first_gif.copy())
+            
+            # Save these frames as the starting point of the final GIF
+            first_gif_frames[0].save(
+                outGif, save_all=True, append_images=first_gif_frames[1:],
+                optimize=True, duration=duration, loop=0
+            )
+
+        # Now, append frames from the rest of the temporary GIFs
+        for temp_gif_path in tempGifs[1:]:
+            with Image.open(outGif) as final_gif, Image.open(temp_gif_path) as temp_gif:
+                append_frames = []
+                for i in range(temp_gif.n_frames):
+                    temp_gif.seek(i)
+                    append_frames.append(temp_gif.copy())
+                
+                # Append the new frames to the existing final GIF
+                final_gif.save(
+                    outGif, save_all=True, append_images=append_frames,
+                    optimize=True, duration=duration, loop=0
+                )
 
 
 #####################################################################

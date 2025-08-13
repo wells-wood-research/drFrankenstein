@@ -10,14 +10,15 @@ class FilePath:
     pass
 class DirectoryPath:
     pass
+from typing import Iterator
 
 
 
 
 
 def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
-                             cappedPdb: FilePath,
-                               outDir: DirectoryPath) -> list[FilePath]:
+                           cappedPdb: FilePath,
+                           outDir: DirectoryPath) -> Iterator[FilePath]:
     """
     Effectively converts a list of XYZ files to PDB
     In practice, updates a static PDB file with coords from a list of XYZ files
@@ -25,17 +26,16 @@ def convert_traj_xyz_to_pdb(trajXyzs: list[FilePath],
     Args:
         trajXyzs (list[FilePath]): a list of XYZ files
         cappedPdb (FilePath): a PDB file containing correct atom data
-        fittingRoundDir (DirectoryPath): the output dir for this function
+        outDir (DirectoryPath): the output dir for this function
     
+    Yields:
+        FilePath: path to each generated PDB file
     """
-    trajPdbs = []
     for trajXyz in trajXyzs:
         fileName = p.splitext(p.basename(trajXyz))[0]
         trajPdb = p.join(outDir, f"{fileName}.pdb")
         update_pdb_coords(cappedPdb, trajXyz, trajPdb)
-        trajPdbs.append(trajPdb)
-
-    return trajPdbs
+        yield trajPdb
 
 ####################
 def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:

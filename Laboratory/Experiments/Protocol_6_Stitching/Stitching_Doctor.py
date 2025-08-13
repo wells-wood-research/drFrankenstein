@@ -192,7 +192,6 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
 
     ## Clean up temporary files
     cleaner.clean_up_stitching(config)
-
     ## Update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config

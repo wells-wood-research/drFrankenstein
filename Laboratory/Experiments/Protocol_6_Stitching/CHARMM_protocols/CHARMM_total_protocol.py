@@ -29,7 +29,8 @@ class DirectoryPath:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_MM_total_energies(config:dict,
-                           torsionTag: str,
+                           torsionTag: str, 
+                           moleculePrm: FilePath,
                              debug = True) -> np.ndarray:
     """
     Main protocol for calculating CHARMM energies for a torsion scan
@@ -54,9 +55,9 @@ def get_MM_total_energies(config:dict,
     os.makedirs(torsionFittingDir, exist_ok=True)
 
     if debug:
-        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, config)
+        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, moleculePrm, config)
     else:
-        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, torsionTag, config)
+        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, moleculePrm, config)
     
     ## sort out data
     mergedEnergyDf = Stitching_Assistant.merge_energy_dfs(singlePointEnergyDfs)
@@ -79,8 +80,8 @@ def get_MM_total_energies(config:dict,
     return  smoothedEnergies
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, torsionTag, config):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, config) for scanIndex, scanDir in enumerate(scanDirs)]
+def run_parallel(scanDirs, torsionTotalDir, moleculePrm, config):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, moleculePrm, config) for scanIndex, scanDir in enumerate(scanDirs)]
 
     with multiprocessing.Pool(processes=config["miscInfo"]["availableCpus"]) as pool:
         singlePointEnergyDfs = pool.starmap(single_point_worker, make_single_arguments(argsList))
@@ -89,17 +90,17 @@ def run_parallel(scanDirs, torsionTotalDir, torsionTag, config):
 
 
 def single_point_worker(args):
-    scanIndex, scanDir, torsionTotalDir, config = args
+    scanIndex, scanDir, torsionTotalDir, moleculePrm, config = args
     try:
-        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, config)
+        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, moleculePrm, config)
         return singlePointEnergyDf
 
     except Exception as e:
         raise(e)    
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, config):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, config) for  scanIndex, scanDir in enumerate(scanDirs)]
+def run_serial(scanDirs, torsionTotalDir, moleculePrm, config):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, moleculePrm, config) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(*args)
@@ -107,7 +108,7 @@ def run_serial(scanDirs, torsionTotalDir, config):
     return singlePointEnergyDfs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, config, debug = False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, moleculePrm, config, debug = False):
     ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
 
@@ -122,7 +123,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
 
 
     trajPdbs = file_parsers.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
-    singlePointEnergies = run_mm_singlepoints(trajPdbs, config)
+    singlePointEnergies = run_mm_singlepoints(trajPdbs, moleculePrm, config)
 
 
     singlePointEnergyDf = pd.DataFrame(singlePointEnergies, columns=["TrajIndex", "Energy"])
@@ -140,7 +141,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def run_mm_singlepoints(trajPdbs: list, config: dict) -> list[float]:
+def run_mm_singlepoints(trajPdbs: list, moleculePrm: FilePath, config: dict) -> list[float]:
     """
     Runs a singlepoint energy calculation at the MM level 
     using OpenMM

@@ -119,13 +119,11 @@ def update_prm(config: dict,
     parmedPrm.dihedral_types[targetAtomTypes] = newDihedralTypes
 
     ## save PRM
-    proposedPrm = p.join(moleculeParameterDir, f"{moleculeName}_capped_{shuffleIndex}.prm")
-    parmedPrm.write(par = proposedPrm)
+    currentPrm = p.join(moleculeParameterDir, f"{moleculeName}_capped_{shuffleIndex}.prm")
+    parmedPrm.write(par = currentPrm)
 
-    ## update config
-    config["runtimeInfo"]["madeByStitching"]["proposedPrm"] = proposedPrm
 
-    return config
+    return currentPrm
     
 
 

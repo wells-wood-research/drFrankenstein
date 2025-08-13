@@ -62,8 +62,8 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         total_protocol = CHARMM_total_protocol
         torsion_protocol = CHARMM_torsion_protocol
         param_key = "moleculePrm"
-        proposed_param_key = "proposedPrm"
         update_param_func = helper_functions.update_prm
+        paramFile = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
 
     ## Initialize runtimeInfo entry for stitching
     config["runtimeInfo"]["madeByStitching"] = {}
@@ -75,7 +75,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     config = helper_functions.copy_assembled_parameters(config)
     if forcefield == "AMBER":
         helper_functions.edit_mol2_partial_charges(config)
-        helper_functions.run_tleap_to_make_params(config)
+        paramFile =helper_functions.run_tleap_to_make_params(config)
 
     ## Unpack config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
@@ -92,7 +92,6 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
 
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
-    currentParameters = {}
     meanAverageErrorTorsion = defaultdict(list)
     meanAverageErrorTotal = defaultdict(list)
 
@@ -111,12 +110,11 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         ## Update the config with the current parameters, unless first iteration
         if counter > 1:
-            config["runtimeInfo"]["madeByStitching"][param_key] = config["runtimeInfo"]["madeByStitching"][proposed_param_key]
             if forcefield == "AMBER":
                 helper_functions.run_tleap_to_make_params(config)
         
         ## Use OpenMM to get MM total energies using scan geometries
-        mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, debug)
+        mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
         ## Extract torsion energies from parameters
         mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
         ## Fit torsion parameters using Fourier Transform
@@ -129,9 +127,9 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         meanAverageErrorTotal[torsionTag].append(maeTotal)
 
         ## OPTION 1 only store final params
-        ## Update parameter file and store current parameters
-        config = update_param_func(config, torsionTag, torsionParameterDf, shuffleIndex)
-        currentParameters[torsionTag] = torsionParameterDf.to_dict(orient="records")
+        ## Update parameter file 
+        paramFile = update_param_func(config, torsionTag, torsionParameterDf, shuffleIndex)
+        # paramFile[torsionTag] = torsionParameterDf.to_dict(orient="records")
 
         ## At the end of one shuffle, check for convergence
         if counter % len(torsionTags) == 0:
@@ -170,8 +168,10 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = maxShuffles
 
     ## Update config with final parameters
-    config["runtimeInfo"]["madeByStitching"][param_key] = config["runtimeInfo"]["madeByStitching"][proposed_param_key]
-    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = currentParameters
+    config["runtimeInfo"]["madeByStitching"][param_key] = paramFile
+
+    ##TODO: construct final parameters
+    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = {}
 
     ## Run plotting protocols
     for torsionTag in torsionTags:

@@ -8,6 +8,7 @@ import numpy as np
 from pdbUtils import pdbUtils
 from shutil import move, copy
 import random
+from functools import reduce
 
 
 ## CLEAN CODE CLASSES ##
@@ -341,27 +342,44 @@ def merge_energy_dfs(energyDfs: list[pd.DataFrame]) -> pd.DataFrame:
     """
 
     ## remove empty DataFrames
-    energyDfs = [df for df in energyDfs if not df is None]
-
-    try:
-        mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
-            columns={'Energy': 'Energy_0'}
+    energyDfs = [df for df in energyDfs if not df is None and not df.empty]
+    if not energyDfs:
+        return pd.DataFrame()
+    
+    processedDfs = []
+    for i, df in enumerate(energyDfs):
+        processedDf = (
+            df[["Angle", "Energy"]]
+            .groupby("Angle", as_index=False)
+            .first()
+            .rename(columns={"Energy": f"Energy_{i}"})
+            .set_index("Angle")
         )
-    except Exception as e:
-        print(energyDfs)
-        raise e
-
-    for i, df in enumerate(energyDfs[1:], start=1):
-        mergedDf = mergedDf.merge(
-            df[['Angle', 'Energy']],
-            on='Angle',
-            how='outer',
-            suffixes=('', f'_df{i}')
-        ).rename(columns={'Energy': f'Energy_{i}'})
-    mergedDf = mergedDf.groupby('Angle', as_index=False).first()
-
-
+        processedDfs.append(processedDf)
+    mergedDf = pd.concat(processedDfs, axis=1, join="outer")
+    mergedDf["Angle"] = mergedDf.index
+    mergedDf = mergedDf.reset_index(drop=True)
     return mergedDf
+
+    # try:
+    #     mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
+    #         columns={'Energy': 'Energy_0'}
+    #     )
+    # except Exception as e:
+    #     print(energyDfs)
+    #     raise e
+
+    # for i, df in enumerate(energyDfs[1:], start=1):
+    #     mergedDf = mergedDf.merge(
+    #         df[['Angle', 'Energy']],
+    #         on='Angle',
+    #         how='outer',
+    #         suffixes=('', f'_df{i}')
+    #     ).rename(columns={'Energy': f'Energy_{i}'})
+    # mergedDf = mergedDf.groupby('Angle', as_index=False).first()
+
+
+    # return mergedDf
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
     """

@@ -156,7 +156,7 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrm: FilePath, config: dict) -> 
     ## unpack config
     moleculePsf = config["runtimeInfo"]["madeByStitching"]["moleculePsf"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
-    moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
+
     # cgenffRtf = config["runtimeInfo"]["madeByStitching"]["cgenffRtf"]
     # cgenffPrm = config["runtimeInfo"]["madeByStitching"]["cgenffPrm"]
 

@@ -20,7 +20,7 @@ class DirectoryPath:
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) -> Tuple[dict, dict]:    
+def get_MM_torsion_energies(config: dict, torsionTag: str, paramFile: FilePath, debug: bool = False) -> Tuple[dict, dict]:    
     """
     Gets MM[torsion] energy for each torsion we have scanned
     This is done by extracting torsion parameters from FRCMOD file
@@ -37,13 +37,13 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) 
     if debug:
         print(f"Getting MM torsion energies for torsion {torsionTag}")
     ## get torsion parameters from PRM file
-    mmTorsionParameters = extract_torsion_parameters_from_prm(config, torsionTag)
+    mmTorsionParameters = extract_torsion_parameters_from_prm(paramFile, torsionTag, config)
     ## reconstruct torsion energies from parameters
     mmTorsionEnergies, mmCosineComponents = construct_MM_torsion_energies(mmTorsionParameters)
 
     return  mmTorsionEnergies, mmCosineComponents
 
-def extract_torsion_parameters_from_prm(config: dict, torsionTag: str) -> dict:
+def extract_torsion_parameters_from_prm(moleculePrm: FilePath, torsionTag: str, config: dict) -> dict:
     """
     Extracts torsion parameters from PRM file
 
@@ -55,7 +55,6 @@ def extract_torsion_parameters_from_prm(config: dict, torsionTag: str) -> dict:
         torsionParameters (dict): torsion parameters
     """
     ## unpack config
-    moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     

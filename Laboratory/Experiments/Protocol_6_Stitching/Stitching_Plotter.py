@@ -9,7 +9,7 @@ import pandas as pd
 from PIL import Image
 import tempfile
 from itertools import islice
-
+from matplotlib.ticker import MaxNLocator
 
 
 ## CLEAN CODE CLASSES ##
@@ -18,7 +18,10 @@ class FilePath:
 class DirectoryPath:
     pass
 
-def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: pd.DataFrame):
+def plot_run_mean_average_error(outDir, maeCsv):
+
+    maeDf = pd.read_csv(maeCsv)
+
     set_rc_params()
     ## init some colors to be used
     white: str = '#FFFFFF'
@@ -26,25 +29,29 @@ def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: 
     brightOrange: str = '#FFA500'
     fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(12, 8))  # create figure
 
-    ## plot average MAE with GLOW
-    for n in range(1, 7):
-        axis.plot(maeTorsionDf["All_Torsions"], color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
-    ## plot main traces
-    axis.plot(maeTorsionDf["All_Torsions"], label='Torsion', linewidth=2, color=brightGreen)
-    ## plot subtle traces for individual torsions
-    individualTorsionDf = maeTorsionDf.drop(["All_Torsions"], axis=1)
-    for torsionTag in individualTorsionDf.columns:
-        axis.plot(individualTorsionDf[torsionTag], linewidth=1, color=brightGreen, alpha=0.3)
 
+    allTorsionsDf = maeDf[maeDf["torsion_tag"] == "All_Torsions"]
+    individualTorsionDf = maeDf[maeDf["torsion_tag"] != "All_Torsions"]
+    ## ==================== TORSIONS ================================== ##
     ## plot average MAE with GLOW
     for n in range(1, 7):
-        axis.plot(maeTotalDf["All_Torsions"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
+        axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_torsion"],color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
     ## plot main traces
-    axis.plot(maeTotalDf["All_Torsions"], label='Total', linewidth=2, color=brightOrange)
+    axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_torsion"], label='Torsion', linewidth=2, color=brightGreen)
+
     ## plot subtle traces for individual torsions
-    individualTorsionDf = maeTotalDf.drop(["All_Torsions"], axis=1)
-    for torsionTag in individualTorsionDf.columns:
-        axis.plot(individualTorsionDf[torsionTag], linewidth=1, color=brightOrange, alpha=0.3)
+    for torsionTag, df in individualTorsionDf.groupby("torsion_tag"):
+        axis.plot(df["shuffle"], df["mae_torsion"], linewidth=1, color=brightGreen, alpha=0.4)
+
+    ## ==================== TOTAL ================================== ##
+    ## plot average MAE with GLOW
+    for n in range(1, 7):
+        axis.plot( allTorsionsDf["shuffle"], allTorsionsDf["mae_total"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
+    ## plot main traces
+    axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_total"], label='Total', linewidth=2, color=brightOrange)
+    ## plot subtle traces for individual torsions
+    for torsionTag, df in individualTorsionDf.groupby("torsion_tag"):
+        axis.plot( df["shuffle"], df["mae_total"], linewidth=1, color=brightOrange, alpha=0.4)
 
     # Add labels and legend
     axis.set_xlabel('Number of Fitting Shuffles')
@@ -60,6 +67,20 @@ def plot_run_mean_average_error(outDir, maeTorsionDf: pd.DataFrame, maeTotalDf: 
         axis.legend(handles, labels)
     else:
         axis.legend()
+    # Get unique shuffle values and ensure they are integers
+    shuffle_values = allTorsionsDf["shuffle"].unique().astype(int)
+
+    # Set x-ticks, ensuring only values >= 0 and <= shuffle_values[-1]
+    axis.set_xticks(shuffle_values)  # Set all integer ticks initially
+    axis.xaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))  # Auto-adjust ticks
+    # Get current ticks and filter to ensure they are >= 0 and <= shuffle_values[-1]
+    current_ticks = axis.get_xticks()
+    valid_ticks = current_ticks[(current_ticks >= 0) & (current_ticks <= shuffle_values[-1])]
+    # Always include the last value if not already present
+    if shuffle_values[-1] not in valid_ticks:
+        valid_ticks = np.append(valid_ticks, shuffle_values[-1])
+    # Sort ticks to maintain order and set them
+    axis.set_xticks(np.sort(valid_ticks))
 
     plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
     plt.close()

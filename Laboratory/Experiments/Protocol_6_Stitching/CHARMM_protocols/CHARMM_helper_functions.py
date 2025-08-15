@@ -75,7 +75,8 @@ def copy_assembled_parameters(config: dict) -> dict:
 
 
 
-def update_prm(config: dict,
+def update_prm(moleculePrm: FilePath, 
+               config: dict,
                   torsionTag: str,
                   torsionParamDf: pd.DataFrame,
                   shuffleIndex: int) -> dict:
@@ -84,7 +85,6 @@ def update_prm(config: dict,
     
     """
     ## unpack config
-    moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]

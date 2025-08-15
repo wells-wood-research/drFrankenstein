@@ -21,6 +21,21 @@ class DirectoryPath:
 from OperatingTools import file_parsers
 
 
+def check_mae_flatline(maeCsv: FilePath, windowSize = 5, diffTolerance = 0.1) -> bool:
+    maeDf = pd.read_csv(maeCsv)
+
+    allMaeDf = maeDf[maeDf["torsion_tag"] == "All_Torsions"]
+
+    diffTorsion = allMaeDf["mae_torsion"].diff().abs()
+    diffTotal = allMaeDf["mae_total"].diff().abs()
+
+    torsionFlatLined = np.all(diffTorsion.tail(windowSize) < diffTolerance)
+    totalFlatLined  = np.all(diffTotal.tail(windowSize) < diffTolerance)
+
+    return torsionFlatLined and totalFlatLined
+        
+
+
 
 def rms_of_mae_dict(meanAverageErrors: dict[str, float]) -> float:
     """

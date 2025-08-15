@@ -71,11 +71,11 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     ## Create output directories
     config = Stitching_Assistant.sort_out_directories(config)
     
-    ## Create initial parameter files
+    ## Create initial parameter files ## TODO: move some of this to Assembly
     config = helper_functions.copy_assembled_parameters(config)
     if forcefield == "AMBER":
         helper_functions.edit_mol2_partial_charges(config)
-        paramFile =helper_functions.run_tleap_to_make_params(config)
+        paramFile = helper_functions.run_tleap_to_make_params(config)
 
     ## Unpack config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
@@ -116,19 +116,18 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         ## Use OpenMM to get MM total energies using scan geometries
         mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
         ## Extract torsion energies from parameters
-        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, debug)
+        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile, debug)
         ## Fit torsion parameters using Fourier Transform
         torsionParameterDf, maeTorsion, maeTotal = QMMM_fitting_protocol.fit_torsion_parameters(
             config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
         )
-
         ## Store mean average errors for the current shuffle
         meanAverageErrorTorsion[torsionTag].append(maeTorsion)
         meanAverageErrorTotal[torsionTag].append(maeTotal)
 
         ## OPTION 1 only store final params
         ## Update parameter file 
-        paramFile = update_param_func(config, torsionTag, torsionParameterDf, shuffleIndex)
+        paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
         # paramFile[torsionTag] = torsionParameterDf.to_dict(orient="records")
 
         ## At the end of one shuffle, check for convergence
@@ -145,10 +144,6 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
                     f.write(f"{shuffleIndex},{tag},{maeTorsionTag},{maeTotalTag}\n")
                 f.write(f"{shuffleIndex},All_Torsions,{rmsMaeTorsion},{rmsMaeTotal}\n")
             
-            meanAverageErrorTorsion.clear()
-            meanAverageErrorTotal.clear()
-
-            
             ## Check for convergence
             if Stitching_Assistant.check_mae_convergence(
                 rmsMaeTorsion, rmsMaeTotal, maeTolTorsion, maeTolTotal
@@ -156,11 +151,25 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
                 config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                 converged = True
                 break
+            ## check to see if parameterisation is flatlined
+            if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
+                if Stitching_Assistant.check_mae_flatline(maeCsv):
+                    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
+                    converged = True
+                    break
+
+            ## at the end of 
+            meanAverageErrorTorsion.clear()
+            meanAverageErrorTotal.clear()
             del rmsMaeTorsion
             del rmsMaeTotal
             gc.collect()
+
+
             shuffleIndex += 1
         counter += 1
+
+
     ### END OF FITTING LOOP ###
 
     ## If the protocol does not converge, update the config with max shuffles
@@ -184,12 +193,8 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
 
     ## Load MAE data from CSV for final run-wide analysis and plotting
     if os.path.exists(maeCsv):
-        full_mae_df = pd.read_csv(maeCsv)
-        maeTorsionDf = full_mae_df.pivot(index='shuffle', columns='torsion_tag', values='mae_torsion').reset_index(drop=True)
-        maeTotalDf = full_mae_df.pivot(index='shuffle', columns='torsion_tag', values='mae_total').reset_index(drop=True)
-
-        Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeTorsionDf, maeTotalDf)
-
+        Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeCsv )
+    exit()
     ## Clean up temporary files
     cleaner.clean_up_stitching(config)
     ## Update config checkpoint flag

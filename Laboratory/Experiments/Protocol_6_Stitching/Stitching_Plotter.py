@@ -143,59 +143,27 @@ def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, durati
             key=_extract_number
         )
     )
-    with tempfile.TemporaryDirectory() as tmpDir:
-        tempGifs = []
-        batchNum = 0
-        
-        # --- Stage 1: Create temporary GIFs in batches (memory-safe) ---
-        while True:
-            batchPngs = list(islice(pngGenerator, batchSize))
-            if not batchPngs:
-                break
-            
-            batchNum += 1
-            tmpGif = p.join(tmpDir, f"batch_{batchNum}.gif")
-            tempGifs.append(tmpGif)
+    print("Opening all PNG frames...")
+    frames = [Image.open(png) for png in pngGenerator]
 
-            frames = [Image.open(png) for png in batchPngs]
-            frames[0].save(
-                tmpGif, save_all=True, append_images=frames[1:],
-                optimize=False, duration=duration, loop=0
-            )
-            for frame in frames:
-                frame.close()
+    if not frames:
+        print("No PNG files were found to create a GIF.")
+        return
 
-        if not tempGifs:
-            return
-
-        # --- Stage 2: Sequentially append frames (truly memory-safe) ---
-        # Open the first temporary GIF to extract its frames and save as the final GIF
-        with Image.open(tempGifs[0]) as first_gif:
-            # Extract all frames from the first GIF
-            first_gif_frames = []
-            for i in range(first_gif.n_frames):
-                first_gif.seek(i)
-                first_gif_frames.append(first_gif.copy())
-            
-            # Save these frames as the starting point of the final GIF
-            first_gif_frames[0].save(
-                outGif, save_all=True, append_images=first_gif_frames[1:],
-                optimize=True, duration=duration, loop=0
-            )
-
-        # Now, append frames from the rest of the temporary GIFs
-        for temp_gif_path in tempGifs[1:]:
-            with Image.open(outGif) as final_gif, Image.open(temp_gif_path) as temp_gif:
-                append_frames = []
-                for i in range(temp_gif.n_frames):
-                    temp_gif.seek(i)
-                    append_frames.append(temp_gif.copy())
-                
-                # Append the new frames to the existing final GIF
-                final_gif.save(
-                    outGif, save_all=True, append_images=append_frames,
-                    optimize=True, duration=duration, loop=0
-                )
+    print(f"Saving {len(frames)} frames to {outGif}...")
+    # Save the first frame and append the rest
+    frames[0].save(
+        outGif,
+        save_all=True,
+        append_images=frames[1:],  # Append all other frames
+        optimize=True,             # Optimize the GIF palette
+        duration=duration,
+        loop=0
+    )
+    
+    # Clean up the opened image objects
+    for frame in frames:
+        frame.close()
 
 
 #####################################################################

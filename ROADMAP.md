@@ -6,7 +6,7 @@
 # Efficiency
 [] problem with df merging in stitching assistant [??]
 [] gif creation is too slow (do we turn it off or skip frames?)
-
+[] Stitching loop is mostly waiting for a thread
 
 # debugging
 [x] yaml writing after stitching

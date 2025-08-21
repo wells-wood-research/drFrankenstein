@@ -29,7 +29,7 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, moleculeFrcmod) -> Tu
     """
 
     ## get torsion parameters from FRCMOD file
-    mmTorsionParameters = extract_torsion_parameters_from_frcmod(config, torsionTag, moleculeFrcmod)
+    mmTorsionParameters = extract_torsion_parameters_from_frcmod(moleculeFrcmod, torsionTag, config)
 
     ## reconstruct torsion energies from parameters
     mmTorsionEnergies, mmCosineComponents = AMBER_helper_functions.construct_MM_torsion_energies(mmTorsionParameters)
@@ -68,7 +68,7 @@ def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dic
 
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str, moleculeFrcmod: FilePath) -> dict:
+def extract_torsion_parameters_from_frcmod( moleculeFrcmod: FilePath,  torsionTag: str, config: dict,) -> dict:
     """
     Reads through a frcmod file 
     Finds torsion parameters for each torsion that we have scanned

@@ -23,7 +23,7 @@ from OperatingTools import file_parsers
 def construct_final_params(config: dict, paramFile: FilePath, param_extraction_function: object, torsionTags: list) -> dict:
     finalParameters = {}
     for torsionTag in torsionTags:
-        torsionParameters = param_extraction_function(config, torsionTag, paramFile)
+        torsionParameters = param_extraction_function(paramFile, torsionTag, config)
         finalParameters[torsionTag] = torsionParameters
 
 

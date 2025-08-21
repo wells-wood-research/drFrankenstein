@@ -54,13 +54,14 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         helper_functions = AMBER_helper_functions
         total_protocol = AMBER_total_protocol
         torsion_protocol = AMBER_torsion_protocol
+        param_extraction_function = AMBER_torsion_protocol.extract_torsion_parameters_from_frcmod
         param_key = "moleculeFrcmod"
-        proposed_param_key = "proposedFrcmod"
         update_param_func = helper_functions.update_frcmod
     else: # CHARMM
         helper_functions = CHARMM_helper_functions
         total_protocol = CHARMM_total_protocol
         torsion_protocol = CHARMM_torsion_protocol
+        param_extraction_function = CHARMM_torsion_protocol.extract_torsion_parameters_from_prm
         param_key = "moleculePrm"
         update_param_func = helper_functions.update_prm
         paramFile = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
@@ -75,15 +76,16 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     config = helper_functions.copy_assembled_parameters(config)
     if forcefield == "AMBER":
         helper_functions.edit_mol2_partial_charges(config)
-        paramFile = helper_functions.run_tleap_to_make_params(config)
+        paramFile = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
+        helper_functions.run_tleap_to_make_params(paramFile, config)
 
     ## Unpack config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     maxShuffles = config["parameterFittingInfo"]["maxShuffles"]
     minShuffles = config["parameterFittingInfo"]["minShuffles"]
     # Standardize on maeTol keys, assuming this is the consistent naming in the config
-    maeTolTotal = config["parameterFittingInfo"].get("maeTolTotal", config["parameterFittingInfo"].get("converganceTolTotal"))
-    maeTolTorsion = config["parameterFittingInfo"].get("maeTolTorsion", config["parameterFittingInfo"].get("converganceTolTorsion"))
+    converganceTolTotal = config["parameterFittingInfo"].get("converganceTolTotal", None)
+    converganceTolTorsion = config["parameterFittingInfo"].get("converganceTolTorsion", None)
 
 
     ## Remove torsions that failed QM scans and shuffle the rest
@@ -92,9 +94,9 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
 
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
+    ## init empties for storing data, counters, and flags
     meanAverageErrorTorsion = defaultdict(list)
     meanAverageErrorTotal = defaultdict(list)
-
     counter = 1
     shuffleIndex = 1
     converged = False
@@ -105,18 +107,20 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     with open(maeCsv, "w") as f:
         f.write("shuffle,torsion_tag,mae_torsion,mae_total\n")
 
+
+
     ### START OF FITTING LOOP ###
     ## Run the torsion fitting protocol, shuffling the torsion order each iteration
     for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
         ## Update the config with the current parameters, unless first iteration
         if counter > 1:
             if forcefield == "AMBER":
-                helper_functions.run_tleap_to_make_params(config)
-        
+                 helper_functions.run_tleap_to_make_params(paramFile, config)
+
         ## Use OpenMM to get MM total energies using scan geometries
         mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
         ## Extract torsion energies from parameters
-        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile, debug)
+        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile)
         ## Fit torsion parameters using Fourier Transform
         torsionParameterDf, maeTorsion, maeTotal = QMMM_fitting_protocol.fit_torsion_parameters(
             config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
@@ -125,10 +129,8 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         meanAverageErrorTorsion[torsionTag].append(maeTorsion)
         meanAverageErrorTotal[torsionTag].append(maeTotal)
 
-        ## OPTION 1 only store final params
         ## Update parameter file 
         paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
-        # paramFile[torsionTag] = torsionParameterDf.to_dict(orient="records")
 
         ## At the end of one shuffle, check for convergence
         if counter % len(torsionTags) == 0:
@@ -146,7 +148,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
             
             ## Check for convergence
             if Stitching_Assistant.check_mae_convergence(
-                rmsMaeTorsion, rmsMaeTotal, maeTolTorsion, maeTolTotal
+                rmsMaeTorsion, rmsMaeTotal, converganceTolTorsion, converganceTolTotal
             ) and shuffleIndex >= minShuffles:
                 config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                 converged = True
@@ -180,7 +182,8 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     config["runtimeInfo"]["madeByStitching"][param_key] = paramFile
 
     ##TODO: construct final parameters
-    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = {}
+    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = Stitching_Assistant.construct_final_params(config, paramFile, param_extraction_function, torsionTags)
+    
 
     ## Run plotting protocols
     for torsionTag in torsionTags:
@@ -194,7 +197,6 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     ## Load MAE data from CSV for final run-wide analysis and plotting
     if os.path.exists(maeCsv):
         Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeCsv )
-    exit()
     ## Clean up temporary files
     cleaner.clean_up_stitching(config)
     ## Update config checkpoint flag

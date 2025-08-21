@@ -50,14 +50,14 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
     return mmTorsionEnergy, mmCosineComponents
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def update_frcmod(config: dict,
+def update_frcmod(moleculeFrcmod: FilePath,
+                  config: dict,
                   torsionTag: str,
                   torsionParamDf: pd.DataFrame,
                   shuffleIndex: int) -> dict:
     """
     Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
     """
-    moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -94,10 +94,8 @@ def update_frcmod(config: dict,
     outputFrcmod = p.join(moleculeParameterDir, f"{moleculeName}_{shuffleIndex}.frcmod")
     parmedFrcmod.write(outputFrcmod, style='frcmod')
 
-    ## put updated frcmod in config as new entry
-    config["runtimeInfo"]["madeByStitching"]["proposedFrcmod"] = outputFrcmod
 
-    return config
+    return outputFrcmod
 
 
 def edit_mol2_partial_charges(config: dict) -> None:
@@ -187,7 +185,7 @@ def copy_assembled_parameters(config: dict) -> dict:
     return config
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_tleap_to_make_params(config: dict) -> None:
+def run_tleap_to_make_params(moleculeFrcmod: FilePath, config: dict) -> None:
     """
     Uses TLEAP to create a prmtop inpcrd pair
 
@@ -203,7 +201,6 @@ def run_tleap_to_make_params(config: dict) -> None:
     """
     ## unpack config
     inMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
-    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     outDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
@@ -215,7 +212,7 @@ def run_tleap_to_make_params(config: dict) -> None:
     with open(tleapInput, "w") as f:
         f.write("source leaprc.gaff2\n")
         f.write(f"mol  = loadmol2 {inMol2} \n")
-        f.write(f"loadamberparams {molFrcmod} \n") # use frcmod previously made
+        f.write(f"loadamberparams {moleculeFrcmod} \n") # use frcmod previously made
         # this frcmod will need to be updated after each torsion fit, so the next batch of mol2 are parameterised with the updated file
         f.write(f"saveamberparm mol {prmtop} {inpcrd}  \n")
         f.write("quit")

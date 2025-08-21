@@ -90,7 +90,10 @@ def write_config_to_yaml(config, outDir):
     ruamelParser.representer.ignore_aliases = lambda x: True
 
     with open(drFrankensteinYaml, "w") as f:
-        ruamelParser.dump(config, f)
+        try:
+            ruamelParser.dump(config, f)
+        except Exception as e:
+            raise(e)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def get_config_input_arg() -> FilePath:

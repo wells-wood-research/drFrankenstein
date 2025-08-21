@@ -219,9 +219,9 @@
                                 <tbody>
                                     {% for param_set in current_final_params %}
                                         <tr>
-                                            <td>{{ param_set.Amplitude | round(4) | default('N/A') }}</td>
-                                            <td>{{ param_set.Period | default('N/A') }}</td>
-                                            <td>{{ param_set.Phase | round(2) | default('N/A') }}</td>
+                                            <td>{{ param_set.k | round(4) | default('N/A') }}</td>
+                                            <td>{{ param_set.periodicity | default('N/A') }}</td>
+                                            <td>{{ param_set.phase | round(2) | default('N/A') }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

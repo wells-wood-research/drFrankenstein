@@ -34,14 +34,13 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config, torsionTag, debug=True):
+def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=True):
     drSplash.show_getting_mm_total(torsionTag)
 
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
     cappedPdb: FilePath = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     completedTorsionScanDirs: list = Stitching_Assistant.get_completed_torsion_scan_dirs(config, torsionTag)
     
-    moleculeFrcmod: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     moleculePrmtop: FilePath = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
 
     ## read calculated partial charges
@@ -57,9 +56,9 @@ def get_MM_total_energies(config, torsionTag, debug=True):
     os.makedirs(torsionFittingDir, exist_ok=True)
 
     if debug:
-        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop)
+        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb,  moleculePrmtop)
     else:
-        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag)
+        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb,  moleculePrmtop)
 
     ## sort out data
     mergedEnergyDf = Stitching_Assistant.merge_energy_dfs(singlePointEnergyDfs)
@@ -80,8 +79,8 @@ def get_MM_total_energies(config, torsionTag, debug=True):
     return  finalScanEnergiesDf["smoothedEnergy"].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
+def run_serial(scanDirs, torsionTotalDir, cappedPdb,  moleculePrmtop):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(*args)
@@ -90,8 +89,8 @@ def run_serial(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, 
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, config, torsionTag):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop) for scanIndex, scanDir in enumerate(scanDirs)]
+def run_parallel(scanDirs, torsionTotalDir, cappedPdb,  moleculePrmtop):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb,  moleculePrmtop) for scanIndex, scanDir in enumerate(scanDirs)]
 
     # Use multiprocessing Pool without tqdm progress bar
     with multiprocessing.Pool() as pool:
@@ -101,16 +100,16 @@ def run_parallel(scanDirs, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def single_point_worker(args):
-    scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop = args
+    scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop = args
     try:
-        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop)
+        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop)
         return singlePointEnergyDf
 
     except Exception as e:
         raise(e)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, chargesDf, moleculeFrcmod, moleculePrmtop, debug=False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, debug=False):
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
     os.makedirs(fittingRoundDir, exist_ok=True)
 

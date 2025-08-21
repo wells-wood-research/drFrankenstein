@@ -20,6 +20,15 @@ class DirectoryPath:
 
 from OperatingTools import file_parsers
 
+def construct_final_params(config: dict, paramFile: FilePath, param_extraction_function: object, torsionTags: list) -> dict:
+    finalParameters = {}
+    for torsionTag in torsionTags:
+        torsionParameters = param_extraction_function(config, torsionTag, paramFile)
+        finalParameters[torsionTag] = torsionParameters
+
+
+    return finalParameters
+
 
 def check_mae_flatline(maeCsv: FilePath, windowSize = 5, diffTolerance = 0.1) -> bool:
     maeDf = pd.read_csv(maeCsv)
@@ -347,54 +356,40 @@ def rescale_angles_0_360(angle: np.array) -> np.array:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def merge_energy_dfs(energyDfs: list[pd.DataFrame]) -> pd.DataFrame:
     """
-    merges energy DataFrames on the Angle column
+    Merges a list of energy DataFrames efficiently by concatenating first.
 
     Args:
-        energyDfs (list): list of DataFrames with Angle column
-    
-    Returns:
-        mergedDf (pd.DataFrame): merged DataFrame
-    """
+        energyDfs (list): A list of DataFrames, each with "Angle" and "Energy" columns.
 
-    ## remove empty DataFrames
-    energyDfs = [df for df in energyDfs if not df is None and not df.empty]
+    Returns:
+        pd.DataFrame: A merged DataFrame with a single "Angle" column and
+                      multiple "Energy_i" columns.
+    """
+    ## Remove empty or None DataFrames
+    energyDfs = [df for df in energyDfs if df is not None and not df.empty]
     if not energyDfs:
         return pd.DataFrame()
-    
-    processedDfs = []
-    for i, df in enumerate(energyDfs):
-        processedDf = (
-            df[["Angle", "Energy"]]
-            .groupby("Angle", as_index=False)
-            .first()
-            .rename(columns={"Energy": f"Energy_{i}"})
-            .set_index("Angle")
-        )
-        processedDfs.append(processedDf)
-    mergedDf = pd.concat(processedDfs, axis=1, join="outer")
-    mergedDf["Angle"] = mergedDf.index
-    mergedDf = mergedDf.reset_index(drop=True)
-    return mergedDf
 
-    # try:
-    #     mergedDf = energyDfs[0][['Angle', 'Energy']].rename(
-    #         columns={'Energy': 'Energy_0'}
-    #     )
-    # except Exception as e:
-    #     print(energyDfs)
-    #     raise e
+    # Assign an ID to each DataFrame to track its origin, then concatenate.
+    # The 'keys' argument in concat adds a new level to the index.
+    combined_df = pd.concat(
+        [df[["Angle", "Energy"]] for df in energyDfs],
+        keys=range(len(energyDfs)),
+        names=['df_index', 'original_index']
+    ).reset_index(level='original_index', drop=True)
 
-    # for i, df in enumerate(energyDfs[1:], start=1):
-    #     mergedDf = mergedDf.merge(
-    #         df[['Angle', 'Energy']],
-    #         on='Angle',
-    #         how='outer',
-    #         suffixes=('', f'_df{i}')
-    #     ).rename(columns={'Energy': f'Energy_{i}'})
-    # mergedDf = mergedDf.groupby('Angle', as_index=False).first()
+    # Perform a single groupby to get the first energy for each angle per original df
+    grouped = combined_df.groupby(['df_index', 'Angle'])['Energy'].first()
 
+    # Unstack the result to pivot the df_index into columns
+    merged_df = grouped.unstack('df_index')
 
-    # return mergedDf
+    # Rename columns to the desired "Energy_i" format
+    merged_df.columns = [f"Energy_{i}" for i in merged_df.columns]
+
+    # Reset the index to turn the 'Angle' index back into a column
+    return merged_df.reset_index()
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> None:
     """

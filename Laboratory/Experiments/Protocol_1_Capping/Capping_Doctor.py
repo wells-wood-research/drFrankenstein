@@ -39,6 +39,9 @@ def capping_protocol(config: dict) -> dict:
     moleculeName = config["moleculeInfo"]["moleculeName"]
     molPdb = p.join(inputDir, f"{moleculeName}.pdb")
     backboneAliases = config["moleculeInfo"].get("backboneAliases", None)
+    ## create an entry in runtimeInfo for capping
+    config["runtimeInfo"]["madeByCapping"] = {}
+
     ## Skip for ligands ##
     if not backboneAliases:
         optimedPdb = Capping_Monster.optimise_capped_structures(molPdb, config)
@@ -47,8 +50,6 @@ def capping_protocol(config: dict) -> dict:
         config["checkpointInfo"]["cappingComplete"] = True
         return config
 
-    ## create an entry in runtimeInfo for capping
-    config["runtimeInfo"]["madeByCapping"] = {}
 
     ## make a dir for capping, update config ##
     cappingDir = p.join(outputDir, "01_termini_capping")

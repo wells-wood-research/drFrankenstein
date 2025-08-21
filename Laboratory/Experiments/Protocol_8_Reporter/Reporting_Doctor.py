@@ -47,7 +47,6 @@ def reporter_protocol(config: dict) -> None:
     methodsData     = Shelly.methods_writer_protocol(config)
     citationsData   = Shelly.gather_citations(config)
 
-
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
     make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
 

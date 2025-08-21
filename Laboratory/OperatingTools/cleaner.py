@@ -87,6 +87,7 @@ def clean_wriggle(config: dict) -> None:
         moleculeName = config["moleculeInfo"]["moleculeName"]
         filesToKeep = [file for file in os.listdir(conformerDir) 
                        if file.startswith(f"{moleculeName}_conformer_") and file.endswith(".xyz")]
+        filesToKeep.extend([file for file in os.listdir(conformerDir) if "final" in file])
         filesToKeep.extend([file for file in os.listdir(conformerDir) if p.splitext(file)[1] in [".inp", ".out"]])
         for file in os.listdir(conformerDir):
             if file in filesToKeep: 

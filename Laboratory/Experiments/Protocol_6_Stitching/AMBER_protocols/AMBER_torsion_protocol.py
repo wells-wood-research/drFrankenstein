@@ -13,7 +13,7 @@ class DirectoryPath:
     pass
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) -> Tuple[dict, dict]:    
+def get_MM_torsion_energies(config: dict, torsionTag: str, moleculeFrcmod) -> Tuple[dict, dict]:    
     """
     Gets MM[torsion] energy for each torsion we have scanned
     This is done by extracting torsion parameters from FRCMOD file
@@ -27,8 +27,9 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, debug: bool = False) 
         mmTorsionEnergies (dict): energies 
         mmCosineComponents (dict): cosine components
     """
+
     ## get torsion parameters from FRCMOD file
-    mmTorsionParameters = extract_torsion_parameters_from_frcmod(config, torsionTag)
+    mmTorsionParameters = extract_torsion_parameters_from_frcmod(config, torsionTag, moleculeFrcmod)
 
     ## reconstruct torsion energies from parameters
     mmTorsionEnergies, mmCosineComponents = AMBER_helper_functions.construct_MM_torsion_energies(mmTorsionParameters)
@@ -67,7 +68,7 @@ def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dic
 
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str) -> dict:
+def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str, moleculeFrcmod: FilePath) -> dict:
     """
     Reads through a frcmod file 
     Finds torsion parameters for each torsion that we have scanned
@@ -82,14 +83,10 @@ def extract_torsion_parameters_from_frcmod(config: dict, torsionTag: str) -> dic
         mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
     """
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
-    molFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
 
-
-    molParams = parmed.load_file(molFrcmod)
-
+    molParams = parmed.load_file(moleculeFrcmod)
 
     atomTypes = tuple(torsionsToScan[torsionTag]["ATOM_TYPES"])
-
     torsionParameters = []
     # Replace DIHEDRAL parameters
     for dihedralKey in molParams.dihedral_types:

@@ -3,6 +3,14 @@
     [x] make atomType map using PRMTOP
 [x] in the case of re-parameterised Phi/Psi, add extra params to account for ncAA-ncAA interactions
 
+# CHARMM COMPATABILITY
+[] DECL -C and DECL +N
+[] BackBoneAlias["N"] _ C, ""["C"] + N
+
+
+## CHARGES
+[] enforce sum(charges) == totalCharge
+
 # Efficiency
 [] problem with df merging in stitching assistant [??]
 [] gif creation is too slow (do we turn it off or skip frames?)

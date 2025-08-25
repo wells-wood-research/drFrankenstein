@@ -85,7 +85,7 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
                                                           debug = debug)
         config["runtimeInfo"]["madeByCharges"]["chargesCsv"] = chargesCsv
 
-
+    Charged_Assistant.round_charges_carefully(config)
 
     config = Charged_Assistant.process_charge_csv(config)
 

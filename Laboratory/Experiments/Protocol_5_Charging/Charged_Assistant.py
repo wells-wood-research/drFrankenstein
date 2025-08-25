@@ -17,6 +17,47 @@ class DirectoryPath:
     pass
 
 
+
+
+def round_charges_carefully(config):
+    """
+    Rounds charges to 3 decimal places, ensuring sum matches totalCharge by adjusting carbon atoms.
+
+    Args:
+        config (dict): config containing all run information
+
+    Returns:
+        None
+    """
+    totalCharge = config["moleculeInfo"]["charge"]
+    chargeDf = pd.read_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"], index_col="Unnamed: 0")
+    # Round charges to 3 decimal places
+    chargeDf['Charge'] = chargeDf['Charge'].round(3)
+
+    # Calculate difference from total charge
+    currentSum = round(chargeDf['Charge'].sum(),3)
+    print(currentSum)
+    difference = totalCharge - currentSum
+    
+    # get carbon indexes, starting with least polar
+    carbonIndexes = chargeDf[chargeDf['atomElement'] == 'C'][['Charge']].abs().sort_values(by='Charge').index    
+
+    if difference != 0:  # Only adjust if difference exists
+        if difference > 0:
+            modifier = 0.001
+        else:
+            modifier = -0.001
+        nAtomsToModify = difference / modifier
+
+        for i in range(int(nAtomsToModify)):
+            chargeDf.loc[carbonIndexes[i % len(carbonIndexes)], 'Charge'] += modifier
+
+        # Re-round to 3 decimal places to avoid floating-point precision issues
+        chargeDf.loc[carbonIndexes, 'Charge'] = chargeDf.loc[carbonIndexes, 'Charge'].round(3)
+
+    # Save the updated DataFrame back to the file
+    chargeDf.to_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"])
+
 def generate_symmetry_constraints_file(config: dict, fittingDir: DirectoryPath) -> FilePath:
     """
     Runs graph-based symmetry tool and generates constraints file to ensure that charges are symmetrically distributed

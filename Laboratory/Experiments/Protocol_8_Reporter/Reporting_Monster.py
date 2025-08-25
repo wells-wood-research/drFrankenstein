@@ -116,7 +116,7 @@ def process_twist_results(config: dict) -> dict:
         "scanSolvationMethod": config["torsionScanInfo"]["scanSolvationMethod"],
         "singlePointMethod": config["torsionScanInfo"]["singlePointMethod"],
         "singlePointSolvationMethod": config["torsionScanInfo"]["singlePointSolvationMethod"],
-        "nRotatableBonds": config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"],
+        "nRotatableBonds": len(config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]),
         "torsionsToScan": deepcopy(config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"])  # Deep copy
     }
     if config["torsionScanInfo"]["nConformers"] == -1:

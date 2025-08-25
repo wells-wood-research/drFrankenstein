@@ -28,7 +28,7 @@ def copy_final_prm(config: dict) -> None:
         config (dict): contains all run information
 
     Returns:
-        None
+        massBlock (str): mass block for CHARMM - copy to RTF
     """
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
@@ -37,8 +37,14 @@ def copy_final_prm(config: dict) -> None:
 
     copy(moleculePrm, finalPrm)
 
+    massBlock = ""
+    for line in open(moleculePrm, "r"):
+        if line.startswith("MASS"):
+            massBlock += line
 
-def create_final_rtf(config):
+    return massBlock
+
+def create_final_rtf(config, massBlock):
     ## unpack config
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
@@ -55,8 +61,22 @@ def create_final_rtf(config):
     cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
 
     terminalSectionWritten = False
-    with open(moleculeRtf, "r") as inRtf, open(finalRtf, "w") as outRtf:
+    writeGenericSection = False
+    with open(moleculeRtf, "r") as inRtf, open(finalRtf, "w") as outRtf:            
+
         for line in inRtf.readlines():
+            if line.strip() == "read rtf card append":
+                writeGenericSection = True
+                outRtf.write(line)
+                continue
+            if writeGenericSection:
+                if  len(backboneAliases) > 0:
+                    outRtf.write("DECL +N\n")
+                    outRtf.write("DECL -C\n")
+                outRtf.write("\nATOMS\n")
+                outRtf.write(massBlock+"\n\n")
+                writeGenericSection = False
+
             if line.startswith("END"): 
                 continue
             if any(atomName in line for atomName in cappingAtomNames):
@@ -64,6 +84,8 @@ def create_final_rtf(config):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
+                for atomName in nTerminalAtoms:
+                    outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
         
@@ -91,7 +113,7 @@ def create_cmap_terms(config: dict) -> dict:
 
 
 
-def get_donor_acceptors(config: dict, debug:bool = True) -> dict:
+def get_donor_acceptors(config: dict, debug: bool = False) -> dict:
     """
     Looks though optimised solvated conformers for hydrogen bonds donors and acceptors
     Creates a dict of DONOR and ACCEPTOR atom pairs,
@@ -135,13 +157,14 @@ def get_donor_acceptors(config: dict, debug:bool = True) -> dict:
             "ascii": "-🗲→",    
             "colour": "yellow",
             "unit":  "conformer",
-            "dynamic_ncols": True,
+            "ncols": 102,
         }
         ## construct an arglist to pass to multiprocessing
         argsList = [(solvatedOptXyz, solvatedDf, moleculeName) for solvatedOptXyz in solvatedOptimisedXyzs]
         nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
         with mp.Pool(processes=nCpus) as pool:
-            results = pool.starmap(detect_hydrogen_bonds_construct_donor_acceptors, argsList)
+            results = list(tqdm(pool.starmap(detect_hydrogen_bonds_construct_donor_acceptors, argsList),
+                                total=len(argsList), **tqdmBarOptions))
         for donors, acceptors in results:
             allDonors.extend(donors)
             allAcceptors.extend(acceptors)

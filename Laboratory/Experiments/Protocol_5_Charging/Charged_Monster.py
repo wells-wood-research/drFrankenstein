@@ -354,7 +354,10 @@ def run_charge_fitting(config: dict,
     Returns:
         config (dict): updated config
     """
-
+    ## Define output file
+    outputFile = p.join(fittingDir, "MultiWfn_raw_outputs.txt")
+    if p.isfile(outputFile):
+        return outputFile
     ## Unpack pathInfo
     multiWfnDir = config["pathInfo"]["multiWfnDir"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
@@ -370,8 +373,7 @@ def run_charge_fitting(config: dict,
     ## Get a molden file for the input command
     moldenFile = glob.glob(p.join(fittingDir, "*.molden.input"))[0]
 
-    ## Define output file
-    outputFile = p.join(fittingDir, "MultiWfn_raw_outputs.txt")
+
 
     ## Open a file object for continuous logging
     with open(outputFile, 'w') as logFile:

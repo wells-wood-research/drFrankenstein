@@ -78,7 +78,10 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         helper_functions.edit_mol2_partial_charges(config)
         paramFile = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
         helper_functions.run_tleap_to_make_params(paramFile, config)
+    elif forcefield == "CHARMM":
+        helper_functions.edit_rtf_charges(config)
 
+        
     ## Unpack config
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     maxShuffles = config["parameterFittingInfo"]["maxShuffles"]

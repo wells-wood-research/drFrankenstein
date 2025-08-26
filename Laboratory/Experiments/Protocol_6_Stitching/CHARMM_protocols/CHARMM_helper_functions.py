@@ -328,13 +328,14 @@ def edit_rtf_charges(config: dict) -> dict:
     mmTotalCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
 
     chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
+
     atomIndex = 0
     tmpRtf = p.join(mmTotalCalculationDir, "update_charges.rtf")
     with open(moleculeRtf, "r") as inRtf, open(tmpRtf, "w") as outRtf:
         for line in inRtf.readlines():
             if line.startswith("ATOM"):
                 lineData = line.split()
-                lineData[3] = round(chargesDf.loc[atomIndex, "Charge"],3).astype(str)
+                lineData[3] = chargesDf.loc[atomIndex, "Charge"].astype(str)
                 line = "\t". join(lineData) + "\n"
                 atomIndex += 1
             outRtf.write(line)

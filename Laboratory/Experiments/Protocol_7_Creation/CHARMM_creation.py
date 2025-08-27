@@ -198,7 +198,13 @@ def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: s
     donors = []
     acceptors = []
     for hBond in hBonds:
-        donorDf = pdbDf.iloc[hBond[0]]
+        try:
+            pdbDf.iloc[hBond[0]]
+            pdbDf.iloc[hBond[1]]
+            pdbDf.iloc[hBond[2]]
+        except:
+            continue
+        donorDf      = pdbDf.iloc[hBond[0]]
         hydrogenDf = pdbDf.iloc[hBond[1]]
         acceptorDf = pdbDf.iloc[hBond[2]]
         if donorDf["RES_NAME"] == moleculeName:

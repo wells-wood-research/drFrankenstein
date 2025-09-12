@@ -44,7 +44,7 @@ def copy_final_prm(config: dict) -> None:
 
     return massBlock
 
-def create_final_rtf(config, massBlock):
+def create_final_rtf(config, massBlock, icBlock):
     ## unpack config
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
@@ -71,8 +71,8 @@ def create_final_rtf(config, massBlock):
                 continue
             if writeGenericSection:
                 if  len(backboneAliases) > 0:
-                    outRtf.write("DECL +N\n")
-                    outRtf.write("DECL -C\n")
+                    outRtf.write("DECL -CA\nDECL -C\nDECL -O\nDECL +N\nDECL +HN\nDECL +CA\n")
+                    outRtf.write("DEFA FIRST NTER LAST CTER\nAUTO ANGLES DIHE\n")
                 outRtf.write("\nATOMS\n")
                 outRtf.write(massBlock+"\n\n")
                 writeGenericSection = False
@@ -98,7 +98,12 @@ def create_final_rtf(config, massBlock):
             outRtf.write(f"DONOR {donorPair[0]} {donorPair[1]}\n")
         for acceptorPair in donorAcceptors["ACCEPTORS"]:
             outRtf.write(f"ACCEPTOR {acceptorPair[0]} {acceptorPair[1]}\n")
+
+        outRtf.write(icBlock+"\n\n")
+
         outRtf.write("END\n")
+            
+
             
         ##TODO: CMAP for Phi/Psi torsion angles if possible
 

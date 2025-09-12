@@ -6,6 +6,7 @@ from shutil import copy
 
 from . import CHARMM_creation
 from . import AMBER_creation
+from OperatingTools import make_internal_coords
 
 
 ################################################################################
@@ -50,7 +51,8 @@ def create_the_monster(config):
     elif forceField == "CHARMM":
         config = CHARMM_creation.get_donor_acceptors(config)
         massBlock = CHARMM_creation.copy_final_prm(config)
-        CHARMM_creation.create_final_rtf(config, massBlock)
+        icBlock = make_internal_coords.gen_internal_coords(config["runtimeInfo"]["madeByCapping"]["cappedPdb"])
+        CHARMM_creation.create_final_rtf(config, massBlock, icBlock)
     config["checkpointInfo"]["finalCreationComplete"] = True
     return config
 

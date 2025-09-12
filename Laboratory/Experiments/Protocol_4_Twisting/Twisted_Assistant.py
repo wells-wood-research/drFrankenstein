@@ -701,10 +701,10 @@ def find_ring_atoms(structure):
     return rings
 
 
-def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
+def _construct_adjacency_matrix(moleculeParams) -> np.ndarray:
     # Build adjacency list for graph representation
     adjacency = defaultdict(list)
-    for bond in parmedPsf.bonds:
+    for bond in moleculeParams.bonds:
         idx1, idx2 = bond.atom1.idx, bond.atom2.idx
         adjacency[idx1].append(idx2)
         adjacency[idx2].append(idx1)
@@ -713,6 +713,13 @@ def _construct_adjacency_matrix(parmedPsf: CharmmPsfFile) -> np.ndarray:
 
 
 def _is_proton_in_the_middle(dihedral: parmed.topologyobjects.Dihedral) -> bool:
+    """
+    Check if a dihedral contains a proton in the middle (i.e., between atoms 1 and 2).
+    Args:
+        dihedral: Dihedral object from ParmEd.
+    Returns:
+        bool: True if the dihedral contains a proton in the middle, False otherwise.
+    """
     atomElements = extract_dihedral_atom_elements(dihedral)
     if atomElements[1] == 1 or atomElements[2] == 1:
         return True

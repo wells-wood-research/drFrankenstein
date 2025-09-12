@@ -94,7 +94,6 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     ## Remove torsions that failed QM scans and shuffle the rest
     torsionTags = Stitching_Assistant.remove_exploded_torsions(config)
     shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles)
-
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
     ## init empties for storing data, counters, and flags
@@ -111,10 +110,14 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         f.write("shuffle,torsion_tag,mae_torsion,mae_total\n")
 
 
-
+    convergedTags = []
     ### START OF FITTING LOOP ###
     ## Run the torsion fitting protocol, shuffling the torsion order each iteration
     for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
+
+        if torsionTag in convergedTags:
+            continue
+
         ## Update the config with the current parameters, unless first iteration
         if counter > 1:
             if forcefield == "AMBER":
@@ -132,9 +135,11 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         meanAverageErrorTorsion[torsionTag].append(maeTorsion)
         meanAverageErrorTotal[torsionTag].append(maeTotal)
 
+
         ## Update parameter file 
         paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
 
+        ##################### END OF SHUFFLE ####################
         ## At the end of one shuffle, check for convergence
         if counter % len(torsionTags) == 0:
             ## Calculate RMS of MAE for torsion and total fits
@@ -162,6 +167,17 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
                     config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                     converged = True
                     break
+            # for torsionTag in torsionTags:
+            #     print(meanAverageErrorTorsion[torsionTag], meanAverageErrorTotal[torsionTag])
+
+            #     print("\n", torsionTag, meanAverageErrorTorsion[torsionTag][-1], meanAverageErrorTotal[torsionTag][-1])
+            #     if Stitching_Assistant.check_mae_convergence(
+            #         meanAverageErrorTorsion[torsionTag][-1],
+            #         meanAverageErrorTotal[torsionTag][-1],
+            #         converganceTolTorsion,
+            #         converganceTolTotal):
+            #         convergedTags.append(torsionTag)
+
 
             ## at the end of 
             meanAverageErrorTorsion.clear()
@@ -205,6 +221,10 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     ## Update config checkpoint flag
     config["checkpointInfo"]["torsionFittingComplete"] = True
     return config
+
+
+
+
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲####
 if __name__ == "__main__":

@@ -94,9 +94,8 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
         "multiplicity": int,
         "moleculePdb": str,
         "moleculeName": str,
-        "nTermini": list,
-        "cTermini": list,
         "chargeGroups": dict,
+        "backboneAliases": dict,
     }
 
     for key, expectedType in expectedKeys.items():
@@ -105,10 +104,7 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
                 # Specific validations for list/dict contents
-                if key in ["nTermini", "cTermini"]:
-                    if not all(isinstance(item, str) for item in value):
-                         _add_error(errors, keyPath, f"All items in list '{key}' must be strings.")
-                elif key == "chargeGroups":
+                if key == "chargeGroups":
                     # value is the chargeGroups dictionary
                     for groupName, groupData in value.items():
                         groupKeyPath = f"{keyPath}.{groupName}"

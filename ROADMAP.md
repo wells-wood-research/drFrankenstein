@@ -4,8 +4,8 @@
 [x] in the case of re-parameterised Phi/Psi, add extra params to account for ncAA-ncAA interactions
 
 # CHARMM COMPATABILITY
-[] DECL -C and DECL +N
-[] BackBoneAlias["N"] _ C, ""["C"] + N
+[x] DECL -C and DECL +N
+[x] BackBoneAlias["N"] _ C, ""["C"] + N
 
 
 ## CHARGES
@@ -22,3 +22,7 @@
     [] check how torsion scanning timing is implemented
 [] rogue ANTECHAMBER output in cwd
 [] wrong labelling of fitting_shuffle PNGs
+
+## CONFIG CONFUSION
+
+[] remove cTermini and nTermini and replace with backboneAliases

@@ -1,6 +1,15 @@
 ![drFrankenstein Splash](./Images/Green_Frank_Basic.png)
-# **drFrankenstein**
-Lightning-Fast MD Parameters for Monstrous Molecules!
+# **drFrankenstein**  - *Lightning-Fast MD Parameters for Monstrous Molecules!*
+
+**drFrankenstein** is a *fully-automated* pipeline for generating forcefield parameters for:
+- Non-canonical amino acids
+- Stapled amino acids
+- Small-molecule ligands
+
+**drFrankenstein** is capable of creating parameter files compatible with **CHARMM** and **AMBER** force fields.
+
+
+
 
 
 

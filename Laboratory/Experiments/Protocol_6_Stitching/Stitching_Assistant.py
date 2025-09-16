@@ -83,7 +83,7 @@ def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int) -> list[str]:
 
     return shuffledTorsionTags
 
-def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, converganceTolTorsion: float | None, converganceTolTotal: float | None) -> bool:
+def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, converganceTolerance: float | None) -> bool:
     """
     Checks Mean Average Errors to see if they have converged
     
@@ -93,14 +93,12 @@ def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, 
         maeTolTotal (float | None): mean average error tolerance for total energy, None gets ignored
         maeTolTorsion (float | None): mean average error tolerance for torsion energy, None gets ignored
     """
-    if converganceTolTotal is not None and converganceTolTorsion is not None:
-        return latestRmsMaeTotal < converganceTolTotal and latestRmsMaeTorsion < converganceTolTorsion
-    elif converganceTolTotal is not None:
-        return latestRmsMaeTotal < converganceTolTotal
-    elif converganceTolTorsion is not None:
-        return latestRmsMaeTorsion < converganceTolTorsion
+    if converganceTolerance is None:
+        return False
     else:
-        return False    
+        return latestRmsMaeTorsion < converganceTolerance and latestRmsMaeTotal < converganceTolerance
+
+   
         
 
 

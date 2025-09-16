@@ -87,8 +87,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     maxShuffles = config["parameterFittingInfo"]["maxShuffles"]
     minShuffles = config["parameterFittingInfo"]["minShuffles"]
     # Standardize on maeTol keys, assuming this is the consistent naming in the config
-    converganceTolTotal = config["parameterFittingInfo"].get("converganceTolTotal", None)
-    converganceTolTorsion = config["parameterFittingInfo"].get("converganceTolTorsion", None)
+    converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
 
 
     ## Remove torsions that failed QM scans and shuffle the rest
@@ -156,12 +155,12 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
             
             ## Check for convergence
             if Stitching_Assistant.check_mae_convergence(
-                rmsMaeTorsion, rmsMaeTotal, converganceTolTorsion, converganceTolTotal
+                rmsMaeTorsion, rmsMaeTotal, converganceTolerance, 
             ) and shuffleIndex >= minShuffles:
                 config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
                 converged = True
                 break
-            ## check to see if parameterisation is flatlined
+            ## every 10 shuffles, check to see if parameterisation is flatlined
             if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
                 if Stitching_Assistant.check_mae_flatline(maeCsv):
                     config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
@@ -179,7 +178,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
             #         convergedTags.append(torsionTag)
 
 
-            ## at the end of 
+            ## at the end of eacj shuffle, clear memory
             meanAverageErrorTorsion.clear()
             meanAverageErrorTotal.clear()
             del rmsMaeTorsion

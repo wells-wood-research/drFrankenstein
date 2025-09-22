@@ -67,6 +67,8 @@ def main():
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
+    drSplash.show_mad_man()
+
     ## run assembly protocol
     if not checkpointInfo["assemblyComplete"]:
         if config["parameterFittingInfo"]["forceField"] == "CHARMM":

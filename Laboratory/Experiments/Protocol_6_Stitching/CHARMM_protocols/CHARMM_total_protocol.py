@@ -67,6 +67,7 @@ def get_MM_total_energies(config:dict,
     mergedEnergyDf.to_csv(mergedEnergycsv, index=False)
         
     finalScanEnergiesDf = pd.DataFrame()
+
     finalScanEnergiesDf["Angle"] = mergedEnergyDf["Angle"]
     finalScanEnergiesDf[torsionTag] = mergedEnergyDf["Mean_Energy"]
     

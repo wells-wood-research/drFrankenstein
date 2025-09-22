@@ -73,8 +73,8 @@ moleculeInfo:
 torsionScanInfo:
   ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
   runScansOn:
-    phiPsi : false         ## DEFAULT TRUE
-    polarProtons : true   ## DEFAULT TRUE
+    phiPsi : true         ## DEFAULT TRUE
+    polarProtons : false   ## DEFAULT TRUE
     nonPolarProtons : true  ## DEFAULT FALSE
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
@@ -85,9 +85,9 @@ torsionScanInfo:
   ## Solvation method for torsion scanning, set to Null for no solvation
   scanSolvationMethod :  ALPB(water) 
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: XTB2
+  singlePointMethod: Null
   ## Solvation method for single point calculations, set to Null for no solvation
-  singlePointSolvationMethod: CPCM(water)
+  singlePointSolvationMethod: Null
 
   
 ##########################################################################################################################
@@ -147,4 +147,4 @@ miscInfo:
   ## the maximum number of cores that will be used
   availableCpus: 30
   ## How many file do you want to delete? Accepts ["None", "basic", "full", "brutal"] (WARNING: only "None" and "basic" work at the moment!)
-  cleanUpLevel: basic
+  cleanUpLevel: 1

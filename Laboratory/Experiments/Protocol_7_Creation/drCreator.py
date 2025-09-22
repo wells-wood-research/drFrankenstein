@@ -50,9 +50,16 @@ def create_the_monster(config):
 
     elif forceField == "CHARMM":
         config = CHARMM_creation.get_donor_acceptors(config)
-        massBlock = CHARMM_creation.copy_final_prm(config)
+        massBlock, config = CHARMM_creation.copy_final_prm(config)
         icBlock = make_internal_coords.gen_internal_coords(config["runtimeInfo"]["madeByCapping"]["cappedPdb"])
-        CHARMM_creation.create_final_rtf(config, massBlock, icBlock)
+        config = CHARMM_creation.create_final_rtf(config, massBlock, icBlock)
+        
+        # if systemType == "whole-system-ncaa":
+        #     CHARMM_creation.add_ncaa_ncaa_dihedrals(config)
+
+        if systemType in ["whole-system-ncaa", "sidechain-only-ncaa"]:
+            CHARMM_creation.duplicate_capping_parameters(config)
+
     config["checkpointInfo"]["finalCreationComplete"] = True
     return config
 

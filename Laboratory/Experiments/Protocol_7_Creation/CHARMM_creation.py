@@ -4,6 +4,7 @@ from pdbUtils import pdbUtils
 import pandas as pd
 import numpy as np
 from shutil import copy
+import parmed as pmd
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##
 import multiprocessing as mp
 from tqdm import tqdm
@@ -20,6 +21,62 @@ class DirectoryPath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
+
+def duplicate_capping_parameters(config:dict) -> None:
+    """
+    Accounts for interactions between capping groups and a ncAA by duplicating these params
+    and replacing capping types with canonical types
+    """
+
+    finalPrm = config["runtimeInfo"]["madeByCreator"]["finalPrm"]
+    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
+
+    name2cgenffType = {}
+    with open(moleculeRtf, "r") as f:
+        for line in f:
+            if line.strip() == "":
+                continue
+            if line.startswith("ATOM"):
+                data = line.split()
+                name2cgenffType[data[1]] = data[2]
+
+    nameToCharmmType = {
+        "NN" : "NH1",
+        "HNN1" : "H",
+        "CN": "CT1",
+        "HCN1": "HB1",
+        "CC1" : "C",
+        "OC" : "O",
+    }
+    cgenffToCharmm = {}
+    for atomName, charmmType in nameToCharmmType.items():
+        cgenffToCharmm[charmmType] = name2cgenffType[atomName]
+
+
+
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    tmpPrm = p.join(finalCreationDir, "tmp.prm")
+
+    cgenffTypes = [key for key in cgenffToCharmm.keys()]
+    print(cgenffTypes)
+    section = "START"
+    sectionHeaders = ["BONDS", "ANGLES", "DIHEDRALS", "IMPROPERS"]
+    with open(finalPrm, "r") as f:
+        for line in f:
+            for sectionHeader in sectionHeaders:
+                if line.startswith(sectionHeader):
+                    section = sectionHeader
+                    continue
+                if section == "BONDS":
+                    print(line)
+                    if any(cgenffType in line for cgenffType in cgenffTypes):
+                        print(line)
+                        data = line.split()
+                        data[0:2] = [cgenffToCharmm.get(cgenffType, cgenffType) for cgenffType in data[0:2]]
+                        line = " ".join(data)
+                        exit()
+    exit()
+                        
 def copy_final_prm(config: dict) -> None:
     """
     Copies final PRM file into the final creation directory
@@ -42,7 +99,9 @@ def copy_final_prm(config: dict) -> None:
         if line.startswith("MASS"):
             massBlock += line
 
-    return massBlock
+    config["runtimeInfo"]["madeByCreator"]["finalPrm"] = finalPrm
+
+    return massBlock, config
 
 def create_final_rtf(config, massBlock, icBlock):
     ## unpack config
@@ -84,8 +143,8 @@ def create_final_rtf(config, massBlock, icBlock):
             if line.startswith("BOND") and not terminalSectionWritten:
                 for atomName in cTerminalAtoms:
                     outRtf.write(f"BOND {atomName} +N\n")
-                for atomName in nTerminalAtoms:
-                    outRtf.write(f"BOND {atomName} -C\n")
+                # for atomName in nTerminalAtoms:
+                #     outRtf.write(f"BOND {atomName} -C\n")
                 terminalSectionWritten = True
             outRtf.write(line)
         
@@ -103,9 +162,10 @@ def create_final_rtf(config, massBlock, icBlock):
 
         outRtf.write("END\n")
             
+        config["runtimeInfo"]["madeByCreator"]["finalRtf"] = finalRtf
 
+        return config 
             
-        ##TODO: CMAP for Phi/Psi torsion angles if possible
 
 
 def create_cmap_terms(config: dict) -> dict:

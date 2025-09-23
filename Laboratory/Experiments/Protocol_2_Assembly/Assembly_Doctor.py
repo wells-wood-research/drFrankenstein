@@ -89,46 +89,40 @@ def charmm_assembly_protocol(config:dict) -> dict:
     ## Find default CHARMM parameters in drFrankenstein SRC folder
     charmmDefaultParams = Assembly_Assistant.find_default_charmm_parameters()
     ## create PSF file using RTF from capped RTF and CGenFF RTF
-    cappedPsf = Assembly_Monster.make_charmm_psf(cappedRtf,
-                                                  charmmDefaultParams["cgenffRtf"],
-                                                    config)
+    cappedPsf = Assembly_Monster.make_charmm_psf(rtfFiles=[cappedRtf,
+                                                  charmmDefaultParams["cgenffRtf"]], config = config, 
+                                                  suffix = "capped"
+                                                    )
 
     parmedPsf = Assembly_Assistant.load_psf_with_params(psfFile = cappedPsf,
                                                         params = (charmmDefaultParams["cgenffRtf"],
                                                                 charmmDefaultParams["cgenffPrm"],
                                                                 cappedRtf, cappedPrm))
     
-    ## we will assign CGenFF types to backbone atoms (if present!) and parameterize them
-    if runScansOn["phiPsi"]:
-            completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, *charmmDefaultParams.values())
-            nameToDesiredType = {
-                        "NN" : "NH1",
-                        "HNN1" : "H",
-                        "CN": "CT1",
-                        "HCN1": "HB1",
-                        "CC1" : "C",
-                        "OC" : "O",
-                    }
 
-    ## we will reset the backbone atom types to CHARMM36m defaults and not reparameterize them!
-    else:
-        parmedPsf, nameToCgenffType, nameToDesiredType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
-                                                                            config)
+    parmedPsf, nameToCgenffType, nameToDesiredType = Assembly_Monster.set_backbone_types_psf(parmedPsf,
+                                                                        config)
 
 
-        missingPrm = Assembly_Monster.create_missing_prm(parmedPsf = parmedPsf,
-                                                    cappedRtf = cappedRtf,
-                                                    cappedPrm = cappedPrm,
-                                                    charmmDefaultParams = charmmDefaultParams,
-                                                    nameToCgenffType = nameToCgenffType,
-                                                    config = config)
-        
-        completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, missingPrm, *charmmDefaultParams.values())
+    missingPrm = Assembly_Monster.create_missing_prm(parmedPsf = parmedPsf,
+                                                cappedRtf = cappedRtf,
+                                                cappedPrm = cappedPrm,
+                                                charmmDefaultParams = charmmDefaultParams,
+                                                nameToCgenffType = nameToCgenffType,
+                                                config = config)
+    
+    completeParameterSet = CharmmParameterSet(cappedRtf, cappedPrm, missingPrm, *charmmDefaultParams.values())
 
     ## load parameters back in to parmed PSF  
     parmedPsf.load_parameters(completeParameterSet)
 
+    assembledPrm, assembledPsf = Assembly_Assistant.save_modified_prm_file(parmedPsf, config)
+    assembledRtf = Assembly_Assistant.update_rtf_types(cappedRtf, nameToDesiredType, config)
+    # assembledPsf = Assembly_Monster.make_charmm_psf(rtfFiles = [assembledRtf,], config = config, suffix = "assembled")
 
-    config = Assembly_Assistant.save_modified_parameter_files(parmedPsf, config)
-    config = Assembly_Assistant.update_rtf_types(cappedRtf, nameToDesiredType, config)
+    config["runtimeInfo"]["madeByAssembly"]["assembledPrm"] = assembledPrm
+    config["runtimeInfo"]["madeByAssembly"]["assembledRtf"] = assembledRtf
+    config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = assembledPsf
+
+
     return config

@@ -31,14 +31,17 @@ def duplicate_capping_parameters(config:dict) -> None:
     finalPrm = config["runtimeInfo"]["madeByCreator"]["finalPrm"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
 
-    name2cgenffType = {}
+    nameToCgenffType = {}
     with open(moleculeRtf, "r") as f:
         for line in f:
             if line.strip() == "":
                 continue
             if line.startswith("ATOM"):
                 data = line.split()
-                name2cgenffType[data[1]] = data[2]
+                nameToCgenffType[data[1]] = data[2]
+
+    print("NAME TO CGENFF TYPE")
+    print(nameToCgenffType)
 
     nameToCharmmType = {
         "NN" : "NH1",
@@ -48,10 +51,18 @@ def duplicate_capping_parameters(config:dict) -> None:
         "CC1" : "C",
         "OC" : "O",
     }
-    cgenffToCharmm = {}
-    for atomName, charmmType in nameToCharmmType.items():
-        cgenffToCharmm[charmmType] = name2cgenffType[atomName]
 
+    print("NAME TO CHARMM TYPE")
+    print(nameToCharmmType)
+
+    cgenffToCharmm = {}
+    for atomName, _ in nameToCharmmType.items():
+        print(atomName, nameToCgenffType[atomName], nameToCharmmType[atomName])
+        cgenffToCharmm[nameToCgenffType[atomName]] = nameToCharmmType[atomName]
+
+    # print("CGENFF TO CHARMM")
+    # print(cgenffToCharmm)
+    exit()
 
 
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
@@ -63,18 +74,22 @@ def duplicate_capping_parameters(config:dict) -> None:
     sectionHeaders = ["BONDS", "ANGLES", "DIHEDRALS", "IMPROPERS"]
     with open(finalPrm, "r") as f:
         for line in f:
+            if line.strip() == "":
+                continue
             for sectionHeader in sectionHeaders:
                 if line.startswith(sectionHeader):
                     section = sectionHeader
                     continue
                 if section == "BONDS":
-                    print(line)
-                    if any(cgenffType in line for cgenffType in cgenffTypes):
-                        print(line)
-                        data = line.split()
+                    print(section + ":" + line)
+                    atomNames = line.split()[0:2]
+                    print(atomNames, cgenffTypes)
+                    if any(cgenffType in atomNames for cgenffType in cgenffTypes):
                         data[0:2] = [cgenffToCharmm.get(cgenffType, cgenffType) for cgenffType in data[0:2]]
-                        line = " ".join(data)
-                        exit()
+                        newLine = " ".join(data)
+                        print("NEWLINE" + newLine)
+                if section  == "ANGLES":
+                    exit()
     exit()
                         
 def copy_final_prm(config: dict) -> None:

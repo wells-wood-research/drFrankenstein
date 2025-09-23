@@ -52,7 +52,6 @@ def copy_assembled_parameters(config: dict) -> dict:
     assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
     assembledPsf = config["runtimeInfo"]["madeByAssembly"]["assembledPsf"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
-    moleculeName = config["moleculeInfo"]["moleculeName"]
 
     destRtf = p.join(moleculeParameterDir, f"DEFAULT_PARAMS.rtf")
     copy(assembledRtf, destRtf)

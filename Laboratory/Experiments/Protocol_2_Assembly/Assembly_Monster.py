@@ -230,17 +230,6 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
     """
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
 
-
-    # Define CHARMM36m atom type mapping
-    ## TODO: Automate using config input
-    nameToDesiredTypeMol = {
-                    backboneAliases["N"][0] : "NH1",
-                    backboneAliases["H"][0]: "H",
-                    backboneAliases["CA"][0]: "CT1",
-                    backboneAliases["HA"][0]: "HB1",
-                    backboneAliases["C"][0] : "C",
-                    backboneAliases["O"][0] : "O" }
-
     nameToDesiredTypeBb = {
                     "NN": "NH1",
                     "HNN1": "H",
@@ -254,8 +243,22 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
                     "HC1": "HB1",
                     "HC2": "HB1",
                     "HC3": "HB1"}
-    
-    nameToDesiredType = {**nameToDesiredTypeBb, **nameToDesiredTypeMol}
+
+    # Define CHARMM36m atom type mapping
+    if not config["torsionScanInfo"]["runScansOn"]["phiPsi"]:
+        nameToDesiredTypeMol = {
+                        backboneAliases["N"][0] : "NH1",
+                        backboneAliases["H"][0]: "H",
+                        backboneAliases["CA"][0]: "CT1",
+                        backboneAliases["HA"][0]: "HB1",
+                        backboneAliases["C"][0] : "C",
+                        backboneAliases["O"][0] : "O" }
+        
+        nameToDesiredType = {**nameToDesiredTypeBb, **nameToDesiredTypeMol}
+
+    else:
+        nameToDesiredType = nameToDesiredTypeBb
+
     nameToCgenffType = Assembly_Assistant.get_cgenff_atom_types(parmedPsf, nameToDesiredType)
     parmedPsf = Assembly_Assistant.update_psf_atom_types(parmedPsf, nameToDesiredType)
 
@@ -299,7 +302,7 @@ def split_charmm_str(config: dict) -> tuple[str, str]:
     return rtfFile, prmFile
 
 
-def make_charmm_psf(moleculeRtf: FilePath, cgenffRtf: FilePath, config: dict) -> str:
+def make_charmm_psf(rtfFiles: list[FilePath], suffix: str, config: dict) -> str:
     """
     Generate a PSF file using PsfGen from RTF and PDB files.
 
@@ -324,12 +327,13 @@ def make_charmm_psf(moleculeRtf: FilePath, cgenffRtf: FilePath, config: dict) ->
 
     # Generate PSF using PsfGen
     gen = PsfGen(output="/dev/null")
-    gen.read_topology(moleculeRtf)
-    gen.read_topology(cgenffRtf)
+    for rtfFile in rtfFiles:
+        gen.read_topology(rtfFile)
+
     gen.add_segment(segid="A", pdbfile=tmpPdb)
     gen.read_coords(segid="A", filename=tmpPdb)
 
-    psfFile = p.join(outDir, f"{moleculeName}_capped.psf")
+    psfFile = p.join(outDir, f"{moleculeName}_{suffix}.psf")
     gen.write_psf(psfFile)
 
     return psfFile

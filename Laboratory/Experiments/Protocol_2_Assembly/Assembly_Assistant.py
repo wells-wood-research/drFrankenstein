@@ -189,13 +189,12 @@ def  update_rtf_types(inRtf: FilePath, nameToDesiredType: dict,  config: dict) -
     outRtf = p.join(assemblyDir, f"{moleculeName}_assembled.rtf")
     file_parsers.write_rtf(parsedRtf, outRtf)
 
-    config["runtimeInfo"]["madeByAssembly"]["assembledRtf"] = outRtf
 
-    return config
+    return outRtf
 
-def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dict:
+def save_modified_prm_file(parmedPsf: CharmmPsfFile, config: dict) -> dict:
     """
-    Save modified RTF, PRM, and PSF files.
+    Save modified RTF files.
 
     Args:
         parmedPsf (CharmmPsfFile): ParmEd CharmmPsfFile object with updated atom types.
@@ -215,10 +214,11 @@ def save_modified_parameter_files(parmedPsf: CharmmPsfFile, config: dict) -> dic
     outputParams.write(par=outPrm)
     parmedPsf.save(outPsf, overwrite=True)
 
-    config["runtimeInfo"]["madeByAssembly"]["assembledPrm"] = outPrm
-    config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = outPsf 
+    return outPrm, outPsf
 
-    return config
+    # config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = outPsf 
+
+    
 def assign_missing_impropers(missingParams: CharmmParameterSet,
                         parmedPsf: CharmmPsfFile,
                           nameToCgenffType: dict,

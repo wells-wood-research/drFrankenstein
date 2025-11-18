@@ -139,6 +139,7 @@ def pdb2mol2(inPdb: FilePath,
 
     ## unpack config
     netCharge = config["moleculeInfo"]["charge"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
 
     ## set RES_ID to 1 for all atoms to keep antechamber happy
     pdbDf = pdbUtils.pdb2df(inPdb)
@@ -151,7 +152,7 @@ def pdb2mol2(inPdb: FilePath,
     ## run antechamber to create MOL2 file from PDB
     antechamberCommand: list = [
         "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
-        "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
+        "-fo", "mol2", "-at", "gaff2", "-rn", moleculeName, "-s", "2",
         "-c", "bcc", "-nc", str(netCharge)
     ]
     with open(antechamberOut, 'w') as outfile:

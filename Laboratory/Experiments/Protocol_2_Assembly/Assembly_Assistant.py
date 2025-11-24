@@ -156,6 +156,17 @@ def pdb2mol2(inPdb: FilePath,
     ]
     with open(antechamberOut, 'w') as outfile:
         run(antechamberCommand, stdout=outfile, stderr=STDOUT)
+    if not p.isfile(outMol2):
+        print(f"Antechamber failed for {inPdb}... Trying Mulliken charge")
+        antechamberCommand: list = [
+        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
+        "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
+        "-c", "mul", "-nc", str(netCharge)
+        ]
+        with open(antechamberOut, 'w') as outfile:
+            run(antechamberCommand, stdout=outfile, stderr=STDOUT)
+    if not p.isfile(outMol2):
+        raise FileNotFoundError(f"Antechamber failed for {inPdb}")
 
     ## clean up temporary files
     os.remove(tmpPdb)

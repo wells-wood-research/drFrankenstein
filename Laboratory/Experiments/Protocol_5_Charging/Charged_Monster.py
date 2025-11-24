@@ -279,11 +279,16 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
         config (dict): updated config
     """
 
-    pdbDf = pdbUtils.pdb2df(pdbFile)
+
 
     chargeGroupsInput = config["moleculeInfo"]["chargeGroups"]
+    if chargeGroupsInput is None:
+        config["runtimeInfo"]["madeByCharges"]["chargeGroups"] = {}
+        return config
+
     chargeGroups = deepcopy(chargeGroupsInput)  # Use deepcopy to avoid modifying the original
     overallCharge = config["moleculeInfo"]["charge"]
+    pdbDf = pdbUtils.pdb2df(pdbFile)
 
     ## remove capping groups
     uncappedDf = pdbDf[~pdbDf["RES_NAME"].isin(["NME", "ACE"])]
@@ -373,8 +378,6 @@ def run_charge_fitting(config: dict,
     ## Get a molden file for the input command
     moldenFile = glob.glob(p.join(fittingDir, "*.molden.input"))[0]
 
-
-
     ## Open a file object for continuous logging
     with open(outputFile, 'w') as logFile:
         # Clear file and write a starting message
@@ -400,14 +403,15 @@ def run_charge_fitting(config: dict,
         child.sendline(conformerListTxt)
 
         ####### LOAD CHARGE CONSTRAINTS #######
-        child.expect(r'.*11.*\n?\r?')
-        child.sendline("6")
+        if not chargeConstraintsTxt is None:
+            child.expect(r'.*11.*\n?\r?')
+            child.sendline("6")
 
-        child.expect(r'.*1.*\n?\r?')
-        child.sendline("1")
+            child.expect(r'.*1.*\n?\r?')
+            child.sendline("1")
 
-        child.expect(r'.*Input.*\n?\r?')
-        child.sendline(chargeConstraintsTxt)
+            child.expect(r'.*Input.*\n?\r?')
+            child.sendline(chargeConstraintsTxt)
 
         if not symmetryConstraintsTxt is None:
         ####### LOAD SYMMETRY CONSTRAINTS #######
@@ -440,24 +444,31 @@ def run_charge_fitting(config: dict,
 
         totalTickProgress = nConformers * 100.00
         progress_bar = tqdm(total=totalTickProgress, **tqdmBarOptions)
+        waitForEnd = False
         try:
             while True:
                 # Expect either a progress line or the end of the process (EOF)
-                index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %",
-                                      r" 11 Choose ESP type, current: Nuclear \+ Electronic[\n\r]?",
-                                      r".*\(y/n\)[\n\r]?", pexpect.TIMEOUT], 
-                                      timeout=5)
+                index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %",                              ## 0 - update progress bar
+                                      r" Sum of charges:",                                              ## 1 - process finished flag
+                                      " 11 Choose ESP type, current: Nuclear + Electronic",             ## 2 - place to stop
+                                      r".*\(y/n\)[\n\r]?",                                              ## 3 - process finished unexpectedly
+                                        pexpect.TIMEOUT],                                               ## 4 - timeout
+                                      timeout=10)
                 if index == 0:  # Progress line matched
                     progress_bar.update(1)  # Update the tqdm bar by 1 tick
                 
-                elif index in [1, 2]:  # (process finished)
+                elif index == 1:  # (process finished as expected)
+                    print(f"Charge fitting process finished, waiting for last bit of file [{index}]")
+                    waitForEnd = True
+                elif index == 2 and waitForEnd: # (process finished unexpectedly) 
+                    print(f"Charge fitting process finished [{index}]")
                     break
-                
-                elif index == 3:  # Timeout (no output for 5 seconds)
+                elif index in [3, 4]:  # Timeout (no output for 5 seconds)
+                    print(f"Charge fitting process ended unexpectedly [{index}]")
                     break
 
         except pexpect.ExceptionPexpect as e:
-            raise e
+            raise f"Charge fitting process failed: {e}" from e
 
         # Close the child process
         child.close()

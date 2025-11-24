@@ -52,17 +52,11 @@ def duplicate_capping_parameters(config:dict) -> None:
         "OC" : "O",
     }
 
-    print("NAME TO CHARMM TYPE")
-    print(nameToCharmmType)
 
     cgenffToCharmm = {}
     for atomName, _ in nameToCharmmType.items():
         print(atomName, nameToCgenffType[atomName], nameToCharmmType[atomName])
         cgenffToCharmm[nameToCgenffType[atomName]] = nameToCharmmType[atomName]
-
-    # print("CGENFF TO CHARMM")
-    # print(cgenffToCharmm)
-    exit()
 
 
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
@@ -89,8 +83,8 @@ def duplicate_capping_parameters(config:dict) -> None:
                         newLine = " ".join(data)
                         print("NEWLINE" + newLine)
                 if section  == "ANGLES":
-                    exit()
-    exit()
+                    ...
+
                         
 def copy_final_prm(config: dict) -> None:
     """

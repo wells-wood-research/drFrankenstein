@@ -449,7 +449,7 @@ def run_charge_fitting(config: dict,
             while True:
                 # Expect either a progress line or the end of the process (EOF)
                 index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %",                              ## 0 - update progress bar
-                                      r" Sum of charges:",                                              ## 1 - process finished flag
+                                      r" Sum of charges:*",                                              ## 1 - process finished flag
                                       " 11 Choose ESP type, current: Nuclear + Electronic",             ## 2 - place to stop
                                       r".*\(y/n\)[\n\r]?",                                              ## 3 - process finished unexpectedly
                                         pexpect.TIMEOUT],                                               ## 4 - timeout

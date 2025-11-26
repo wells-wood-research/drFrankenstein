@@ -74,7 +74,7 @@ def decide_atom_to_delete_C_termini(atomNames: list) -> str:
 
     return atomToDelete
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def decide_atom_to_delete_N_termini(atomNames: list) -> str:
+def decide_atom_to_delete_N_termini(atomNames: list, config: dict) -> str:
     """
     From a list of atom names, decide which one to delete in relation to the N-Termini
 
@@ -84,8 +84,15 @@ def decide_atom_to_delete_N_termini(atomNames: list) -> str:
         atomToDelete (str): name of the atom to delete (can be "None")
     
     """
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+    aliasesH = backboneAliases["H"]
     atomNames = sorted([atomName for atomName in atomNames if atomName.startswith("H")])
-    if len(atomNames) > 1:
+
+    atomNames = [atomName for atomName in atomNames if atomName not in aliasesH]
+
+    if len(atomNames) == 1:
+        atomToDelete = atomNames[0]
+    elif len(atomNames) > 1:
         atomToDelete = atomNames[-1]
     else:
         atomToDelete = "None"

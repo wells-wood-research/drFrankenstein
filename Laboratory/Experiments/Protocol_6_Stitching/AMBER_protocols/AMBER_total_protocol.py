@@ -34,7 +34,7 @@ class DirectoryPath:
     pass
 
 
-def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=True):
+def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     drSplash.show_getting_mm_total(torsionTag)
 
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
@@ -161,9 +161,14 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> float:
 
     simulation = app.Simulation(prmtop.topology, system, integrator, platform)
     ## set coordinates of simulation 
+    nParticles = simulation.context.getSystem().getNumParticles()
+    print(f"Number of particles: {nParticles}")
     singlePointEnergies = []
     for trajPdb in trajPdbs:
         pdbFile = app.PDBFile(trajPdb)
+        print(trajPdb)
+        print(len(pdbFile.positions))
+        exit()
         simulation.context.setPositions(pdbFile.positions)
         state: openmm.State = simulation.context.getState(getPositions=True, getEnergy=True)
         singlePointEnergy = state.getPotentialEnergy() / unit.kilocalories_per_mole

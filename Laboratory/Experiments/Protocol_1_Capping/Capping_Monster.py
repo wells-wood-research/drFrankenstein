@@ -48,7 +48,7 @@ def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
                                                    moleculeInfo=config["moleculeInfo"],
                                                    qmMethod="XTB2",
                                                     solvationMethod="ALPB(water)",
-                                                    geomOptions="MaxIter 10")
+                                                    geomOptions="MaxIter 100")
     optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
     drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
 
@@ -78,7 +78,7 @@ def trim_termini(molDf: pd.DataFrame,
     allAtomsToDelete = []
     for nTerminalAtom in nTerminalAtoms:
         bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf, nTerminalAtom)
-        nTerminalProton = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms)
+        nTerminalProton = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms, config)
         allAtomsToDelete.append(nTerminalProton)
 
     ## get the oxygen (or equivalent) atoms bound to C-Terminus, and anything bound to that oxygen

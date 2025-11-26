@@ -27,7 +27,7 @@ from OperatingTools import Timer, cleaner
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
-def torsion_fitting_protocol(config: dict, debug=False) -> dict:
+def torsion_fitting_protocol(config: dict, debug=True) -> dict:
     """
     Main protocol for torsion fitting for AMBER or CHARMM parameters.
     For each torsion that has had QM scans performed (creates QM[total]):

@@ -139,7 +139,8 @@ def make_mol2_with_antechamber(inPdb: FilePath,
 
     ## unpack config
     netCharge = config["moleculeInfo"]["charge"]
-    moleculeName = config["moleculeInfo"]["name"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
     ## set RES_ID to 1 for all atoms to keep antechamber happy
     pdbDf = pdbUtils.pdb2df(inPdb)
     pdbDf["RES_ID"] = 1

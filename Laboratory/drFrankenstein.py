@@ -18,6 +18,7 @@ from OperatingTools import Timer
 from OperatingTools import set_config_defaults
 from OperatingTools import validate_config
 from OperatingTools import handle_CGenFF_dependancy
+from OperatingTools import pdb_checker
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -43,6 +44,8 @@ def main():
 
     config = set_config_defaults.apply_defaults_and_validate(config)
 
+
+
     ## check config for errors#
     ##TODO: re-do once config is settled
     # config = validate_config.validate_config(config)
@@ -53,6 +56,9 @@ def main():
     ## deal with checkpointing, lets us skip steps if already done
     config = drYaml.read_config_with_checkpoints(config, outputDir)
     config = drYaml.init_config_checkpoints(config, outputDir)
+    ## check input PDB
+    pdb_checker.check_pdb(config)
+
 
     ## initialise runtimeInfo
     config = drYaml.initialise_runtime_info(config)

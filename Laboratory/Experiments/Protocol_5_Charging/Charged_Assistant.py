@@ -55,9 +55,11 @@ def round_charges_carefully(config):
         else:
             modifier = -0.001
         nAtomsToModify = abs(difference / modifier)
+        
 
         for i in range(int(nAtomsToModify)):
-            chargeDf.loc[chargeDf["ATOM_NAME"] == carbonNames[i], "Charge"] += modifier
+            carbonIndex = i % len(carbonNames)
+            chargeDf.loc[chargeDf["ATOM_NAME"] == carbonNames[carbonIndex], "Charge"] += modifier
 
 
         # Re-round to 3 decimal places to avoid floating-point precision issues

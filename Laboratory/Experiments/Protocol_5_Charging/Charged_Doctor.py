@@ -381,7 +381,10 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
                                                 debug=debug)
     ## create input files for MultiWFN
     conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir, fittingDir)
-    chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
+    if config["moleculeInfo"]["chargeGroups"] is not None:
+        chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
+    else:
+        chargeConstraintsTxt = None
     # symmetryConstraintsTxt = Charged_Assistant.generate_symmetry_constraints_file(config, fittingDir)
     ## run MultiWFN RESP charge fitting
     rawMultiWfnOutputs = Charged_Monster.run_charge_fitting(config=config,

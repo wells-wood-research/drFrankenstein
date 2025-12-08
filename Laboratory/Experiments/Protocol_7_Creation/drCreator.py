@@ -43,7 +43,6 @@ def create_the_monster(config):
         config = AMBER_creation.copy_final_frcmod(config)
         if systemType == "whole-system-ncaa":
             AMBER_creation.add_ncaa_ncaa_dihedrals(config)
-
         if systemType in ["whole-system-ncaa", "sidechain-only-ncaa"]:
             AMBER_creation.duplicate_capping_parameters(config)
             AMBER_creation.add_wildcard_dihedrals(config)

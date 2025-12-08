@@ -411,9 +411,14 @@ def find_orca_output_files(config: dict) -> dict:
         torsionScanOut = None
 
     if not config["torsionScanInfo"]["singlePointMethod"] is None:
-        spTopDir = [p.join(conformerDir, dirName) for dirName in os.listdir(conformerDir) if "SP" in dirName][0]
-        spDir = [p.join(spTopDir, dirName) for dirName in os.listdir(spTopDir) if "SP" in dirName][0]
-        torsionScanSpOut = p.join(spDir, "orca_sp.out")
+        for conformerDir in [p.join(torsionTagDir, dirName) for dirName in os.listdir(torsionTagDir) if "conformer" in dirName]:
+            spTopDirs = [p.join(conformerDir, dirName) for dirName in os.listdir(conformerDir) if "SP" in dirName]
+            if len(spTopDirs) == 0:
+                continue
+            spTopDir = spTopDirs[0]
+            spDir = [p.join(spTopDir, dirName) for dirName in os.listdir(spTopDir) if "SP" in dirName][0]
+            torsionScanSpOut = p.join(spDir, "orca_sp.out")
+            break
         if not p.isfile(torsionScanSpOut):
             torsionScanSpOut = None
     else:

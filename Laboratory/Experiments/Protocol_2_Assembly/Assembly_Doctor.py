@@ -38,7 +38,7 @@ def amber_assembly_protocol(config:dict) -> dict:
 
     ## create a mol2 file with antechamber
     moleculeMol2 = p.join(assemblyDir, f"{moleculeName}_capped.mol2")
-    Assembly_Assistant.pdb2mol2(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], moleculeMol2, assemblyDir, config)
+    Assembly_Assistant.make_mol2_with_antechamber(config["runtimeInfo"]["madeByCapping"]["cappedPdb"], moleculeMol2, assemblyDir, config)
 
     if config["torsionScanInfo"]["runScansOn"]["phiPsi"]:
         ## reset capping atom types to gaff2 defaults

@@ -210,8 +210,8 @@ def get_capping_atom_ids(config):
     obabelCommand = ["obabel", "-i", "mol2", cappedMol2, "-O", tmpPdb]
     call(obabelCommand, stdout=PIPE, stderr=PIPE)
 
-    cappingAtomNames = ["NN", "HNN1", "CN", "HCN1", "HCN2", "HCN3", ## NME cap
-                        "CC1", "OC", "CC2", "HC1", "HC2", "HC3"] ## ACE cap
+    cappingAtomNames = ["N_N", "H_N", "C_N", "H1_N", "H2_N", "H3_N", ## NME cap
+                        "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"] ## ACE cap
 
     tmpdf = pdbUtils.pdb2df(tmpPdb)
     cappingAtomIds = tmpdf[tmpdf["ATOM_NAME"].isin(cappingAtomNames)]["ATOM_ID"].to_list()

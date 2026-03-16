@@ -1,9 +1,9 @@
-HETATM    1  CC1 ACE     0      -0.133   0.453   0.000  0.00  0.00           C  
-HETATM    2  OC  ACE     0      -1.113  -0.252   0.000  0.00  0.00           O  
-HETATM    3  CC2 ACE     0       1.241  -0.167   0.000  0.00  0.00           C  
-HETATM    4  HC1 ACE     0       1.360  -0.785   0.890  0.00  0.00           H  
-HETATM    5  HC2 ACE     0       1.360  -0.785  -0.890  0.00  0.00           H  
-HETATM    6  HC3 ACE     0       1.995   0.620   0.000  0.00  0.00           H  
+HETATM    1  C_C ACE     0      -0.133   0.453   0.000  0.00  0.00           C  
+HETATM    2  O_C ACE     0      -1.113  -0.252   0.000  0.00  0.00           O  
+HETATM    3 C2_C ACE     0       1.241  -0.167   0.000  0.00  0.00           C  
+HETATM    4 H1_C ACE     0       1.360  -0.785   0.890  0.00  0.00           H  
+HETATM    5 H2_C ACE     0       1.360  -0.785  -0.890  0.00  0.00           H  
+HETATM    6 H3_C ACE     0       1.995   0.620   0.000  0.00  0.00           H  
 CONECT    1    2    3
 CONECT    2    1
 CONECT    3    1    4    5    6

@@ -4,10 +4,10 @@ import traceback
 import ruamel.yaml as ruamel
 ## drFRANKENSTEIN LIBRARIES ##
 from Experiments.Protocol_1_Capping import Capping_Doctor
-from Experiments.Protocol_2_Assembly import Assembly_Doctor
-from Experiments.Protocol_3_Wriggling import Wriggling_Doctor
-from Experiments.Protocol_4_Twisting import Twisted_Doctor
-from Experiments.Protocol_5_Charging import Charged_Doctor
+from Experiments.Protocol_4_Assembly import Assembly_Doctor
+from Experiments.Protocol_2_Wriggling import Wriggling_Doctor
+from Experiments.Protocol_5_Twisting import Twisted_Doctor
+from Experiments.Protocol_3_Charging import Charged_Doctor
 from Experiments.Protocol_6_Stitching import Stitching_Doctor
 from Experiments.Protocol_7_Creation import drCreator
 from Experiments.Protocol_8_Reporter import Reporting_Doctor
@@ -37,6 +37,8 @@ def main():
         None
     
     """
+    drSplash.show_mad_man()
+
     ## get config yaml file from argpass command-line-argument
     configYaml = drYaml.get_config_input_arg()
     ## load into dict, check for bad formatting
@@ -72,30 +74,11 @@ def main():
         drSplash.show_capping_splash()
         config = Capping_Doctor.capping_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
-
-    drSplash.show_mad_man()
-
-    ## run assembly protocol
-    if not checkpointInfo["assemblyComplete"]:
-        if config["parameterFittingInfo"]["forceField"] == "CHARMM":
-            config = handle_CGenFF_dependancy.handle_cgenff_dependancy(config)
-            drYaml.write_config_to_yaml(config, outputDir)
-            config = Assembly_Doctor.charmm_assembly_protocol(config=config)
-            drYaml.write_config_to_yaml(config, outputDir)  
-        elif config["parameterFittingInfo"]["forceField"] == "AMBER":
-            config = Assembly_Doctor.amber_assembly_protocol(config=config)
-            drYaml.write_config_to_yaml(config, outputDir)
-
+    
     ## run conformer generation protocol
     if not checkpointInfo["conformersComplete"]:
         drSplash.show_wriggle_splash()
         config = Wriggling_Doctor.conformer_generation_protocol(config=config)
-        drYaml.write_config_to_yaml(config, outputDir)
-
-    ## run torsion scanning
-    if not checkpointInfo["scanningComplete"]:
-        drSplash.show_twist_splash()
-        config = Twisted_Doctor.twist_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
     ## run charge calculations
@@ -103,6 +86,31 @@ def main():
         drSplash.show_charge_splash()
         config = Charged_Doctor.charge_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
+    if not checkpointInfo["assemblyComplete"]:
+        ## TODO: drSplash?
+        config = Assembly_Doctor.agnostic_assembly_protocol(config=config)
+
+
+    exit()
+
+    # ## run assembly protocol
+    # if not checkpointInfo["assemblyComplete"]:
+    #     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
+    #         config = handle_CGenFF_dependancy.handle_cgenff_dependancy(config)
+    #         drYaml.write_config_to_yaml(config, outputDir)
+    #         config = Assembly_Doctor.charmm_assembly_protocol(config=config)
+    #         drYaml.write_config_to_yaml(config, outputDir)  
+    #     elif config["parameterFittingInfo"]["forceField"] == "AMBER":
+    #         config = Assembly_Doctor.amber_assembly_protocol(config=config)
+    #         drYaml.write_config_to_yaml(config, outputDir)
+
+    ## run torsion scanning
+    if not checkpointInfo["scanningComplete"]:
+        drSplash.show_twist_splash()
+        config = Twisted_Doctor.twist_protocol(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)
+
 
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:

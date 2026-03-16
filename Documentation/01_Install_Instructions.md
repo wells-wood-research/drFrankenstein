@@ -7,7 +7,7 @@
 #### 1. Install ORCA
 
 
-1. Download the ORCA 6.0.1 binary installer from: [The ORCA Forum](https://orcaforum.kofo.mpg.de/app.php/dlext/?cat=25)
+1. Download the ORCA 6.1.1 binary installer from: [The ORCA Forum](https://orcaforum.kofo.mpg.de/app.php/dlext/?cat=25)
 ![Screenshot of ORCA download](../Images/ORCA_download.png)
 
 
@@ -16,13 +16,13 @@
 
 3. Give yourself permission to run the ORCA binary installer:
 ```bash
-chmod +x ~/bin/orca_6_0_1_linux_x86-64_shared_openmpi416.run
+chmod +x ~/bin/orca_6_1_1_linux_x86-64_shared_openmpi416.run
 ```
 4. Run the installer
 ```bash
-~/bin/orca_6_0_1_linux_x86-64_shared_openmpi416.run
+~/bin/orca_6_1_1_linux_x86-64_shared_openmpi416.run
 ```
-This will create the `orca_6_0_1_linux_x86-64_shared_openmpi416` directory in your `bin` directory
+This will create the `orca_6_1_1_linux_x86-64_shared_openmpi416` directory in your `bin` directory
 Inside this directory, you will find the `orca` binary, you will need to supply the full path to this binary to drFrankenstein via the `pathInfo`.`orcaExe` parameter in all of your config.yaml files.
 
 ---

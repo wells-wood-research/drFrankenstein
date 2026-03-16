@@ -1,0 +1,969 @@
+C:
+  c:
+    MASS: 12.01
+    COMMENT: Sp2 C carbonyl group
+    CHARGE: 0.616
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  c1:
+    MASS: 12.01
+    COMMENT: Sp C
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+  c2:
+    MASS: 12.01
+    COMMENT: Sp2 C
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  c3:
+    MASS: 12.01
+    COMMENT: Sp3 C
+    CHARGE: 0.878
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+  cp:
+    MASS: 12.01
+    COMMENT: Head Sp2 C that connect two rings in biphenyl sys.
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cq:
+    MASS: 12.01
+    COMMENT: Head Sp2 C that connect two rings in biphenyl sys. identical to cp
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cc:
+    MASS: 12.01
+    COMMENT: Sp2 carbons in non-pure aromatic systems
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cg:
+    MASS: 12.01
+    COMMENT: Inner Sp carbons in conjugated systems
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+  ch:
+    MASS: 12.01
+    COMMENT: Inner Sp carbons in conjugated systems, identical to cg
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+  cx:
+    MASS: 12.01
+    COMMENT: Sp3 carbons in triangle systems
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+  cy:
+    MASS: 12.01
+    COMMENT: Sp3 carbons in square systems
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+  c5:
+    MASS: 12.01
+    COMMENT: Sp3 carbons in five-memberred rings
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+  c6:
+    MASS: 12.01
+    COMMENT: Sp3 carbons in six-memberred rings
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+  cv:
+    MASS: 12.01
+    COMMENT: Sp2 carbons in square systems
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cz:
+    MASS: 12.01
+    COMMENT: Sp2 carbon in guanidine group
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cs:
+    MASS: 12.01
+    COMMENT: Sp2 C in c=S
+    CHARGE: 0.616
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  ca:
+    MASS: 12.01
+    COMMENT: Sp2 C in pure aromatic systems
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cd:
+    MASS: 12.01
+    COMMENT: Sp2 carbons in non-pure aromatic systems, identical to cc
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  ce:
+    MASS: 12.01
+    COMMENT: Inner Sp2 carbons in conjugated systems
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cf:
+    MASS: 12.01
+    COMMENT: Inner Sp2 carbons in conjugated systems, identical to ce
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+  cu:
+    MASS: 12.01
+    COMMENT: Sp2 carbons in triangle systems
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+Cs:
+  Cs+:
+    MASS: 132.91
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.988
+    WELL_DEPTH: 0.37853483
+Ca:
+  Ca2+:
+    MASS: 40.08
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.642
+    WELL_DEPTH: 0.10185975
+Cd:
+  Cd2+:
+    MASS: 112.41
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.535
+    WELL_DEPTH: 0.05102457
+Ce:
+  Ce3+:
+    MASS: 140.12
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.782
+    WELL_DEPTH: 0.19865859
+  Ce4+:
+    MASS: 140.12
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.766
+    WELL_DEPTH: 0.18612361
+Cu:
+  Cu+:
+    MASS: 63.55
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.201
+    WELL_DEPTH: 0.001123
+  Cu2+:
+    MASS: 63.55
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.476
+    WELL_DEPTH: 0.0319862
+H:
+  h1:
+    MASS: 1.008
+    COMMENT: H bonded to aliphatic carbon with 1 electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.3593
+    WELL_DEPTH: 0.0208
+  h2:
+    MASS: 1.008
+    COMMENT: H bonded to aliphatic carbon with 2 electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.2593
+    WELL_DEPTH: 0.0208
+  h3:
+    MASS: 1.008
+    COMMENT: H bonded to aliphatic carbon with 3 electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.1593
+    WELL_DEPTH: 0.0208
+  h4:
+    MASS: 1.008
+    COMMENT: H bonded to non-sp3 carbon with 1 electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.4235
+    WELL_DEPTH: 0.0161
+  h5:
+    MASS: 1.008
+    COMMENT: H bonded to non-sp3 carbon with 2 electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.3735
+    WELL_DEPTH: 0.0161
+  ha:
+    MASS: 1.008
+    COMMENT: H bonded to aromatic carbon
+    CHARGE: 0.135
+    RADIUS: 1.4735
+    WELL_DEPTH: 0.0161
+  hc:
+    MASS: 1.008
+    COMMENT: H bonded to aliphatic carbon without electrwd. group
+    CHARGE: 0.135
+    RADIUS: 1.4593
+    WELL_DEPTH: 0.0208
+  hn:
+    MASS: 1.008
+    COMMENT: H bonded to nitrogen atoms
+    CHARGE: 0.161
+    RADIUS: 0.621
+    WELL_DEPTH: 0.01
+  hp:
+    MASS: 1.008
+    COMMENT: H bonded to phosphate
+    CHARGE: 0.135
+    RADIUS: 0.6031
+    WELL_DEPTH: 0.0144
+  hw:
+    MASS: 1.008
+    COMMENT: Hydrogen in water
+    CHARGE: 0.135
+    RADIUS: null
+    WELL_DEPTH: null
+  hx:
+    MASS: 1.008
+    COMMENT: H bonded to C next to positively charged group
+    CHARGE: 0.135
+    RADIUS: 1.0593
+    WELL_DEPTH: 0.0208
+  H3O+:
+    MASS: 19.02
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.337
+    WELL_DEPTH: 0.00780282
+  ho:
+    MASS: 1.008
+    COMMENT: Hydroxyl group
+    CHARGE: 0.135
+    RADIUS: 0.3019
+    WELL_DEPTH: 0.0047
+  hs:
+    MASS: 1.008
+    COMMENT: Hydrogen bonded to sulphur
+    CHARGE: 0.135
+    RADIUS: 0.6112
+    WELL_DEPTH: 0.0124
+F:
+  f:
+    MASS: 19.0
+    COMMENT: Fluorine
+    CHARGE: 0.32
+    RADIUS: 1.7029
+    WELL_DEPTH: 0.0832
+  F-:
+    MASS: 19.0
+    COMMENT: ''
+    CHARGE: -1.0
+    RADIUS: 1.783
+    WELL_DEPTH: 0.19945255
+Cl:
+  cl:
+    MASS: 35.45
+    COMMENT: Chlorine
+    CHARGE: 1.91
+    RADIUS: 1.9452
+    WELL_DEPTH: 0.2638
+  Cl-:
+    MASS: 35.45
+    COMMENT: ''
+    CHARGE: -1.0
+    RADIUS: 2.252
+    WELL_DEPTH: 0.60293097
+Br:
+  br:
+    MASS: 79.9
+    COMMENT: Bromine
+    CHARGE: 2.88
+    RADIUS: 2.0275
+    WELL_DEPTH: 0.3932
+  Br-:
+    MASS: 79.9
+    COMMENT: ''
+    CHARGE: -1.0
+    RADIUS: 2.428
+    WELL_DEPTH: 0.7207094
+I:
+  i:
+    MASS: 126.9
+    COMMENT: Iodine
+    CHARGE: 4.69
+    RADIUS: 2.1558
+    WELL_DEPTH: 0.4955
+  I-:
+    MASS: 126.9
+    COMMENT: ''
+    CHARGE: -1.0
+    RADIUS: 2.724
+    WELL_DEPTH: 0.85418187
+N:
+  n:
+    MASS: 14.01
+    COMMENT: Sp2 nitrogen in amide groups
+    CHARGE: 0.53
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+  n1:
+    MASS: 14.01
+    COMMENT: Sp N
+    CHARGE: 0.53
+    RADIUS: 1.8372
+    WELL_DEPTH: 0.1098
+  n2:
+    MASS: 14.01
+    COMMENT: aliphatic Sp2 N with two connected atoms
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+  n3:
+    MASS: 14.01
+    COMMENT: Sp3 N with three connected atoms
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+  n4:
+    MASS: 14.01
+    COMMENT: Sp3 N with four connected atoms
+    CHARGE: 0.53
+    RADIUS: 1.4028
+    WELL_DEPTH: 3.8748
+  nc:
+    MASS: 14.01
+    COMMENT: Sp2 N in non-pure aromatic systems
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+  nf:
+    MASS: 14.01
+    COMMENT: Inner Sp2 N in conjugated systems, identical to ne
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+  nh:
+    MASS: 14.01
+    COMMENT: Amine N connected one or more aromatic rings
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+  ns:
+    MASS: 14.01
+    COMMENT: amind N, with 1 attached hydrogen atom
+    CHARGE: 0.53
+    RADIUS: 1.8352
+    WELL_DEPTH: 0.1174
+  nt:
+    MASS: 14.01
+    COMMENT: amide N, with 2 attached hydrogen atoms
+    CHARGE: 0.53
+    RADIUS: 1.8852
+    WELL_DEPTH: 0.0851
+  nx:
+    MASS: 14.01
+    COMMENT: like n4, but only has one hydrogen atom
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+  ny:
+    MASS: 14.01
+    COMMENT: like n4, but only has two hydrogen atoms
+    CHARGE: 0.53
+    RADIUS: 1.5028
+    WELL_DEPTH: 1.6959
+  nz:
+    MASS: 14.01
+    COMMENT: like n4, but only has three three hydrogen atoms
+    CHARGE: 0.53
+    RADIUS: 1.5528
+    WELL_DEPTH: 1.145
+  n+:
+    MASS: 14.01
+    COMMENT: NH4+
+    CHARGE: 0.53
+    RADIUS: 1.6028
+    WELL_DEPTH: 0.7828
+  nu:
+    MASS: 14.01
+    COMMENT: like nh, but only has one attached hydrogen atom
+    CHARGE: 0.53
+    RADIUS: 1.8403
+    WELL_DEPTH: 0.1545
+  nv:
+    MASS: 14.01
+    COMMENT: like nh, but only has two attached hydrogen atoms
+    CHARGE: 0.53
+    RADIUS: 1.8903
+    WELL_DEPTH: 0.112
+  n7:
+    MASS: 14.01
+    COMMENT: like n3, but only has one attached hydrogen atom
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+  n8:
+    MASS: 14.01
+    COMMENT: like n3, but only has two attached hydrogen atoms
+    CHARGE: 0.53
+    RADIUS: 2.0486
+    WELL_DEPTH: 0.0323
+  n9:
+    MASS: 14.01
+    COMMENT: NH3
+    CHARGE: 0.53
+    RADIUS: 2.27
+    WELL_DEPTH: 0.0095
+  nj:
+    MASS: 14.01
+    COMMENT: like n in RG4
+    CHARGE: 0.53
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+  nk:
+    MASS: 14.01
+    COMMENT: like n4/nx/ny in RG3
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+  nl:
+    MASS: 14.01
+    COMMENT: like n4/nx/ny in RG4
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+  nm:
+    MASS: 14.01
+    COMMENT: like nh in RG3
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+  nn:
+    MASS: 14.01
+    COMMENT: like nh in RG4
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+  nq:
+    MASS: 14.01
+    COMMENT: like n3 in RG4
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+  n5:
+    MASS: 14.01
+    COMMENT: like n7 in RG3
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+  n6:
+    MASS: 14.01
+    COMMENT: like n7 in RG4
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+  na:
+    MASS: 14.01
+    COMMENT: Sp2 N with three connected atoms
+    CHARGE: 0.53
+    RADIUS: 1.7992
+    WELL_DEPTH: 0.2042
+  nb:
+    MASS: 14.01
+    COMMENT: Sp2 N in pure aromatic systems
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+  'no':
+    MASS: 14.01
+    COMMENT: Nitro N
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+  nd:
+    MASS: 14.01
+    COMMENT: Sp2 N in non-pure aromatic systems, identical to nc
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+  ni:
+    MASS: 14.01
+    COMMENT: like n in RG3
+    CHARGE: 0.53
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+  np:
+    MASS: 14.01
+    COMMENT: like n3 in RG3
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+
+Na:
+  Na+:
+    MASS: 22.99
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.475
+    WELL_DEPTH: 0.03171494
+
+  Nd3+:
+    MASS: 144.24
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.724
+    WELL_DEPTH: 0.15486311
+Ne:
+  ne:
+    MASS: 14.01
+    COMMENT: Inner Sp2 N in conjugated systems
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+
+Ni:
+  Ni2+:
+    MASS: 58.69
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.431
+    WELL_DEPTH: 0.02133669
+
+O:
+  o:
+    MASS: 16.0
+    COMMENT: Oxygen with one connected atom
+    CHARGE: 0.434
+    RADIUS: 1.7107
+    WELL_DEPTH: 0.1463
+  oh:
+    MASS: 16.0
+    COMMENT: Oxygen in hydroxyl group
+    CHARGE: 0.465
+    RADIUS: 1.82
+    WELL_DEPTH: 0.093
+  op:
+    MASS: 16.0
+    COMMENT: Oxygen in RG3
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+  oq:
+    MASS: 16.0
+    COMMENT: Oxygen in RG4
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+  ow:
+    MASS: 16.0
+    COMMENT: Oxygen in water
+    CHARGE: 0.465
+    RADIUS: null
+    WELL_DEPTH: null
+  os:
+    MASS: 16.0
+    COMMENT: Ether and ester oxygen
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+P:
+  p2:
+    MASS: 30.97
+    COMMENT: Phosphate with two connected atoms
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  p3:
+    MASS: 30.97
+    COMMENT: Phosphate with three connected atoms, such as PH3
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  p4:
+    MASS: 30.97
+    COMMENT: Phosphate with three connected atoms, such as O=P(CH3)2
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  p5:
+    MASS: 30.97
+    COMMENT: Phosphate with four connected atoms, such as O=P(OH)3
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  pc:
+    MASS: 30.97
+    COMMENT: Sp2 P in non-pure aromatic systems
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  pe:
+    MASS: 30.97
+    COMMENT: Inner Sp2 P in conjugated systems
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  pf:
+    MASS: 30.97
+    COMMENT: Inner Sp2 P in conjugated systems, identical to pe
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  px:
+    MASS: 30.97
+    COMMENT: Special p4 in conjugated systems
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  py:
+    MASS: 30.97
+    COMMENT: Special p5 in conjugated systems
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  pb:
+    MASS: 30.97
+    COMMENT: Sp2 P in pure aromatic systems
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+  pd:
+    MASS: 30.97
+    COMMENT: Sp2 P in non-pure aromatic systems, identical to pc
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+S:
+  s:
+    MASS: 32.06
+    COMMENT: S with one connected atom
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  s2:
+    MASS: 32.06
+    COMMENT: S with two connected atom, involved at least one double bond
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  s4:
+    MASS: 32.06
+    COMMENT: S with three connected atoms
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  s6:
+    MASS: 32.06
+    COMMENT: S with four connected atoms
+    CHARGE: 2.9
+    RADIUS: 2.2777
+    WELL_DEPTH: 0.0614
+  sh:
+    MASS: 32.06
+    COMMENT: Sp3 S connected with hydrogen
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  ss:
+    MASS: 32.06
+    COMMENT: Sp3 S in thio-ester and thio-ether
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  sx:
+    MASS: 32.06
+    COMMENT: Special s4 in conjugated systems
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  sy:
+    MASS: 32.06
+    COMMENT: Special s6 in conjugated systems
+    CHARGE: 2.9
+    RADIUS: 2.2777
+    WELL_DEPTH: 0.0614
+  sp:
+    MASS: 32.06
+    COMMENT: not described
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+  sq:
+    MASS: 32.06
+    COMMENT: not described
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+Li:
+  Li+:
+    MASS: 6.94
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.267
+    WELL_DEPTH: 0.00312065
+K:
+  K+:
+    MASS: 39.1
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.719
+    WELL_DEPTH: 0.15131351
+Rb:
+  Rb+:
+    MASS: 85.47
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.834
+    WELL_DEPTH: 0.24140216
+Tl:
+  Tl+:
+    MASS: 204.38
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+  Tl3+:
+    MASS: 204.38
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.571
+    WELL_DEPTH: 0.0657303
+Ag:
+  Ag+:
+    MASS: 107.87
+    COMMENT: ''
+    CHARGE: 1.0
+    RADIUS: 1.341
+    WELL_DEPTH: 0.00818431
+Be:
+  Be2+:
+    MASS: 9.01
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.203
+    WELL_DEPTH: 0.00116124
+Zn:
+  Zn2+:
+    MASS: 65.4
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.455
+    WELL_DEPTH: 0.02662782
+Co:
+  Co2+:
+    MASS: 58.93
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.458
+    WELL_DEPTH: 0.02735051
+Cr:
+  Cr2+:
+    MASS: 52.0
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.431
+    WELL_DEPTH: 0.02133669
+  Cr3+:
+    MASS: 52.0
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.415
+    WELL_DEPTH: 0.01827024
+Fe:
+  Fe2+:
+    MASS: 55.85
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.457
+    WELL_DEPTH: 0.02710805
+  Fe3+:
+    MASS: 55.85
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.443
+    WELL_DEPTH: 0.02387506
+Mg:
+  Mg2+:
+    MASS: 24.305
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.437
+    WELL_DEPTH: 0.02257962
+V:
+  V2+:
+    MASS: 50.94
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.494
+    WELL_DEPTH: 0.03715368
+Mn:
+  Mn2+:
+    MASS: 54.94
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.485
+    WELL_DEPTH: 0.03450196
+Hg:
+  Hg2+:
+    MASS: 200.59
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.641
+    WELL_DEPTH: 0.10128575
+Sn:
+  Sn2+:
+    MASS: 118.71
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.777
+    WELL_DEPTH: 0.19470705
+Sr:
+  Sr2+:
+    MASS: 87.62
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.777
+    WELL_DEPTH: 0.19470705
+Ba:
+  Ba2+:
+    MASS: 137.33
+    COMMENT: ''
+    CHARGE: 2.0
+    RADIUS: 1.936
+    WELL_DEPTH: 0.33132862
+Al:
+  Al3+:
+    MASS: 26.98
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.369
+    WELL_DEPTH: 0.01128487
+In:
+  In3+:
+    MASS: 114.82
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.491
+    WELL_DEPTH: 0.03625449
+Y:
+  Y3+:
+    MASS: 88.91
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.63
+    WELL_DEPTH: 0.09509276
+La:
+  La3+:
+    MASS: 138.91
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.758
+    WELL_DEPTH: 0.1799796
+Pr:
+  Pr3+:
+    MASS: 140.91
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.78
+    WELL_DEPTH: 0.19707431
+Sm:
+  Sm3+:
+    MASS: 150.36
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.711
+    WELL_DEPTH: 0.14571499
+Eu:
+  Eu3+:
+    MASS: 151.96
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.716
+    WELL_DEPTH: 0.14920231
+Gd:
+  Gd3+:
+    MASS: 157.25
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.658
+    WELL_DEPTH: 0.11129023
+Tb:
+  Tb3+:
+    MASS: 158.93
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.671
+    WELL_DEPTH: 0.11928915
+Dy:
+  Dy3+:
+    MASS: 162.5
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.637
+    WELL_DEPTH: 0.09900804
+Er:
+  Er3+:
+    MASS: 167.26
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.635
+    WELL_DEPTH: 0.09788018
+Tm:
+  Tm3+:
+    MASS: 168.93
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.647
+    WELL_DEPTH: 0.10475707
+Lu:
+  Lu3+:
+    MASS: 174.97
+    COMMENT: ''
+    CHARGE: 3.0
+    RADIUS: 1.625
+    WELL_DEPTH: 0.09235154
+Hf:
+  Hf4+:
+    MASS: 178.49
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+Zr:
+  Zr4+:
+    MASS: 91.22
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.609
+    WELL_DEPTH: 0.0838924
+U:
+  U4+:
+    MASS: 238.03
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.792
+    WELL_DEPTH: 0.20665151
+Pu:
+  Pu4+:
+    MASS: 244.06
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+Th:
+  Th4+:
+    MASS: 232.04
+    COMMENT: ''
+    CHARGE: 4.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704

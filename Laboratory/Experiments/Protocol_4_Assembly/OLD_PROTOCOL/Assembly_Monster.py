@@ -82,18 +82,18 @@ def change_capping_types_amber(mol2File: FilePath, config: dict) -> None:
     """
     # Define AMBER19ff atom type mapping
     amberDefaultMap = {
-                    "NN": "N",
-                    "HNN1": "H",
-                    "CN": "CX", 
-                    "HCN1": "H3",
-                    "HCN2": "H3",
-                    "HCN3": "H3",
-                    "CC1": "C",
-                    "OC": "O",
-                    "CC2": "CX", 
-                    "HC1": "H3",
-                    "HC2": "H3",
-                    "HC3": "H3"
+                    "N_N": "N",
+                    "H_N": "H",
+                    "C_N": "CX", 
+                    "H1_N": "H3",
+                    "H2_N": "H3",
+                    "H2_N": "H3",
+                    "C_C": "C",
+                    "O_C": "O",
+                    "CM_C": "CX", 
+                    "H1_C": "H3",
+                    "H2_C": "H3",
+                    "H3_C": "H3"
     }
     
     parmedStructure = parmed.load_file(mol2File)
@@ -127,18 +127,18 @@ def change_backbone_types_amber(mol2File: FilePath, config: dict) -> None:
                     "HA": "H1",
                     "C" : "C",
                     "O" : "O",
-                    "NN": "N",
-                    "HNN1": "H",
-                    "CN": "CT", 
-                    "HCN1": "H3",
-                    "HCN2": "H3",
-                    "HCN3": "H3",
-                    "CC1": "C",
-                    "OC": "O",
-                    "CC2": "CT", 
-                    "HC1": "H3",
-                    "HC2": "H3",
-                    "HC3": "H3"
+                    "N_N": "N",
+                    "H_N": "H",
+                    "C_N": "CT", 
+                    "H1_N": "H3",
+                    "H2_N": "H3",
+                    "H3_N": "H3",
+                    "C_C": "C",
+                    "O_C": "O",
+                    "C2_C": "CT", 
+                    "H1_C": "H3",
+                    "H2_C": "H3",
+                    "H3_C": "H3"
     }
 
     parmedStructure = parmed.load_file(mol2File)
@@ -231,18 +231,18 @@ def set_backbone_types_psf(parmedPsf: CharmmPsfFile,
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
 
     nameToDesiredTypeBb = {
-                    "NN": "NH1",
-                    "HNN1": "H",
-                    "CN": "CT1", 
-                    "HCN1": "HB1",
-                    "HCN2": "HB1",
-                    "HCN3": "HB1",
-                    "CC1": "C",
-                    "OC": "O",
-                    "CC2": "CT1", 
-                    "HC1": "HB1",
-                    "HC2": "HB1",
-                    "HC3": "HB1"}
+                    "N_N": "NH1",
+                    "H_N": "H",
+                    "C_N": "CT1", 
+                    "H1_N": "HB1",
+                    "H2_N": "HB1",
+                    "H3_N": "HB1",
+                    "C_C": "C",
+                    "O_C": "O",
+                    "C2_C": "CT1", 
+                    "H1_C": "HB1",
+                    "H2_C": "HB1",
+                    "H3_C": "HB1"}
 
     # Define CHARMM36m atom type mapping
     if not config["torsionScanInfo"]["runScansOn"]["phiPsi"]:

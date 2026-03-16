@@ -18,3 +18,5 @@ _test*
 _hidden_scripts
 .vscode
 *.dat
+Inputs
+__ALA__

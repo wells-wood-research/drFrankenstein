@@ -3,8 +3,8 @@ from os import path as p
 
 
 from . import Assembly_Monster
-# from . import Assembly_Assistant
-# Placeholder classes (extend if needed)
+from . import Assembly_Assistant
+
 class FilePath:
     pass
 
@@ -82,9 +82,11 @@ def agnostic_assembly_protocol(config:dict) -> dict:
 
     atomFeaturesDf, atomTypesDict = Assembly_Monster.construct_atom_features(kbValues, r0values, kThetaValues, theta0values, config=config)
 
+
     atomTypes, atomTypesDf = Assembly_Monster.assign_atom_types_by_clustering(atomFeaturesDf)
 
 
+    atomTypeMasses = Assembly_Monster.get_atom_type_masses(atomTypesDf)
 
     (bondParamsByType,
       angleParamsByType,
@@ -96,7 +98,7 @@ def agnostic_assembly_protocol(config:dict) -> dict:
     
     nonBondedParams = Assembly_Monster.assign_non_bonded_by_analogy(atomTypesDf)
 
-    config = Assembly_Monster.construct_frcmod(atomTypes,
+    config = Assembly_Monster.construct_frcmod(atomTypeMasses,
                                         bondParamsByType, 
                                         angleParamsByType,
                                            groupedDihedrals, groupedImpropers,
@@ -104,6 +106,8 @@ def agnostic_assembly_protocol(config:dict) -> dict:
                                                  config=config)
 
     config = Assembly_Monster.construct_mol2(atomTypesDf, config=config)
+
+    config = Assembly_Assistant.run_tleap_to_make_params(config)
 
 
     return config

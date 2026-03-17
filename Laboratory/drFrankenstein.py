@@ -92,8 +92,6 @@ def main():
         config = Assembly_Doctor.agnostic_assembly_protocol(config=config)
 
 
-    exit()
-
     # ## run assembly protocol
     # if not checkpointInfo["assemblyComplete"]:
     #     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
@@ -110,6 +108,7 @@ def main():
         drSplash.show_twist_splash()
         config = Twisted_Doctor.twist_protocol(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
+
 
 
     ## run torsion parameter fitting

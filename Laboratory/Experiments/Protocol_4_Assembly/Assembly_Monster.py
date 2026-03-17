@@ -507,7 +507,8 @@ def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
         
         # Optional: create a string identifier like "C_0", "C_1", etc.
         cluster_strings = pd.Series(labels, index=elementDf.index).astype(str)
-        atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] = "_" + element.lower() + cluster_strings
+        # atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] =  element.upper() + "_" + cluster_strings
+        atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] =  element.upper() + cluster_strings
 
     
     atomTypes = atomTypesDf["ATOM_TYPE"].to_dict()
@@ -541,7 +542,7 @@ def  assign_non_bonded_by_analogy(atomTypesDf):
     return nonBondedParams
   
 
-def construct_frcmod(atomTypes: dict,
+def construct_frcmod(atomTypeMasses: dict,
                       bondParamsByType: dict, angleParamsByType: dict,
                         groupedDihedrals: list[tuple[str, str, str, str]], groupedImpropers: list[tuple[str]],
                           nonBondedParams: dict,
@@ -557,7 +558,8 @@ def construct_frcmod(atomTypes: dict,
     with open(frcmodFile, "w") as f:
         f.write("CREATED BY drFRANKENSTEIN\n\n")
         f.write("MASS\n")
-        ### TODO: GET A MASS LOOKUP TABLE
+        for atomType, mass in atomTypeMasses.items():
+            f.write(f"{atomType}\t{mass:.3f}\n")
         f.write("\n")
         f.write("BOND\n")
         for (atomI, atomJ), bondData in bondParamsByType.items():
@@ -572,18 +574,20 @@ def construct_frcmod(atomTypes: dict,
             f.write(f"{atomI}-{atomJ}-{atomK}\t{kTheta:.2f}\t{theta0:.3f}\n")
         f.write("\n")
         f.write("DIHE\n")
+        (divfactor, kTorsion, phase, periodicity) = ("1", "0.000", "180.000", "1.000")
         for (atomI, atomJ, atomK, atomL) in groupedDihedrals:
-            f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t1\t0.000\t\t1.000\tDUMMY INPUT\n")
+            f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t{divfactor}\t{kTorsion}\t{phase}\t{periodicity}\t!DUMMY INPUT\n")
         f.write("\n")
         f.write("IMPROPER\n")
         for (atomI, atomJ, atomK, atomL) in groupedImpropers:
-            f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t\t1.1\t180.0\t2.0\tDEFAULT VALUE\n")
+            f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t\t1.1\t180.000\t2.0\t!DEFAULT VALUE\n")
         f.write("\n")
-        f.write("NONBONDED\n")
+        f.write("NONB\n")
         for atomType, nonBondedData in nonBondedParams.items():
             radius = nonBondedData["RADIUS"]
             wellDepth = nonBondedData["WELL_DEPTH"]
             f.write(f"{atomType}\t{radius:.3f}\t{wellDepth:.3f}\n")
+        f.write("\n")
             
     config["runtimeInfo"]["madeByAssembly"]["moleculeFrcmod"] = frcmodFile
 
@@ -593,47 +597,119 @@ def construct_frcmod(atomTypes: dict,
 def construct_mol2(atomTypesDf: pd.DataFrame, config: dict):
 
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
-
     assemblyDir = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] 
     moleculeName = config["moleculeInfo"]["moleculeName"]
     chargesCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
     chargesDf = pd.read_csv(chargesCsv, index_col="Unnamed: 0")
+
     chargeFittingProtocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
     chargeQMMethod = config["chargeFittingInfo"]["singlePointMethod"]
 
     tmpMol2 = p.join(assemblyDir, "tmp.mol2")
 
     obabelCall = ["obabel", cappedPdb,  "-O", tmpMol2]
-
-    call(obabelCall)#, stdout=PIPE, stderr=PIPE)
+    call(obabelCall, stdout=PIPE, stderr=PIPE)
+    
     mol2File = p.join(assemblyDir, f"{moleculeName}.mol2")
 
-    with  open(tmpMol2, "r") as inFile, open(mol2File, "w") as outFile:
-
-        readingAtoms = False
+    with open(tmpMol2, "r") as inFile, open(mol2File, "w") as outFile:
+        section = None
+        
         for line in inFile:
-            if line.startswith("@<TRIPOS>ATOM"):
-                readingAtoms=True
+            
+            # --- Detect Block Headers ---
+            if line.startswith("@<TRIPOS>MOLECULE"):
+                section = "MOLECULE"
+                outFile.write(line)
+                
+                # 1. Replace default Obabel molecule name with ours
+                next(inFile) 
+                outFile.write(f"{moleculeName}\n")
+                
+                # 2. Fix the header counts to declare exactly 1 substructure
+                counts_line = next(inFile)
+                counts = counts_line.split()
+                if len(counts) >= 3:
+                    counts[2] = "1" # 3rd integer represents the number of substructures
+                outFile.write(" " + " ".join(counts) + "\n")
+                continue
+                
+            elif line.startswith("@<TRIPOS>ATOM"):
+                section = "ATOM"
                 outFile.write(line)
                 continue
-            if line.startswith("@<TRIPOS>BOND"):
-                readingAtoms=False
-            if readingAtoms:
+                
+            elif line.startswith("@<TRIPOS>BOND"):
+                section = "BOND"
+                outFile.write(line)
+                continue
+                
+            elif line.startswith("@<TRIPOS>SUBSTRUCTURE"):
+                section = "SUBSTRUCTURE"
+                # We skip OpenBabel's substructure block entirely
+                continue
+
+            # --- Process Block Contents ---
+            if section == "ATOM":
+                if not line.strip():
+                    continue
                 atomData = line.split()
                 atomName = atomData[1]
+                
+                # Assign forcefield atom type
                 atomType = atomTypesDf[atomTypesDf["ATOM_NAME"] == atomName]["ATOM_TYPE"].iloc[0]
                 atomData[5] = atomType
+                
+                # Force all atoms into a single molecular residue for tleap
+                atomData[6] = "1"     # Residue Number
+                atomData[7] = "MOL"   # Residue Name
+                
+                # Assign partial charges
                 atomCharge = chargesDf[chargesDf["ATOM_NAME"] == atomName]["Charge"].iloc[0]
-                atomChargeFormatted = f"{atomCharge:.4f}"
-                atomData[-1] = atomChargeFormatted
+                atomData[8] = f"{atomCharge:.4f}"
+                
                 outFile.write("\t".join(atomData) + "\n")
-            elif line.startswith("GASTEIGER"):
-                outFile.write(f"{chargeFittingProtocol} [{chargeQMMethod}]\n")
+                
+            elif section == "BOND":
+                if not line.strip():
+                    continue
+                bondData = line.split()
+                
+                # Convert TRIPOS 'am' (amide) bond orders to standard '1' 
+                if len(bondData) >= 4 and bondData[3].lower() == "am":
+                    bondData[3] = "1"
+                    
+                outFile.write("\t".join(bondData) + "\n")
+                
+            elif section == "MOLECULE":
+                # Inject the custom QM method name instead of GASTEIGER
+                if "GASTEIGER" in line or "NO_CHARGES" in line:
+                    outFile.write(f"{chargeFittingProtocol} [{chargeQMMethod}]\n")
+                else:
+                    outFile.write(line)
+                    
+            elif section == "SUBSTRUCTURE":
+                # Do nothing; wait for the end of the file
+                pass
+                
             else:
                 outFile.write(line)
-    print(f"Constructed mol2 file: {mol2File}")
 
+        # --- Append Safe Substructure Block ---
+        # AMBER's tleap needs this precise formatting to allocate the 1-4 bonding memory correctly
+        outFile.write("@<TRIPOS>SUBSTRUCTURE\n")
+        outFile.write("     1 MOL         1 TEMP              0 ****  ****    0 ROOT\n")
 
     config["runtimeInfo"]["madeByAssembly"]["moleculeMol2"] = mol2File
 
     return config
+
+
+def get_atom_type_masses(atomTypesDf: pd.DataFrame) -> dict:
+    massLookup = Assembly_Assistant.init_mass_lookup()
+    atomTypeMasses = {}
+    for atomType, groupDf in atomTypesDf.groupby("ATOM_TYPE"):
+        element = groupDf["ELEMENT"].iloc[0]
+        mass = massLookup[element]
+        atomTypeMasses[atomType] = mass
+    return atomTypeMasses

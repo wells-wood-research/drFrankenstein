@@ -19,55 +19,49 @@ class DirectoryPath:
 
 def round_charges_carefully(config):
     """
-    Rounds charges to 3 decimal places, ensuring sum matches totalCharge by adjusting carbon atoms.
-
-    Args:
-        config (dict): config containing all run information
-
-    Returns:
-        None
+    Rounds charges to 3 decimal places, ensuring the sum for the ENTIRE molecule
+    matches totalCharge by adjusting specified carbon atoms.
     """
     totalCharge = config["moleculeInfo"]["charge"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     cappedDf = pdbUtils.pdb2df(cappedPdb)
-    carbonIndexes = cappedDf[(cappedDf["ELEMENT"] == "C") & (~cappedDf["ATOM_NAME"].isin(["C_C", "C2_C", "C_N"]))].index   
+    
     chargeDf = pd.read_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"], index_col="Unnamed: 0")
 
-    ## Exclude Capping Groups
-    moleculeDf = chargeDf[~chargeDf["ATOM_NAME"].isin(["C_N", "N_N", "H1_N", "H2_N", "H3_N",
-                                                        "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"])]
-
-
-    # Calculate difference from total charge for molecule excluding capping groups
-    currentSum = round(moleculeDf['Charge'].sum(),3)
-    difference = totalCharge - currentSum
-
-    # Round charges to 3 decimal places
+    # 1. Round ALL charges in the full DataFrame first. This is the operation that introduces error.
     chargeDf['Charge'] = chargeDf['Charge'].round(3)
-    # get carbon indexes, starting with least polar
-    carbonNames = chargeDf.loc[carbonIndexes, 'ATOM_NAME'][chargeDf.loc[carbonIndexes, 'Charge'].abs().sort_values().index].tolist()
 
+    # 2. Calculate the sum of the ENTIRE system after rounding.
+    currentSum = chargeDf['Charge'].sum()
+    
+    # 3. Calculate the remaining difference to the target total charge.
+    # We round the difference itself to avoid floating point artifacts like 0.00099999999
+    difference = round(totalCharge - currentSum, 3)
 
-    if difference != 0:  # Only adjust if difference exists
-        if difference > 0:
-            modifier = 0.001
-        else:
-            modifier = -0.001
-        nAtomsToModify = abs(difference / modifier)
+    if difference != 0:
+        # Get carbon indexes to modify, sorted by least polar
+        carbonIndexes = cappedDf[(cappedDf["ELEMENT"] == "C") & (~cappedDf["ATOM_NAME"].isin(["C_C", "C2_C", "C_N"]))].index
+        carbonNames = chargeDf.loc[carbonIndexes, 'ATOM_NAME'][chargeDf.loc[carbonIndexes, 'Charge'].abs().sort_values().index].tolist()
+
+        if not carbonNames:
+            raise ValueError("No carbon atoms available to adjust charges.")
+
+        modifier = 0.001 if difference > 0 else -0.001
         
+        # 4. Use round() instead of int() to get the correct number of steps.
+        n_steps = int(round(abs(difference / modifier)))
+        
+        for i in range(n_steps):
+            # Cycle through the carbon atoms to distribute the change
+            carbonIndexToModify = chargeDf[chargeDf["ATOM_NAME"] == carbonNames[i % len(carbonNames)]].index
+            chargeDf.loc[carbonIndexToModify, "Charge"] += modifier
 
-        for i in range(int(nAtomsToModify)):
-            carbonIndex = i % len(carbonNames)
-            chargeDf.loc[chargeDf["ATOM_NAME"] == carbonNames[carbonIndex], "Charge"] += modifier
+    # Final check (optional but good for validation)
+    final_sum = chargeDf['Charge'].sum()
+    if not np.isclose(final_sum, totalCharge):
+        print(f"Warning: Final charge sum is {final_sum}, which does not equal the target charge of {totalCharge}")
 
-
-        # Re-round to 3 decimal places to avoid floating-point precision issues
-        chargeDf.loc[carbonIndexes, 'Charge'] = chargeDf.loc[carbonIndexes, 'Charge'].round(3)
-
-    # Calculate difference from total charge
-    currentSum = round(chargeDf['Charge'].sum(),3)
-    difference = totalCharge - currentSum
-    # Save the updated DataFrame back to the file
+    # 5. Save the result.
     chargeDf.to_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"])
 
 def generate_symmetry_constraints_file(config: dict, fittingDir: DirectoryPath) -> FilePath:

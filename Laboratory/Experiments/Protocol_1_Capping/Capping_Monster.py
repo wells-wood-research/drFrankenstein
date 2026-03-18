@@ -256,7 +256,6 @@ def place_hn(cappedDf: pd.DataFrame,
     Returns:
         nmeDf (pd.DataFrame): DataFrame with H_N capping atom placed
     """
-    print(nmeDf)
     # Get coordinates from protein
     bondedAtoms = Capping_Assistant.find_bonded_atoms(cappedDf, cTerminalAtom)
 

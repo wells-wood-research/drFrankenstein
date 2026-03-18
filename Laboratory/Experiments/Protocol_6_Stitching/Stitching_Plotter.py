@@ -143,14 +143,12 @@ def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, durati
             key=_extract_number
         )
     )
-    print("Opening all PNG frames...")
     frames = [Image.open(png) for png in pngGenerator]
 
     if not frames:
         print("No PNG files were found to create a GIF.")
         return
 
-    print(f"Saving {len(frames)} frames to {outGif}...")
     # Save the first frame and append the rest
     frames[0].save(
         outGif,

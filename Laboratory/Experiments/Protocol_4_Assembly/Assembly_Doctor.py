@@ -83,15 +83,19 @@ def agnostic_assembly_protocol(config:dict) -> dict:
     atomFeaturesDf, atomTypesDict = Assembly_Monster.construct_atom_features(kbValues, r0values, kThetaValues, theta0values, config=config)
 
 
-    atomTypes, atomTypesDf = Assembly_Monster.assign_atom_types_by_clustering(atomFeaturesDf)
+    atomTypesDf = Assembly_Monster.assign_atom_types_by_clustering(atomFeaturesDf)
 
+    atomTypesDf = Assembly_Monster.reassign_capping_types(atomTypesDf, config=config)
+
+    if not config["torsionScanInfo"]["runScansOn"]["phiPsi"]:
+        atomTypesDf = Assembly_Monster.reassign_backbone_types(atomTypesDf, config=config)
 
     atomTypeMasses = Assembly_Monster.get_atom_type_masses(atomTypesDf)
 
     (bondParamsByType,
       angleParamsByType,
         groupedDihedrals,
-          groupedImpropers) = Assembly_Monster.group_params_by_atom_type(atomTypes,
+          groupedImpropers) = Assembly_Monster.group_params_by_atom_type(atomTypesDf,
                                                                           kbValues, r0values,
                                                                             kThetaValues, theta0values, 
                                                                                 dihedrals, impropers)
@@ -108,6 +112,5 @@ def agnostic_assembly_protocol(config:dict) -> dict:
     config = Assembly_Monster.construct_mol2(atomTypesDf, config=config)
 
     config = Assembly_Assistant.run_tleap_to_make_params(config)
-
 
     return config

@@ -238,7 +238,6 @@ def identify_rotatable_bonds(config: dict, mode: str = "AMBER") -> List[Tuple[in
     adjacencyMatrix = _construct_adjacency_matrix(moleculeParams)
 
 
-
     aromaticRings, nonAromaticRings = classify_rings_aromatic(rings, moleculeParams, adjacencyMatrix)
 
     for dihedral in moleculeParams.dihedrals:
@@ -416,7 +415,6 @@ def get_conformer_xyzs(config, seed=1818, temperature=300):
         p=probabilities
     )
     selectedConformerXyzs = [sortedConformerXyzs[i] for i in selectedIndices]
-    print(selectedConformerXyzs)
 
     return selectedConformerXyzs
 

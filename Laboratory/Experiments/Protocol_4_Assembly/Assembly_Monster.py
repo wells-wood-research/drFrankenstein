@@ -436,7 +436,9 @@ def construct_atom_features(kbValues, r0values, kThetaValues, theta0values, conf
 
     return atomFeaturesDf, atomFeaturesDict
 
-def group_params_by_atom_type(atomTypes, kbValues, r0values, kThetaValues, theta0values, dihedrals, impropers):
+def group_params_by_atom_type(atomTypesDf, kbValues, r0values, kThetaValues, theta0values, dihedrals, impropers):
+
+    atomTypes = atomTypesDf["ATOM_TYPE"].to_dict()
 
     bondedParams = {}
     for (atomZeroIndexes, kB), r0 in zip(kbValues.items(), r0values.values()):
@@ -476,6 +478,44 @@ def group_params_by_atom_type(atomTypes, kbValues, r0values, kThetaValues, theta
     return meanBondParams, meanAngleParams, groupedDihedrals, groupedImpropers
 
 
+def reassign_capping_types(atomTypesDf, config) -> tuple[dict, pd.DataFrame]:
+    amberDefaultMap = {
+                    "N_N": "N",
+                    "H_N": "H",
+                    "C_N": "CX", 
+                    "H1_N": "H3",
+                    "H2_N": "H3",
+                    "H2_N": "H3",
+                    "C_C": "C",
+                    "O_C": "O",
+                    "CM_C": "CX", 
+                    "H1_C": "H3",
+                    "H2_C": "H3",
+                    "H3_C": "H3"
+     }
+    atomTypesDf["ATOM_TYPE"] = atomTypesDf.apply(lambda row: amberDefaultMap.get(row["ATOM_NAME"], row["ATOM_TYPE"]), axis=1)
+
+    return atomTypesDf
+
+def reassign_backbone_types(atomTypesDf, config) -> tuple[dict, pd.DataFrame]:
+    amberDefaultMap = {
+                    "N_N": "N",
+                    "H_N": "H",
+                    "C_N": "CX", 
+                    "H1_N": "H3",
+                    "H2_N": "H3",
+                    "H2_N": "H3",
+                    "C_C": "C",
+                    "O_C": "O",
+                    "CM_C": "CX", 
+                    "H1_C": "H3",
+                    "H2_C": "H3",
+                    "H3_C": "H3"
+     }
+    atomTypesDf["ATOM_TYPE"] = atomTypesDf.apply(lambda row: amberDefaultMap.get(row["ATOM_NAME"], row["ATOM_TYPE"]), axis=1)
+
+    return atomTypesDf
+
 
 
 
@@ -493,27 +533,31 @@ def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
     
     colsToDrop =['ATOM_ID', 'ATOM_NAME', 'ELEMENT', 'CLUSTER_LABEL', 'ATOM_TYPE']
     
+    atomTypeSuffixes = pd.Series([f"{letter}" for letter in "zyxwvutsrqponmlkjihgfedcba"])
 
     for element, elementDf in atomTypesDf.groupby("ELEMENT"):
-        
-        # 1. Preprocess and scale features
-        featuresScaled = _extract_and_scale_features(elementDf, colsToDrop)
-        
-        # 2. Find best K and get labels
-        labels = _find_optimal_clusters(featuresScaled, kMax=maxClusters)
-        
-        # 3. Assign labels back to the DataFrame corresponding to their original index
-        atomTypesDf.loc[elementDf.index, 'CLUSTER_LABEL'] = labels
-        
-        # Optional: create a string identifier like "C_0", "C_1", etc.
-        cluster_strings = pd.Series(labels, index=elementDf.index).astype(str)
-        # atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] =  element.upper() + "_" + cluster_strings
-        atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] =  element.upper() + cluster_strings
+            
+            # 1. Preprocess and scale features
+            featuresScaled = _extract_and_scale_features(elementDf, colsToDrop)
+            
+            # 2. Find best K and get labels (assuming labels are 0, 1, 2...)
+            labels = _find_optimal_clusters(featuresScaled, kMax=maxClusters)
+            
+            # 3. Assign labels back to the DataFrame corresponding to their original index
+            atomTypesDf.loc[elementDf.index, 'CLUSTER_LABEL'] = labels
+            
+            # Create a Series of the labels aligned with the current element's indices
+            cluster_series = pd.Series(labels, index=elementDf.index)
+            
+            # Map the integer cluster labels to their corresponding suffix 
+            # (e.g., 0 -> 'v1', 1 -> 'v2')
+            mapped_suffixes = cluster_series.map(atomTypeSuffixes)
+            
+            # Concatenate the Element name and the mapped suffix
+            atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] = element.lower() + mapped_suffixes
 
     
-    atomTypes = atomTypesDf["ATOM_TYPE"].to_dict()
-
-    return atomTypes, atomTypesDf
+    return  atomTypesDf
 
 
 def  assign_non_bonded_by_analogy(atomTypesDf):
@@ -549,7 +593,6 @@ def construct_frcmod(atomTypeMasses: dict,
                           config: dict) -> dict:
     assemblyDir = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    # nAtoms = config["moleculeInfo"]["nAtoms"]
 
     frcmodFile = f"{moleculeName}_assembled.frcmod"
     frcmodFile = p.join(assemblyDir, frcmodFile)
@@ -563,12 +606,14 @@ def construct_frcmod(atomTypeMasses: dict,
         f.write("\n")
         f.write("BOND\n")
         for (atomI, atomJ), bondData in bondParamsByType.items():
+            (atomI, atomJ) = (atom.ljust(2) for atom in (atomI, atomJ))
             kB = bondData["kB"]
             r0 = bondData["r0"]
             f.write(f"{atomI}-{atomJ}\t{kB:.2f}\t{r0:.3f}\n")
         f.write("\n")
         f.write("ANGLE\n")
         for (atomI, atomJ, atomK), angleData in angleParamsByType.items():
+            (atomI, atomJ, atomK) = (atom.ljust(2) for atom in (atomI, atomJ, atomK))
             kTheta = angleData["kTheta"]
             theta0 = angleData["theta0"]
             f.write(f"{atomI}-{atomJ}-{atomK}\t{kTheta:.2f}\t{theta0:.3f}\n")
@@ -576,10 +621,12 @@ def construct_frcmod(atomTypeMasses: dict,
         f.write("DIHE\n")
         (divfactor, kTorsion, phase, periodicity) = ("1", "0.000", "180.000", "1.000")
         for (atomI, atomJ, atomK, atomL) in groupedDihedrals:
+            (atomI, atomJ, atomK, atomL) = (atom.ljust(2) for atom in (atomI, atomJ, atomK, atomL))
             f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t{divfactor}\t{kTorsion}\t{phase}\t{periodicity}\t!DUMMY INPUT\n")
         f.write("\n")
         f.write("IMPROPER\n")
         for (atomI, atomJ, atomK, atomL) in groupedImpropers:
+            (atomI, atomJ, atomK, atomL) = (atom.ljust(2) for atom in (atomI, atomJ, atomK, atomL))
             f.write(f"{atomI}-{atomJ}-{atomK}-{atomL}\t\t1.1\t180.000\t2.0\t!DEFAULT VALUE\n")
         f.write("\n")
         f.write("NONB\n")
@@ -589,7 +636,7 @@ def construct_frcmod(atomTypeMasses: dict,
             f.write(f"{atomType}\t{radius:.3f}\t{wellDepth:.3f}\n")
         f.write("\n")
             
-    config["runtimeInfo"]["madeByAssembly"]["moleculeFrcmod"] = frcmodFile
+    config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"] = frcmodFile
 
 
     return config
@@ -700,7 +747,7 @@ def construct_mol2(atomTypesDf: pd.DataFrame, config: dict):
         outFile.write("@<TRIPOS>SUBSTRUCTURE\n")
         outFile.write("     1 MOL         1 TEMP              0 ****  ****    0 ROOT\n")
 
-    config["runtimeInfo"]["madeByAssembly"]["moleculeMol2"] = mol2File
+    config["runtimeInfo"]["madeByAssembly"]["cappedMol2"] = mol2File
 
     return config
 

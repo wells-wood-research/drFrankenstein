@@ -43,7 +43,6 @@ def parse_amber_force_field(file_content, constant_charge = None):
     # --- Part 1: Parse Atom Types, Mass, and Comments ---
     for line in lines:
         line = line.strip()
-        print(line)
         if not line:
             parsing_atom_types = False
             continue

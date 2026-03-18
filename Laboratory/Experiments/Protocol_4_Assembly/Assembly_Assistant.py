@@ -23,8 +23,8 @@ def run_tleap_to_make_params(config: dict) -> dict:
     Uses TLEAP to create a prmtop inpcrd pair
 
     """
-    inMol2: FilePath = config["runtimeInfo"]["madeByAssembly"]["moleculeMol2"]
-    molFrcmod: FilePath = config["runtimeInfo"]["madeByAssembly"]["moleculeFrcmod"]
+    inMol2: FilePath = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    molFrcmod: FilePath = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
     outDir: DirectoryPath = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
 
@@ -41,9 +41,9 @@ def run_tleap_to_make_params(config: dict) -> dict:
 
     tleapOutput: FilePath = p.join(outDir, f"tleap.out")
 
-    tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
+    tleapCommand: list = ["tleap", "-f", tleapInput,]
 
-    call(tleapCommand)
+    call(tleapCommand, stdout= open(tleapOutput, "w"))
 
     config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"] = prmtop
 

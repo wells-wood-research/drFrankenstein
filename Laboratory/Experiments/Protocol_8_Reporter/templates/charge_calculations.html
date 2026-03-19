@@ -135,15 +135,15 @@
         <p><h3><strong>Number of Conformers Used: </strong>{{ charge_data.nConformers | default('N/A') }}</h3></p>
     </div>
 
-    <!-- Molecular Visualization -->
-    {% if charge_data.chargeHtml %}
-        <h2>3D Visualization of Charges</h2>
+    <!-- Interactive Molecular Graph -->
+    {% if charge_data.graphHtml %}
+        <h2>Interactive Molecular Graph with Charges</h2>
         <div class="viz-and-colorbar-container">
             <div class="charge-viz-wrapper">
                 <iframe
-                    src="{{ charge_data.chargeHtml }}"
-                    title="Molecule 3D Viewer with Charges">
-                    Your browser does not support iframes. Please open <a href="{{ charge_data.chargeHtml }}">this link</a> directly.
+                    src="{{ charge_data.graphHtml }}"
+                    title="Interactive Molecular Graph with Bonds">
+                    Your browser does not support iframes. Please open <a href="{{ charge_data.graphHtml }}">this link</a> directly.
                 </iframe>
             </div>
             {% if charge_data.colorBar %}
@@ -156,8 +156,15 @@
                 </div>
             {% endif %}
         </div>
-    {% else %}
-        <p>No molecular visualization file provided for charges.</p>
+        <div class="info">
+            <p><h4>The interactive graph shows the molecular structure as a network where:</h4></p>
+            <ul>
+                <li><h4>Nodes represent atoms (colored by partial charge)</h4></li>
+                <li><h4>Edges represent bonds (with calculated bond lengths)</h4></li>
+                <li><h4>Hover over atoms to see detailed information</h4></li>
+                <li><h4>Click and drag to rotate the 3D view</h4></li>
+            </ul>
+        </div>
     {% endif %}
 
     <!-- Partial Charges Table -->

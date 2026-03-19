@@ -86,7 +86,8 @@
     }
 
     .viz-iframe-wrapper {
-        width: 630px;
+        width: 100%;
+        max-width: 630px;
         height: 330px;
         margin: 0 auto 10px auto; /* Top margin 0, auto for L/R centering, 10px bottom */
         border: none;
@@ -253,7 +254,8 @@
                                 <iframe
                                     class="viz-iframe"
                                     src="{{ viz_html_path }}"
-                                    title="Molecule 3D Viewer for {{ dihedral_name }}">
+                                    title="Molecule 3D Viewer for {{ dihedral_name }}"
+                                    sandbox="allow-scripts allow-same-origin">
                                     Your browser does not support iframes. Please open <a href="{{ viz_html_path }}">this link</a> directly.
                                 </iframe>
                             </div>

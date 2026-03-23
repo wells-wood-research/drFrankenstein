@@ -3,6 +3,8 @@ import py3Dmol
 from pdbUtils import pdbUtils # Your custom PDB parsing utility
 from shutil import copy
 import os
+import re
+import hashlib
 from os import path as p
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
@@ -73,6 +75,17 @@ def make_vibrant_colors():
         "#7CFC00"   # Lawn Green
     ]
     return vibrantColors
+
+def make_safe_report_html_name(prefix: str, raw_name: str) -> str:
+    """
+    Build a stable, filesystem-safe html filename from a potentially noisy identifier.
+    """
+    raw_name_str = str(raw_name)
+    safe_component = re.sub(r"[^A-Za-z0-9._-]+", "_", raw_name_str).strip("._-")
+    if not safe_component:
+        safe_component = "item"
+    short_hash = hashlib.sha1(raw_name_str.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}_{safe_component}_{short_hash}.html"
 
 def make_charge_gradient_colors():
     chargeGradientColors =['#FF00FF', '#FF66FF', '#FFCCFF', '#FFF5FF', '#FFFFFF', '#F5FFF5', '#CCFFCC', '#33FF33', '#00FF00']
@@ -693,7 +706,8 @@ def make_highlighted_torsion_visualisations(config, outDir):
             hovermode='closest', autosize=True, height=330
         )
         
-        htmlFile = p.join(outDir, f"{torsionTag}.html")
+        htmlFileName = make_safe_report_html_name("torsion", torsionTag)
+        htmlFile = p.join(outDir, htmlFileName)
         fig.write_html(htmlFile, config={'responsive': True})
         htmlFiles[torsionTag] = p.relpath(htmlFile, reporterDir)
     

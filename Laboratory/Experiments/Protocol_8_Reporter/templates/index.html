@@ -216,6 +216,27 @@
     </div> <!-- End of parallax-viewport -->
 
     <script>
+        function attachIframeLoadHandler(iframe) {
+            if (!iframe || iframe.dataset.loaderBound === 'true') return;
+            iframe.dataset.loaderBound = 'true';
+
+            const loaderContainer = iframe.closest('[data-iframe-loader]');
+            if (!loaderContainer) return;
+
+            iframe.addEventListener('load', function() {
+                loaderContainer.classList.add('iframe-loaded');
+            }, { once: true });
+        }
+
+        function loadDeferredIframes(scopeElement) {
+            if (!scopeElement) return;
+            const deferredIframes = scopeElement.querySelectorAll('iframe[data-src]:not([src])');
+            deferredIframes.forEach((iframe) => {
+                attachIframeLoadHandler(iframe);
+                iframe.setAttribute('src', iframe.getAttribute('data-src'));
+            });
+        }
+
         function openTab(evt, tabName) {
             var tabcontent = document.getElementsByClassName("tab-content");
             for (var i = 0; i < tabcontent.length; i++) {
@@ -226,10 +247,19 @@
             for (var i = 0; i < tabbuttons.length; i++) {
                 tabbuttons[i].classList.remove("active");
             }
-            document.getElementById(tabName).style.display = "block";
-            document.getElementById(tabName).classList.add("active");
+            const activeTab = document.getElementById(tabName);
+            activeTab.style.display = "block";
+            activeTab.classList.add("active");
+            loadDeferredIframes(activeTab);
             evt.currentTarget.classList.add("active");
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const allDeferredIframes = document.querySelectorAll('iframe[data-src]');
+            allDeferredIframes.forEach((iframe) => attachIframeLoadHandler(iframe));
+            const activeTab = document.querySelector('.tab-content.active');
+            loadDeferredIframes(activeTab);
+        });
     </script>
 
 </body>

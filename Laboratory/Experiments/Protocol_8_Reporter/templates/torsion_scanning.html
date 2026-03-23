@@ -86,6 +86,7 @@
     }
 
     .viz-iframe-wrapper {
+        position: relative;
         width: 100%;
         max-width: 630px;
         height: 330px;
@@ -98,6 +99,49 @@
         width: 100%;
         height: 100%;
         border: none; /* Remove default iframe border */
+    }
+
+    .iframe-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20, 20, 20, 0.9);
+        color: #cfcfcf;
+        font-size: 0.95em;
+        letter-spacing: 0.02em;
+        z-index: 2;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-loading-overlay {
+        display: none;
+    }
+
+    .iframe-error-overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 12px;
+        background-color: rgba(20, 20, 20, 0.95);
+        color: #d9d9d9;
+        font-size: 0.9em;
+        z-index: 3;
+    }
+
+    .iframe-error-overlay a {
+        color: #6cb6ff;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-error-overlay {
+        display: flex;
+    }
+
+    [data-iframe-loader].iframe-loaded .iframe-loading-overlay {
+        display: none;
     }
 
     .dihedral-plots {
@@ -250,10 +294,15 @@
                         {% set viz_html_path = torsion_data.torsionHtmls.get(dihedral_name) %}
                         {% if viz_html_path %}
                             <h3>Torsion 3D Visualization</h3>
-                            <div class="viz-iframe-wrapper">
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="{{ viz_html_path }}" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
                                 <iframe
                                     class="viz-iframe"
-                                    src="{{ viz_html_path }}"
+                                    data-src="{{ viz_html_path }}"
                                     title="Molecule 3D Viewer for {{ dihedral_name }}"
                                     sandbox="allow-scripts allow-same-origin">
                                     Your browser does not support iframes. Please open <a href="{{ viz_html_path }}">this link</a> directly.
@@ -354,6 +403,55 @@
 
 
 <script>
+    function bindTorsionIframeErrorHandling(scopeElement) {
+        if (!scopeElement) return;
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            if (iframe.dataset.torsionErrorBound === 'true') return;
+            iframe.dataset.torsionErrorBound = 'true';
+
+            iframe.addEventListener('error', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-loaded');
+                    loaderContainer.classList.add('iframe-error');
+                }
+            });
+
+            iframe.addEventListener('load', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-error');
+                    loaderContainer.classList.add('iframe-loaded');
+                }
+            });
+        });
+    }
+
+    function loadTorsionIframesWithFallback(scopeElement) {
+        if (!scopeElement) return;
+        bindTorsionIframeErrorHandling(scopeElement);
+
+        if (typeof loadDeferredIframes === "function") {
+            loadDeferredIframes(scopeElement);
+        }
+
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            const loaderContainer = iframe.closest('[data-iframe-loader]');
+            if (!loaderContainer) return;
+
+            if (iframe.getAttribute('src')) {
+                const timeoutMs = 3000;
+                setTimeout(function() {
+                    if (!loaderContainer.classList.contains('iframe-loaded')) {
+                        loaderContainer.classList.add('iframe-error');
+                    }
+                }, timeoutMs);
+            }
+        });
+    }
+
     function openDihedralSubTab(evt, subTabName) {
         var i, subTabContent, subTabButtons;
         let parentScope = evt.target.closest('.torsion-sub-tab-nav').parentNode;
@@ -373,6 +471,7 @@
         if (targetContentElement) {
             targetContentElement.style.display = "block";
             targetContentElement.classList.add("active");
+            loadTorsionIframesWithFallback(targetContentElement);
         }
         if (evt.currentTarget) {
             evt.currentTarget.classList.add("active");
@@ -383,6 +482,7 @@
         const activeSubTabs = document.querySelectorAll('.torsion-sub-tab-content.active');
         activeSubTabs.forEach(tab => {
             tab.style.display = 'block';
+            loadTorsionIframesWithFallback(tab);
         });
     });
 </script>

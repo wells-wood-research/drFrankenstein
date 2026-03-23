@@ -11,6 +11,7 @@
 
     /* Visualization iframe container */
     .charge-viz-wrapper {
+        position: relative;
         width: 630px; /* Match plot-container width */
         max-width: 100%; /* Ensure responsiveness */
         height: 630px; /* Adjust height as needed */
@@ -24,6 +25,23 @@
         width: 100%;
         height: 100%;
         border: none;
+    }
+
+    .iframe-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20, 20, 20, 0.9);
+        color: #cfcfcf;
+        font-size: 0.95em;
+        letter-spacing: 0.02em;
+        z-index: 2;
+    }
+
+    [data-iframe-loader].iframe-loaded .iframe-loading-overlay {
+        display: none;
     }
 
     /* Plot container for color bar */
@@ -139,9 +157,10 @@
     {% if charge_data.graphHtml %}
         <h2>Interactive Molecular Graph with Charges</h2>
         <div class="viz-and-colorbar-container">
-            <div class="charge-viz-wrapper">
+            <div class="charge-viz-wrapper" data-iframe-loader>
+                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
                 <iframe
-                    src="{{ charge_data.graphHtml }}"
+                    data-src="{{ charge_data.graphHtml }}"
                     title="Interactive Molecular Graph with Bonds">
                     Your browser does not support iframes. Please open <a href="{{ charge_data.graphHtml }}">this link</a> directly.
                 </iframe>

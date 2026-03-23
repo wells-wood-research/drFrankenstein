@@ -1,32 +1,42 @@
-
 import os
 from os import path as p
+import warnings
+from subprocess import call, run, PIPE, STDOUT
+from pdbUtils import pdbUtils
+import parmed as pmd
+from parmed.charmm import CharmmParameterSet, CharmmPsfFile
+from parmed.exceptions import ParameterWarning
 
-import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
-from collections import defaultdict
-from subprocess import call, PIPE
+# Suppress ParameterWarning
+warnings.filterwarnings('ignore', category=ParameterWarning)
 
-## CLEAN CODE ##
-class DirectoryPath:
-    pass
+## drFRANKENSTEIN LIBRARIES ##
+from OperatingTools import file_parsers
+
+# Placeholder classes (extend if needed)
 class FilePath:
     pass
 
+class DirectoryPath:
+    pass
 
-def run_tleap_to_make_params(config: dict) -> dict:
-
+def run_tleap_to_make_params(inMol2: FilePath,
+                            molFrcmod: FilePath,
+                              outDir: DirectoryPath,
+                                moleculeName: str):
     """
     Uses TLEAP to create a prmtop inpcrd pair
 
+    Args:
+        inMol2 (FilePath): input MOL2 file
+        molFrcmod (FilePath): input FRCMOD file
+        outDir (DirectoryPath): output directory
+        index (str): identifier for output files
+
+    Returns: 
+        prmtop (FilePath): topology file for AMBER
+        impcrd (FilePath): coordinate file for AMBER
     """
-    inMol2: FilePath = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
-    molFrcmod: FilePath = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
-    outDir: DirectoryPath = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
-    moleculeName: str = config["moleculeInfo"]["moleculeName"]
 
     prmtop: FilePath = p.join(outDir, f"{moleculeName}_cappped.prmtop")
     inpcrd: FilePath = p.join(outDir, f"{moleculeName}_capped.inpcrd")
@@ -41,145 +51,417 @@ def run_tleap_to_make_params(config: dict) -> dict:
 
     tleapOutput: FilePath = p.join(outDir, f"tleap.out")
 
-    tleapCommand: list = ["tleap", "-f", tleapInput,]
+    tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
 
-    call(tleapCommand, stdout= open(tleapOutput, "w"))
+    call(tleapCommand, stdout=PIPE)
 
-    config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"] = prmtop
-
-    return config
+    return prmtop
 
 
-def average_dict_values(list_of_strength_dicts):
+def find_default_amber_parameters(amberHome: DirectoryPath) -> tuple[FilePath, FilePath]:
     """
-    Calculates the average strength for each unique key across a list of dictionaries.
-    """
-    sums = defaultdict(float)
-    counts = defaultdict(int)
+    Finds gaff2.dat and parm19.dat from AMBERHOME
 
-    for strength_dict in list_of_strength_dicts:
-        for key, strength in strength_dict.items():
-            sums[key] += strength
-            counts[key] += 1
+    Args:
+        amberHome (DirectoryPath): path to AMBERHOME
+
+    Returns:
+        gaff2Dat (FilePath): path to gaff2.dat
+        parm19Dat (FilePath): path to parm19.dat
     
-    averages = {key: sums[key] / counts[key] for key in sums}
-    return averages
+    """
+
+    gaff2Dat = p.join(amberHome, "dat", "leap", "parm", "gaff2.dat")
+    parm19Dat = p.join(amberHome, "dat", "leap", "parm", "parm19.dat")
+
+    if not p.exists(gaff2Dat):
+        raise FileNotFoundError(f"Could not find {gaff2Dat}")
+    if not p.exists(parm19Dat):
+        raise FileNotFoundError(f"Could not find {parm19Dat}")
+
+    return gaff2Dat, parm19Dat
+
+def create_frcmod_file(mol2File: FilePath,
+                        frcmodFile: FilePath,
+                          gaff2Dat: FilePath) -> FilePath:
+    """
+    uses parmchk2 to create a frcmod file from a mol2 file
+
+    Args:
+        chargesMol2 (FilePath): mol2 file of charges
+        moleculeName (str): name of molecule
+        config (dict): config dict
+
+    Returns:
+        molFrcmod (FilePath): path to frcmod file
+    
+    """
+
+    ## run run parmchk2
+    parmchk2Command = ["parmchk2",
+                        "-i", mol2File,
+                          "-f", "mol2",
+                            "-o", frcmodFile,
+                              "-a", "Y",
+                                "-p", gaff2Dat]
+
+    try:
+        call(parmchk2Command)
+    except Exception as e:
+        raise(e)
+
+    return None
 
 
-def get_compliance_matrix(hessianMatrix: np.ndarray, tol: float = 1e-4) -> np.ndarray:
+def make_mol2_with_antechamber(inPdb: FilePath,
+              outMol2: FilePath,
+                workingDir: DirectoryPath,
+                config: dict) -> None:
     """
-    Calculates the compliance matrix by inverting the Hessian, 
-    explicitly removing near-zero eigenvalues (translations and rotations)
-    that would otherwise blow up to massive values.
+    Uses antechamber to convert pdb to mol2
+    Writes some unwanted temporary files
+    TODO: clean these up
+
+    Args:
+        inPdb (FilePath): input file in PDB format
+        outPdb (FilePath): output file in MOL2 format
+        workingDir (DirectoryPath): working directory (vital for cleanup)
+
+    Returns:
+        None (outMol2 has already been defined!)
+    
     """
-    eigenvalues, eigenvectors = np.linalg.eigh(hessianMatrix)
+
+
+    if p.exists(outMol2):
+        return None
+    os.chdir(workingDir)
+
+    ## unpack config
+    netCharge = config["moleculeInfo"]["charge"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
+    ## set RES_ID to 1 for all atoms to keep antechamber happy
+    pdbDf = pdbUtils.pdb2df(inPdb)
+    pdbDf["RES_ID"] = 1
+    tmpPdb = p.join(workingDir, "tmp.pdb")
+    pdbUtils.df2pdb(pdbDf, tmpPdb)
+    ## get index, set path for antechamber to write outputs
+    index: str = p.basename(inPdb).split("_")[1].split(".")[0]
+    antechamberOut: FilePath = p.join(workingDir, f"antechamber_{index}.out")
+    ## run antechamber to create MOL2 file from PDB
+    antechamberCommand: list = [
+        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
+        "-fo", "mol2", "-at", "gaff2", "-rn", moleculeName, "-s", "2",
+        "-c", "bcc", "-nc", str(netCharge)
+    ]
+    with open(antechamberOut, 'w') as outfile:
+        run(antechamberCommand, stdout=outfile, stderr=STDOUT)
+    if not p.isfile(outMol2):
+        print(f"Antechamber failed for {inPdb}... Trying Mulliken charge")
+        antechamberCommand: list = [
+        "antechamber", "-i", tmpPdb, "-fi", "pdb", "-o", outMol2,
+        "-fo", "mol2", "-at", "gaff2", "-rn", "MOL", "-s", "2",
+        "-c", "mul", "-nc", str(netCharge)
+        ]
+        with open(antechamberOut, 'w') as outfile:
+            run(antechamberCommand, stdout=outfile, stderr=STDOUT)
+    if not p.isfile(outMol2):
+        raise FileNotFoundError(f"Antechamber failed for {inPdb}")
+
+    ## clean up temporary files
+    os.remove(tmpPdb)
+    filesToRemove = [f for f in os.listdir(workingDir) if f.startswith("ANTECHAMBER")]
+    for f in filesToRemove:
+        os.remove(p.join(workingDir, f))
+    return None
+
+
+def  update_rtf_types(inRtf: FilePath, nameToDesiredType: dict,  config: dict) -> dict:
+    """
+    Update RTF file with updated atom types
+
+    Args:
+        inRtf (FilePath): input RTF file
+        outRtf (FilePath): output RTF file
+        config (dict): configuration dictionary
+
+    Returns:
+        config (dict): updated configuration dictionary
+    """
+    assemblyDir = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+    parsedRtf = file_parsers.parse_rtf(inRtf)
+
+    for atom in parsedRtf["residues"][moleculeName]["atoms"]:
+        if not atom["name"] in nameToDesiredType:
+            continue
+        atom["type"] = nameToDesiredType[atom["name"]]
+
+    outRtf = p.join(assemblyDir, f"{moleculeName}_assembled.rtf")
+    file_parsers.write_rtf(parsedRtf, outRtf)
+
+
+    return outRtf
+
+def save_modified_prm_file(parmedPsf: CharmmPsfFile, config: dict) -> dict:
+    """
+    Save modified RTF files.
+
+    Args:
+        parmedPsf (CharmmPsfFile): ParmEd CharmmPsfFile object with updated atom types.
+        config (dict): Configuration dictionary.
+
+    Returns:
+        config (dict): Updated configuration dictionary with file paths for RTF, PRM, and PSF files.
+    """
+    ## unpack config 
+    assemblyDir = config["runtimeInfo"]["madeByAssembly"]["assemblyDir"]
+    moleculeName = config["moleculeInfo"]["moleculeName"]
+
+    outputParams = CharmmParameterSet.from_structure(parmedPsf)
+    outPrm = p.join(assemblyDir, f"{moleculeName}_assembled.prm")
+    outPsf = p.join(assemblyDir, f"{moleculeName}_assembled.psf")
+
+    outputParams.write(par=outPrm)
+    parmedPsf.save(outPsf, overwrite=True)
+
+    return outPrm, outPsf
+
+    # config["runtimeInfo"]["madeByAssembly"]["assembledPsf"] = outPsf 
+
     
-    inv_eigenvalues = np.zeros_like(eigenvalues)
-    
-    for i, eig in enumerate(eigenvalues):
-        if abs(eig) > tol:
-            inv_eigenvalues[i] = 1.0 / eig
+def assign_missing_impropers(missingParams: CharmmParameterSet,
+                        parmedPsf: CharmmPsfFile,
+                          nameToCgenffType: dict,
+                            completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+        
+    """
+    Check for missing improper parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing improper parameters.
+    """
+    for improper in parmedPsf.impropers:
+        atomNames=[improper.atom1.name, improper.atom2.name, improper.atom3.name, improper.atom4.name]
+        newTypes = [improper.atom1.type, improper.atom2.type, improper.atom3.type, improper.atom4.type]
+        origTypes = [nameToCgenffType.get(name, atomType) for name, atomType in zip(atomNames, newTypes)]
+
+        improperKey = tuple(newTypes)
+        if improperKey not in completeParameterSet.improper_types and improperKey not in missingParams.improper_types:
+            origImproperKey = tuple(origTypes)
+            if origImproperKey in completeParameterSet.improper_types:
+                improperTypes = completeParameterSet.improper_types[origImproperKey]
+                missingParams.improper_types[improperKey] = improperTypes
+            else:
+                raise ValueError(f"Warning: No CGenFF improper parameters for \n" \
+                    f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
+
+    return missingParams
+def assign_missing_dihedrals(missingParams: CharmmParameterSet,
+                        parmedPsf: CharmmPsfFile,
+                          nameToCgenffType: dict,
+                            completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+    # Check for missing dihedral parameters
+    """
+    Check for missing dihedral parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing dihedral parameters.
+    """
+    for dihedral in parmedPsf.dihedrals:
+        atomNames=[dihedral.atom1.name, dihedral.atom2.name, dihedral.atom3.name, dihedral.atom4.name]
+        newTypes = [dihedral.atom1.type, dihedral.atom2.type, dihedral.atom3.type, dihedral.atom4.type]
+        origTypes = [nameToCgenffType.get(name, atomType) for name, atomType in zip(atomNames, newTypes)]
+
+        dihedralKey = tuple(newTypes)
+        if dihedralKey not in completeParameterSet.dihedral_types and dihedralKey not in missingParams.dihedral_types:
+            origDihedralKey = tuple(origTypes)
+            origDihedralKeyRev = tuple(reversed(origDihedralKey))
+            if origDihedralKey in completeParameterSet.dihedral_types:
+                dihedralTypes = completeParameterSet.dihedral_types[origDihedralKey]
+                missingParams.dihedral_types[dihedralKey] = dihedralTypes
+            elif origDihedralKeyRev in completeParameterSet.dihedral_types:
+                dihedralTypes = completeParameterSet.dihedral_types[origDihedralKeyRev]
+                missingParams.dihedral_types[dihedralKey] = dihedralTypes
+            else:
+                raise ValueError(f"Warning: No CGenFF dihedral parameters for \n" \
+                    f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
+
+    return missingParams
+def assign_missing_angles(missingParams: CharmmParameterSet,
+                        parmedPsf: CharmmPsfFile,
+                          nameToCgenffType: dict,
+                            completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+    # Check for missing angle parameters
+    """
+    Check for missing angle parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing angle parameters.
+    """
+    for angle in parmedPsf.angles:
+        atomNames=[angle.atom1.name, angle.atom2.name, angle.atom3.name]
+        newTypes = [angle.atom1.type, angle.atom2.type, angle.atom3.type]
+        origTypes = [nameToCgenffType.get(name, atomType) for name, atomType in zip(atomNames, newTypes)] 
+        angleKey = tuple(newTypes)
+        if angleKey not in completeParameterSet.angle_types and angleKey not in missingParams.angle_types:
+            origAngleKey = tuple(origTypes)
+            if origAngleKey in completeParameterSet.angle_types:
+                angleType = completeParameterSet.angle_types[origAngleKey]
+                missingParams.angle_types[angleKey] = angleType
+            elif origAngleKey[::-1] in completeParameterSet.angle_types:
+                angleType = completeParameterSet.angle_types[origAngleKey[::-1]]
+                missingParams.angle_types[angleKey] = angleType
+            else:
+                raise ValueError(f"Warning: No CGenFF angle parameters for \n" \
+                                 f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
             
-    complianceMatrix = eigenvectors @ np.diag(inv_eigenvalues) @ eigenvectors.T
+    return missingParams
+def assign_missing_bonds(missingParams: CharmmParameterSet,
+                        parmedPsf: CharmmPsfFile,
+                          nameToCgenffType: dict,
+                            completeParameterSet: CharmmParameterSet) -> CharmmParameterSet:
+    """
+    Check for missing bond parameters and assign from CGenFF parameters.
+
+    Args:
+        missingParams: (CharmmParameterSet) object to store missing parameters.
+        parmedPsf: (CharmmPsfFile) object with updated atom types.
+        nameToCgenffType: (dict) mapping atom names to original CGenFF types.
+        completeParameterSet: (CharmmParameterSet) object with all parameters.
+
+    Returns:
+        missingParams: (CharmmParameterSet) object with added missing bond parameters.
+    """
+    for bond in parmedPsf.bonds:
+        atomNames = [bond.atom1.name, bond.atom2.name]
+        newTypes = [bond.atom1.type, bond.atom2.type]
+        origTypes = [nameToCgenffType.get(name, atomType) for name, atomType in zip(atomNames, newTypes)] 
+        bondKey = tuple(sorted(newTypes))  # Bonds are order-independent
+        if bondKey not in completeParameterSet.bond_types and bondKey not in missingParams.bond_types:
+            # Map to original CGenFF types
+            origBondKey = tuple(sorted(origTypes))
+            if origBondKey in completeParameterSet.bond_types:
+                bondType = completeParameterSet.bond_types[origBondKey]
+                missingParams.bond_types[bondKey] = bondType
+            else:
+                raise ValueError(f"Warning: No CGenFF bond parameters for \n" \
+                                 f"CGenFF: {origTypes}, CHARMM: {newTypes} NAME {atomNames}")
+    return missingParams
+
+
+def update_psf_atom_types(parmedPsf: CharmmPsfFile, nameToDesiredType: dict) -> CharmmPsfFile:
+    """
+    Update atom types in the PSF structure based on a mapping.
+
+    Args:
+        parmedPsf: ParmEd CharmmPsfFile object.
+        nameToDesiredType: Dictionary mapping atom names to new CHARMM36m types.
+
+    Returns:
+        parmedPsf: ParmEd CharmmPsfFile object with updated atom types
+
+    """
+    for atom in parmedPsf.atoms:
+        if atom.name in nameToDesiredType:
+            oldType = atom.type
+            atom.type = nameToDesiredType[atom.name]
+    return parmedPsf
+
+def get_cgenff_atom_types(parmedPsf: CharmmPsfFile, nameToDesiredType: dict) -> dict:
+    """
+    Get the original CGenFF atom types for atoms to be retyped.
+
+    Args:
+        psf: ParmEd CharmmPsfFile object with CGenFF types.
+        nameToDesiredType: Dictionary mapping atom names to new CHARMM36m types.
+
+    Returns:
+        Dictionary mapping atom names to their original CGenFF types.
+    """
+    cgenffTypes = {}
+    for atom in parmedPsf.atoms:
+        if atom.name in nameToDesiredType:
+            cgenffTypes[atom.name] = atom.type
+    return cgenffTypes
+
+
+def load_psf_with_params(psfFile:FilePath, params:tuple) -> CharmmPsfFile:
+    """
+    Reads a PSF file into Parmed and loads parameters
+
+    Args:
+        psfFile (FilePath): Path to the PSF file to read
+        params (tuple): Tuple of parameter paths 
+    Returns:
+        psf (CharmmPsfFile): Parmed PSF object
     
-    return complianceMatrix
-
-
-def measure_angle(pdbDf: pd.DataFrame, angles: list[tuple[int, int, int]]) -> dict[tuple[int, int, int], float]:
-    theta0values = {}
-
-    for i, j, k in angles:
-        coord_i = pdbDf.loc[i, ["X", "Y", "Z"]].values
-        coord_j = pdbDf.loc[j, ["X", "Y", "Z"]].values
-        coord_k = pdbDf.loc[k, ["X", "Y", "Z"]].values
-        
-        vec1 = coord_i - coord_j
-        vec2 = coord_k - coord_j
-        
-        cosine_angle = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-        cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
-        
-        rad_angle = np.arccos(cosine_angle)
-        theta0values[(i, j, k)] = np.degrees(rad_angle)
-
-    return theta0values
-
-
-def measure_bond_length(pdbDf: pd.DataFrame, bonds: list[tuple[int, int]]) -> float:
-    r0values = {}
-
-    for i, j in bonds:
-        vec = pdbDf.loc[[i, j], ["X", "Y", "Z"]].values[0] - pdbDf.loc[[i, j], ["X", "Y", "Z"]].values[1]
-        r0values[(i, j)] = np.linalg.norm(vec)
-
-    return r0values
-
-
-def _extract_and_scale_features(df, cols_to_ignore):
     """
-    Removes ignored columns and standardizes the numerical features.
+
+    parmedPsf = CharmmPsfFile(psfFile)
+    originalCgenffParams = CharmmParameterSet(*params)
+    parmedPsf.load_parameters(originalCgenffParams)
+
+    return parmedPsf
+
+
+def find_default_charmm_parameters() -> dict:
     """
-    features_df = df.drop(columns=cols_to_ignore, errors='ignore')
+    Uses relative locations to find default CHARMM parameters
 
-    scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(features_df)
-
-    return scaled_features
-
-
-def _find_optimal_clusters(featuresScaled, kMax=10):
+    Args:
+        None [Uses location of this file as reference]
+    Returns:
+        charmmDefaultParams (dict): contains paths to all default CHARMM parameters
     """
-    Iterates through possible values of K to find the best silhouette score.
-    Returns the cluster labels for the optimal K.
-    """
-    nAtoms = featuresScaled.shape[0]
+    assemblySrcDir = p.dirname(p.abspath(__file__))
+    labDir = p.dirname(p.dirname(assemblySrcDir))
+    ingredientDir = p.join(labDir, "Ingredients")
+    charmmDir = p.join(ingredientDir, "CHARMM")
+    charmmDownloadDir = [p.join(charmmDir, dir) for dir in os.listdir(charmmDir) 
+                 if p.isdir(p.join(charmmDir, dir))][0]
+    topparDir = p.join(charmmDownloadDir, "toppar")
     
-    if nAtoms < 3:
-        return np.zeros(nAtoms, dtype=int)
-        
-    bestK = 2
-    bestSilhouetteScore = -1.0
-    bestLabels = np.zeros(nAtoms, dtype=int)
-    
-    kLimit = min(kMax, nAtoms - 1)
-    if kLimit < 2:
-        return bestLabels
-        
-    for k in range(2, kLimit + 1):
-        kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
-        labels = kmeans.fit_predict(featuresScaled)
-        
-        if len(set(labels)) > 1:
-            score = silhouette_score(featuresScaled, labels)
-            if score > bestSilhouetteScore:
-                bestSilhouetteScore = score
-                bestK = k
-                bestLabels = labels
-                
-    return bestLabels
 
 
-def find_non_bonded_lookup() -> FilePath:
-    thisDir = p.dirname(p.abspath(__file__))
-    labDir = p.dirname(p.dirname(thisDir))
-    nonBondedLookup = p.join(labDir, "Ingredients", "NonBonded_LookUp.yaml")
-    return nonBondedLookup
-def init_mass_lookup() -> dict:
-    massLookup = {
-    'H': 1.0080, 'He': 4.0026, 'Li': 6.9400, 'Be': 9.0122, 'B': 10.8100, 'C': 12.0110, 'N': 14.0070, 'O': 15.9990,
-    'F': 18.9984, 'Ne': 20.1797, 'Na': 22.9898, 'Mg': 24.3050, 'Al': 26.9815, 'Si': 28.0850, 'P': 30.9738, 'S': 32.0600,
-    'Cl': 35.4500, 'Ar': 39.9480, 'K': 39.0983, 'Ca': 40.0780, 'Sc': 44.9559, 'Ti': 47.8670, 'V': 50.9415, 'Cr': 51.9961,
-    'Mn': 54.9380, 'Fe': 55.8450, 'Co': 58.9332, 'Ni': 58.6934, 'Cu': 63.5460, 'Zn': 65.3800, 'Ga': 69.7230, 'Ge': 72.6300,
-    'As': 74.9216, 'Se': 78.9710, 'Br': 79.9040, 'Kr': 83.7980, 'Rb': 85.4678, 'Sr': 87.6200, 'Y': 88.9058, 'Zr': 91.2240,
-    'Nb': 92.9064, 'Mo': 95.9500, 'Tc': 98.0000, 'Ru': 101.0700, 'Rh': 102.9055, 'Pd': 106.4200, 'Ag': 107.8682, 'Cd': 112.4140,
-    'In': 114.8180, 'Sn': 118.7100, 'Sb': 121.7600, 'Te': 127.6000, 'I': 126.9045, 'Xe': 131.2930, 'Cs': 132.9055, 'Ba': 137.3270,
-    'La': 138.9055, 'Ce': 140.1160, 'Pr': 140.9077, 'Nd': 144.2420, 'Pm': 145.0000, 'Sm': 150.3600, 'Eu': 151.9640, 'Gd': 157.2500,
-    'Tb': 158.9253, 'Dy': 162.5000, 'Ho': 164.9303, 'Er': 167.2590, 'Tm': 168.9342, 'Yb': 173.0540, 'Lu': 174.9668, 'Hf': 178.4900,
-    'Ta': 180.9479, 'W': 183.8400, 'Re': 186.2070, 'Os': 190.2300, 'Ir': 192.2170, 'Pt': 195.0840, 'Au': 196.9665, 'Hg': 200.5920,
-    'Tl': 204.3800, 'Pb': 207.2000, 'Bi': 208.9804, 'Po': 209.0000, 'At': 210.0000, 'Rn': 222.0000, 'Fr': 223.0000, 'Ra': 226.0000,
-    'Ac': 227.0000, 'Th': 232.0377, 'Pa': 231.0359, 'U': 238.0289, 'Np': 237.0000, 'Pu': 244.0000, 'Am': 243.0000, 'Cm': 247.0000,
-    'Bk': 247.0000, 'Cf': 251.0000, 'Es': 252.0000, 'Fm': 257.0000, 'Md': 258.0000, 'No': 259.0000, 'Lr': 262.0000, 'Rf': 267.0000,
-    'Db': 270.0000, 'Sg': 269.0000, 'Bh': 270.0000, 'Hs': 270.0000, 'Mt': 278.0000, 'Ds': 281.0000, 'Rg': 282.0000, 'Cn': 285.0000,
-    'Nh': 286.0000, 'Fl': 289.0000, 'Mc': 290.0000, 'Lv': 293.0000, 'Ts': 294.0000, 'Og': 294.0000,
-}
-    return massLookup
+    charmmRtf = p.join(topparDir, "top_all36_prot.rtf")
+    charmmPrm = p.join(topparDir, "par_all36m_prot.prm")
+
+    cgenffRtf = p.join(topparDir , "top_all36_cgenff.rtf")
+    cgenffPrm = p.join(topparDir , "par_all36_cgenff.prm")
+
+    filesNotFound = []
+    for file in [charmmRtf, charmmPrm, cgenffRtf, cgenffPrm]:
+        if not p.isfile(file):
+            filesNotFound.append(file)
+
+    if len(filesNotFound) > 0:
+        raise FileNotFoundError(f"Cannot find CHARMM parameters at {filesNotFound}")
+
+    charmmDefaultParams = {
+        "charmmRtf": charmmRtf,
+        "charmmPrm": charmmPrm,
+        "cgenffRtf": cgenffRtf,
+        "cgenffPrm": cgenffPrm
+    }
+
+    return charmmDefaultParams

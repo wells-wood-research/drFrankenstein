@@ -1,0 +1,520 @@
+He:
+  He:
+    MASS: 4.003
+    RADIUS: 0.6
+    WELL_DEPTH: 0.0157
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor H/H (Z-distance=1, donor MASS=1.000).
+    SOURCE_TYPE: H/H
+B:
+  B:
+    MASS: 10.81
+    RADIUS: 1.203
+    WELL_DEPTH: 0.00116124
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Be/Be2+ (Z-distance=1, donor MASS=9.010).
+    SOURCE_TYPE: Be/Be2+
+Ne:
+  Ne:
+    MASS: 14.01
+    RADIUS: 1.75
+    WELL_DEPTH: 0.061
+    COMMENT: Element absent from gaff2.yaml. MASS from lookup MASS; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor F/F (Z-distance=1, donor MASS=1.000).
+    SOURCE_TYPE: F/F
+Si:
+  Si:
+    MASS: 28.085
+    RADIUS: 1.369
+    WELL_DEPTH: 0.01128487
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Al/Al3+ (Z-distance=1, donor MASS=26.980).
+    SOURCE_TYPE: Al/Al3+
+Ar:
+  Ar:
+    MASS: 39.948
+    RADIUS: 1.948
+    WELL_DEPTH: 0.265
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Cl/Cl (Z-distance=1, donor MASS=35.450).
+    SOURCE_TYPE: Cl/Cl
+Sc:
+  Sc:
+    MASS: 44.956
+    RADIUS: 1.642
+    WELL_DEPTH: 0.10185975
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Ca/Ca2+ (Z-distance=1, donor MASS=40.080).
+    SOURCE_TYPE: Ca/Ca2+
+Ti:
+  Ti:
+    MASS: 47.867
+    RADIUS: 1.494
+    WELL_DEPTH: 0.03715368
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor V/V2+ (Z-distance=1, donor MASS=50.940).
+    SOURCE_TYPE: V/V2+
+Ga:
+  Ga:
+    MASS: 69.723
+    RADIUS: 1.1
+    WELL_DEPTH: 0.0125
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Zn/Zn (Z-distance=1, donor MASS=65.400).
+    SOURCE_TYPE: Zn/Zn
+Ge:
+  Ge:
+    MASS: 72.63
+    RADIUS: 1.1
+    WELL_DEPTH: 0.0125
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Zn/Zn (Z-distance=2, donor MASS=65.400).
+    SOURCE_TYPE: Zn/Zn
+As:
+  As:
+    MASS: 74.922
+    RADIUS: 2.22
+    WELL_DEPTH: 0.32
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Br/Br (Z-distance=2, donor MASS=79.900).
+    SOURCE_TYPE: Br/Br
+Se:
+  Se:
+    MASS: 78.971
+    RADIUS: 2.22
+    WELL_DEPTH: 0.32
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Br/Br (Z-distance=1, donor MASS=79.900).
+    SOURCE_TYPE: Br/Br
+Kr:
+  Kr:
+    MASS: 83.798
+    RADIUS: 2.22
+    WELL_DEPTH: 0.32
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Br/Br (Z-distance=1, donor MASS=79.900).
+    SOURCE_TYPE: Br/Br
+Nb:
+  Nb:
+    MASS: 92.906
+    RADIUS: 1.609
+    WELL_DEPTH: 0.0838924
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Zr/Zr4+ (Z-distance=1, donor MASS=91.220).
+    SOURCE_TYPE: Zr/Zr4+
+Mo:
+  Mo:
+    MASS: 95.95
+    RADIUS: 1.609
+    WELL_DEPTH: 0.0838924
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Zr/Zr4+ (Z-distance=2, donor MASS=91.220).
+    SOURCE_TYPE: Zr/Zr4+
+Tc:
+  Tc:
+    MASS: 98.0
+    RADIUS: 1.609
+    WELL_DEPTH: 0.0838924
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Zr/Zr4+ (Z-distance=3, donor MASS=91.220).
+    SOURCE_TYPE: Zr/Zr4+
+Ru:
+  Ru:
+    MASS: 101.07
+    RADIUS: 1.341
+    WELL_DEPTH: 0.00818431
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Ag/Ag+ (Z-distance=3, donor MASS=107.870).
+    SOURCE_TYPE: Ag/Ag+
+Rh:
+  Rh:
+    MASS: 102.906
+    RADIUS: 1.341
+    WELL_DEPTH: 0.00818431
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Ag/Ag+ (Z-distance=2, donor MASS=107.870).
+    SOURCE_TYPE: Ag/Ag+
+Pd:
+  Pd:
+    MASS: 106.42
+    RADIUS: 1.341
+    WELL_DEPTH: 0.00818431
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Ag/Ag+ (Z-distance=1, donor MASS=107.870).
+    SOURCE_TYPE: Ag/Ag+
+Sb:
+  Sb:
+    MASS: 121.76
+    RADIUS: 1.777
+    WELL_DEPTH: 0.19470705
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Sn/Sn2+ (Z-distance=1, donor MASS=118.710).
+    SOURCE_TYPE: Sn/Sn2+
+Te:
+  Te:
+    MASS: 127.6
+    RADIUS: 2.35
+    WELL_DEPTH: 0.4
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor I/I (Z-distance=1, donor MASS=50.000).
+    SOURCE_TYPE: I/I
+Xe:
+  Xe:
+    MASS: 131.29
+    RADIUS: 2.35
+    WELL_DEPTH: 0.4
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor I/I (Z-distance=1, donor MASS=50.000).
+    SOURCE_TYPE: I/I
+Pm:
+  Pm:
+    MASS: 145.0
+    RADIUS: 1.724
+    WELL_DEPTH: 0.15486311
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Nd/Nd3+ (Z-distance=1, donor MASS=144.240).
+    SOURCE_TYPE: Nd/Nd3+
+Ho:
+  Ho:
+    MASS: 164.93
+    RADIUS: 1.637
+    WELL_DEPTH: 0.09900804
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Dy/Dy3+ (Z-distance=1, donor MASS=162.500).
+    SOURCE_TYPE: Dy/Dy3+
+Yb:
+  Yb:
+    MASS: 173.05
+    RADIUS: 1.647
+    WELL_DEPTH: 0.10475707
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Tm/Tm3+ (Z-distance=1, donor MASS=168.930).
+    SOURCE_TYPE: Tm/Tm3+
+Ta:
+  Ta:
+    MASS: 180.948
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hf/Hf4+ (Z-distance=1, donor MASS=178.490).
+    SOURCE_TYPE: Hf/Hf4+
+W:
+  W:
+    MASS: 183.84
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hf/Hf4+ (Z-distance=2, donor MASS=178.490).
+    SOURCE_TYPE: Hf/Hf4+
+Re:
+  Re:
+    MASS: 186.207
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hf/Hf4+ (Z-distance=3, donor MASS=178.490).
+    SOURCE_TYPE: Hf/Hf4+
+Os:
+  Os:
+    MASS: 190.23
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hf/Hf4+ (Z-distance=4, donor MASS=178.490).
+    SOURCE_TYPE: Hf/Hf4+
+Ir:
+  Ir:
+    MASS: 192.217
+    RADIUS: 1.641
+    WELL_DEPTH: 0.10128575
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hg/Hg2+ (Z-distance=3, donor MASS=200.590).
+    SOURCE_TYPE: Hg/Hg2+
+Pt:
+  Pt:
+    MASS: 195.084
+    RADIUS: 1.641
+    WELL_DEPTH: 0.10128575
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hg/Hg2+ (Z-distance=2, donor MASS=200.590).
+    SOURCE_TYPE: Hg/Hg2+
+Au:
+  Au:
+    MASS: 196.967
+    RADIUS: 1.641
+    WELL_DEPTH: 0.10128575
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Hg/Hg2+ (Z-distance=1, donor MASS=200.590).
+    SOURCE_TYPE: Hg/Hg2+
+Pb:
+  Pb:
+    MASS: 207.2
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Tl/Tl+ (Z-distance=1, donor MASS=204.380).
+    SOURCE_TYPE: Tl/Tl+
+Bi:
+  Bi:
+    MASS: 208.98
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Tl/Tl+ (Z-distance=2, donor MASS=204.380).
+    SOURCE_TYPE: Tl/Tl+
+Po:
+  Po:
+    MASS: 209.0
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Tl/Tl+ (Z-distance=3, donor MASS=204.380).
+    SOURCE_TYPE: Tl/Tl+
+At:
+  At:
+    MASS: 210.0
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Tl/Tl+ (Z-distance=4, donor MASS=204.380).
+    SOURCE_TYPE: Tl/Tl+
+Rn:
+  Rn:
+    MASS: 222.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Th/Th4+ (Z-distance=4, donor MASS=232.040).
+    SOURCE_TYPE: Th/Th4+
+Fr:
+  Fr:
+    MASS: 223.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Th/Th4+ (Z-distance=3, donor MASS=232.040).
+    SOURCE_TYPE: Th/Th4+
+Ra:
+  Ra:
+    MASS: 226.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Th/Th4+ (Z-distance=2, donor MASS=232.040).
+    SOURCE_TYPE: Th/Th4+
+Ac:
+  Ac:
+    MASS: 227.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Th/Th4+ (Z-distance=1, donor MASS=232.040).
+    SOURCE_TYPE: Th/Th4+
+Pa:
+  Pa:
+    MASS: 231.036
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Th/Th4+ (Z-distance=1, donor MASS=232.040).
+    SOURCE_TYPE: Th/Th4+
+Np:
+  Np:
+    MASS: 237.0
+    RADIUS: 1.792
+    WELL_DEPTH: 0.20665151
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor U/U4+ (Z-distance=1, donor MASS=238.030).
+    SOURCE_TYPE: U/U4+
+Am:
+  Am:
+    MASS: 243.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=1, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Cm:
+  Cm:
+    MASS: 247.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=2, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Bk:
+  Bk:
+    MASS: 247.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=3, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Cf:
+  Cf:
+    MASS: 251.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=4, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Es:
+  Es:
+    MASS: 252.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=5, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Fm:
+  Fm:
+    MASS: 257.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=6, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Md:
+  Md:
+    MASS: 258.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=7, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+'No':
+  'No':
+    MASS: 259.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=8, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Lr:
+  Lr:
+    MASS: 266.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=9, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Rf:
+  Rf:
+    MASS: 267.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=10, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Db:
+  Db:
+    MASS: 268.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=11, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Sg:
+  Sg:
+    MASS: 269.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=12, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Bh:
+  Bh:
+    MASS: 270.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=13, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Hs:
+  Hs:
+    MASS: 269.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=14, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Mt:
+  Mt:
+    MASS: 278.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=15, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Ds:
+  Ds:
+    MASS: 281.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=16, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Rg:
+  Rg:
+    MASS: 282.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=17, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Cn:
+  Cn:
+    MASS: 285.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=18, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Nh:
+  Nh:
+    MASS: 286.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=19, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Fl:
+  Fl:
+    MASS: 289.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=20, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Mc:
+  Mc:
+    MASS: 290.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=21, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Lv:
+  Lv:
+    MASS: 293.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=22, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Ts:
+  Ts:
+    MASS: 294.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=23, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+
+Og:
+  Og:
+    MASS: 294.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: Element absent from gaff2.yaml. MASS from fallback periodic masses; RADIUS/WELL_DEPTH
+      inferred by nearby periodic analogy to donor Pu/Pu4+ (Z-distance=24, donor MASS=244.060).
+    SOURCE_TYPE: Pu/Pu4+

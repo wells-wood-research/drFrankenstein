@@ -3,25 +3,25 @@
 
     /* Styles for Sub-Tabs within Torsion Scanning */
     .torsion-sub-tab-nav {
-        display: flex;
-        flex-wrap: wrap; /* Allow buttons to wrap if many */
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
         background-color: #1a1a1a;
         margin-top: 15px;
     }
 
     .torsion-sub-tab-nav button {
-        background-color: inherit;
+        background-color: #202020;
         color: #b0b0b0;
-        border: none;
+        border: 1px solid #343434;
+        border-radius: 4px;
         outline: none;
         cursor: pointer;
-        padding: 10px 15px;
+        padding: 6px;
         transition: 0.3s;
-        font-size: 0.9em;
-    }
-
-    .torsion-sub-tab-nav button:last-child {
-        border-right: none;
+        font-size: 0.8em;
+        min-height: 112px;
+        text-align: center;
     }
 
     .torsion-sub-tab-nav button:hover {
@@ -32,7 +32,46 @@
     .torsion-sub-tab-nav button.active {
         background-color: #333333;
         color: #ffffff;
+        border-color: #00ff00;
         font-weight: bold;
+    }
+
+    .torsion-sub-tab-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .torsion-sub-tab-tile img {
+        width: 100%;
+        height: 72px;
+        object-fit: contain;
+        object-position: center;
+        border-radius: 3px;
+        border: 1px solid #454545;
+        background-color: #111111;
+    }
+
+    .torsion-sub-tab-tile .tile-label {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .torsion-sub-tab-tile .tile-placeholder {
+        width: 100%;
+        height: 72px;
+        border-radius: 3px;
+        border: 1px dashed #454545;
+        background-color: #151515;
+        color: #8c8c8c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75em;
     }
 
     .torsion-sub-tab-content {
@@ -209,6 +248,9 @@
 
     /* Responsive adjustments for smaller screens */
     @media (max-width: 768px) { /* Adjust breakpoint as needed */
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
         .dihedral-top-section {
             flex-direction: column; /* Stack info and viz panels vertically */
             align-items: stretch;   /* Make panels take full available width */
@@ -227,6 +269,18 @@
         }
         .dihedral-plots .plot-container {
             flex-basis: 100%; /* Make plots take full width on small screens */
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 520px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
@@ -273,7 +327,18 @@
             {% for dihedral_name, details in torsion_data.torsionsToScan.items() %}
                 <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="openDihedralSubTab(event, 'dihedral_sub_tab_{{ loop.index }}')">
-                    {{ dihedral_name }}
+                    {% set single_point_preview = details.spPng if details.spPng else none %}
+                    {% set scan_preview = details.scanPng if details.scanPng else none %}
+                    <span class="torsion-sub-tab-tile">
+                        {% if single_point_preview %}
+                            <img src="{{ single_point_preview }}" alt="Single-point energies preview for {{ dihedral_name }}">
+                        {% elif scan_preview %}
+                            <img src="{{ scan_preview }}" alt="Scan energies preview for {{ dihedral_name }}">
+                        {% else %}
+                            <span class="tile-placeholder">No preview</span>
+                        {% endif %}
+                        <span class="tile-label">{{ dihedral_name }}</span>
+                    </span>
                 </button>
             {% endfor %}
         </div>

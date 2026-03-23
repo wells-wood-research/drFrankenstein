@@ -193,6 +193,29 @@ def  make_orca_input_for_scan(inputXyz,
 
     return orcaInputFile
 ###################################################################################
+def  make_orca_input_for_sp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+    ## unpack moleculeInfo
+    charge = moleculeInfo["charge"]
+    multiplicity = moleculeInfo["multiplicity"]
+    ## create orca input file
+    orcaInputFile = p.join(outDir, "orca_sp.inp")
+    with open(orcaInputFile, "w") as f:
+        f.write(" # --------------------------------- #\n")
+        f.write(" #  Single Point Calculation         #\n")
+        f.write(" # --------------------------------- #\n")
+        ## METHOD
+        if solvationMethod is None:
+            f.write(f"! {qmMethod} SP\n")
+        else:
+            f.write(f"! {qmMethod} {solvationMethod} SP\n") 
+        ## GEOMETRY
+        f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
+
+    return orcaInputFile
+###################################################################################
+
+
+
 def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]

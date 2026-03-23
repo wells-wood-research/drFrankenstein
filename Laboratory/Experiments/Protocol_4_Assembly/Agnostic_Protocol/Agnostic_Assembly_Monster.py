@@ -16,8 +16,8 @@ from pdbUtils import pdbUtils
 
 
 from OperatingTools import file_parsers
-from . import Assembly_Assistant
-from .Assembly_Assistant import (
+from . import Agnostic_Assembly_Assistant
+from .Agnostic_Assembly_Assistant import (
     average_dict_values,
     get_compliance_matrix,
     measure_angle,
@@ -561,16 +561,25 @@ def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
 
 
 def  assign_non_bonded_by_analogy(atomTypesDf):
-    nonBondedLookup = find_non_bonded_lookup()
+    nonBondedLookup, absentNonBondedLookup = find_non_bonded_lookup()
 
     with open(nonBondedLookup, "r") as f:
         nonBondedLookup = yaml.safe_load(f)
+
+    with open(absentNonBondedLookup, "r") as f:
+        absentNonBondedLookup = yaml.safe_load(f)
 
     nonBondedParams = {}
     for atomType, atomTypeDf, in atomTypesDf.groupby("ATOM_TYPE"):
         meanCharge = atomTypeDf["Charge"].mean()
         element = atomTypeDf["ELEMENT"].iloc[0]
-        elementLookup = nonBondedLookup[element]
+        ## use gaff2 lookup (by-analogy will be for the correct element)
+        elementLookup = nonBondedLookup.get(element, None)
+        if elementLookup is None:   ## if element not in gaff2 lookup, use the absent lookup. This will be by-analogy to the closest element in the gaff2 lookup based on charge
+            elementLookup = absentNonBondedLookup.get(element, None)
+            print(f"WARNING: Non-Bonded Parameters for element {element} not found in GAFF2. Non-Bonded parameters will be assigned by-analogy to the closest available element")
+        if elementLookup is None:
+            raise ValueError(f"No non-bonded parameters found for element {element}\n Please check your input PDB file.")
         elementLookupDf = pd.DataFrame.from_dict(elementLookup).T
         elementLookupDf["Delta_Charge"] = elementLookupDf["CHARGE"] - meanCharge
         minDeltaCharge = elementLookupDf["Delta_Charge"].min()
@@ -709,7 +718,7 @@ def construct_mol2(atomTypesDf: pd.DataFrame, config: dict):
                 
                 # Force all atoms into a single molecular residue for tleap
                 atomData[6] = "1"     # Residue Number
-                atomData[7] = "MOL"   # Residue Name
+                atomData[7] = moleculeName   # Residue Name
                 
                 # Assign partial charges
                 atomCharge = chargesDf[chargesDf["ATOM_NAME"] == atomName]["Charge"].iloc[0]
@@ -753,7 +762,7 @@ def construct_mol2(atomTypesDf: pd.DataFrame, config: dict):
 
 
 def get_atom_type_masses(atomTypesDf: pd.DataFrame) -> dict:
-    massLookup = Assembly_Assistant.init_mass_lookup()
+    massLookup = Agnostic_Assembly_Assistant.init_mass_lookup()
     atomTypeMasses = {}
     for atomType, groupDf in atomTypesDf.groupby("ATOM_TYPE"):
         element = groupDf["ELEMENT"].iloc[0]

@@ -46,25 +46,25 @@
 
     /* Styles for Sub-Tabs within Parameter Fitting (mimicking torsion_scanning.html) */
     .fitting-sub-tab-nav {
-        display: flex;
-        flex-wrap: wrap;
-        background-color: #1a1a1a; /* Dark background for nav bar */
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+        background-color: #1a1a1a;
         margin-top: 15px;
     }
 
     .fitting-sub-tab-nav button {
-        background-color: inherit;
-        color: #b0b0b0; /* Light grey text for inactive tabs */
-        border: none;
+        background-color: #202020;
+        color: #b0b0b0;
+        border: 1px solid #343434;
+        border-radius: 4px;
         outline: none;
         cursor: pointer;
-        padding: 10px 15px;
+        padding: 6px;
         transition: 0.3s;
-        font-size: 0.9em;
-    }
-
-    .fitting-sub-tab-nav button:last-child {
-        border-right: none; /* No border on the very last button */
+        font-size: 0.8em;
+        min-height: 112px;
+        text-align: center;
     }
 
     .fitting-sub-tab-nav button:hover {
@@ -75,7 +75,46 @@
     .fitting-sub-tab-nav button.active {
         background-color: #333333; /* Darker grey for active tab */
         color: #ffffff; /* White text for active tab */
+        border-color: #00ff00;
         font-weight: bold;
+    }
+
+    .fitting-sub-tab-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .fitting-sub-tab-tile img {
+        width: 100%;
+        height: 72px;
+        object-fit: contain;
+        object-position: center;
+        border-radius: 3px;
+        border: 1px solid #454545;
+        background-color: #111111;
+    }
+
+    .fitting-sub-tab-tile .tile-label {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .fitting-sub-tab-tile .tile-placeholder {
+        width: 100%;
+        height: 72px;
+        border-radius: 3px;
+        border: 1px dashed #454545;
+        background-color: #151515;
+        color: #8c8c8c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75em;
     }
 
     .fitting-sub-tab-content {
@@ -160,6 +199,24 @@
         background-color: #2a2a2a; /* Dark background for image area if transparent */
         border-radius: 3px; /* Optional */
     }
+
+    @media (max-width: 900px) {
+        .fitting-sub-tab-nav {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .fitting-sub-tab-nav {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 520px) {
+        .fitting-sub-tab-nav {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
 </style>
 
 <h2>Parameter Fitting Summary</h2>
@@ -193,7 +250,15 @@
             {% for dihedral_name, details in fitting_data.torsionsToScan.items() %}
                 <button class="fitting-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="open_fitting_sub_tab(event, 'fitting_sub_tab_{{ loop.index }}')">
-                    {{ dihedral_name }}
+                    {% set fit_preview = fitting_data.fittingImages.get(dihedral_name).finalPng if fitting_data.fittingImages and fitting_data.fittingImages.get(dihedral_name) and fitting_data.fittingImages.get(dihedral_name).finalPng else none %}
+                    <span class="fitting-sub-tab-tile">
+                        {% if fit_preview %}
+                            <img src="{{ fit_preview }}" alt="Final fitting preview for {{ dihedral_name }}">
+                        {% else %}
+                            <span class="tile-placeholder">No preview</span>
+                        {% endif %}
+                        <span class="tile-label">{{ dihedral_name }}</span>
+                    </span>
                 </button>
             {% endfor %}
         </div>

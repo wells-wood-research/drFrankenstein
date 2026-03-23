@@ -177,6 +177,10 @@ def run_orca_solvator_for_charge_calculations(args: tuple) -> FilePath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_orca_singlepoint_for_charge_calculations(args) -> None: 
     conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config = args
+
+    assemblyProtocol = config["miscInfo"]["assemblyProtocol"]
+    chargeFittingProtocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
+
     conformerName = p.basename(conformerXyz).split(".")[0]
     
     conformerQmDir = p.join(orcaDir, conformerName)
@@ -200,19 +204,33 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
         drOrca.run_orca(orcaOptInput, orcaOptOutput, config)
 
     optXyz = p.join(conformerQmDir, "orca_opt.xyz")
-    orcaSinglePointInput = drOrca.make_orca_input_for_opt_freq(inputXyz = optXyz,
-                                                                outDir = conformerQmDir,
-                                                                moleculeInfo = moleculeInfo,
-                                                                qmMethod = chargeFittingInfo["singlePointMethod"],
-                                                                solvationMethod = singlePointSolvation)
-    
-    orcaSinglePointOutput = p.join(conformerQmDir, "orca_opt_freq.out")
-    if not p.isfile(orcaSinglePointOutput):
-        drOrca.run_orca(orcaSinglePointInput, orcaSinglePointOutput, config)
 
-    singlePointName = p.splitext(p.basename(orcaSinglePointInput))[0]
-    call(["orca_2mkl", p.join(conformerQmDir,singlePointName), "-molden"], stdout=DEVNULL)
-    singlePointMolden = p.join(conformerQmDir, "orca_opt_freq.molden.input")
+    ## time saving step: only run opt/freq when assemblyProtocol == "AGNOSTIC"
+    ## even then, we only need opt/freq for the solvated in RESP2
+    if assemblyProtocol == "AGNOSTIC" and chargeFittingProtocol == "RESP2" and useSolvation:
+        orcaCalculationInput = drOrca.make_orca_input_for_opt_freq(inputXyz = optXyz,
+                                                                    outDir = conformerQmDir,
+                                                                    moleculeInfo = moleculeInfo,
+                                                                    qmMethod = chargeFittingInfo["singlePointMethod"],
+                                                                    solvationMethod = singlePointSolvation)
+        
+        orcaCalculationOutput = p.join(conformerQmDir, "orca_opt_freq.out")
+    else:
+        orcaCalculationInput = drOrca.make_orca_input_for_qmmm_singlepoint(inputXyz=optXyz,
+                                                                       outDir= conformerQmDir,
+                                                                       moleculeInfo= config["moleculeInfo"],
+                                                                       qmMethod= chargeFittingInfo["singlePointMethod"],
+                                                                       qmAtoms= config["runtimeInfo"]["madeByCharges"]["qmAtoms"],
+                                                                       parameterFile= config["runtimeInfo"]["madeByCharges"]["solvatedParams"],
+                                                                       solvationMethod = singlePointSolvation)
+        orcaCalculationOutput = p.join(conformerQmDir, "orca_sp.out")
+
+    if not p.isfile(orcaCalculationOutput):
+        drOrca.run_orca(orcaCalculationInput, orcaCalculationOutput, config)
+
+    calculationName = p.splitext(p.basename(orcaCalculationInput))[0]
+    call(["orca_2mkl", p.join(conformerQmDir,calculationName), "-molden"], stdout=DEVNULL)
+    singlePointMolden = p.join(conformerQmDir, f"{calculationName}.molden.input")
 
     destMolden = p.join(fittingDir, f"{conformerName}.molden.input")
 

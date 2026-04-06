@@ -17,6 +17,7 @@ from typing import List, Tuple
 ## drFRANKENSTIEN LIBRARIES ##
 from . import Capping_Monster
 from . import Capping_Assistant
+from . import Capping_Builders
 from OperatingTools import Timer, cleaner
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -90,6 +91,7 @@ def add_nmethyl_caps(molDf: pd.DataFrame,
                         config: dict) -> pd.DataFrame:
     """
     Protocol for adding N-Methyl (NCH3) caps to each C-Terminus
+    Uses internal coordinate geometry for proper placement.
 
     Args:
         molDf (pd.DataFrame): dataframe of the molecule
@@ -103,18 +105,18 @@ def add_nmethyl_caps(molDf: pd.DataFrame,
     cappedDf = molDf.copy()
     cTerminalAtoms = config["moleculeInfo"]["backboneAliases"]["C"]
     nmeDf = pdbUtils.pdb2df(nmePdb)
-    originalNmeDf = nmeDf.copy()
 
     dfsToConcat = [molDf]
 
     maxResId = molDf["RES_ID"].max()
     for i, cTerminalAtom in enumerate(cTerminalAtoms):
-        tmpNmeDf = Capping_Monster.place_nn(cappedDf, cTerminalAtom, nmeDf)
-        tmpNmeDf = Capping_Monster.place_hnn1(cappedDf, cTerminalAtom, tmpNmeDf)
-        tmpNmeDf = Capping_Monster.place_cn(cappedDf, cTerminalAtom, tmpNmeDf)
-        tmpNmeDf = Capping_Assistant.transform_whole(originalNmeDf, tmpNmeDf, atomNames=["NN", "HNN1", "CN"])
+        tmpNmeDf = Capping_Builders.build_nme_cap(cappedDf, cTerminalAtom, nmeDf)
         tmpNmeDf["RES_ID"] = maxResId + i + 1
         dfsToConcat.append(tmpNmeDf)
+        
+        validation = Capping_Builders.validate_geometry(cappedDf, tmpNmeDf, "C", cTerminalAtom)
+        if config.get("verbose", False):
+            print(f"NME cap geometry for {cTerminalAtom}: {validation}")
 
     nmeCappedDf = pd.concat(dfsToConcat, axis=0)
     return nmeCappedDf
@@ -124,6 +126,7 @@ def add_acetyl_caps(molDf: pd.DataFrame,
                        config: dict) -> pd.DataFrame:
     """
     Protocol for adding Acetyl (CCH3) caps to each N-Terminus
+    Uses internal coordinate geometry for proper placement.
 
     Args:
         molDf (pd.DataFrame): dataframe of the molecule
@@ -141,13 +144,13 @@ def add_acetyl_caps(molDf: pd.DataFrame,
     dfsToConcat = [molDf]
     maxResId = molDf["RES_ID"].max()
     for i, nTerminalAtom in enumerate(nTerminalAtoms):
-        tmpAceDf = Capping_Monster.place_cc1(cappedDf, nTerminalAtom, aceDf)
-        tmpAceDf = Capping_Monster.place_oc(cappedDf, nTerminalAtom, aceDf)
-        tmpAceDf = Capping_Monster.place_cc2(cappedDf, nTerminalAtom, aceDf)
-        aceDf = pdbUtils.pdb2df(acePdb)
-        tmpAceDf = Capping_Assistant.transform_whole(aceDf, tmpAceDf, atomNames=["CC1", "OC", "CC2"])
+        tmpAceDf = Capping_Builders.build_ace_cap(cappedDf, nTerminalAtom, aceDf)
         tmpAceDf["RES_ID"] = maxResId + i + 1
         dfsToConcat.append(tmpAceDf)
+        
+        validation = Capping_Builders.validate_geometry(cappedDf, tmpAceDf, "N", nTerminalAtom)
+        if config.get("verbose", False):
+            print(f"ACE cap geometry for {nTerminalAtom}: {validation}")
 
     aceCappedDf = pd.concat(dfsToConcat, axis=0)
     return aceCappedDf

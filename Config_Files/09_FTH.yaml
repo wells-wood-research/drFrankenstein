@@ -10,15 +10,14 @@
 ##########################################################################################################################
 pathInfo:
   ## full path to input files
-  inputDir: /home/eugene/drFrankenstein/Inputs
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/eugene/09_FTH_FrankenParams
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/00_FTH_TEST
   ## full path to Multiwfn install directory
-  multiWfnDir: /home/eugene/bin/Multiwfn_3.8_dev_bin_Linux_noGUI
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
-  orcaExe: /home/eugene/bin/orca_6_0_1/orca
+  orcaExe: /home/esp/bin/orca_6_1_0/orca
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
-  amberHome: /home/eugene/.conda/envs/Igor
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null
 

@@ -37,6 +37,7 @@ def conformer_generation_protocol(config: dict) -> dict:
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     conformerDir = config["runtimeInfo"]["madeByConformers"]["conformerDir"]
+    nCpus = config["miscInfo"]["nCpus"]
 
     ## convert capped PDB file to XYZ format
     cappedXyz = p.join(conformerDir, f"{moleculeName}_capped.xyz")

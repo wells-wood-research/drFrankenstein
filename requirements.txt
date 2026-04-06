@@ -11,7 +11,7 @@ pexpect==4.9.0
 tqdm==4.67.1
 imageio==2.37.0
 mdtraj==1.10.3
+scikit-learn==1.7.2
 networkx
 argpass
-scikit-learn=1.7.2
-yaml
+pyyaml

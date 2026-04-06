@@ -30,13 +30,12 @@ def round_charges_carefully(config):
     totalCharge = config["moleculeInfo"]["charge"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     cappedDf = pdbUtils.pdb2df(cappedPdb)
-    carbonIndexes = cappedDf[(cappedDf["ELEMENT"] == "C") & (~cappedDf["ATOM_NAME"].isin(["CC1", "CC2", "CN"]))].index   
+    carbonIndexes = cappedDf[(cappedDf["ELEMENT"] == "C") & (~cappedDf["ATOM_NAME"].isin(["C_C", "C2_C", "C_N"]))].index   
     chargeDf = pd.read_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"], index_col="Unnamed: 0")
 
     ## Exclude Capping Groups
-    moleculeDf = chargeDf[~chargeDf["ATOM_NAME"].isin(["CN", "NN", "HNN1", "HCN1",
-                                                        "HCN2", "HCN3", "CC1", "OC",
-                                                          "CC2", "HC1", "HC2", "HC3"])]
+    moleculeDf = chargeDf[~chargeDf["ATOM_NAME"].isin(["C_N", "N_N", "H1_N", "H2_N", "H3_N",
+                                                        "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"])]
 
 
     # Calculate difference from total charge for molecule excluding capping groups
@@ -55,9 +54,11 @@ def round_charges_carefully(config):
         else:
             modifier = -0.001
         nAtomsToModify = abs(difference / modifier)
+        
 
         for i in range(int(nAtomsToModify)):
-            chargeDf.loc[chargeDf["ATOM_NAME"] == carbonNames[i], "Charge"] += modifier
+            carbonIndex = i % len(carbonNames)
+            chargeDf.loc[chargeDf["ATOM_NAME"] == carbonNames[carbonIndex], "Charge"] += modifier
 
 
         # Re-round to 3 decimal places to avoid floating-point precision issues

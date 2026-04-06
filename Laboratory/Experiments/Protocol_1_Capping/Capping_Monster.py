@@ -48,7 +48,7 @@ def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
                                                    moleculeInfo=config["moleculeInfo"],
                                                    qmMethod="XTB2",
                                                     solvationMethod="ALPB(water)",
-                                                    geomOptions="MaxIter 10")
+                                                    geomOptions="MaxIter 100")
     optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
     drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
 
@@ -78,7 +78,7 @@ def trim_termini(molDf: pd.DataFrame,
     allAtomsToDelete = []
     for nTerminalAtom in nTerminalAtoms:
         bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf, nTerminalAtom)
-        nTerminalProton = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms)
+        nTerminalProton = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms, config)
         allAtomsToDelete.append(nTerminalProton)
 
     ## get the oxygen (or equivalent) atoms bound to C-Terminus, and anything bound to that oxygen
@@ -96,18 +96,18 @@ def trim_termini(molDf: pd.DataFrame,
     return molDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_cc1(cappedDf: pd.DataFrame,
+def place_cc(cappedDf: pd.DataFrame,
                nTerminalAtom: str,
                  aceDf: pd.DataFrame) -> pd.DataFrame:
     """
-    Places the CC1 capping atom in the Acetyl capping group
+    Places the C_C capping atom in the Acetyl capping group
     
     Args:
         cappedDf (pd.DataFrame): DataFrame of capped molecule
         nTerminalAtom (str): name of N-Terminus atom
         aceDf (pd.DataFrame): DataFrame of Acetyl capping group
     Returns:
-        aceDf (pd.DataFrame): DataFrame with CC1 capping atom placed
+        aceDf (pd.DataFrame): DataFrame with C_C capping atom placed
     """
     
     ## get coordinates for N-Terminus
@@ -130,14 +130,14 @@ def place_cc1(cappedDf: pd.DataFrame,
     else:
         caName = caAtomNames[0]
     caCoords = cappedDf[cappedDf["ATOM_NAME"] == caName].loc[:, ["X", "Y", "Z"]].values[0]
-    ## place the CC1 capping atom
+    ## place the C_C capping atom
     aceDf = Capping_Assistant.place_capping_atom_by_average_of_vectors(capDf = aceDf,
                                                       vectorAtomCoordsA = hCoords,
                                                        vectorAtomCoordsB = nTerminalCoords,
                                                         vectorAtomCoordsC = caCoords,
                                                           vectorAtomCoordsD =  nTerminalCoords,
                                                              bondedAtomCoords = nTerminalCoords,
-                                                              atomNameToPlace = "CC1",
+                                                              atomNameToPlace = "C_C",
                                                                bondLength = 1.4)
 
     return aceDf
@@ -146,14 +146,14 @@ def place_oc(cappedDf: pd.DataFrame,
               nTerminalAtom: str,
                 aceDf: pd.DataFrame) -> pd.DataFrame:
     """
-    Places the OC capping atom in the Acetyl capping group
+    Places the O_C capping atom in the Acetyl capping group
     
     Args:
         cappedDf (pd.DataFrame): DataFrame of capped molecule
         nTerminalAtom (str): name of N-Terminus atom
         aceDf (pd.DataFrame): DataFrame of Acetyl capping group
     Returns:
-        aceDf (pd.DataFrame): DataFrame with OC capping atom placed
+        aceDf (pd.DataFrame): DataFrame with O_C capping atom placed
     """
 
     ## get coordinates for N-Terminus
@@ -168,18 +168,18 @@ def place_oc(cappedDf: pd.DataFrame,
         hAtomName = hAtomNames[0]
     hCoords = cappedDf[cappedDf["ATOM_NAME"] == hAtomName].loc[:, ["X", "Y", "Z"]].values[0]
     ## get coordinates for CC1 in the Acetyl capping group
-    cc1Coords = aceDf[aceDf["ATOM_NAME"] == "CC1"].loc[:, ["X", "Y", "Z"]].values[0]
+    ccCoords = aceDf[aceDf["ATOM_NAME"] == "C_C"].loc[:, ["X", "Y", "Z"]].values[0]
     ## place the OC capping atom
     aceDf = Capping_Assistant.place_capping_atom_by_vector(capDf=aceDf,
                                         vectorAtomCoordsA = hCoords,
                                         vectorAtomCoordsB = nTerminalCoords,
-                                        bondedAtomCoords = cc1Coords,
-                                        atomNameToPlace = "OC",
+                                        bondedAtomCoords = ccCoords,
+                                        atomNameToPlace = "O_C",
                                         bondLength = 1.2)
 
     return aceDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_cc2(cappedDf: pd.DataFrame,
+def place_c2c(cappedDf: pd.DataFrame,
                nTerminalAtom: str,
                  aceDf: pd.DataFrame) -> pd.DataFrame:
     """
@@ -194,16 +194,16 @@ def place_cc2(cappedDf: pd.DataFrame,
     """
     ## get coordinates
     nTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == nTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
-    cc1Coords = aceDf[aceDf["ATOM_NAME"] == "CC1"].loc[:, ["X", "Y", "Z"]].values[0]
-    ocCoords = aceDf[aceDf["ATOM_NAME"] == "OC"].loc[:, ["X", "Y", "Z"]].values[0]
+    ccCoords = aceDf[aceDf["ATOM_NAME"] == "C_C"].loc[:, ["X", "Y", "Z"]].values[0]
+    ocCoords = aceDf[aceDf["ATOM_NAME"] == "O_C"].loc[:, ["X", "Y", "Z"]].values[0]
     ## place the CC2 capping atom
     aceDf = Capping_Assistant.place_capping_atom_by_average_of_vectors(capDf = aceDf,
                                                       vectorAtomCoordsA = nTerminalCoords,
-                                                       vectorAtomCoordsB = cc1Coords,
+                                                       vectorAtomCoordsB = ccCoords,
                                                         vectorAtomCoordsC = ocCoords,
-                                                         vectorAtomCoordsD = cc1Coords, 
-                                                          bondedAtomCoords = cc1Coords,
-                                                           atomNameToPlace = "CC2",
+                                                         vectorAtomCoordsD = ccCoords, 
+                                                          bondedAtomCoords = ccCoords,
+                                                           atomNameToPlace = "C2_C",
                                                             bondLength= 1.45)
     return aceDf
 
@@ -212,7 +212,7 @@ def place_nn(cappedDf: pd.DataFrame,
               cTerminalAtom: str,
                 nmeDf: pd.DataFrame) -> pd.DataFrame:
     """
-    Places the NN capping atom in the N-Methyl capping group
+    Places the N_N capping atom in the N-Methyl capping group
     
     Args:
         cappedDf (pd.DataFrame): DataFrame of capped molecule
@@ -237,25 +237,26 @@ def place_nn(cappedDf: pd.DataFrame,
                                                        vectorAtomCoordsC=caCoords,
                                                         vectorAtomCoordsD=cTerminalCoords,
                                                          bondedAtomCoords=cTerminalCoords,
-                                                          atomNameToPlace="NN",
+                                                          atomNameToPlace="N_N",
                                                            bondLength=1.4)
 
     
     return nmeDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def place_hnn1(cappedDf: pd.DataFrame,
+def place_hn(cappedDf: pd.DataFrame,
                 cTerminalAtom: str,
                   nmeDf: pd.DataFrame) -> pd.DataFrame:
     """
-    Places the HNN1 capping atom in the N-Methyl capping group
+    Places the H_N capping atom in the N-Methyl capping group
     
     Args:
         cappedDf (pd.DataFrame): DataFrame of capped molecule
         cTerminalAtom (str): name of C-Terminus atom
         nmeDf (pd.DataFrame): DataFrame of N-Methyl capping group
     Returns:
-        nmeDf (pd.DataFrame): DataFrame with HNN1 capping atom placed
+        nmeDf (pd.DataFrame): DataFrame with H_N capping atom placed
     """
+    print(nmeDf)
     # Get coordinates from protein
     bondedAtoms = Capping_Assistant.find_bonded_atoms(cappedDf, cTerminalAtom)
 
@@ -265,13 +266,13 @@ def place_hnn1(cappedDf: pd.DataFrame,
     oCoords = cappedDf[cappedDf["ATOM_NAME"] == oEquivalentName].loc[:, ["X", "Y", "Z"]].values[0]
     
     # Get original NN coordinates
-    nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "NN"].loc[:, ["X", "Y", "Z"]].values[0]
+    nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "N_N"].loc[:, ["X", "Y", "Z"]].values[0]
 
     nmeDf = Capping_Assistant.place_capping_atom_by_vector(capDf=nmeDf,
                                         vectorAtomCoordsA = oCoords,
                                         vectorAtomCoordsB = cTerminalCoords,
                                         bondedAtomCoords = nnCoords,
-                                        atomNameToPlace = "HNN1",
+                                        atomNameToPlace = "H_N",
                                         bondLength = 1.0)
 
     return nmeDf
@@ -280,7 +281,7 @@ def place_cn(cappedDf: pd.DataFrame,
               cTerminalAtom: str,
                 nmeDf: pd.DataFrame) -> pd.DataFrame:
     """
-    Places the CN capping atom in the N-Methyl capping group
+    Places the C_N capping atom in the N-Methyl capping group
     
     Args:
         cappedDf (pd.DataFrame): DataFrame of capped molecule
@@ -291,16 +292,16 @@ def place_cn(cappedDf: pd.DataFrame,
     """
     ## get coordinates for C-Terminus, NN and HNN atoms
     cTerminalCoords = cappedDf[cappedDf["ATOM_NAME"] == cTerminalAtom].loc[:, ["X", "Y", "Z"]].values[0]
-    nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "NN"].loc[:, ["X", "Y", "Z"]].values[0]
-    hnnCoords = nmeDf[nmeDf["ATOM_NAME"] == "HNN1"].loc[:, ["X", "Y", "Z"]].values[0]
+    nnCoords = nmeDf[nmeDf["ATOM_NAME"] == "N_N"].loc[:, ["X", "Y", "Z"]].values[0]
+    hnCoords = nmeDf[nmeDf["ATOM_NAME"] == "H_N"].loc[:, ["X", "Y", "Z"]].values[0]
     ## place CN
     nmeDf = Capping_Assistant.place_capping_atom_by_average_of_vectors(capDf = nmeDf,
                                              vectorAtomCoordsA = cTerminalCoords,
                                                vectorAtomCoordsB = nnCoords,
-                                                 vectorAtomCoordsC = hnnCoords,
+                                                 vectorAtomCoordsC = hnCoords,
                                                    vectorAtomCoordsD = nnCoords,
                                                      bondedAtomCoords = nnCoords,
-                                                       atomNameToPlace = "CN",
+                                                       atomNameToPlace = "C_N",
                                                          bondLength = 1.4)
     
     return nmeDf

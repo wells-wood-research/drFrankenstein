@@ -264,12 +264,12 @@ def set_capping_types_to_charmm_defaults_rtf(config: dict) -> dict:
     mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
 
     mapAtomNameToDefaultCharmmType = {
-        "NN": "NH1",        ## N-Me Nitrogen -> BB Nitrogen
-        "CN": "CT1",        ## N-Me Carbon -> BB CA
-        "HNN1": "H",        ## N-Me Hydrogen -> BB N-H Hydrogen
-        "OC": "O",          ## ACE oxygen -> BB amide carbon
-        "CC1": "C",         ## ACE amide carbon -> BB amide carbon
-        "CC2": "CT1"        ## ACE methyl carbon -> BB CA
+        "N_N": "NH1",        ## N-Me Nitrogen -> BB Nitrogen
+        "C_N": "CT1",        ## N-Me Carbon -> BB CA
+        "H_N": "H",        ## N-Me Hydrogen -> BB N-H Hydrogen
+        "O_C": "O",          ## ACE oxygen -> BB amide carbon
+        "C_C": "C",         ## ACE amide carbon -> BB amide carbon
+        "C2_C": "CT1"        ## ACE methyl carbon -> BB CA
     }
 
 

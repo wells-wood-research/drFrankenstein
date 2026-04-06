@@ -22,67 +22,70 @@ class DirectoryPath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 
-# def duplicate_capping_parameters(config:dict) -> None:
-#     """
-#     Accounts for interactions between capping groups and a ncAA by duplicating these params
-#     and replacing capping types with canonical types
-#     """
+def duplicate_capping_parameters(config:dict) -> None:
+    """
+    Accounts for interactions between capping groups and a ncAA by duplicating these params
+    and replacing capping types with canonical types
+    """
 
-#     finalPrm = config["runtimeInfo"]["madeByCreator"]["finalPrm"]
-#     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
+    finalPrm = config["runtimeInfo"]["madeByCreator"]["finalPrm"]
+    moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
 
-#     nameToCgenffType = {}
-#     with open(moleculeRtf, "r") as f:
-#         for line in f:
-#             if line.strip() == "":
-#                 continue
-#             if line.startswith("ATOM"):
-#                 data = line.split()
-#                 nameToCgenffType[data[1]] = data[2]
+    nameToCgenffType = {}
+    with open(moleculeRtf, "r") as f:
+        for line in f:
+            if line.strip() == "":
+                continue
+            if line.startswith("ATOM"):
+                data = line.split()
+                nameToCgenffType[data[1]] = data[2]
 
-#     nameToCharmmType = {
-#         "NN" : "NH1",
-#         "HNN1" : "H",
-#         "CN": "CT1",
-#         "HCN1": "HB1",
-#         "CC1" : "C",
-#         "OC" : "O",
-#     }
+    print("NAME TO CGENFF TYPE")
+    print(nameToCgenffType)
 
-
-#     cgenffToCharmm = {}
-#     for atomName, _ in nameToCharmmType.items():
-#         print(atomName, nameToCgenffType[atomName], nameToCharmmType[atomName])
-#         cgenffToCharmm[nameToCgenffType[atomName]] = nameToCharmmType[atomName]
+    nameToCharmmType = {
+        "N_N" : "NH1",
+        "H_N" : "H",
+        "C_N": "CT1",
+        "H1_N": "HB1",
+        "C_C" : "C",
+        "O_C" : "O",
+    }
 
 
+    cgenffToCharmm = {}
+    for atomName, _ in nameToCharmmType.items():
+        print(atomName, nameToCgenffType[atomName], nameToCharmmType[atomName])
+        cgenffToCharmm[nameToCgenffType[atomName]] = nameToCharmmType[atomName]
 
-#     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
-#     tmpPrm = p.join(finalCreationDir, "tmp.prm")
 
-#     cgenffTypes = [key for key in cgenffToCharmm.keys()]
-#     print(cgenffTypes)
-#     section = "START"
-#     sectionHeaders = ["BONDS", "ANGLES", "DIHEDRALS", "IMPROPERS"]
-#     with open(finalPrm, "r") as f:
-#         for line in f:
-#             if line.strip() == "":
-#                 continue
-#             for sectionHeader in sectionHeaders:
-#                 if line.startswith(sectionHeader):
-#                     section = sectionHeader
-#                     continue
-#                 if section == "BONDS":
-#                     atomNames = line.split()[0:2]
-#                     print(atomNames, cgenffTypes)
-#                     if any(cgenffType in atomNames for cgenffType in cgenffTypes):
-#                         data[0:2] = [cgenffToCharmm.get(cgenffType, cgenffType) for cgenffType in data[0:2]]
-#                         newLine = " ".join(data)
-#                         print("NEWLINE" + newLine)
-#                 if section  == "ANGLES":
-#                     exit()
-#     exit()
-                        
+    finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    tmpPrm = p.join(finalCreationDir, "tmp.prm")
+
+    cgenffTypes = [key for key in cgenffToCharmm.keys()]
+    print(cgenffTypes)
+    section = "START"
+    sectionHeaders = ["BONDS", "ANGLES", "DIHEDRALS", "IMPROPERS"]
+    with open(finalPrm, "r") as f:
+        for line in f:
+            if line.strip() == "":
+                continue
+            for sectionHeader in sectionHeaders:
+                if line.startswith(sectionHeader):
+                    section = sectionHeader
+                    continue
+                if section == "BONDS":
+                    print(section + ":" + line)
+                    atomNames = line.split()[0:2]
+                    print(atomNames, cgenffTypes)
+                    if any(cgenffType in atomNames for cgenffType in cgenffTypes):
+                        data[0:2] = [cgenffToCharmm.get(cgenffType, cgenffType) for cgenffType in data[0:2]]
+                        newLine = " ".join(data)
+                        print("NEWLINE" + newLine)
+                if section  == "ANGLES":
+                    ...
+
+
 def copy_final_prm(config: dict) -> None:
     """
     Copies final PRM file into the final creation directory
@@ -123,7 +126,7 @@ def create_final_rtf(config, massBlock, icBlock):
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
 
 
-    cappingAtomNames = ["CN", "NN", "HNN1", "HCN1", "HCN2", "HCN3", "CC1", "OC", "CC2", "HC1", "HC2", "HC3"]
+    cappingAtomNames = ["C_N", "N_N", "H_N", "H1_N", "H2_N", "H3_N", "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"]
 
     terminalSectionWritten = False
     writeGenericSection = False

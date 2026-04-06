@@ -15,7 +15,7 @@
 
 ## Installation
 
-To install **drFrankenstein**, you will need to follow the instructions in the [Installation Guide](./Documentation/01_Instalation.md).
+To install **drFrankenstein**, you will need to follow the instructions in the [Installation Guide](./Documentation/01_Install_Instructions.md).
 
 
 ## Usage

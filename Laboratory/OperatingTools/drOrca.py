@@ -48,6 +48,8 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
 
 
 
+
+
 ########################################
 
 def make_orca_input_qmmm_singlepoint(inputXyz: FilePath,
@@ -213,6 +215,27 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
 
     return orcaInputFile
 
+
+
+def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+    ## unpack moleculeInfo
+    charge = moleculeInfo["charge"]
+    multiplicity = moleculeInfo["multiplicity"]
+    ## create orca input file
+    orcaInputFile = p.join(outDir, "orca_sp.inp")
+    with open(orcaInputFile, "w") as f:
+        f.write(" # ------------------------------------ #\n")
+        f.write(" # Restrained EletcroStatic Potential   #\n")
+        f.write(" # ------------------------------------ #\n")
+        ## METHOD
+        if solvationMethod is None:
+            f.write(f"! {qmMethod} RESP\n")
+        else:
+            f.write(f"! {qmMethod} {solvationMethod} SP\n") 
+        ## GEOMETRY
+        f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
+
+    return orcaInputFile
 
 ###################################################################################
 def did_orca_finish_normallly(orcaOut):

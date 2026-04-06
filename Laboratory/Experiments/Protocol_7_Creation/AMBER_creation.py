@@ -5,7 +5,7 @@ from subprocess import call, PIPE
 from shutil import copy
 from copy import copy as object_copy
 import sys
-
+from pdbUtils import pdbUtils
 import parmed as pmd
 from OperatingTools import file_parsers
 
@@ -159,10 +159,10 @@ def duplicate_capping_parameters(config: dict) -> dict:
         newParams = {}
 
         for atomTypes, paramObject in param_dict.items():
-            if "CX" in atomTypes:
-                for newAtomType in ["CT", "XC"]:
+            if "CT" in atomTypes:
+                for newAtomType in ["CX", "XC"]:
                     newAtomNames = tuple(
-                        [newAtomType if atomType == "CX" else atomType for atomType in atomTypes]
+                        [newAtomType if atomType == "CT" else atomType for atomType in atomTypes]
                     )
                     
                     newParams[newAtomNames] = object_copy(paramObject)
@@ -203,12 +203,20 @@ def copy_final_frcmod(config: dict) -> dict:
     
 ################################################################################
 def get_capping_atom_ids(config):
-    chargeGroups = config["runtimeInfo"]["madeByCharges"]["chargeGroups"]
 
-    cappingAtomIds = []
-    for chargeGroupName, chargeGroupData in chargeGroups.items():
-        if chargeGroupName.startswith("NME_cap") or chargeGroupName.startswith("ACE_cap"):
-            cappingAtomIds.extend(chargeGroupData["indexes"])
+    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    creationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
+    tmpPdb = p.join(creationDir, "tmp.pdb")
+    obabelCommand = ["obabel", "-i", "mol2", cappedMol2, "-O", tmpPdb]
+    call(obabelCommand, stdout=PIPE, stderr=PIPE)
+
+    cappingAtomNames = ["N_N", "H_N", "C_N", "H1_N", "H2_N", "H3_N", ## NME cap
+                        "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"] ## ACE cap
+
+    tmpdf = pdbUtils.pdb2df(tmpPdb)
+    cappingAtomIds = tmpdf[tmpdf["ATOM_NAME"].isin(cappingAtomNames)]["ATOM_ID"].to_list()
+
+    os.remove(tmpPdb)
 
     return cappingAtomIds
 

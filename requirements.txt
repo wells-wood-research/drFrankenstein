@@ -14,3 +14,4 @@ mdtraj==1.10.3
 networkx
 argpass
 scikit-learn=1.7.2
+yaml

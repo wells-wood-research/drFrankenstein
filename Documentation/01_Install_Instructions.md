@@ -7,7 +7,7 @@
 #### 1. Install ORCA
 
 
-1. Download the ORCA 6.1.1 binary installer from: [The ORCA Forum]https://orcaforum.kofo.mpg.de/app.php/dlext/?cat=30&sid=2403eadfa2353e33e8067b58b00ada12)
+1. Download the ORCA 6.1.1 binary installer from: [The ORCA Forum](https://orcaforum.kofo.mpg.de/app.php/dlext/?cat=25)
 ![Screenshot of ORCA download](../Images/ORCA_download.png)
 
 

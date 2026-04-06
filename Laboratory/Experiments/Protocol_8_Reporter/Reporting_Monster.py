@@ -91,12 +91,19 @@ def process_charges_results(config: dict) -> dict:
     chargesData["partialChargeData"] = partialChargeData
     chargesData["partialChargeHeaders"] = partialChargeHeaders
 
-    chargeHtml, minCharge, maxCharge = Reporting_Assistant.make_charge_visualisation(config, chargesImagesDir)
-
+    # Get min and max charge for color bar
+    minCharge = chargesDf["Charge"].min()
+    maxCharge = chargesDf["Charge"].max()
+    
     colorBar = Reporting_Assistant.make_charge_color_bar(minCharge, maxCharge, chargesImagesDir, config)
-
     chargesData["colorBar"] = colorBar
-    chargesData["chargeHtml"] = chargeHtml
+
+    # Generate molecular graph visualization
+    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    atoms_df, bonds_df = Reporting_Assistant.parse_mol2_file(cappedMol2)
+    molecular_graph = Reporting_Assistant.build_molecular_graph(atoms_df, bonds_df)
+    graph_html = Reporting_Assistant.create_interactive_graph_visualization(molecular_graph, chargesImagesDir, config)
+    chargesData["graphHtml"] = graph_html
 
     return chargesData
 
@@ -150,7 +157,6 @@ def process_wriggle_results(config: dict) -> dict:
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     conformerImagesDir = p.join(imagesDir, "conformer_images")
     os.makedirs(conformerImagesDir, exist_ok=True)
-
 
     conformerHtmls = Reporting_Assistant.make_conformer_visualisations(config, conformerImagesDir)
 

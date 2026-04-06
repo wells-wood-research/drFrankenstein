@@ -26,3 +26,49 @@
 ## CONFIG CONFUSION
 
 [] remove cTermini and nTermini and replace with backboneAliases
+
+
+
+## HESSIAN
+
+[x] reorder pipeline IN MAIN
+    1. Capping
+    2. Wriggle
+    3. Charges  [TACK on HESSIAN CALCULATIONS]
+    3. Assembly [CLUSTERING BASED ON HESSIAN + CHARGES]
+    4. Twist
+    6. Stitching 
+    7. Creation [CHECK USE OF ATOM TYPES]
+    8. Reporter [NEW ATOM TYPE ASSIGNMENT SECTION]
+
+ASSEMBLY PROTOCOL
+
+[x] Find .hess files from charges calculation (might depend on protocol used for charges)
+[x] loop through .hess files
+    [x] construct hessian matrix from .hess file
+    [x] invert to get compliance matrix
+    [x] construct adjacancy and angle matrix frpm cappedPdb
+    [x] convert adjacency and angle matrix to bond and angle lists
+    [x] calculate distance and angle strengths (k values)
+    [] extract optimised bond and angle values from cappedPdb
+
+[] average over r0 and k0 values for each bond and angle
+[] create a dict with atomIds as keys and:
+    [] Element
+    [] nBonds
+    [] Charge
+    [] r0 values
+    [] k0 values
+
+STORE A DICT WITH DEFAULT AMBER BACKBONE PARAMS IN IT
+AND NON-BONDED AND MASS. 
+
+for each atom type, we need to find the closest gaff/ions atom type (use charge)
+and use the NONBONDED params from that atom type.
+
+[] create a script that runs over gaff2.dat, and ions parameters and stores data like this:
+```yaml
+hc: {MASS: 1.008, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 0.25, ELEMENT: H},
+hn: {MASS: 1.008, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 0.35, ELEMENT: H},
+fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEMENT: Fe},
+```

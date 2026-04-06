@@ -17,5 +17,3 @@ _test*
 _hidden_scripts
 .vscode
 *.dat
-__pycache__/
-*.pyc

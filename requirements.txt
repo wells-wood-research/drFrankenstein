@@ -13,3 +13,4 @@ imageio==2.37.0
 mdtraj==1.10.3
 networkx
 argpass
+scikit-learn=1.7.2

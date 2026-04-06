@@ -23,6 +23,7 @@ def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases
     parmedPrmtop = pmd.load_file(moleculePrmtop)
     prmtopDf = parmedPrmtop.to_dataframe()
     
+
     ## gather backbone atom types from prmtop
     backboneAtomTypes = {}
     for atomName in backboneAliases.values():

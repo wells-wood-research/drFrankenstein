@@ -34,8 +34,7 @@ def time_function(functionAlias: str, functionGroup: str = None):
                 config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] = executionTime
                 config["runtimeInfo"]["timeInfo"][functionName]["functionGroup"] = functionGroup
             else:
-                totalExecutionTime =    config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] + executionTime
-                config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] += totalExecutionTime
+                config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] += executionTime
 
             return result  # Return the function's result unchanged
         return wrapper

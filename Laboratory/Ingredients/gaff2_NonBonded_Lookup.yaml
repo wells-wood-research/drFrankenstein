@@ -1,0 +1,2719 @@
+C:
+  C:
+    MASS: 1.1
+    CHARGE: 180.0
+    RADIUS: 1.908
+    WELL_DEPTH: 0.086
+    COMMENT: 180. 2. dac guess, 9/94
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CA:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C pure aromatic (benzene)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CB:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 aromatic C, 5&6 membered ring junction
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CC:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 aromatic C, 5 memb. ring HIS
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CD:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: 'sp2 C atom in the middle of: C=CD-CD=C'
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CI:
+    MASS: 12.01
+    CHARGE: null
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: ''
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: null
+  CK:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C 5 memb.ring in purines (dA,dG)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CP:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C 5 memb.ring in purines (G)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CM:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C pyrimidines in pos. 5 & 6 (dT,dC)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CS:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C pyrimidines in pos. 5 & 6 (U)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CN:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C aromatic 5&6 memb.ring junct.(TRP)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CQ:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 C in 5 mem.ring of purines between 2 N
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CR:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 arom as CQ but in HIS
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CT:
+    MASS: 12.01
+    CHARGE: 0.878
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: sp3 aliphatic C
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CV:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 arom. 5 memb.ring w/1 N and 1 H (HIS)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CW:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 arom. 5 memb.ring w/1 N-H and 1 H (HIS)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  C*:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.908
+    WELL_DEPTH: 0.086
+    COMMENT: sp2 arom. 5 memb.ring w/1 subst. (TRP)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CX:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: protein C-alpha (new to ff10)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CY:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: nitrile C (Howard et al.JCC,16,243,1995)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  CZ:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp C (Howard et al.JCC,16,243,1995)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  C5:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.908
+    WELL_DEPTH: 0.086
+    COMMENT: sp2 C 5 memb.ring in purines (A)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  C4:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.908
+    WELL_DEPTH: 0.086
+    COMMENT: sp2 C pyrimidines in pos. 5 & 6 (C)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  C0:
+    MASS: 40.08
+    CHARGE: null
+    RADIUS: 1.7131
+    WELL_DEPTH: 0.459789
+    COMMENT: ''
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: null
+  CO:
+    MASS: 12.01
+    CHARGE: 0.616
+    RADIUS: 1.908
+    WELL_DEPTH: 0.086
+    COMMENT: sp2 C carboxylate group
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  2C:
+    MASS: 12.01
+    CHARGE: 0.878
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: sp3 aliphatic C with two (duo) heavy atoms
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  3C:
+    MASS: 12.01
+    CHARGE: 0.878
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: sp3 aliphatic C with three (tres) heavy atoms
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  C8:
+    MASS: 12.01
+    CHARGE: 0.878
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: sp3 aliphatic C basic AA side chain
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  c:
+    MASS: 1.1
+    CHARGE: 180.0
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: 1.1 180. 2. Junmei et al.1999
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cs:
+    MASS: 12.01
+    CHARGE: 0.616
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 C in c=S
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  c1:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+    COMMENT: Sp C
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  c2:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 C
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  c3:
+    MASS: 12.01
+    CHARGE: 0.878
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+    COMMENT: Sp3 C
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ca:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 C in pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cp:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Head Sp2 C that connect two rings in biphenyl sys.
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cq:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Head Sp2 C that connect two rings in biphenyl sys. identical to cp
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cc:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 carbons in non-pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cd:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 carbons in non-pure aromatic systems, identical to cc
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ce:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Inner Sp2 carbons in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cf:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Inner Sp2 carbons in conjugated systems, identical to ce
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cg:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+    COMMENT: Inner Sp carbons in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ch:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9525
+    WELL_DEPTH: 0.1596
+    COMMENT: Inner Sp carbons in conjugated systems, identical to cg
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cx:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+    COMMENT: Sp3 carbons in triangle systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cy:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+    COMMENT: Sp3 carbons in square systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  c5:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+    COMMENT: Sp3 carbons in five-memberred rings
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  c6:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.9069
+    WELL_DEPTH: 0.1078
+    COMMENT: Sp3 carbons in six-memberred rings
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cu:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 carbons in triangle systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cv:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 carbons in square systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  cz:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.8606
+    WELL_DEPTH: 0.0988
+    COMMENT: Sp2 carbon in guanidine group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+X:
+  XC:
+    MASS: 12.01
+    CHARGE: 0.36
+    RADIUS: 1.908
+    WELL_DEPTH: 0.1094
+    COMMENT: protein C-alpha (new to ff19)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  X:
+    MASS: 10.5
+    CHARGE: 180.0
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: 180. 2. JCC,7,(1986),230
+    ORIGIN_COMMENT: gaff2.dat:MASS
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: gaff2.dat:MASS
+H:
+  H:
+    MASS: 1.0
+    CHARGE: 2.0
+    RADIUS: 0.6
+    WELL_DEPTH: 0.0157
+    COMMENT: Ferguson base pair geom.
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MOD4      RE
+  HC:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.487
+    WELL_DEPTH: 0.0157
+    COMMENT: H aliph. bond. to C without electrwd.group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  H1:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.387
+    WELL_DEPTH: 0.0157
+    COMMENT: H aliph. bond. to C with 1 electrwd. group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  H2:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.287
+    WELL_DEPTH: 0.0157
+    COMMENT: H aliph. bond. to C with 2 electrwd.groups
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  H3:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.187
+    WELL_DEPTH: 0.0157
+    COMMENT: H aliph. bond. to C with 3 eletrwd.groups
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  HA:
+    MASS: 1.008
+    CHARGE: 0.167
+    RADIUS: 1.459
+    WELL_DEPTH: 0.015
+    COMMENT: H arom. bond. to C without elctrwd. groups
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  H4:
+    MASS: 1.008
+    CHARGE: 0.167
+    RADIUS: 1.409
+    WELL_DEPTH: 0.015
+    COMMENT: H arom. bond. to C with 1 electrwd. group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  H5:
+    MASS: 1.008
+    CHARGE: 0.167
+    RADIUS: 1.359
+    WELL_DEPTH: 0.015
+    COMMENT: H arom.at C with 2 elctrwd. gr,+HCOO group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  HO:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 0.0
+    WELL_DEPTH: 0.0
+    COMMENT: hydroxyl group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  HS:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 0.6112
+    WELL_DEPTH: 0.0124
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: null
+  HP:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.1
+    WELL_DEPTH: 0.0157
+    COMMENT: H bonded to C next to positively charged gr
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  HZ:
+    MASS: 1.008
+    CHARGE: 0.161
+    RADIUS: 1.459
+    WELL_DEPTH: 0.015
+    COMMENT: H bond sp C (Howard et al.JCC,16,243,1995)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  h1:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.3593
+    WELL_DEPTH: 0.0208
+    COMMENT: H bonded to aliphatic carbon with 1 electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  h2:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.2593
+    WELL_DEPTH: 0.0208
+    COMMENT: H bonded to aliphatic carbon with 2 electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  h3:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.1593
+    WELL_DEPTH: 0.0208
+    COMMENT: H bonded to aliphatic carbon with 3 electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  h4:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.4235
+    WELL_DEPTH: 0.0161
+    COMMENT: H bonded to non-sp3 carbon with 1 electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  h5:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.3735
+    WELL_DEPTH: 0.0161
+    COMMENT: H bonded to non-sp3 carbon with 2 electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ha:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.4735
+    WELL_DEPTH: 0.0161
+    COMMENT: H bonded to aromatic carbon
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hc:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.4593
+    WELL_DEPTH: 0.0208
+    COMMENT: H bonded to aliphatic carbon without electrwd. group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hn:
+    MASS: 1.008
+    CHARGE: 0.161
+    RADIUS: 0.621
+    WELL_DEPTH: 0.01
+    COMMENT: H bonded to nitrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ho:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 0.3019
+    WELL_DEPTH: 0.0047
+    COMMENT: Hydroxyl group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hp:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 0.6031
+    WELL_DEPTH: 0.0144
+    COMMENT: H bonded to phosphate
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hs:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 0.6112
+    WELL_DEPTH: 0.0124
+    COMMENT: Hydrogen bonded to sulphur
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hw:
+    MASS: 0.0
+    CHARGE: 0.0
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: 0000. 4. flag for fast water
+    ORIGIN_COMMENT: gaff2.dat:MASS
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  hx:
+    MASS: 1.008
+    CHARGE: 0.135
+    RADIUS: 1.0593
+    WELL_DEPTH: 0.0208
+    COMMENT: H bonded to C next to positively charged group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  HW:
+    MASS: 1.008
+    CHARGE: 0.0
+    RADIUS: 0.0
+    WELL_DEPTH: 0.0
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.tip3p:MASS; frcmod.tip3p:NONBON
+    MASS_ORIGIN: frcmod.tip3p:MASS
+    CHARGE_ORIGIN: frcmod.tip3p:MASS
+    RADIUS_ORIGIN: frcmod.tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.tip3p:NONBON
+    COMMENT_ORIGIN: null
+  H3O+:
+    MASS: 19.02
+    CHARGE: 1.0
+    RADIUS: 1.337
+    WELL_DEPTH: 0.00780282
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+F:
+  F:
+    MASS: 1.0
+    CHARGE: 1.2
+    RADIUS: 1.75
+    WELL_DEPTH: 0.061
+    COMMENT: 1.20 180.0 1. Junmei et al, 1999
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  f:
+    MASS: 1.0
+    CHARGE: 0.09
+    RADIUS: 1.7029
+    WELL_DEPTH: 0.0832
+    COMMENT: 0.090 0.000 3.000 m3-2021
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  F-:
+    MASS: null
+    CHARGE: null
+    RADIUS: 1.783
+    WELL_DEPTH: 0.19945255
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: null
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Cl:
+  Cl:
+    MASS: 35.45
+    CHARGE: 1.91
+    RADIUS: 1.948
+    WELL_DEPTH: 0.265
+    COMMENT: )
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  cl:
+    MASS: 35.45
+    CHARGE: 1.91
+    RADIUS: 1.9452
+    WELL_DEPTH: 0.2638
+    COMMENT: Chlorine
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  Cl-:
+    MASS: null
+    CHARGE: null
+    RADIUS: 2.252
+    WELL_DEPTH: 0.60293097
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: null
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Br:
+  Br:
+    MASS: 79.9
+    CHARGE: 2.88
+    RADIUS: 2.22
+    WELL_DEPTH: 0.32
+    COMMENT: )
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  br:
+    MASS: 79.9
+    CHARGE: 2.88
+    RADIUS: 2.0275
+    WELL_DEPTH: 0.3932
+    COMMENT: Bromine
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  Br-:
+    MASS: null
+    CHARGE: null
+    RADIUS: 2.428
+    WELL_DEPTH: 0.7207094
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: null
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+I:
+  I:
+    MASS: 50.0
+    CHARGE: 106.0
+    RADIUS: 2.35
+    WELL_DEPTH: 0.4
+    COMMENT: 106.00 Junmei et al,99
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  i:
+    MASS: 1.0
+    CHARGE: 0.95
+    RADIUS: 2.1558
+    WELL_DEPTH: 0.4955
+    COMMENT: 0.950 0.000 1.000 m10-2021
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  I-:
+    MASS: null
+    CHARGE: null
+    RADIUS: 2.724
+    WELL_DEPTH: 0.85418187
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: null
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Mg:
+  MG:
+    MASS: 24.305
+    CHARGE: 0.12
+    RADIUS: 0.7926
+    WELL_DEPTH: 0.8947
+    COMMENT: magnesium
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  Mg2+:
+    MASS: 24.305
+    CHARGE: 2.0
+    RADIUS: 1.437
+    WELL_DEPTH: 0.02257962
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+N:
+  N:
+    MASS: 1.0
+    CHARGE: 0.0
+    RADIUS: 1.824
+    WELL_DEPTH: 0.17
+    COMMENT: 0.000 0.000 4. HYP
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  NA:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 N in 5 memb.ring w/H atom (HIS)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  NB:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 N in 5 memb.ring w/LP (HIS,ADE,GUA)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  NC:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 N in 6 memb.ring w/LP (ADE,GUA)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  N2:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 N in amino groups
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  N3:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.824
+    WELL_DEPTH: 0.17
+    COMMENT: sp3 N for charged amino groups (Lys, etc)
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  NT:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp3 N for amino groups amino groups
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  N*:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: sp2 N
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  NY:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: nitrile N (Howard et al.JCC,16,243,1995)
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: parm19.dat:MASS
+  n:
+    MASS: 1.0
+    CHARGE: 2.08
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+    COMMENT: 1 2.080 0.000 2.000 t17 SS AUE=0.8425 RMSE=1.0798 TorType=3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n1:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8372
+    WELL_DEPTH: 0.1098
+    COMMENT: Sp N
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n2:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: aliphatic Sp2 N with two connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n3:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+    COMMENT: Sp3 N with three connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n4:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.4028
+    WELL_DEPTH: 3.8748
+    COMMENT: Sp3 N with four connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  na:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7992
+    WELL_DEPTH: 0.2042
+    COMMENT: Sp2 N with three connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nb:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: Sp2 N in pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nc:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: Sp2 N in non-pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nd:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: Sp2 N in non-pure aromatic systems, identical to nc
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ne:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: Inner Sp2 N in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nf:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8993
+    WELL_DEPTH: 0.0941
+    COMMENT: Inner Sp2 N in conjugated systems, identical to ne
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nh:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+    COMMENT: Amine N connected one or more aromatic rings
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  'no':
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+    COMMENT: Nitro N
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ns:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8352
+    WELL_DEPTH: 0.1174
+    COMMENT: amind N, with 1 attached hydrogen atom
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nt:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8852
+    WELL_DEPTH: 0.0851
+    COMMENT: amide N, with 2 attached hydrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nx:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+    COMMENT: like n4, but only has one hydrogen atom
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ny:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.5028
+    WELL_DEPTH: 1.6959
+    COMMENT: like n4, but only has two hydrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nz:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.5528
+    WELL_DEPTH: 1.145
+    COMMENT: like n4, but only has three three hydrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n+:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.6028
+    WELL_DEPTH: 0.7828
+    COMMENT: NH4+
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nu:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8403
+    WELL_DEPTH: 0.1545
+    COMMENT: like nh, but only has one attached hydrogen atom
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nv:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8903
+    WELL_DEPTH: 0.112
+    COMMENT: like nh, but only has two attached hydrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n7:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+    COMMENT: like n3, but only has one attached hydrogen atom
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n8:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 2.0486
+    WELL_DEPTH: 0.0323
+    COMMENT: like n3, but only has two attached hydrogen atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n9:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 2.27
+    WELL_DEPTH: 0.0095
+    COMMENT: NH3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ni:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+    COMMENT: like n in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nj:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7852
+    WELL_DEPTH: 0.1636
+    COMMENT: like n in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nk:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+    COMMENT: like n4/nx/ny in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nl:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.4528
+    WELL_DEPTH: 2.5453
+    COMMENT: like n4/nx/ny in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nm:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+    COMMENT: like nh in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nn:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.7903
+    WELL_DEPTH: 0.215
+    COMMENT: like nh in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  np:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+    COMMENT: like n3 in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  nq:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.8886
+    WELL_DEPTH: 0.0858
+    COMMENT: like n3 in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n5:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+    COMMENT: like n7 in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  n6:
+    MASS: 14.01
+    CHARGE: 0.53
+    RADIUS: 1.9686
+    WELL_DEPTH: 0.0522
+    COMMENT: like n7 in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  NH4+:
+    MASS: 18.04
+    CHARGE: 4.0
+    RADIUS: 1.779
+    WELL_DEPTH: 0.19628399
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+O:
+  O:
+    MASS: 1.0
+    CHARGE: 0.0
+    RADIUS: 1.6612
+    WELL_DEPTH: 0.21
+    COMMENT: -EP 1 0.000 180.000 2.000
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  O2:
+    MASS: 16.0
+    CHARGE: 0.434
+    RADIUS: 1.6612
+    WELL_DEPTH: 0.21
+    COMMENT: carboxyl and phosphate group oxygen
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  OH:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.721
+    WELL_DEPTH: 0.2104
+    COMMENT: oxygen in hydroxyl group
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  OS:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.6837
+    WELL_DEPTH: 0.17
+    COMMENT: ether and ester oxygen
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  OP:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.85
+    WELL_DEPTH: 0.17
+    COMMENT: 2- phosphate oxygen
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  o:
+    MASS: 1.0
+    CHARGE: 2.325
+    RADIUS: 1.7107
+    WELL_DEPTH: 0.1463
+    COMMENT: 2.325 180.000 2.000 c174-2021
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  oh:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.82
+    WELL_DEPTH: 0.093
+    COMMENT: Oxygen in hydroxyl group
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  op:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+    COMMENT: Oxygen in RG3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  oq:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+    COMMENT: Oxygen in RG4
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  os:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: 1.7713
+    WELL_DEPTH: 0.0726
+    COMMENT: Ether and ester oxygen
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ow:
+    MASS: 16.0
+    CHARGE: 0.465
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: Oxygen in water
+    ORIGIN_COMMENT: gaff2.dat:MASS
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  OW:
+    MASS: 16.0
+    CHARGE: null
+    RADIUS: 1.7683
+    WELL_DEPTH: 0.152
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.tip3p:MASS; frcmod.tip3p:NONBON
+    MASS_ORIGIN: frcmod.tip3p:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: frcmod.tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.tip3p:NONBON
+    COMMENT_ORIGIN: null
+P:
+  P:
+    MASS: 100.0
+    CHARGE: 120.5
+    RADIUS: 2.1
+    WELL_DEPTH: 0.2
+    COMMENT: 120.50 parmbsc0
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+  p2:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Phosphate with two connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  p3:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Phosphate with three connected atoms, such as PH3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  p4:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Phosphate with three connected atoms, such as O=P(CH3)2
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  p5:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Phosphate with four connected atoms, such as O=P(OH)3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  pb:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Sp2 P in pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  pc:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Sp2 P in non-pure aromatic systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  pd:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Sp2 P in non-pure aromatic systems, identical to pc
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  pe:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Inner Sp2 P in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  pf:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Inner Sp2 P in conjugated systems, identical to pe
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  px:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Special p4 in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  py:
+    MASS: 30.97
+    CHARGE: 1.538
+    RADIUS: 2.0732
+    WELL_DEPTH: 0.2295
+    COMMENT: Special p5 in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+S:
+  S:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: S in methioine
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  SH:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: S in cystine
+    ORIGIN_COMMENT: frcmod.ff19SB:MASS; frcmod.ff19SB:NONB
+    MASS_ORIGIN: frcmod.ff19SB:MASS
+    CHARGE_ORIGIN: frcmod.ff19SB:MASS
+    RADIUS_ORIGIN: frcmod.ff19SB:NONB
+    WELL_DEPTH_ORIGIN: frcmod.ff19SB:NONB
+    COMMENT_ORIGIN: frcmod.ff19SB:MASS
+  s:
+    MASS: 1.0
+    CHARGE: 0.332
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: 1 0.332 180.000 2.000 t10 SS AUE=0.9021 RMSE=1.2368 TorType=3
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  s2:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: S with two connected atom, involved at least one double bond
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  s4:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: S with three connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  s6:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 2.2777
+    WELL_DEPTH: 0.0614
+    COMMENT: S with four connected atoms
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  sh:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: Sp3 S connected with hydrogen
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  ss:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: Sp3 S in thio-ester and thio-ether
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  sx:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: Special s4 in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  sy:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 2.2777
+    WELL_DEPTH: 0.0614
+    COMMENT: Special s6 in conjugated systems
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  sp:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: not described
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+  sq:
+    MASS: 32.06
+    CHARGE: 2.9
+    RADIUS: 1.9825
+    WELL_DEPTH: 0.2824
+    COMMENT: not described
+    ORIGIN_COMMENT: gaff2.dat:MASS; gaff2.dat:MOD4      RE
+    MASS_ORIGIN: gaff2.dat:MASS
+    CHARGE_ORIGIN: gaff2.dat:MASS
+    RADIUS_ORIGIN: gaff2.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: gaff2.dat:MOD4      RE
+    COMMENT_ORIGIN: gaff2.dat:MASS
+Cu:
+  CU:
+    MASS: 63.55
+    CHARGE: null
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: ''
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: null
+  Cu+:
+    MASS: 63.55
+    CHARGE: 1.0
+    RADIUS: 1.201
+    WELL_DEPTH: 0.001123
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+  Cu2+:
+    MASS: 63.55
+    CHARGE: 2.0
+    RADIUS: 1.476
+    WELL_DEPTH: 0.0319862
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Fe:
+  FE:
+    MASS: 55.0
+    CHARGE: null
+    RADIUS: null
+    WELL_DEPTH: null
+    COMMENT: ''
+    ORIGIN_COMMENT: parm19.dat:MASS
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: null
+    WELL_DEPTH_ORIGIN: null
+    COMMENT_ORIGIN: null
+  Fe2+:
+    MASS: 55.85
+    CHARGE: 2.0
+    RADIUS: 1.457
+    WELL_DEPTH: 0.02710805
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+  Fe3+:
+    MASS: 55.85
+    CHARGE: 3.0
+    RADIUS: 1.443
+    WELL_DEPTH: 0.02387506
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Zn:
+  Zn:
+    MASS: 65.4
+    CHARGE: null
+    RADIUS: 1.1
+    WELL_DEPTH: 0.0125
+    COMMENT: ''
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: null
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: null
+  Zn2+:
+    MASS: 65.4
+    CHARGE: 2.0
+    RADIUS: 1.455
+    WELL_DEPTH: 0.02662782
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+E:
+  EP:
+    MASS: 0.0
+    CHARGE: 0.0
+    RADIUS: 0.0
+    WELL_DEPTH: 0.0
+    COMMENT: extra point
+    ORIGIN_COMMENT: parm19.dat:MASS; parm19.dat:MOD4      RE
+    MASS_ORIGIN: parm19.dat:MASS
+    CHARGE_ORIGIN: parm19.dat:MASS
+    RADIUS_ORIGIN: parm19.dat:MOD4      RE
+    WELL_DEPTH_ORIGIN: parm19.dat:MOD4      RE
+    COMMENT_ORIGIN: parm19.dat:MASS
+Li:
+  Li+:
+    MASS: 6.94
+    CHARGE: 1.0
+    RADIUS: 1.267
+    WELL_DEPTH: 0.00312065
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Na:
+  Na+:
+    MASS: 22.99
+    CHARGE: 1.0
+    RADIUS: 1.475
+    WELL_DEPTH: 0.03171494
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+K:
+  K+:
+    MASS: 39.1
+    CHARGE: 1.0
+    RADIUS: 1.719
+    WELL_DEPTH: 0.15131351
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Rb:
+  Rb+:
+    MASS: 85.47
+    CHARGE: 1.0
+    RADIUS: 1.834
+    WELL_DEPTH: 0.24140216
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Cs:
+  Cs+:
+    MASS: 132.91
+    CHARGE: 1.0
+    RADIUS: 1.988
+    WELL_DEPTH: 0.37853483
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Tl:
+  Tl+:
+    MASS: 204.38
+    CHARGE: 1.0
+    RADIUS: 1.703
+    WELL_DEPTH: 0.14021803
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+  Tl3+:
+    MASS: 204.38
+    CHARGE: 3.0
+    RADIUS: 1.571
+    WELL_DEPTH: 0.0657303
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Ag:
+  Ag+:
+    MASS: 107.87
+    CHARGE: 1.0
+    RADIUS: 1.341
+    WELL_DEPTH: 0.00818431
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions1lm_126_tip3p:MASS; frcmod.ions1lm_126_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions1lm_126_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions1lm_126_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Be:
+  Be2+:
+    MASS: 9.01
+    CHARGE: 2.0
+    RADIUS: 1.203
+    WELL_DEPTH: 0.00116124
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Ni:
+  Ni2+:
+    MASS: 58.69
+    CHARGE: 2.0
+    RADIUS: 1.431
+    WELL_DEPTH: 0.02133669
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Co:
+  Co2+:
+    MASS: 58.93
+    CHARGE: 2.0
+    RADIUS: 1.458
+    WELL_DEPTH: 0.02735051
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Cr:
+  Cr2+:
+    MASS: 52.0
+    CHARGE: 2.0
+    RADIUS: 1.431
+    WELL_DEPTH: 0.02133669
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+  Cr3+:
+    MASS: 52.0
+    CHARGE: 3.0
+    RADIUS: 1.415
+    WELL_DEPTH: 0.01827024
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+V:
+  V2+:
+    MASS: 50.94
+    CHARGE: 2.0
+    RADIUS: 1.494
+    WELL_DEPTH: 0.03715368
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Mn:
+  Mn2+:
+    MASS: 54.94
+    CHARGE: 2.0
+    RADIUS: 1.485
+    WELL_DEPTH: 0.03450196
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Hg:
+  Hg2+:
+    MASS: 200.59
+    CHARGE: 2.0
+    RADIUS: 1.641
+    WELL_DEPTH: 0.10128575
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Cd:
+  Cd2+:
+    MASS: 112.41
+    CHARGE: 2.0
+    RADIUS: 1.535
+    WELL_DEPTH: 0.05102457
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Ca:
+  Ca2+:
+    MASS: 40.08
+    CHARGE: 2.0
+    RADIUS: 1.642
+    WELL_DEPTH: 0.10185975
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Sn:
+  Sn2+:
+    MASS: 118.71
+    CHARGE: 2.0
+    RADIUS: 1.777
+    WELL_DEPTH: 0.19470705
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Sr:
+  Sr2+:
+    MASS: 87.62
+    CHARGE: 2.0
+    RADIUS: 1.777
+    WELL_DEPTH: 0.19470705
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Ba:
+  Ba2+:
+    MASS: 137.33
+    CHARGE: 2.0
+    RADIUS: 1.936
+    WELL_DEPTH: 0.33132862
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Al:
+  Al3+:
+    MASS: 26.98
+    CHARGE: 3.0
+    RADIUS: 1.369
+    WELL_DEPTH: 0.01128487
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+In:
+  In3+:
+    MASS: 114.82
+    CHARGE: 3.0
+    RADIUS: 1.491
+    WELL_DEPTH: 0.03625449
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Y:
+  Y3+:
+    MASS: 88.91
+    CHARGE: 3.0
+    RADIUS: 1.63
+    WELL_DEPTH: 0.09509276
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+La:
+  La3+:
+    MASS: 138.91
+    CHARGE: 3.0
+    RADIUS: 1.758
+    WELL_DEPTH: 0.1799796
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Ce:
+  Ce3+:
+    MASS: 140.12
+    CHARGE: 3.0
+    RADIUS: 1.782
+    WELL_DEPTH: 0.19865859
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+  Ce4+:
+    MASS: 140.12
+    CHARGE: 4.0
+    RADIUS: 1.766
+    WELL_DEPTH: 0.18612361
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Pr:
+  Pr3+:
+    MASS: 140.91
+    CHARGE: 3.0
+    RADIUS: 1.78
+    WELL_DEPTH: 0.19707431
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Nd:
+  Nd3+:
+    MASS: 144.24
+    CHARGE: 3.0
+    RADIUS: 1.724
+    WELL_DEPTH: 0.15486311
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Sm:
+  Sm3+:
+    MASS: 150.36
+    CHARGE: 3.0
+    RADIUS: 1.711
+    WELL_DEPTH: 0.14571499
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Eu:
+  Eu3+:
+    MASS: 151.96
+    CHARGE: 3.0
+    RADIUS: 1.716
+    WELL_DEPTH: 0.14920231
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Gd:
+  Gd3+:
+    MASS: 157.25
+    CHARGE: 3.0
+    RADIUS: 1.658
+    WELL_DEPTH: 0.11129023
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Tb:
+  Tb3+:
+    MASS: 158.93
+    CHARGE: 3.0
+    RADIUS: 1.671
+    WELL_DEPTH: 0.11928915
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Dy:
+  Dy3+:
+    MASS: 162.5
+    CHARGE: 3.0
+    RADIUS: 1.637
+    WELL_DEPTH: 0.09900804
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Er:
+  Er3+:
+    MASS: 167.26
+    CHARGE: 3.0
+    RADIUS: 1.635
+    WELL_DEPTH: 0.09788018
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Tm:
+  Tm3+:
+    MASS: 168.93
+    CHARGE: 3.0
+    RADIUS: 1.647
+    WELL_DEPTH: 0.10475707
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Lu:
+  Lu3+:
+    MASS: 174.97
+    CHARGE: 3.0
+    RADIUS: 1.625
+    WELL_DEPTH: 0.09235154
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Hf:
+  Hf4+:
+    MASS: 178.49
+    CHARGE: 4.0
+    RADIUS: 1.6
+    WELL_DEPTH: 0.07934493
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Zr:
+  Zr4+:
+    MASS: 91.22
+    CHARGE: 4.0
+    RADIUS: 1.609
+    WELL_DEPTH: 0.0838924
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+U:
+  U4+:
+    MASS: 238.03
+    CHARGE: 4.0
+    RADIUS: 1.792
+    WELL_DEPTH: 0.20665151
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Pu:
+  Pu4+:
+    MASS: 244.06
+    CHARGE: 4.0
+    RADIUS: 1.752
+    WELL_DEPTH: 0.17542802
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null
+Th:
+  Th4+:
+    MASS: 232.04
+    CHARGE: 4.0
+    RADIUS: 1.77
+    WELL_DEPTH: 0.18922704
+    COMMENT: ''
+    ORIGIN_COMMENT: frcmod.ions234lm_1264_tip3p:MASS; frcmod.ions234lm_1264_tip3p:NONBON
+    MASS_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    CHARGE_ORIGIN: frcmod.ions234lm_1264_tip3p:MASS
+    RADIUS_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    WELL_DEPTH_ORIGIN: frcmod.ions234lm_1264_tip3p:NONBON
+    COMMENT_ORIGIN: null

@@ -139,7 +139,7 @@ def clean_up_scan_dir(scanDir: DirectoryPath, config: dict) -> None:
             os.remove(p.join(scanDir, file))
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
-def clean_up_singlepoint_dir(spDir: DirectoryPath, config: dict, keepGbw: bool = False) -> None:
+def clean_up_singlepoint_dir(spDir: DirectoryPath, config: dict, keepSuffix: list[str] = []) -> None:
     """
     Cleans up orca singlepoint calculation dir
 
@@ -154,8 +154,8 @@ def clean_up_singlepoint_dir(spDir: DirectoryPath, config: dict, keepGbw: bool =
         keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".molden.input")])
         keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".out")])
 
-        if keepGbw:
-            keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(".gbw")])
+        for suffix in keepSuffix:
+            keepFiles.extend([file for file in os.listdir(spDir) if file.endswith(suffix)])
         for file in os.listdir(spDir):
             if file in keepFiles:
                 continue

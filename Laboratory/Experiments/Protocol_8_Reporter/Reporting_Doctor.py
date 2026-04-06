@@ -2,7 +2,6 @@ from jinja2 import Environment, FileSystemLoader
 import pandas as pd
 from os import path as p
 from shutil import copy
-import py3Dmol
 from pdbUtils import pdbUtils # Your custom PDB parsing utility
 import os
 from os import path as p

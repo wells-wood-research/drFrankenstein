@@ -3,25 +3,25 @@
 
     /* Styles for Sub-Tabs within Torsion Scanning */
     .torsion-sub-tab-nav {
-        display: flex;
-        flex-wrap: wrap; /* Allow buttons to wrap if many */
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
         background-color: #1a1a1a;
         margin-top: 15px;
     }
 
     .torsion-sub-tab-nav button {
-        background-color: inherit;
+        background-color: #202020;
         color: #b0b0b0;
-        border: none;
+        border: 1px solid #343434;
+        border-radius: 4px;
         outline: none;
         cursor: pointer;
-        padding: 10px 15px;
+        padding: 6px;
         transition: 0.3s;
-        font-size: 0.9em;
-    }
-
-    .torsion-sub-tab-nav button:last-child {
-        border-right: none;
+        font-size: 0.8em;
+        min-height: 112px;
+        text-align: center;
     }
 
     .torsion-sub-tab-nav button:hover {
@@ -32,7 +32,46 @@
     .torsion-sub-tab-nav button.active {
         background-color: #333333;
         color: #ffffff;
+        border-color: #00ff00;
         font-weight: bold;
+    }
+
+    .torsion-sub-tab-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .torsion-sub-tab-tile img {
+        width: 100%;
+        height: 72px;
+        object-fit: contain;
+        object-position: center;
+        border-radius: 3px;
+        border: 1px solid #454545;
+        background-color: #111111;
+    }
+
+    .torsion-sub-tab-tile .tile-label {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .torsion-sub-tab-tile .tile-placeholder {
+        width: 100%;
+        height: 72px;
+        border-radius: 3px;
+        border: 1px dashed #454545;
+        background-color: #151515;
+        color: #8c8c8c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75em;
     }
 
     .torsion-sub-tab-content {
@@ -86,7 +125,9 @@
     }
 
     .viz-iframe-wrapper {
-        width: 630px;
+        position: relative;
+        width: 100%;
+        max-width: 630px;
         height: 330px;
         margin: 0 auto 10px auto; /* Top margin 0, auto for L/R centering, 10px bottom */
         border: none;
@@ -97,6 +138,49 @@
         width: 100%;
         height: 100%;
         border: none; /* Remove default iframe border */
+    }
+
+    .iframe-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20, 20, 20, 0.9);
+        color: #cfcfcf;
+        font-size: 0.95em;
+        letter-spacing: 0.02em;
+        z-index: 2;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-loading-overlay {
+        display: none;
+    }
+
+    .iframe-error-overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 12px;
+        background-color: rgba(20, 20, 20, 0.95);
+        color: #d9d9d9;
+        font-size: 0.9em;
+        z-index: 3;
+    }
+
+    .iframe-error-overlay a {
+        color: #6cb6ff;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-error-overlay {
+        display: flex;
+    }
+
+    [data-iframe-loader].iframe-loaded .iframe-loading-overlay {
+        display: none;
     }
 
     .dihedral-plots {
@@ -164,6 +248,9 @@
 
     /* Responsive adjustments for smaller screens */
     @media (max-width: 768px) { /* Adjust breakpoint as needed */
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
         .dihedral-top-section {
             flex-direction: column; /* Stack info and viz panels vertically */
             align-items: stretch;   /* Make panels take full available width */
@@ -182,6 +269,18 @@
         }
         .dihedral-plots .plot-container {
             flex-basis: 100%; /* Make plots take full width on small screens */
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 520px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
@@ -228,7 +327,18 @@
             {% for dihedral_name, details in torsion_data.torsionsToScan.items() %}
                 <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="openDihedralSubTab(event, 'dihedral_sub_tab_{{ loop.index }}')">
-                    {{ dihedral_name }}
+                    {% set single_point_preview = details.spPng if details.spPng else none %}
+                    {% set scan_preview = details.scanPng if details.scanPng else none %}
+                    <span class="torsion-sub-tab-tile">
+                        {% if single_point_preview %}
+                            <img src="{{ single_point_preview }}" alt="Single-point energies preview for {{ dihedral_name }}">
+                        {% elif scan_preview %}
+                            <img src="{{ scan_preview }}" alt="Scan energies preview for {{ dihedral_name }}">
+                        {% else %}
+                            <span class="tile-placeholder">No preview</span>
+                        {% endif %}
+                        <span class="tile-label">{{ dihedral_name }}</span>
+                    </span>
                 </button>
             {% endfor %}
         </div>
@@ -249,11 +359,17 @@
                         {% set viz_html_path = torsion_data.torsionHtmls.get(dihedral_name) %}
                         {% if viz_html_path %}
                             <h3>Torsion 3D Visualization</h3>
-                            <div class="viz-iframe-wrapper">
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="{{ viz_html_path }}" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
                                 <iframe
                                     class="viz-iframe"
-                                    src="{{ viz_html_path }}"
-                                    title="Molecule 3D Viewer for {{ dihedral_name }}">
+                                    data-src="{{ viz_html_path }}"
+                                    title="Molecule 3D Viewer for {{ dihedral_name }}"
+                                    sandbox="allow-scripts allow-same-origin">
                                     Your browser does not support iframes. Please open <a href="{{ viz_html_path }}">this link</a> directly.
                                 </iframe>
                             </div>
@@ -352,6 +468,55 @@
 
 
 <script>
+    function bindTorsionIframeErrorHandling(scopeElement) {
+        if (!scopeElement) return;
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            if (iframe.dataset.torsionErrorBound === 'true') return;
+            iframe.dataset.torsionErrorBound = 'true';
+
+            iframe.addEventListener('error', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-loaded');
+                    loaderContainer.classList.add('iframe-error');
+                }
+            });
+
+            iframe.addEventListener('load', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-error');
+                    loaderContainer.classList.add('iframe-loaded');
+                }
+            });
+        });
+    }
+
+    function loadTorsionIframesWithFallback(scopeElement) {
+        if (!scopeElement) return;
+        bindTorsionIframeErrorHandling(scopeElement);
+
+        if (typeof loadDeferredIframes === "function") {
+            loadDeferredIframes(scopeElement);
+        }
+
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            const loaderContainer = iframe.closest('[data-iframe-loader]');
+            if (!loaderContainer) return;
+
+            if (iframe.getAttribute('src')) {
+                const timeoutMs = 3000;
+                setTimeout(function() {
+                    if (!loaderContainer.classList.contains('iframe-loaded')) {
+                        loaderContainer.classList.add('iframe-error');
+                    }
+                }, timeoutMs);
+            }
+        });
+    }
+
     function openDihedralSubTab(evt, subTabName) {
         var i, subTabContent, subTabButtons;
         let parentScope = evt.target.closest('.torsion-sub-tab-nav').parentNode;
@@ -371,6 +536,7 @@
         if (targetContentElement) {
             targetContentElement.style.display = "block";
             targetContentElement.classList.add("active");
+            loadTorsionIframesWithFallback(targetContentElement);
         }
         if (evt.currentTarget) {
             evt.currentTarget.classList.add("active");
@@ -381,6 +547,7 @@
         const activeSubTabs = document.querySelectorAll('.torsion-sub-tab-content.active');
         activeSubTabs.forEach(tab => {
             tab.style.display = 'block';
+            loadTorsionIframesWithFallback(tab);
         });
     });
 </script>

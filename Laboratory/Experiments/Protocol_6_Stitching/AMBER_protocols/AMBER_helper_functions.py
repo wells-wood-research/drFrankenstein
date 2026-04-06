@@ -137,10 +137,9 @@ def edit_mol2_partial_charges(config: dict) -> None:
                 atomCharge = chargesDf.loc[chargesDf['atomIndex'] == atomIndex, 'Charge'].values[0]
                 ## Format to 4 decimal places
                 atomCharge = f"{atomCharge:.4f}"
-                ## sort out spaces for the case of negative charges
-                if not atomCharge.startswith("-"):
-                    atomCharge = " "+atomCharge
-                newLine = line[:-10]  + atomCharge
+                lineParts = line.split()
+                lineParts[-1] = atomCharge
+                newLine = "\t".join(lineParts)
                 line = newLine+"\n"
             ## write to outMol2
             writeMol2.write(line)

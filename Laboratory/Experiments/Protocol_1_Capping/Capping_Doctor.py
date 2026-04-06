@@ -111,9 +111,9 @@ def add_nmethyl_caps(molDf: pd.DataFrame,
     maxResId = molDf["RES_ID"].max()
     for i, cTerminalAtom in enumerate(cTerminalAtoms):
         tmpNmeDf = Capping_Monster.place_nn(cappedDf, cTerminalAtom, nmeDf)
-        tmpNmeDf = Capping_Monster.place_hnn1(cappedDf, cTerminalAtom, tmpNmeDf)
+        tmpNmeDf = Capping_Monster.place_hn(cappedDf, cTerminalAtom, tmpNmeDf)
         tmpNmeDf = Capping_Monster.place_cn(cappedDf, cTerminalAtom, tmpNmeDf)
-        tmpNmeDf = Capping_Assistant.transform_whole(originalNmeDf, tmpNmeDf, atomNames=["NN", "HNN1", "CN"])
+        tmpNmeDf = Capping_Assistant.transform_whole(originalNmeDf, tmpNmeDf, atomNames=["N_N", "H_N", "C_N"])
         tmpNmeDf["RES_ID"] = maxResId + i + 1
         dfsToConcat.append(tmpNmeDf)
         
@@ -147,11 +147,11 @@ def add_acetyl_caps(molDf: pd.DataFrame,
     dfsToConcat = [molDf]
     maxResId = molDf["RES_ID"].max()
     for i, nTerminalAtom in enumerate(nTerminalAtoms):
-        tmpAceDf = Capping_Monster.place_cc1(cappedDf, nTerminalAtom, aceDf)
+        tmpAceDf = Capping_Monster.place_cc(cappedDf, nTerminalAtom, aceDf)
         tmpAceDf = Capping_Monster.place_oc(cappedDf, nTerminalAtom, aceDf)
-        tmpAceDf = Capping_Monster.place_cc2(cappedDf, nTerminalAtom, aceDf)
+        tmpAceDf = Capping_Monster.place_c2c(cappedDf, nTerminalAtom, aceDf)
         aceDf = pdbUtils.pdb2df(acePdb)
-        tmpAceDf = Capping_Assistant.transform_whole(aceDf, tmpAceDf, atomNames=["CC1", "OC", "CC2"])
+        tmpAceDf = Capping_Assistant.transform_whole(aceDf, tmpAceDf, atomNames=["C_C", "O_C", "C2_C"])
         tmpAceDf["RES_ID"] = maxResId + i + 1
         dfsToConcat.append(tmpAceDf)
         

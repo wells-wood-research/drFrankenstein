@@ -12,11 +12,8 @@
 /0
 /1*
 /1*/*
-__pycache__/
 _test*
 /_hidden_scripts/*
 _hidden_scripts
 .vscode
 *.dat
-Inputs
-__ALA__

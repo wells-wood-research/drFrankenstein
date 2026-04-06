@@ -10,9 +10,6 @@ from pdbUtils import pdbUtils
 from typing import Tuple
 from .. import Assembly_Assistant
 
-# Suppress ParameterWarning
-warnings.filterwarnings('ignore', category=ParameterWarning)
-
 class FilePath(str):
     ...
 class DirectoryPath(str):

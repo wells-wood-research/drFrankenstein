@@ -25,7 +25,6 @@ def round_charges_carefully(config):
     totalCharge = config["moleculeInfo"]["charge"]
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     cappedDf = pdbUtils.pdb2df(cappedPdb)
-    
     chargeDf = pd.read_csv(config["runtimeInfo"]["madeByCharges"]["chargesCsv"], index_col="Unnamed: 0")
 
     # 1. Round ALL charges in the full DataFrame first. This is the operation that introduces error.

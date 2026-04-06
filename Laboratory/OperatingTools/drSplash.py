@@ -569,7 +569,6 @@ def print_botched(errorReport) -> None:
  
 if __name__ == "__main__":
     show_mad_man()
-    exit()
     show_capping_splash()
     show_wriggle_splash()
     show_twist_splash()
@@ -594,4 +593,4 @@ if __name__ == "__main__":
     }
 
 
-    # show_what_have_we_created(config)
+    show_what_have_we_created(config)

@@ -17,3 +17,9 @@ _test*
 _hidden_scripts
 .vscode
 *.dat
+*.pyc
+__pycache__ 
+*.log
+*.tmp
+*.bak
+*.swp

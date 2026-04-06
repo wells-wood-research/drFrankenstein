@@ -44,10 +44,10 @@ def build_nme_cap(mol_df: pd.DataFrame,
     NME structure: -C(=O)-NH-CH3
     
     Places atoms in order:
-    1. NN: nitrogen bonded to C-terminus carbonyl
-    2. HNN1: hydrogen on nitrogen
-    3. CN: methyl carbon
-    4. HCN1, HCN2, HCN3: methyl hydrogens (via transformation)
+    1. N_N: nitrogen bonded to C-terminus carbonyl
+    2. H_N: hydrogen on nitrogen
+    3. C_N: methyl carbon
+    4. H1_N, H2_N, H3_N: methyl hydrogens (via transformation)
     
     Args:
         mol_df (pd.DataFrame): molecule DataFrame
@@ -78,7 +78,7 @@ def build_nme_cap(mol_df: pd.DataFrame,
     ca_coords = geom.get_coords(mol_df, ca_name)
     o_coords = geom.get_coords(mol_df, o_name)
     
-    # 1. Place NN: nitrogen of NME cap
+    # 1. Place N_N: nitrogen of NME cap
     # Use sp2 geometry - nitrogen is in plane opposite to O and CA
     nn_coords = geom.place_sp2_substituent(
         center_atom=c_coords,
@@ -87,9 +87,9 @@ def build_nme_cap(mol_df: pd.DataFrame,
         bond_length=BOND_C_N,
         in_plane=True
     )
-    nme_df = geom.set_coords(nme_df, "NN", nn_coords)
+    nme_df = geom.set_coords(nme_df, "N_N", nn_coords)
     
-    # 2. Place HNN1: hydrogen on nitrogen
+    # 2. Place H_N: hydrogen on nitrogen
     # Use internal coords: trans to C=O (dihedral ~180°)
     hnn1_coords = geom.place_atom_internal_coords(
         atom_a=ca_coords,
@@ -99,9 +99,9 @@ def build_nme_cap(mol_df: pd.DataFrame,
         angle_deg=ANGLE_PEPTIDE,
         dihedral_deg=DIHEDRAL_TRANS
     )
-    nme_df = geom.set_coords(nme_df, "HNN1", hnn1_coords)
+    nme_df = geom.set_coords(nme_df, "H_N", hnn1_coords)
     
-    # 3. Place CN: methyl carbon
+    # 3. Place C_N: methyl carbon
     # Opposite to C and H on the nitrogen (sp2-like geometry)
     cn_coords = geom.place_sp2_substituent(
         center_atom=nn_coords,
@@ -110,14 +110,14 @@ def build_nme_cap(mol_df: pd.DataFrame,
         bond_length=BOND_C_C,
         in_plane=True
     )
-    nme_df = geom.set_coords(nme_df, "CN", cn_coords)
+    nme_df = geom.set_coords(nme_df, "C_N", cn_coords)
     
     # 4. Place methyl hydrogens using SVD alignment
-    # Now that we have NN, HNN1, CN properly placed, align the template
+    # Now that we have N_N, H_N, C_N properly placed, align the template
     nme_df = Capping_Assistant.transform_whole(
         originalDf=nme_template_df,
         targetDf=nme_df,
-        atomNames=["NN", "HNN1", "CN"]
+        atomNames=["N_N", "H_N", "C_N"]
     )
     
     return nme_df
@@ -134,10 +134,10 @@ def build_ace_cap(mol_df: pd.DataFrame,
     ACE structure: CH3-C(=O)-N-
     
     Places atoms in order:
-    1. CC1: carbonyl carbon bonded to N-terminus
-    2. OC: carbonyl oxygen
-    3. CC2: methyl carbon
-    4. HC1, HC2, HC3: methyl hydrogens (via transformation)
+    1. C_C: carbonyl carbon bonded to N-terminus
+    2. O_C: carbonyl oxygen
+    3. C2_C: methyl carbon
+    4. H1_C, H2_C, H3_C: methyl hydrogens (via transformation)
     
     Args:
         mol_df (pd.DataFrame): molecule DataFrame
@@ -175,7 +175,7 @@ def build_ace_cap(mol_df: pd.DataFrame,
     else:
         h_coords = ca_coords
     
-    # 1. Place CC1: carbonyl carbon of ACE cap
+    # 1. Place C_C: carbonyl carbon of ACE cap
     # Use sp2-like placement opposite to CA and H
     if h_name != ca_name:
         cc1_coords = geom.place_sp2_substituent(
@@ -190,9 +190,9 @@ def build_ace_cap(mol_df: pd.DataFrame,
         direction = n_coords - ca_coords
         cc1_coords = geom.place_atom_by_bond_length(n_coords, direction, BOND_C_N)
     
-    ace_df = geom.set_coords(ace_df, "CC1", cc1_coords)
+    ace_df = geom.set_coords(ace_df, "C_C", cc1_coords)
     
-    # 2. Place OC: carbonyl oxygen
+    # 2. Place O_C: carbonyl oxygen
     # Trans to CA (dihedral ~180° for trans peptide)
     oc_coords = geom.place_atom_internal_coords(
         atom_a=ca_coords,
@@ -202,9 +202,9 @@ def build_ace_cap(mol_df: pd.DataFrame,
         angle_deg=ANGLE_PEPTIDE,
         dihedral_deg=DIHEDRAL_TRANS
     )
-    ace_df = geom.set_coords(ace_df, "OC", oc_coords)
+    ace_df = geom.set_coords(ace_df, "O_C", oc_coords)
     
-    # 3. Place CC2: methyl carbon
+    # 3. Place C2_C: methyl carbon
     # Opposite to N and O on the carbonyl carbon (sp2 geometry)
     cc2_coords = geom.place_sp2_substituent(
         center_atom=cc1_coords,
@@ -213,13 +213,13 @@ def build_ace_cap(mol_df: pd.DataFrame,
         bond_length=BOND_C_C,
         in_plane=True
     )
-    ace_df = geom.set_coords(ace_df, "CC2", cc2_coords)
+    ace_df = geom.set_coords(ace_df, "C2_C", cc2_coords)
     
     # 4. Place methyl hydrogens using SVD alignment
     ace_df = Capping_Assistant.transform_whole(
         originalDf=ace_template_df,
         targetDf=ace_df,
-        atomNames=["CC1", "OC", "CC2"]
+        atomNames=["C_C", "O_C", "C2_C"]
     )
     
     return ace_df
@@ -249,28 +249,28 @@ def validate_geometry(mol_df: pd.DataFrame,
         if terminus_type == "C":
             # NME cap validation
             c_coords = geom.get_coords(mol_df, terminal_atom)
-            nn_coords = geom.get_coords(cap_df, "NN")
-            hnn1_coords = geom.get_coords(cap_df, "HNN1")
-            cn_coords = geom.get_coords(cap_df, "CN")
+            nn_coords = geom.get_coords(cap_df, "N_N")
+            hnn1_coords = geom.get_coords(cap_df, "H_N")
+            cn_coords = geom.get_coords(cap_df, "C_N")
             
-            results["C-NN_bond"] = geom.calculate_distance(c_coords, nn_coords)
-            results["NN-HNN1_bond"] = geom.calculate_distance(nn_coords, hnn1_coords)
-            results["NN-CN_bond"] = geom.calculate_distance(nn_coords, cn_coords)
-            results["C-NN-HNN1_angle"] = geom.calculate_angle(c_coords, nn_coords, hnn1_coords)
-            results["C-NN-CN_angle"] = geom.calculate_angle(c_coords, nn_coords, cn_coords)
+            results["C-N_N_bond"] = geom.calculate_distance(c_coords, nn_coords)
+            results["N_N-H_N_bond"] = geom.calculate_distance(nn_coords, hnn1_coords)
+            results["N_N-C_N_bond"] = geom.calculate_distance(nn_coords, cn_coords)
+            results["C-N_N-H_N_angle"] = geom.calculate_angle(c_coords, nn_coords, hnn1_coords)
+            results["C-N_N-C_N_angle"] = geom.calculate_angle(c_coords, nn_coords, cn_coords)
             
         elif terminus_type == "N":
             # ACE cap validation
             n_coords = geom.get_coords(mol_df, terminal_atom)
-            cc1_coords = geom.get_coords(cap_df, "CC1")
-            oc_coords = geom.get_coords(cap_df, "OC")
-            cc2_coords = geom.get_coords(cap_df, "CC2")
+            cc1_coords = geom.get_coords(cap_df, "C_C")
+            oc_coords = geom.get_coords(cap_df, "O_C")
+            cc2_coords = geom.get_coords(cap_df, "C2_C")
             
-            results["N-CC1_bond"] = geom.calculate_distance(n_coords, cc1_coords)
-            results["CC1-OC_bond"] = geom.calculate_distance(cc1_coords, oc_coords)
-            results["CC1-CC2_bond"] = geom.calculate_distance(cc1_coords, cc2_coords)
-            results["N-CC1-OC_angle"] = geom.calculate_angle(n_coords, cc1_coords, oc_coords)
-            results["N-CC1-CC2_angle"] = geom.calculate_angle(n_coords, cc1_coords, cc2_coords)
+            results["N-C_C_bond"] = geom.calculate_distance(n_coords, cc1_coords)
+            results["C_C-O_C_bond"] = geom.calculate_distance(cc1_coords, oc_coords)
+            results["C_C-C2_C_bond"] = geom.calculate_distance(cc1_coords, cc2_coords)
+            results["N-C_C-O_C_angle"] = geom.calculate_angle(n_coords, cc1_coords, oc_coords)
+            results["N-C_C-C2_C_angle"] = geom.calculate_angle(n_coords, cc1_coords, cc2_coords)
         
         results["status"] = "valid"
         

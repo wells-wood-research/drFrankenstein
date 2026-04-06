@@ -116,13 +116,16 @@ def write_goat_input(conformerDir, cappedXyz, config):
     multiplicity = config["moleculeInfo"]["multiplicity"]
     availableCpus = config["miscInfo"]["availableCpus"]
 
+
+    useCpus = min(16, availableCpus)
+
     goatOrcaInput = p.join(conformerDir, f"GOAT_orca.inp")
     with open(goatOrcaInput, "w") as f:
         f.write(" # --------------------------------- #\n")
         f.write(" #  GOAT conformation generation     #\n")
         f.write(" # --------------------------------- #\n")
         f.write("!XTB2 GOAT\n")
-        f.write(f"%PAL NPROCS {availableCpus} END\n")  
+        f.write(f"%PAL NPROCS {useCpus} END\n")  
         f.write("%GOAT\n")
         f.write("\tMAXITERMULT 1\n")            ## only do one round (save some time)
         f.write("\tFREEZEAMIDES TRUE\n")           ## freeze amides

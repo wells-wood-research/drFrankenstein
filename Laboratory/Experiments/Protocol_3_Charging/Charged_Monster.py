@@ -383,6 +383,13 @@ def run_charge_fitting(config: dict,
     multiWfnDir = config["pathInfo"]["multiWfnDir"]
     nConformers = config["chargeFittingInfo"]["nConformers"]
 
+    def as_rel_to_fitting(inputPath: FilePath) -> FilePath:
+        if p.isabs(inputPath):
+            absolutePath = inputPath
+        else:
+            absolutePath = p.join(fittingDir, inputPath)
+        return p.relpath(absolutePath, fittingDir)
+
     ## Change dir to MultiWFN build dir so it can find settings.ini
     os.chdir(multiWfnDir)
 
@@ -395,6 +402,13 @@ def run_charge_fitting(config: dict,
     moldenFile = glob.glob(p.join(fittingDir, "*.molden.input"))[0]
     ## use relative path
     moldenFile = p.relpath(moldenFile, fittingDir)
+    conformerListInput = as_rel_to_fitting(conformerListTxt)
+    chargeConstraintsInput = None
+    if chargeConstraintsTxt is not None:
+        chargeConstraintsInput = as_rel_to_fitting(chargeConstraintsTxt)
+    symmetryConstraintsInput = None
+    if symmetryConstraintsTxt is not None:
+        symmetryConstraintsInput = as_rel_to_fitting(symmetryConstraintsTxt)
     os.chdir(fittingDir)
 
 
@@ -421,10 +435,10 @@ def run_charge_fitting(config: dict,
         child.sendline("-1")
 
         child.expect(r'.*Input.*\n?\r?')
-        child.sendline(conformerListTxt)
+        child.sendline(conformerListInput)
 
         ####### LOAD CHARGE CONSTRAINTS #######
-        if not chargeConstraintsTxt is None:
+        if chargeConstraintsInput is not None:
             child.expect(r'.*11.*\n?\r?')
             child.sendline("6")
 
@@ -432,9 +446,9 @@ def run_charge_fitting(config: dict,
             child.sendline("1")
 
             child.expect(r'.*Input.*\n?\r?')
-            child.sendline(chargeConstraintsTxt)
+            child.sendline(chargeConstraintsInput)
 
-        if not symmetryConstraintsTxt is None:
+        if symmetryConstraintsInput is not None:
         ####### LOAD SYMMETRY CONSTRAINTS #######
             child.expect(r'.*11.*\n?\r?')
             child.sendline("5")
@@ -443,7 +457,7 @@ def run_charge_fitting(config: dict,
             child.sendline("1")
 
             child.expect(r'.*Input.*\n?\r?')
-            child.sendline(symmetryConstraintsTxt)
+            child.sendline(symmetryConstraintsInput)
 
         ####### RUN CALCULATIONS #######
         child.expect(r'.*11.*\n?\r?')

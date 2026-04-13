@@ -208,7 +208,8 @@ def generate_charge_constraints_file(config: dict, outDir: DirectoryPath) -> Fil
     return chargeConstraintsTxt
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
-                                  chargeFittingDir: DirectoryPath) -> FilePath:
+                                  chargeFittingDir: DirectoryPath,
+                                  conformerNames: list[str] | None = None) -> FilePath:
     """
     Reads through single point calculations for each conformer 
     and gets the single-point energies
@@ -218,17 +219,24 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
     Args:
         orcaCalculationsDir (DirectoryPath): path to dir containing single point calculations
         chargeFittingDir (DirectoryPath): path to dir for charge fitting calculations
+        conformerNames (list[str] | None): optional list of conformer names to include
 
     Returns:
         conformerListTxt (FilePath): path to conformer list file
     """
 
+    if conformerNames is None:
+        conformerNames = sorted([
+            entry for entry in os.listdir(orcaCalculationsDir)
+            if p.isdir(p.join(orcaCalculationsDir, entry))
+        ])
+
     singlePointData = {}
-    for conformerName in os.listdir(orcaCalculationsDir):
+    for conformerName in conformerNames:
         singlePointData[conformerName] = {}
         calculationDir = p.join(orcaCalculationsDir, conformerName)
-        if not p.isdir:
-            continue
+        if not p.isdir(calculationDir):
+            raise FileNotFoundError(f"Expected conformer calculation dir not found: {calculationDir}")
         ## find ORCA.out file
         singlePointOutFile = [p.join(calculationDir, file) for file
                                in os.listdir(calculationDir)
@@ -238,7 +246,9 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
         singlePointData[conformerName]["Energy"] = singlePointEnergy
         singlePointData[conformerName]["Path"] =  f"{conformerName}.molden.input"
 
-    singlePointDf =pd.DataFrame.from_dict(singlePointData, orient='index')
+    singlePointDf = pd.DataFrame.from_dict(singlePointData, orient='index')
+    if singlePointDf.empty:
+        raise ValueError("No conformers found for conformer_list.txt generation.")
 
     singlePointDf = calculate_boltzmann_probabilities(singlePointDf)
 

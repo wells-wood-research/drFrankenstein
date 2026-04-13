@@ -373,14 +373,16 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     conformerXyzs = config["runtimeInfo"]["madeByCharges"]["conformerXyzsForCharges"]
 
     ## run orca single-point calculations on conformers
-    run_qm_calculations_for_RESP(conformerXyzs = conformerXyzs,
-                                 orcaDir=orcaDir,
-                                            fittingDir=fittingDir,
-                                               config=config,
-                                                useSolvation=useSolvation,
-                                                debug=debug)
+    usedConformerNames = run_qm_calculations_for_RESP(conformerXyzs = conformerXyzs,
+                                                       orcaDir=orcaDir,
+                                                       fittingDir=fittingDir,
+                                                       config=config,
+                                                       useSolvation=useSolvation,
+                                                       debug=debug)
     ## create input files for MultiWFN
-    conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir, fittingDir)
+    conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir,
+                                                                       fittingDir,
+                                                                       conformerNames=usedConformerNames)
     if config["moleculeInfo"]["chargeGroups"] is not None:
         chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
     else:
@@ -406,7 +408,7 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
                                         fittingDir: DirectoryPath,
                                                 config: dict,
                                                     useSolvation: bool = True,
-                                                        debug: bool = False) -> None:
+                                                        debug: bool = False) -> list[str]:
     """
     Runs ORCA single-point calculations on a set of conformers
     Handles multiprocessing and progress bar
@@ -416,7 +418,7 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
         fittingDir (DirectoryPath): Directory for output for charge fitting
         config (dict): dictionary containing all run information
     Returns:
-        None [we will find output files later]
+        sampledConformerNames (list[str]): conformers used for 01_orca_calculations
     
     """
     
@@ -432,9 +434,12 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
         config["chargeFittingInfo"]["nConformers"] = len(conformerXyzs)
     else:
         sampledConformerXyzs = conformerXyzs[:nConformers]
-    ## 
-    conformerIds = [p.basename(file).split(".")[0].split("_")[-1] for file in sampledConformerXyzs]
-    config["runtimeInfo"]["madeByCharges"]
+    sampledConformerNames = [p.splitext(p.basename(file))[0] for file in sampledConformerXyzs]
+    config["runtimeInfo"]["madeByCharges"]["orcaCalculatedConformerNames"] = sampledConformerNames
+    conformerTrackingTxt = p.join(orcaDir, "used_conformers.txt")
+    with open(conformerTrackingTxt, "w") as f:
+        for conformerName in sampledConformerNames:
+            f.write(f"{conformerName}\n")
 
     ## create an argument list for running charge calculations
     argsList = [(conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config) for conformerXyz in sampledConformerXyzs]
@@ -467,10 +472,11 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
                     iterable_len = len(argsList),
                     progress_bar_options=tqdmBarOptions)
 
+    return sampledConformerNames
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     raise NotImplementedError
-
 
 
 

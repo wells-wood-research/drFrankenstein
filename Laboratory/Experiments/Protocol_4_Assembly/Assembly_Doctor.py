@@ -29,7 +29,7 @@ def parameter_assembly_protocol(config:dict) -> dict:
     elif assemblyProtocol.upper() == "CGENFF":
         config = CGenFF_assembly_protocol(config)
 
-    config["chekpointInfo"]["assemblyComplete"] = True
+    config.setdefault("checkpointInfo", {})["assemblyComplete"] = True
     return config
     
 

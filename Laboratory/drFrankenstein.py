@@ -89,7 +89,8 @@ def main():
 
     if not checkpointInfo["assemblyComplete"]:
         ## TODO: drSplash?
-        config = Assembly_Doctor.agnostic_assembly_protocol(config=config)
+        config = Assembly_Doctor.parameter_assembly_protocol(config=config)
+        drYaml.write_config_to_yaml(config, outputDir)
 
 
     # ## run assembly protocol

@@ -35,7 +35,7 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     Returns:
         config (dict): updated config
     """
-
+    debug=True
 
     ## create an entry in runtimeInfo for conformers
     config["runtimeInfo"]["madeByCharges"] = {}
@@ -432,6 +432,9 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
         config["chargeFittingInfo"]["nConformers"] = len(conformerXyzs)
     else:
         sampledConformerXyzs = conformerXyzs[:nConformers]
+    ## 
+    conformerIds = [p.basename(file).split(".")[0].split("_")[-1] for file in sampledConformerXyzs]
+    config["runtimeInfo"]["madeByCharges"]
 
     ## create an argument list for running charge calculations
     argsList = [(conformerXyz, orcaDir, fittingDir, chargeFittingInfo,  moleculeInfo, useSolvation, config) for conformerXyz in sampledConformerXyzs]

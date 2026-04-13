@@ -236,7 +236,7 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
         singlePointEnergy = find_final_single_point_energy(singlePointOutFile)
        
         singlePointData[conformerName]["Energy"] = singlePointEnergy
-        singlePointData[conformerName]["Path"] = p.join(chargeFittingDir, f"{conformerName}.molden.input")
+        singlePointData[conformerName]["Path"] =  f"{conformerName}.molden.input"
 
     singlePointDf =pd.DataFrame.from_dict(singlePointData, orient='index')
 
@@ -246,6 +246,9 @@ def generate_conformer_list_file(orcaCalculationsDir: DirectoryPath,
     with open(conformerListTxt, "w") as f:
         for _, row in singlePointDf.iterrows():
             f.write(f"{row['Path']} {str(row['Probability'])}\n")
+
+    ## set back to relpath
+    coformerListTxt = p.relpath(conformerListTxt, chargeFittingDir)
 
     return conformerListTxt
 

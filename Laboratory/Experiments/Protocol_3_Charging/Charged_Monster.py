@@ -216,12 +216,10 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
         
         orcaCalculationOutput = p.join(conformerQmDir, "orca_opt_freq.out")
     else:
-        orcaCalculationInput = drOrca.make_orca_input_for_qmmm_singlepoint(inputXyz=optXyz,
+        orcaCalculationInput = drOrca.make_orca_input_for_singlepoint(inputXyz=optXyz,
                                                                        outDir= conformerQmDir,
-                                                                       moleculeInfo= config["moleculeInfo"],
+                                                                       moleculeInfo= moleculeInfo,
                                                                        qmMethod= chargeFittingInfo["singlePointMethod"],
-                                                                       qmAtoms= config["runtimeInfo"]["madeByCharges"]["qmAtoms"],
-                                                                       parameterFile= config["runtimeInfo"]["madeByCharges"]["solvatedParams"],
                                                                        solvationMethod = singlePointSolvation)
         orcaCalculationOutput = p.join(conformerQmDir, "orca_sp.out")
 
@@ -395,6 +393,10 @@ def run_charge_fitting(config: dict,
 
     ## Get a molden file for the input command
     moldenFile = glob.glob(p.join(fittingDir, "*.molden.input"))[0]
+    ## use relative path
+    moldenFile = p.relpath(moldenFile, fittingDir)
+    os.chdir(fittingDir)
+
 
     ## Open a file object for continuous logging
     with open(outputFile, 'w') as logFile:
@@ -404,6 +406,7 @@ def run_charge_fitting(config: dict,
 
         ## Spawn the child process with logfile enabled
         chargeFittingCommand = f"{multiWfnExe} {moldenFile}"
+        print(chargeFittingCommand)
         child = pexpect.spawn(chargeFittingCommand, encoding='utf-8', logfile=logFile)
 
         ####### GET TO RESP MAIN MENU #######

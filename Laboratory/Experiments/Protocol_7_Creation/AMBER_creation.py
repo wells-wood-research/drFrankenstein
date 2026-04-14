@@ -22,13 +22,36 @@ def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases
     ## extract backbone atom types from prmtop
     parmedPrmtop = pmd.load_file(moleculePrmtop)
     prmtopDf = parmedPrmtop.to_dataframe()
-    
+    prmtopDf["name"] = prmtopDf["name"].astype(str).str.strip()
 
     ## gather backbone atom types from prmtop
     backboneAtomTypes = {}
-    for atomName in backboneAliases.values():
-        atomType = prmtopDf.loc[prmtopDf["name"] == atomName[0], "type"].values[0]
-        backboneAtomTypes[atomName[0]] = atomType
+    missingAliases = {}
+    for canonicalName, aliases in backboneAliases.items():
+        if len(aliases) == 0:
+            missingAliases[canonicalName] = aliases
+            continue
+
+        matchedAtomType = None
+        for alias in aliases:
+            matchedTypes = prmtopDf.loc[prmtopDf["name"] == alias, "type"].values
+            if len(matchedTypes) > 0:
+                matchedAtomType = matchedTypes[0]
+                break
+
+        if matchedAtomType is None:
+            missingAliases[canonicalName] = aliases
+            continue
+
+        ## keep all configured aliases usable downstream
+        for alias in aliases:
+            backboneAtomTypes[alias] = matchedAtomType
+
+    if missingAliases:
+        missingText = ", ".join([f"{name}:{aliases}" for name, aliases in missingAliases.items()])
+        raise ValueError(
+            f"Could not find configured backboneAliases in PRMTOP {moleculePrmtop}: {missingText}"
+        )
       
     return backboneAtomTypes
 

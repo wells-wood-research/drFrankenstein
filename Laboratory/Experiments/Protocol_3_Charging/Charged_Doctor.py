@@ -35,8 +35,6 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     Returns:
         config (dict): updated config
     """
-    debug=True
-
     ## create an entry in runtimeInfo for conformers
     config["runtimeInfo"]["madeByCharges"] = {}
 

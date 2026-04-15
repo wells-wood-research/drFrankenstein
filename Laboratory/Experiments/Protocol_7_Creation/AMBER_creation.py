@@ -17,6 +17,8 @@ class DirectoryPath:
     pass
 from typing import Dict, List, Tuple
 
+OPTIONAL_BACKBONE_ALIASES = {"H", "HA"}
+
 def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases: Dict[str, List[str]]):
 
     ## extract backbone atom types from prmtop
@@ -29,6 +31,8 @@ def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases
     missingAliases = {}
     for canonicalName, aliases in backboneAliases.items():
         if len(aliases) == 0:
+            if canonicalName in OPTIONAL_BACKBONE_ALIASES:
+                continue
             missingAliases[canonicalName] = aliases
             continue
 
@@ -40,6 +44,8 @@ def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases
                 break
 
         if matchedAtomType is None:
+            if canonicalName in OPTIONAL_BACKBONE_ALIASES:
+                continue
             missingAliases[canonicalName] = aliases
             continue
 
@@ -83,8 +89,13 @@ def add_ncaa_ncaa_dihedrals(config: dict) -> None:
     ## create a mapping between amber types to gaff2 (made by us) atom types
     amber2gaffTypes = {}
     for canonicalName, customNames in backboneAliases.items():
+        if len(customNames) == 0:
+            continue
         amberType = amberBackboneTypes[canonicalName]
-        amber2gaffTypes[amberType] = backboneAtomTypes[customNames[0]]
+        mappedAlias = next((alias for alias in customNames if alias in backboneAtomTypes), None)
+        if mappedAlias is None:
+            continue
+        amber2gaffTypes[amberType] = backboneAtomTypes[mappedAlias]
     ## make ncaa-ncaa dihedrals
     parmedFrcmod = pmd.load_file(finalFrcMod)
     newParams = {}

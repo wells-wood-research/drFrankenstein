@@ -30,7 +30,10 @@ BOND_N_H = 1.01    # N-H bond
 BOND_C_O = 1.23    # Carbonyl C=O
 BOND_C_C = 1.52    # C-C single bond
 ANGLE_PEPTIDE = 120.0  # Standard angle for sp2 amide
+ANGLE_INTERNAL = 180.0 - ANGLE_PEPTIDE  # place_atom_internal_coords convention
 DIHEDRAL_TRANS = 180.0  # Trans peptide bond
+MIN_NONBONDED_CAP_DISTANCE = 1.5  # Required minimum distance to non-cap atoms
+CLASH_ROTATION_STEPS = 72  # 5° scan around attachment bond
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -96,7 +99,7 @@ def build_nme_cap(mol_df: pd.DataFrame,
         atom_b=c_coords,
         atom_c=nn_coords,
         bond_length=BOND_N_H,
-        angle_deg=ANGLE_PEPTIDE,
+        angle_deg=ANGLE_INTERNAL,
         dihedral_deg=DIHEDRAL_TRANS
     )
     nme_df = geom.set_coords(nme_df, "H_N", hnn1_coords)
@@ -118,6 +121,18 @@ def build_nme_cap(mol_df: pd.DataFrame,
         originalDf=nme_template_df,
         targetDf=nme_df,
         atomNames=["N_N", "H_N", "C_N"]
+    )
+    # Keep the three atoms that define the amide center exact after SVD alignment.
+    nme_df = geom.set_coords(nme_df, "N_N", nn_coords)
+    nme_df = geom.set_coords(nme_df, "H_N", hnn1_coords)
+    nme_df = geom.set_coords(nme_df, "C_N", cn_coords)
+    nme_df = resolve_cap_nonbonded_clashes(
+        mol_df=mol_df,
+        cap_df=nme_df,
+        terminal_atom=c_terminal_atom,
+        pivot_atom="N_N",
+        min_distance=MIN_NONBONDED_CAP_DISTANCE,
+        rotation_steps=CLASH_ROTATION_STEPS,
     )
     
     return nme_df
@@ -199,8 +214,10 @@ def build_ace_cap(mol_df: pd.DataFrame,
         atom_b=n_coords,
         atom_c=cc1_coords,
         bond_length=BOND_C_O,
-        angle_deg=ANGLE_PEPTIDE,
-        dihedral_deg=DIHEDRAL_TRANS
+        angle_deg=ANGLE_INTERNAL,
+        # place_atom_internal_coords defines the torsion as D-C-B-A (O-C-N-CA),
+        # so 0.0 here yields the trans 180° arrangement we need around ACE carbonyl C.
+        dihedral_deg=0.0
     )
     ace_df = geom.set_coords(ace_df, "O_C", oc_coords)
     
@@ -221,8 +238,106 @@ def build_ace_cap(mol_df: pd.DataFrame,
         targetDf=ace_df,
         atomNames=["C_C", "O_C", "C2_C"]
     )
+    # Keep the trigonal-planar carbonyl center exact after SVD alignment.
+    ace_df = geom.set_coords(ace_df, "C_C", cc1_coords)
+    ace_df = geom.set_coords(ace_df, "O_C", oc_coords)
+    ace_df = geom.set_coords(ace_df, "C2_C", cc2_coords)
+    ace_df = resolve_cap_nonbonded_clashes(
+        mol_df=mol_df,
+        cap_df=ace_df,
+        terminal_atom=n_terminal_atom,
+        pivot_atom="C_C",
+        min_distance=MIN_NONBONDED_CAP_DISTANCE,
+        rotation_steps=CLASH_ROTATION_STEPS,
+    )
     
     return ace_df
+
+
+#🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+def resolve_cap_nonbonded_clashes(mol_df: pd.DataFrame,
+                                  cap_df: pd.DataFrame,
+                                  terminal_atom: str,
+                                  pivot_atom: str,
+                                  min_distance: float = MIN_NONBONDED_CAP_DISTANCE,
+                                  rotation_steps: int = CLASH_ROTATION_STEPS) -> pd.DataFrame:
+    """
+    Resolve cap-vs-molecule nonbonded clashes by rigidly rotating cap atoms around
+    the attachment bond (terminal_atom-pivot_atom).
+
+    This keeps all cap internal geometry and restrained angles intact while applying
+    a simple repulsive-physics objective to reduce close contacts.
+    """
+    reference_df = mol_df[mol_df["ATOM_NAME"] != terminal_atom]
+    if reference_df.empty:
+        return cap_df
+
+    terminal_coords = geom.get_coords(mol_df, terminal_atom)
+    pivot_coords = geom.get_coords(cap_df, pivot_atom)
+
+    best_df = cap_df.copy()
+    best_energy, best_min_distance = _cap_clash_energy(
+        cap_df=best_df,
+        reference_df=reference_df,
+        min_distance=min_distance,
+    )
+
+    if best_min_distance >= min_distance:
+        return best_df
+
+    atom_names = cap_df["ATOM_NAME"].tolist()
+    cap_coords = cap_df[["X", "Y", "Z"]].astype(float).values
+
+    for angle in np.linspace(0.0, 360.0, num=rotation_steps, endpoint=False):
+        rotated_coords = geom.rotate_points_around_axis(
+            points=cap_coords,
+            axis_point1=terminal_coords,
+            axis_point2=pivot_coords,
+            angle_deg=float(angle),
+        )
+        rotated_df = cap_df.copy()
+        rotated_df.loc[:, ["X", "Y", "Z"]] = rotated_coords
+
+        # Keep attachment atom fixed exactly on the original coordinates.
+        pivot_index = atom_names.index(pivot_atom)
+        rotated_df.iloc[pivot_index, rotated_df.columns.get_indexer(["X", "Y", "Z"])] = pivot_coords
+
+        energy, min_d = _cap_clash_energy(
+            cap_df=rotated_df,
+            reference_df=reference_df,
+            min_distance=min_distance,
+        )
+
+        if (energy < best_energy) or (np.isclose(energy, best_energy) and min_d > best_min_distance):
+            best_df = rotated_df
+            best_energy = energy
+            best_min_distance = min_d
+
+            if best_min_distance >= min_distance and np.isclose(best_energy, 0.0):
+                break
+
+    return best_df
+
+
+def _cap_clash_energy(cap_df: pd.DataFrame,
+                      reference_df: pd.DataFrame,
+                      min_distance: float) -> Tuple[float, float]:
+    """Return repulsive penalty and minimum cap-reference distance."""
+    if reference_df.empty:
+        return 0.0, float("inf")
+
+    cap_coords = cap_df[["X", "Y", "Z"]].astype(float).values
+    ref_coords = reference_df[["X", "Y", "Z"]].astype(float).values
+
+    deltas = cap_coords[:, None, :] - ref_coords[None, :, :]
+    distances = np.linalg.norm(deltas, axis=2)
+    min_d = float(np.min(distances))
+
+    overlap = np.clip(min_distance - distances, a_min=0.0, a_max=None)
+    # Harmonic repulsion for overlaps only.
+    energy = float(np.sum(overlap * overlap))
+    return energy, min_d
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
@@ -258,6 +373,10 @@ def validate_geometry(mol_df: pd.DataFrame,
             results["N_N-C_N_bond"] = geom.calculate_distance(nn_coords, cn_coords)
             results["C-N_N-H_N_angle"] = geom.calculate_angle(c_coords, nn_coords, hnn1_coords)
             results["C-N_N-C_N_angle"] = geom.calculate_angle(c_coords, nn_coords, cn_coords)
+            results["H_N-N_N-C_N_angle"] = geom.calculate_angle(hnn1_coords, nn_coords, cn_coords)
+            reference_df = mol_df[mol_df["ATOM_NAME"] != terminal_atom]
+            _, min_d = _cap_clash_energy(cap_df, reference_df, MIN_NONBONDED_CAP_DISTANCE)
+            results["min_cap_nonbonded_distance"] = min_d
             
         elif terminus_type == "N":
             # ACE cap validation
@@ -271,6 +390,18 @@ def validate_geometry(mol_df: pd.DataFrame,
             results["C_C-C2_C_bond"] = geom.calculate_distance(cc1_coords, cc2_coords)
             results["N-C_C-O_C_angle"] = geom.calculate_angle(n_coords, cc1_coords, oc_coords)
             results["N-C_C-C2_C_angle"] = geom.calculate_angle(n_coords, cc1_coords, cc2_coords)
+            results["O_C-C_C-C2_C_angle"] = geom.calculate_angle(oc_coords, cc1_coords, cc2_coords)
+            results["O_C-C_C-N-C2_C_dihedral"] = geom.calculate_dihedral(oc_coords, cc1_coords, n_coords, cc2_coords)
+            reference_df = mol_df[mol_df["ATOM_NAME"] != terminal_atom]
+            _, min_d = _cap_clash_energy(cap_df, reference_df, MIN_NONBONDED_CAP_DISTANCE)
+            results["min_cap_nonbonded_distance"] = min_d
+
+            bonded_atoms = Capping_Assistant.find_bonded_atoms(mol_df, terminal_atom)
+            ca_candidates = [atom for atom in bonded_atoms if atom.startswith("C")]
+            if len(ca_candidates) > 0:
+                ca_name = "CA" if "CA" in ca_candidates else ca_candidates[0]
+                ca_coords = geom.get_coords(mol_df, ca_name)
+                results["O_C-C_C-N-CA_dihedral"] = geom.calculate_dihedral(oc_coords, cc1_coords, n_coords, ca_coords)
         
         results["status"] = "valid"
         

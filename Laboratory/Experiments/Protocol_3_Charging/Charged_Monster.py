@@ -76,12 +76,28 @@ def run_qmmm_singlepoint(qmmmSinglepointArgs):
                                                                        qmAtoms=qmAtoms,
                                                                        parameterFile=solvatedParams)
     qmmmSinglepointOrcaOutput = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp.out")
-    if not p.isfile(qmmmSinglepointOrcaOutput):
+    qmmmSinglepointBase = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp")
+    qmmmSinglepointGbw = f"{qmmmSinglepointBase}.gbw"
+    qmmmNeedsRun = (
+        (not p.isfile(qmmmSinglepointOrcaOutput))
+        or (not drOrca.did_orca_finish_normallly(qmmmSinglepointOrcaOutput))
+        or (not p.isfile(qmmmSinglepointGbw))
+    )
+    if qmmmNeedsRun:
         drOrca.run_orca(qmmmSinglepointOrcaInput, qmmmSinglepointOrcaOutput, config)
+
+    if not drOrca.did_orca_finish_normallly(qmmmSinglepointOrcaOutput):
+        raise RuntimeError(f"QMMM single-point ORCA failed: {qmmmSinglepointOrcaOutput}")
+    if not p.isfile(qmmmSinglepointGbw):
+        raise FileNotFoundError(f"Missing GBW after QMMM single-point: {qmmmSinglepointGbw}")
     
     ## create molden file for charge fitting TODO: move to its own func
-    call(["orca_2mkl", p.join(conformerQmmmSinglepointDir,"QMMM_orca_sp"), "-molden"], stdout=DEVNULL)
+    mklStatus = call(["orca_2mkl", qmmmSinglepointBase, "-molden"], stdout=DEVNULL)
+    if mklStatus != 0:
+        raise RuntimeError(f"orca_2mkl failed for {qmmmSinglepointBase}")
     singlePointMolden = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp.molden.input")
+    if not p.isfile(singlePointMolden):
+        raise FileNotFoundError(f"Missing Molden file after orca_2mkl: {singlePointMolden}")
 
     destMolden = p.join(fittingDir, f"{conformerName}.molden.input")
 
@@ -200,10 +216,19 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                     solvationMethod = optSolvation)
     
     orcaOptOutput = p.join(conformerQmDir, "orca_opt.out")
-    if not p.isfile(orcaOptOutput):
+    optXyz = p.join(conformerQmDir, "orca_opt.xyz")
+    optNeedsRun = (
+        (not p.isfile(orcaOptOutput))
+        or (not drOrca.did_orca_finish_normallly(orcaOptOutput))
+        or (not p.isfile(optXyz))
+    )
+    if optNeedsRun:
         drOrca.run_orca(orcaOptInput, orcaOptOutput, config)
 
-    optXyz = p.join(conformerQmDir, "orca_opt.xyz")
+    if not drOrca.did_orca_finish_normallly(orcaOptOutput):
+        raise RuntimeError(f"Optimisation ORCA failed: {orcaOptOutput}")
+    if not p.isfile(optXyz):
+        raise FileNotFoundError(f"Missing optimisation geometry: {optXyz}")
 
     ## time saving step: only run opt/freq when assemblyProtocol == "AGNOSTIC"
     ## even then, we only need opt/freq for the solvated in RESP2
@@ -223,12 +248,28 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                                        solvationMethod = singlePointSolvation)
         orcaCalculationOutput = p.join(conformerQmDir, "orca_sp.out")
 
-    if not p.isfile(orcaCalculationOutput):
+    calculationName = p.splitext(p.basename(orcaCalculationInput))[0]
+    calculationBase = p.join(conformerQmDir, calculationName)
+    calculationGbw = f"{calculationBase}.gbw"
+    calculationNeedsRun = (
+        (not p.isfile(orcaCalculationOutput))
+        or (not drOrca.did_orca_finish_normallly(orcaCalculationOutput))
+        or (not p.isfile(calculationGbw))
+    )
+    if calculationNeedsRun:
         drOrca.run_orca(orcaCalculationInput, orcaCalculationOutput, config)
 
-    calculationName = p.splitext(p.basename(orcaCalculationInput))[0]
-    call(["orca_2mkl", p.join(conformerQmDir,calculationName), "-molden"], stdout=DEVNULL)
+    if not drOrca.did_orca_finish_normallly(orcaCalculationOutput):
+        raise RuntimeError(f"Single-point ORCA failed: {orcaCalculationOutput}")
+    if not p.isfile(calculationGbw):
+        raise FileNotFoundError(f"Missing GBW after single-point: {calculationGbw}")
+
+    mklStatus = call(["orca_2mkl", calculationBase, "-molden"], stdout=DEVNULL)
+    if mklStatus != 0:
+        raise RuntimeError(f"orca_2mkl failed for {calculationBase}")
     singlePointMolden = p.join(conformerQmDir, f"{calculationName}.molden.input")
+    if not p.isfile(singlePointMolden):
+        raise FileNotFoundError(f"Missing Molden file after orca_2mkl: {singlePointMolden}")
 
     destMolden = p.join(fittingDir, f"{conformerName}.molden.input")
 

@@ -78,18 +78,20 @@ def trim_termini(molDf: pd.DataFrame,
     allAtomsToDelete = []
     for nTerminalAtom in nTerminalAtoms:
         bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf, nTerminalAtom)
-        nTerminalProton = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms, config)
-        allAtomsToDelete.append(nTerminalProton)
+        nTerminalProtons = Capping_Assistant.decide_atom_to_delete_N_termini(bondedAtoms, config)
+        allAtomsToDelete.extend(nTerminalProtons)
 
     ## get the oxygen (or equivalent) atoms bound to C-Terminus, and anything bound to that oxygen
     for cTerminalAtom in cTerminalAtoms:
         bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf, cTerminalAtom)
         cTerminalOxygen = Capping_Assistant.decide_atom_to_delete_C_termini(bondedAtoms)
-        allAtomsToDelete.append(cTerminalOxygen)
+        if cTerminalOxygen != "None":
+            allAtomsToDelete.append(cTerminalOxygen)
         if not cTerminalOxygen == "None":
             bondedAtoms = Capping_Assistant.find_bonded_atoms(molDf, cTerminalOxygen)
             cTerminalProton = Capping_Assistant.decide_atom_to_delete_C_terminal_proton(bondedAtoms)
-            allAtomsToDelete.append(cTerminalProton)
+            if cTerminalProton != "None":
+                allAtomsToDelete.append(cTerminalProton)
 
     molDf = molDf[~molDf["ATOM_NAME"].isin(allAtomsToDelete)]
 

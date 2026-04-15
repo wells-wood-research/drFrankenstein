@@ -74,29 +74,37 @@ def decide_atom_to_delete_C_termini(atomNames: list) -> str:
 
     return atomToDelete
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def decide_atom_to_delete_N_termini(atomNames: list, config: dict) -> str:
+def decide_atom_to_delete_N_termini(atomNames: list, config: dict) -> list:
     """
-    From a list of atom names, decide which one to delete in relation to the N-Termini
+    From a list of atom names bonded to an N-terminus, decide which hydrogens to delete
+    so that, after ACE attachment, the N remains trivalent.
 
     Args:
         atomNames (list): list of atom names
     Returns:
-        atomToDelete (str): name of the atom to delete (can be "None")
+        atomsToDelete (list): names of hydrogen atoms to delete
     
     """
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
-    aliasesH = backboneAliases["H"]
-    atomNames = sorted([atomName for atomName in atomNames if atomName.startswith("H")])
+    aliasesH = set(backboneAliases.get("H", []))
 
-    atomNames = [atomName for atomName in atomNames if atomName not in aliasesH]
+    hydrogenAtoms = sorted([atomName for atomName in atomNames if atomName.startswith("H")])
+    nonHydrogenCount = len([atomName for atomName in atomNames if not atomName.startswith("H")])
 
-    if len(atomNames) == 1:
-        atomToDelete = atomNames[0]
-    elif len(atomNames) > 1:
-        atomToDelete = atomNames[-1]
-    else:
-        atomToDelete = "None"
-    return atomToDelete
+    # N should have 3 total bonds after adding ACE (adds one new bond),
+    # so pre-capping it should have 2 existing bonds.
+    targetHydrogensBeforeCap = max(0, 2 - nonHydrogenCount)
+
+    preferredHydrogens = [atomName for atomName in hydrogenAtoms if atomName in aliasesH]
+    otherHydrogens = [atomName for atomName in hydrogenAtoms if atomName not in aliasesH]
+
+    hydrogensToKeep = []
+    for atomName in preferredHydrogens + otherHydrogens:
+        if atomName not in hydrogensToKeep and len(hydrogensToKeep) < targetHydrogensBeforeCap:
+            hydrogensToKeep.append(atomName)
+
+    atomsToDelete = [atomName for atomName in hydrogenAtoms if atomName not in hydrogensToKeep]
+    return atomsToDelete
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 

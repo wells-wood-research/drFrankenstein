@@ -270,3 +270,34 @@ def calculate_dihedral(coord1: np.ndarray,
     y = np.dot(m1, n2)
     
     return np.degrees(np.arctan2(y, x))
+
+
+def rotate_points_around_axis(points: np.ndarray,
+                              axis_point1: np.ndarray,
+                              axis_point2: np.ndarray,
+                              angle_deg: float) -> np.ndarray:
+    """
+    Rotate points around an arbitrary axis using Rodrigues' rotation formula.
+
+    Args:
+        points (np.ndarray): N x 3 array of XYZ coordinates.
+        axis_point1 (np.ndarray): first point on rotation axis.
+        axis_point2 (np.ndarray): second point on rotation axis.
+        angle_deg (float): rotation angle in degrees.
+
+    Returns:
+        np.ndarray: rotated N x 3 coordinates.
+    """
+    axis = normalize_vector(axis_point2 - axis_point1)
+    angle = np.radians(angle_deg)
+
+    points_centered = points - axis_point1
+    cross_term = np.cross(axis, points_centered)
+    dot_term = np.dot(points_centered, axis)
+
+    rotated = (
+        points_centered * np.cos(angle) +
+        cross_term * np.sin(angle) +
+        np.outer(dot_term, axis) * (1.0 - np.cos(angle))
+    )
+    return rotated + axis_point1

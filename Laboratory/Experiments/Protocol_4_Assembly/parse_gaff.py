@@ -385,8 +385,8 @@ def collect_amber19_nonbonded_parameters(leap_parm_dir: str) -> dict:
 
 
 if __name__ == "__main__":
-    leap_parm_dir = "/home/eugene/.conda/envs/Igor/dat/leap/parm"
-    output_yaml = "/home/eugene/drFrankenstein/Laboratory/Experiments/Protocol_4_Assembly/gaff2.yaml"
+    leap_parm_dir = "/home/esp/.conda/envs/Igor/dat/leap/parm"
+    output_yaml = "/home/esp/drFrankenstein/Laboratory/Experiments/Protocol_4_Assembly/gaff2.yaml"
 
     force_field_dict = collect_amber19_nonbonded_parameters(leap_parm_dir)
     write_dict_to_yaml(force_field_dict, output_yaml)

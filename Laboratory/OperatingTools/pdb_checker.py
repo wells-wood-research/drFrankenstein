@@ -3,6 +3,7 @@ import os
 from os import path as p
 import pandas as pd
 from pdbUtils.pdbUtils import pdb2df
+from OperatingTools import electron_checker
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -12,10 +13,17 @@ class DirectoryPath:
 def check_pdb(config: dict) -> None:
     inputDir = config["pathInfo"]["inputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
+    charge = config["moleculeInfo"]["charge"]
+    multiplicity = config["moleculeInfo"]["multiplicity"]
     molPdb = p.join(inputDir, f"{moleculeName}.pdb")
     pdbDf = pdb2df(molPdb)
 
     check_for_duplicate_atoms(pdbDf)
+    electron_checker.validate_charge_multiplicity_from_pdb(
+        pdb_df=pdbDf,
+        charge=charge,
+        multiplicity=multiplicity
+    )
 
 
 def check_for_duplicate_atoms(pdbDf: pd.DataFrame):

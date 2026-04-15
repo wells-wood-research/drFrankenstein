@@ -61,7 +61,7 @@ def main():
     ## check input PDB
     pdb_checker.check_pdb(config)
 
-
+    exit()
     ## initialise runtimeInfo
     config = drYaml.initialise_runtime_info(config)
     ## save config back to yaml

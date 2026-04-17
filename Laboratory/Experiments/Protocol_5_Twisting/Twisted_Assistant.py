@@ -579,7 +579,7 @@ def calculate_torsion_angle(coords, torsionIndexes):
 
 def set_up_directories(config: dict) -> dict:
     outputDir = config["pathInfo"]["outputDir"]
-    torsionTopDir = p.join(outputDir, "04_torsion_scanning")
+    torsionTopDir = p.join(outputDir, "05_torsion_scanning")
     os.makedirs(torsionTopDir, exist_ok=True)
     config["runtimeInfo"]["madeByTwisting"]["torsionDir"] = torsionTopDir
 

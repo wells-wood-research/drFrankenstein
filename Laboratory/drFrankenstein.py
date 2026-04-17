@@ -49,8 +49,7 @@ def main():
 
 
     ## check config for errors#
-    ##TODO: re-do once config is settled
-    # config = validate_config.validate_config(config)
+    config = validate_config.validate_config(config)
 
     ## unpack config to find outputDir, make directory
     outputDir = config["pathInfo"]["outputDir"]
@@ -92,17 +91,6 @@ def main():
         drYaml.write_config_to_yaml(config, outputDir)
 
 
-    # ## run assembly protocol
-    # if not checkpointInfo["assemblyComplete"]:
-    #     if config["parameterFittingInfo"]["forceField"] == "CHARMM":
-    #         config = handle_CGenFF_dependancy.handle_cgenff_dependancy(config)
-    #         drYaml.write_config_to_yaml(config, outputDir)
-    #         config = Assembly_Doctor.charmm_assembly_protocol(config=config)
-    #         drYaml.write_config_to_yaml(config, outputDir)  
-    #     elif config["parameterFittingInfo"]["forceField"] == "AMBER":
-    #         config = Assembly_Doctor.amber_assembly_protocol(config=config)
-    #         drYaml.write_config_to_yaml(config, outputDir)
-
     ## run torsion scanning
     if not checkpointInfo["scanningComplete"]:
         drSplash.show_twist_splash()
@@ -110,16 +98,10 @@ def main():
         drYaml.write_config_to_yaml(config, outputDir)
 
 
-
     ## run torsion parameter fitting
     if not checkpointInfo["torsionFittingComplete"]:
         drSplash.show_stitch_splash()
         config = Stitching_Doctor.torsion_fitting_protocol(config=config)
-
-        # if config["parameterFittingInfo"]["forceField"] == "AMBER":
-        #     config = Stitching_Doctor.torsion_fitting_protocol_AMBER(config=config)
-        # elif config["parameterFittingInfo"]["forceField"] == "CHARMM":
-        #     config = Stitching_Doctor.torsion_fitting_protocol_CHARMM(config=config)
         drYaml.write_config_to_yaml(config, outputDir)
 
     ## run final creation

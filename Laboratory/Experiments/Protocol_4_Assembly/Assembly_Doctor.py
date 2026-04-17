@@ -53,7 +53,7 @@ def amber_assembly_protocol(config:dict) -> dict:
     config["runtimeInfo"]["madeByAssembly"] = {}
 
     ## make a dir for assembly of initial parameters
-    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
+    assemblyDir = p.join(config["pathInfo"]["outputDir"], "04_parameter_assembly")
     os.makedirs(assemblyDir, exist_ok=True)
     config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] = assemblyDir
 
@@ -110,7 +110,7 @@ def agnostic_assembly_protocol(config:dict) -> dict:
     config["runtimeInfo"]["madeByAssembly"] = {}
 
     ## make a dir for assembly of initial parameters
-    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
+    assemblyDir = p.join(config["pathInfo"]["outputDir"], "04_parameter_assembly")
     os.makedirs(assemblyDir, exist_ok=True)
     config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] = assemblyDir
 
@@ -194,7 +194,7 @@ def CGenFF_assembly_protocol(config:dict) -> dict:
     runScansOn = config["torsionScanInfo"]["runScansOn"]
 
     ## make a dir for assembly of initial parameters
-    assemblyDir = p.join(config["pathInfo"]["outputDir"], "02_parameter_assembly")
+    assemblyDir = p.join(config["pathInfo"]["outputDir"], "04_parameter_assembly")
     os.makedirs(assemblyDir, exist_ok=True)
     config["runtimeInfo"]["madeByAssembly"]["assemblyDir"] = assemblyDir
     ## Split STR file into RTF and PRM

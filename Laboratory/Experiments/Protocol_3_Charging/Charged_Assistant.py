@@ -321,7 +321,7 @@ def set_up_directories(config: dict, protocol: str) -> dict:
 
     outputDir: DirectoryPath = pathInfo["outputDir"]
     ## charge dir - acts as a topDir for all charge-related processes
-    chargeDir: DirectoryPath = p.join(outputDir, "05_charge_calculations")
+    chargeDir: DirectoryPath = p.join(outputDir, "03_charge_calculations")
     os.makedirs(chargeDir, exist_ok=True)
 
     #### FOR RESP FITTING, just run once ##

@@ -64,10 +64,10 @@ def init_config_checkpoints(config, outDir):
     if not p.exists(drFrankensteinYaml):
         config["checkpointInfo"] = {
             "cappingComplete": False,
-            "assemblyComplete": False,
             "conformersComplete": False,
-            "scanningComplete": False,
             "chargesComplete": False,
+            "assemblyComplete": False,
+            "scanningComplete": False,
             "torsionFittingComplete": False,
             "finalCreationComplete": False,
             "reportingComplete": False

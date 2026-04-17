@@ -7,14 +7,20 @@ class FilePath:
 class DirectoryPath:
     pass
 from OperatingTools import file_parsers
+from OperatingTools import drLogger
 ########################################
 def run_orca(orcaInput, orcaOutput, config):
     orcaExe = config["pathInfo"]["orcaExe"]
     orcaCommand = [orcaExe, orcaInput]
+    logger = config.get("logger")
     with open(orcaOutput, 'w') as outputFile:
         try:
-            call(orcaCommand, stdout=outputFile, stderr=outputFile)
+            result = call(orcaCommand, stdout=outputFile, stderr=outputFile)
+            if logger:
+                logger.log_subprocess_call(orcaCommand, result)
         except Exception as e:
+            if logger:
+                logger.log_subprocess_error(orcaCommand, e)
             raise(e)
 ########################################
 def make_orca_input_qmmm_opt(inputXyz: FilePath,

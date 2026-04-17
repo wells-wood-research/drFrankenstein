@@ -9,6 +9,7 @@ from .Antechamber_Protocol import Antechamber_Assembly_Monster
 from .CGenFF_Protocol import CGenFF_Assembly_Monster
 from .CGenFF_Protocol import CGenFF_Assembly_Assistant
 from .Antechamber_Protocol import Antechamber_Assembly_Assistant
+from OperatingTools import drLogger
 
 
 class FilePath:
@@ -19,6 +20,7 @@ class DirectoryPath:
 
 
 
+@drLogger.experiment_logger("Parameter Assembly")
 def parameter_assembly_protocol(config:dict) -> dict:
     assemblyProtocol = config["miscInfo"]["assemblyProtocol"]
 

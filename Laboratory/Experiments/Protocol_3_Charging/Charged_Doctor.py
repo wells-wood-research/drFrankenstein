@@ -16,12 +16,14 @@ class DirectoryPath:
     pass
 
 ## drFRANKENSTEIN LIBRARIES ##
-from OperatingTools import Timer, cleaner
+from OperatingTools import Timer, cleaner, drLogger
 from . import Charged_Monster
 from . import Charged_Assistant
 from ..Protocol_5_Twisting import Twisted_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@drLogger.experiment_logger("Charge Calculation")
+@Timer.time_function("Charge Calculation", "CHARGE_CALCULATION")
 def charge_protocol(config: dict, debug: bool = False) -> dict:
     """
     Main protocol for charge fitting

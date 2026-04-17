@@ -21,8 +21,10 @@ from . import Twisted_Monster
 from . import Twisted_Plotter
 from OperatingTools import drSplash
 from OperatingTools import Timer
+from OperatingTools import drLogger
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@drLogger.experiment_logger("Torsion Scanning")
 def twist_protocol(config):
     ## create an entry in runtimeInfo for twist
     """

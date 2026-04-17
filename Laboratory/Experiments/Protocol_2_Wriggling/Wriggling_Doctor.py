@@ -15,7 +15,9 @@ from typing import List, Tuple
 from OperatingTools import drOrca
 from OperatingTools import Timer
 from OperatingTools import cleaner
+from OperatingTools import drLogger
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@drLogger.experiment_logger("Conformer Generation")
 @Timer.time_function("Conformer Generation", "CONFORMER_GENERATION")
 def conformer_generation_protocol(config: dict) -> dict:
     """

@@ -10,7 +10,9 @@ from . import Reporting_Monster
 from . import Reporting_Assistant
 from . import plot_time_gantt
 from . import Shelly
+from OperatingTools import drLogger
 
+@drLogger.experiment_logger("Report Generation")
 def reporter_protocol(config: dict) -> None:
     """
     Runs the reporter protocol

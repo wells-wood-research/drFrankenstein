@@ -23,9 +23,10 @@ from .CHARMM_protocols import CHARMM_torsion_protocol
 from . import QMMM_fitting_protocol
 from . import Stitching_Assistant
 from . import Stitching_Plotter
-from OperatingTools import Timer, cleaner
+from OperatingTools import Timer, cleaner, drLogger
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@drLogger.experiment_logger("Torsion Parameter Fitting")
 @Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
 def torsion_fitting_protocol(config: dict, debug=True) -> dict:
     """

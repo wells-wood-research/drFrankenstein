@@ -7,10 +7,12 @@ from shutil import copy
 from . import CHARMM_creation
 from . import AMBER_creation
 from OperatingTools import make_internal_coords
+from OperatingTools import drLogger
 
 
 ################################################################################
 
+@drLogger.experiment_logger("Final Creation")
 def create_the_monster(config):
     ## create a runtimeInfo 
     config["runtimeInfo"]["madeByCreator"] = {}

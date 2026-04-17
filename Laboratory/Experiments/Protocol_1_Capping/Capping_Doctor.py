@@ -18,9 +18,10 @@ from typing import List, Tuple
 from . import Capping_Monster
 from . import Capping_Assistant
 from . import Capping_Builders
-from OperatingTools import Timer, cleaner
+from OperatingTools import Timer, cleaner, drLogger
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+@drLogger.experiment_logger("Termini Capping")
 @Timer.time_function("Termini Capping", "TERMINI_CAPPING")
 def capping_protocol(config: dict) -> dict:
     """

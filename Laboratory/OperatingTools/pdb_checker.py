@@ -11,6 +11,7 @@ class DirectoryPath:
     pass
 
 def check_pdb(config: dict) -> None:
+    print(config)
     inputDir = config["pathInfo"]["inputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     charge = config["moleculeInfo"]["charge"]

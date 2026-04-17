@@ -94,6 +94,10 @@ The following protocol experiments are automatically logged:
 
 ## Using the Logging System
 
+### Important: Global Logger (No Config Pollution)
+
+The logger is now a **global singleton** to avoid YAML serialization issues. Do NOT store it in the config dict.
+
 ### In Experiment Code
 
 The logging system is automatically integrated into all protocol functions via decorators:
@@ -104,8 +108,11 @@ from OperatingTools import drLogger
 @drLogger.experiment_logger("My Experiment Name")
 def my_protocol(config: dict) -> dict:
     # Your protocol code here
+    # No need to access logger - it's automatic!
     return config
 ```
+
+The decorator automatically uses the global logger. No config modification needed.
 
 ### In Subprocess Calls
 
@@ -115,27 +122,31 @@ Use the provided logging-aware subprocess wrappers:
 from OperatingTools import drSubprocess
 
 # Instead of: subprocess.call(cmd)
-drSubprocess.logged_call(cmd, config=config)
+drSubprocess.logged_call(cmd)
 
 # Instead of: subprocess.run(cmd)
-drSubprocess.logged_run(cmd, config=config)
+drSubprocess.logged_run(cmd)
 ```
 
 Or log manually:
 
 ```python
+from OperatingTools import drLogger
+
 result = subprocess.call(cmd)
-logger = config.get("logger")
+logger = drLogger.get_logger()
 if logger:
     logger.log_subprocess_call(cmd, result)
 ```
 
-### Accessing the Logger
+### Accessing the Logger Globally
 
-The logger is automatically initialized and stored in the config:
+The logger is accessible from anywhere without polluting the config:
 
 ```python
-logger = config.get("logger")
+from OperatingTools import drLogger
+
+logger = drLogger.get_logger()
 if logger:
     exp_id = logger.start_experiment("Custom Experiment")
     # ... do work ...
@@ -173,18 +184,26 @@ Return the path to the log file.
 #### `_format_duration(seconds: int) -> str`
 Format seconds into DD:HH:MM:SS format.
 
+### Module-Level Functions
+
+#### `get_logger() -> ExperimentLogger | None`
+Get the global logger instance. Returns None if not initialized.
+
+#### `set_logger(logger: ExperimentLogger) -> None`
+Set the global logger instance. Called automatically by main() to initialize logging.
+
 ### Decorators
 
 #### `@experiment_logger(experiment_name: str)`
-Decorator for automatic experiment start/end logging with timing.
+Decorator for automatic experiment start/end logging with timing. Uses the global logger instance automatically.
 
 ### Utilities
 
-#### `drSubprocess.logged_call(command, config=None, **kwargs) -> int`
-Logging-aware wrapper for `subprocess.call()`.
+#### `drSubprocess.logged_call(command, **kwargs) -> int`
+Logging-aware wrapper for `subprocess.call()`. Uses global logger instance.
 
-#### `drSubprocess.logged_run(command, config=None, **kwargs) -> CompletedProcess`
-Logging-aware wrapper for `subprocess.run()`.
+#### `drSubprocess.logged_run(command, **kwargs) -> CompletedProcess`
+Logging-aware wrapper for `subprocess.run()`. Uses global logger instance.
 
 ## Duration Format
 
@@ -257,14 +276,23 @@ To add logging to additional functions:
    ```python
    @drLogger.experiment_logger("Your Experiment Name")
    def your_protocol(config):
-       # code here
+       # code here - no need to touch config
        pass
    ```
 
 3. For subprocess calls:
    ```python
    from OperatingTools import drSubprocess
-   result = drSubprocess.logged_call(cmd, config=config)
+   result = drSubprocess.logged_call(cmd)  # No config needed!
+   ```
+
+4. To access logger directly (optional):
+   ```python
+   from OperatingTools import drLogger
+   logger = drLogger.get_logger()
+   if logger:
+       # logger available
+       pass
    ```
 
 ## Testing

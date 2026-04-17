@@ -70,10 +70,10 @@ def test_subprocess_logging():
     """Test subprocess call logging"""
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = drLogger.ExperimentLogger(tmpdir)
-        config = {"logger": logger}
+        drLogger.set_logger(logger)  # Set global logger
         
         # Test successful command
-        result = drSubprocess.logged_call(['echo', 'test'], config=config)
+        result = drSubprocess.logged_call(['echo', 'test'])
         assert result == 0
         
         log_file = logger.get_log_file_path()
@@ -90,10 +90,10 @@ def test_subprocess_run_logging():
     """Test subprocess.run logging"""
     with tempfile.TemporaryDirectory() as tmpdir:
         logger = drLogger.ExperimentLogger(tmpdir)
-        config = {"logger": logger}
+        drLogger.set_logger(logger)  # Set global logger
         
         # Test successful command
-        result = drSubprocess.logged_run(['ls', '-l'], config=config, capture_output=True)
+        result = drSubprocess.logged_run(['ls', '-l'], capture_output=True)
         assert result.returncode == 0
         
         log_file = logger.get_log_file_path()

@@ -54,6 +54,7 @@ def main():
         ## check config for errors#
         config = validate_config.validate_config(config)
 
+
         ## unpack config to find outputDir, make directory
         outputDir = config["pathInfo"]["outputDir"]
         os.makedirs(outputDir,exist_ok=True)
@@ -61,7 +62,7 @@ def main():
         ## Initialize logging system
         log_dir = p.join(outputDir, "00_logs")
         logger = drLogger.ExperimentLogger(log_dir)
-        config["logger"] = logger
+        drLogger.set_logger(logger)  # Set global logger instance
         logger.logger.info(f"drFrankenstein Parameterisation started")
         
         ## deal with checkpointing, lets us skip steps if already done

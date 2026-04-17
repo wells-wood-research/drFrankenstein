@@ -12,7 +12,7 @@ from OperatingTools import drLogger
 def run_orca(orcaInput, orcaOutput, config):
     orcaExe = config["pathInfo"]["orcaExe"]
     orcaCommand = [orcaExe, orcaInput]
-    logger = config.get("logger")
+    logger = drLogger.get_logger()
     with open(orcaOutput, 'w') as outputFile:
         try:
             result = call(orcaCommand, stdout=outputFile, stderr=outputFile)

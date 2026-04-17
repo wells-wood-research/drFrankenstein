@@ -8,6 +8,21 @@ from typing import Optional, List, Any
 from os import path as p
 
 
+# Module-level singleton logger (not stored in config to avoid YAML serialization issues)
+_global_logger = None
+
+
+def get_logger() -> Optional['ExperimentLogger']:
+    """Get the global logger instance."""
+    return _global_logger
+
+
+def set_logger(logger: 'ExperimentLogger') -> None:
+    """Set the global logger instance."""
+    global _global_logger
+    _global_logger = logger
+
+
 class ExperimentLogger:
     """
     Robust logging system for drFrankenstein experiments.
@@ -29,20 +44,16 @@ class ExperimentLogger:
         self._setup_logger()
 
     def _setup_logger(self):
-        """Configure the logger with both file and console handlers."""
+        """Configure the logger with file handler only (no terminal output)."""
         self.logger = logging.getLogger("drFrankenstein")
         self.logger.setLevel(logging.DEBUG)
         
         # Remove existing handlers to avoid duplicates
         self.logger.handlers = []
         
-        # File handler
+        # File handler only - no console output
         file_handler = logging.FileHandler(self.log_file)
         file_handler.setLevel(logging.DEBUG)
-        
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
         
         # Formatter
         formatter = logging.Formatter(
@@ -51,10 +62,7 @@ class ExperimentLogger:
         )
         
         file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
-        
         self.logger.addHandler(file_handler)
-        self.logger.addHandler(console_handler)
 
     def start_experiment(self, experiment_name: str) -> str:
         """
@@ -244,20 +252,16 @@ def experiment_logger(experiment_name: str):
         def my_protocol(config):
             ...
     
-    Note: Requires 'config' to be passed as a keyword argument.
-          Logger is accessed via config['logger'] (or can be created if needed).
+    Note: Uses the global logger instance (set via drLogger.set_logger()).
+          Config parameter no longer needs logger, avoiding YAML serialization issues.
     """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            config = kwargs.get("config")
-            if not config:
-                # If config not found, just run the function normally
-                return func(*args, **kwargs)
-            
-            logger = config.get("logger")
+            # Get the global logger instance
+            logger = get_logger()
             if not logger:
-                # Logger not initialized yet
+                # Logger not initialized yet, just run the function
                 return func(*args, **kwargs)
             
             exp_id = logger.start_experiment(experiment_name)

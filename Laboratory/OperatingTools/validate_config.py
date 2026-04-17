@@ -54,28 +54,31 @@ def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
          _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
          return
 
-    # Keys here match the expected config structure, not changing them to camelCase
-    expectedKeys = {
+    # Required keys
+    requiredKeys = {
         "inputDir": str,
         "outputDir": str,
         "multiWfnDir": str,
         "orcaExe": str,
-        "gaff2Dat": str,
     }
 
-    for key, expectedType in expectedKeys.items():
+    # Optional keys
+    optionalKeys = {
+        "amberHome": str,
+        "cgenffExe": (str, type(None)),
+    }
+
+    for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
             _validate_type(value, expectedType, keyPath, errors)
-            # Optional: Add os.path.exists checks here if needed
-            # if key in ["inputDir", "multiWfnDir", "orcaExe", "gaff2Dat"]:
-            #     if isinstance(value, str) and not os.path.exists(value):
-            #          _add_error(errors, keyPath, f"Path does not exist: '{value}'")
-            # elif key == "outputDir":
-            #     parentDir = os.path.dirname(os.path.abspath(value))
-            #     if isinstance(value, str) and not os.access(parentDir, os.W_OK):
-            #          _add_error(errors, keyPath, f"Output directory's parent is not writable: '{parentDir}'")
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
+            _validate_type(value, expectedType, keyPath, errors)
 
 
 def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
@@ -88,31 +91,38 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
          _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
          return
 
-    # Keys here match the expected config structure
-    expectedKeys = {
+    # Required keys
+    requiredKeys = {
         "charge": int,
         "multiplicity": int,
-        "moleculePdb": str,
         "moleculeName": str,
+    }
+
+    # Optional keys
+    optionalKeys = {
         "chargeGroups": dict,
         "backboneAliases": dict,
     }
 
-    for key, expectedType in expectedKeys.items():
+    for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
+            _validate_type(value, expectedType, keyPath, errors)
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                # Specific validations for list/dict contents
-                if key == "chargeGroups":
-                    # value is the chargeGroups dictionary
+                # Specific validations for chargeGroups
+                if key == "chargeGroups" and isinstance(value, dict):
                     for groupName, groupData in value.items():
                         groupKeyPath = f"{keyPath}.{groupName}"
                         if not isinstance(groupData, dict):
                             _add_error(errors, groupKeyPath, f"Charge group '{groupName}' must be a dictionary.")
-                            continue # Skip further checks for this malformed group
+                            continue
 
-                        # Check 'atoms' key within the group
                         if _check_key_exists(groupData, "atoms", groupKeyPath, errors):
                             atomsValue = groupData["atoms"]
                             atomsKeyPath = f"{groupKeyPath}.atoms"
@@ -120,7 +130,6 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
                                 if not all(isinstance(item, str) for item in atomsValue):
                                     _add_error(errors, atomsKeyPath, "All items in 'atoms' list must be strings.")
 
-                        # Check 'charge' key within the group
                         if _check_key_exists(groupData, "charge", groupKeyPath, errors):
                             chargeValue = groupData["charge"]
                             chargeKeyPath = f"{groupKeyPath}.charge"
@@ -137,25 +146,42 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
          _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
          return
 
-    # Keys here match the expected config structure
-    # Use tuple (str, type(None)) for solvation methods to allow None
-    expectedKeys = {
+    # Required keys
+    requiredKeys = {
+        "runScansOn": dict,
         "nConformers": int,
         "scanMethod": str,
-        "scanSolvationMethod": (str, type(None)),  # Allow str or None
-        "singlePointMethod": str,
-        "singlePointSolvationMethod": (str, type(None)), # Allow str or None
-        "skipPhiPSi": bool,
     }
 
-    for key, expectedType in expectedKeys.items():
+    # Optional keys
+    optionalKeys = {
+        "scanSolvationMethod": (str, type(None)),
+        "singlePointMethod": (str, type(None)),
+        "singlePointSolvationMethod": (str, type(None)),
+    }
+
+    for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                # Value range/specific value checks (only if type validation passed)
                 if key == "nConformers" and isinstance(value, int) and value < -1:
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
+            _validate_type(value, expectedType, keyPath, errors)
+
+    # Validate runScansOn structure
+    if "runScansOn" in sectionData and isinstance(sectionData["runScansOn"], dict):
+        runScansOn = sectionData["runScansOn"]
+        runScansKeyPath = f"{sectionName}.runScansOn"
+        for scanType, enabled in runScansOn.items():
+            keyPath = f"{runScansKeyPath}.{scanType}"
+            if not isinstance(enabled, bool):
+                _add_error(errors, keyPath, f"Scan type '{scanType}' must be a boolean, but got {type(enabled).__name__}")
 
 
 
@@ -169,33 +195,41 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
          _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
          return
 
-    # Keys here match the expected config structure
-    # Use tuple (str, type(None)) for solvation methods to allow None
-    expectedKeys = {
+    # Required keys
+    requiredKeys = {
         "chargeFittingProtocol": str,
         "nConformers": int,
         "nCoresPerCalculation": int,
         "optMethod": str,
-        "optSolvationMethod": (str, type(None)), # Allow str or None
         "singlePointMethod": str,
-        "singlePointSolvationMethod": (str, type(None)), # Allow str or None
+    }
+
+    # Optional keys
+    optionalKeys = {
+        "optSolvationMethod": (str, type(None)),
+        "singlePointSolvationMethod": (str, type(None)),
+        "waterDensity": (int, float, type(None)),
     }
 
     allowedProtocols = ["RESP", "RESP2", "SOLVATOR"]
-    # allowedQmmmSolvation = ["TIP3P"] # Context specific check removed for generality
 
-    for key, expectedType in expectedKeys.items():
+    for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                 # Value range/specific value checks (only if type validation passed)
                 if key == "chargeFittingProtocol" and isinstance(value, str):
                     _validate_allowed_values(value, allowedProtocols, keyPath, errors)
                 elif key == "nConformers" and isinstance(value, int) and value < -1:
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
                 elif key == "nCoresPerCalculation" and isinstance(value, int) and value <= 0:
-                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
+            _validate_type(value, expectedType, keyPath, errors)
 
 
 def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
@@ -250,28 +284,38 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
          _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
          return
 
-    # Keys here match the expected config structure
-    expectedKeys = {
+    # Required keys
+    requiredKeys = {
         "availableCpus": int,
-        "cleanUpLevel": str,
     }
-    allowedCleanupLevels = ["None", "basic", "full", "brutal"]
-    # currentlyWorkingCleanupLevels = ["None", "basic"] # Based on comment
 
-    for key, expectedType in expectedKeys.items():
+    # Optional keys
+    optionalKeys = {
+        "cleanUpLevel": int,
+        "assemblyProtocol": str,
+    }
+
+    allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
+
+    for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                # Value range/specific value checks (only if type validation passed)
                 if key == "availableCpus" and isinstance(value, int) and value <= 0:
-                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-                elif key == "cleanUpLevel" and isinstance(value, str):
-                    if not _validate_allowed_values(value, allowedCleanupLevels, keyPath, errors):
-                        pass # Error already added by _validate_allowed_values
-                    # Optional: Add a warning for levels mentioned as not working yet
-                    # elif value not in currentlyWorkingCleanupLevels:
-                    #     print(f"Warning: Config specifies cleanUpLevel='{value}', but comment indicates only {currentlyWorkingCleanupLevels} are implemented.")
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
+            if _validate_type(value, expectedType, keyPath, errors):
+                if key == "cleanUpLevel" and isinstance(value, int) and (value < 0 or value > 3):
+                    _add_error(errors, keyPath, f"Value for '{key}' must be between 0 and 3, but got {value}.")
+                elif key == "assemblyProtocol" and isinstance(value, str):
+                    _validate_allowed_values(value, allowedAssemblyProtocols, keyPath, errors)
+
+
 
 
 # --- Main Validation Function (snake_case name) ---
@@ -325,6 +369,3 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
         return config # Validation successful
     else:
         drSplash.show_config_error(errors)
-
-
-# --- Example Usage (variables also changed to camelCase) ---

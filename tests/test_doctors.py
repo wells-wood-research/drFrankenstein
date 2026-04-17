@@ -5,6 +5,7 @@ import tempfile
 import types
 import unittest
 from unittest.mock import MagicMock, patch
+import pandas as pd
 
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -176,6 +177,7 @@ from Laboratory.Experiments.Protocol_3_Charging import Charged_Doctor
 from Laboratory.Experiments.Protocol_4_Assembly import Assembly_Doctor
 from Laboratory.Experiments.Protocol_5_Twisting import Twisted_Doctor
 from Laboratory.Experiments.Protocol_6_Stitching import Stitching_Doctor
+from Laboratory.Experiments.Protocol_7_Creation import AMBER_creation
 from Laboratory.Experiments.Protocol_8_Reporter import Reporting_Doctor
 
 
@@ -354,6 +356,28 @@ class TestReportingDoctor(DoctorTestBase):
 
             self.assertIn("madeByReporting", result["runtimeInfo"])
             self.assertTrue(result["runtimeInfo"]["madeByReporting"]["reportHtml"].endswith("drFrankenstein_report.html"))
+
+
+class TestAmberCreation(unittest.TestCase):
+    def test_extract_backbone_types_allows_missing_optional_h_and_ha(self):
+        prmtop_df = pd.DataFrame({"name": ["N", "CA", "C", "O"], "type": ["N", "CT", "C", "O"]})
+        aliases = {"N": ["N"], "CA": ["CA"], "C": ["C"], "O": ["O"], "H": ["H"], "HA": ["HA"]}
+
+        with patch("Laboratory.Experiments.Protocol_7_Creation.AMBER_creation.pmd.load_file", return_value=MagicMock(to_dataframe=lambda: prmtop_df), create=True):
+            atom_types = AMBER_creation.extract_backbone_types_from_prmtop("fake.prmtop", aliases)
+
+        self.assertEqual(atom_types["N"], "N")
+        self.assertEqual(atom_types["CA"], "CT")
+        self.assertNotIn("H", atom_types)
+        self.assertNotIn("HA", atom_types)
+
+    def test_extract_backbone_types_still_requires_core_backbone_atoms(self):
+        prmtop_df = pd.DataFrame({"name": ["N", "CA", "C"], "type": ["N", "CT", "C"]})
+        aliases = {"N": ["N"], "CA": ["CA"], "C": ["C"], "O": ["O"]}
+
+        with patch("Laboratory.Experiments.Protocol_7_Creation.AMBER_creation.pmd.load_file", return_value=MagicMock(to_dataframe=lambda: prmtop_df), create=True):
+            with self.assertRaises(ValueError):
+                AMBER_creation.extract_backbone_types_from_prmtop("fake.prmtop", aliases)
 
 
 if __name__ == "__main__":

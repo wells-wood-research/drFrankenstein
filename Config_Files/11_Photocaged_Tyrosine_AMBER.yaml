@@ -10,15 +10,15 @@
 ##########################################################################################################################
 pathInfo:
   ## full path to input files
-  inputDir: /home/eugene/drFrankenstein/Inputs                                   ## DEFAULT (cwd)
+  inputDir: /home/esp/drFrankenstein/Inputs                                   ## DEFAULT (cwd)
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/eugene/FrankenParams_PCY_AMBER                     ## DEFAULT = /cwd/moleculeName_FrankenParams
+  outputDir: /home/esp/FrankenParams_PCY_AMBER                     ## DEFAULT = /cwd/moleculeName_FrankenParams
   ## full path to Multiwfn install directory
-  multiWfnDir: /home/eugene/bin/Multiwfn_3.8_dev_bin_Linux_noGUI                                 ## NO DEFAULT, throw error if absent or not a dir
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI                                 ## NO DEFAULT, throw error if absent or not a dir
   ## full path to ORCA executable
-  orcaExe: /home/eugene/bin/orca_6_0_1/orca                                                ## NO DEFAULT, throw error if absent or not a dir
+  orcaExe: /home/esp/bin/orca_6_1_0/orca                                                ## NO DEFAULT, throw error if absent or not a dir
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
-  amberHome: /home/eugene/.conda/envs/Igor                                                    ## DEFAULT found by "echo $AMBERHOME"
+  amberHome: /home/esp/.conda/envs/Igor                                                    ## DEFAULT found by "echo $AMBERHOME"
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null                                                                               ## DEFAULT Null
 

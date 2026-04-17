@@ -46,7 +46,7 @@ tar -xvf xtb-6.7.1-linux-x86_64.tar.xz
 
 4.  Copy the binary `~/bin/xtb-dist/bin/xtb` to the ORCA install directory, renaming it `otool_xtb`:
 ```bash
-cp ~/bin/xtb-dist/bin/xtb ~/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/otool_xtb
+cp ~/bin/xtb-dist/bin/xtb ~/bin/orca_6_1_0_linux_x86-64_shared_openmpi416/otool_xtb
 ```
 >This will allow ORCA to run calculations with the XTB2 method
 

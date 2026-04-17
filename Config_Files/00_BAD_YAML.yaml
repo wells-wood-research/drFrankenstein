@@ -3,7 +3,7 @@ pathInfo:
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Inputs
   outputDir: /home/esp/scriptDevelopment/drFrankenstein/03_CRO_outputs
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
-  orcaExe: /home/esp/bin/orca_6_0_1_linux_x86-64_shared_openmpi416/orca
+  orcaExe: /home/esp/bin/orca_6_1_0_linux_x86-64_shared_openmpi416/orca
   gaff2Dat: /home/esp/anaconda3/envs/Igor/dat/leap/parm/gaff2.dat
 ## Tell me about your moleucle
 moleculeInfo:

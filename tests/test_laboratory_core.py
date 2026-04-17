@@ -59,6 +59,7 @@ if "pdbUtils" not in sys.modules:
     sys.modules["pdbUtils.pdbUtils"] = pdbutils_mod
 
 from Laboratory.OperatingTools import file_parsers
+from Laboratory.OperatingTools import electron_checker
 from Laboratory.OperatingTools import make_internal_coords
 from Laboratory.OperatingTools import pdb_checker
 from Laboratory.OperatingTools import set_config_defaults
@@ -172,6 +173,42 @@ class TestPdbChecker(unittest.TestCase):
             ]
         )
         pdb_checker.check_for_duplicate_atoms(df)
+
+
+class TestElectronChecker(unittest.TestCase):
+    def test_calculate_total_electrons_uses_charge_adjustment(self):
+        df = pd.DataFrame(
+            [
+                {"ATOM_ID": 1, "ATOM_NAME": "N", "ELEMENT": "N"},
+                {"ATOM_ID": 2, "ATOM_NAME": "H1", "ELEMENT": "H"},
+                {"ATOM_ID": 3, "ATOM_NAME": "H2", "ELEMENT": "H"},
+                {"ATOM_ID": 4, "ATOM_NAME": "H3", "ELEMENT": "H"},
+            ]
+        )
+        self.assertEqual(electron_checker.calculate_total_electrons(df, charge=1), 9)
+
+    def test_validate_charge_multiplicity_raises_for_both_odd(self):
+        df = pd.DataFrame(
+            [
+                {"ATOM_ID": 1, "ATOM_NAME": "N", "ELEMENT": "N"},
+                {"ATOM_ID": 2, "ATOM_NAME": "H1", "ELEMENT": "H"},
+                {"ATOM_ID": 3, "ATOM_NAME": "H2", "ELEMENT": "H"},
+                {"ATOM_ID": 4, "ATOM_NAME": "H3", "ELEMENT": "H"},
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "both odd"):
+            electron_checker.validate_charge_multiplicity_from_pdb(df, charge=1, multiplicity=1)
+
+    def test_validate_charge_multiplicity_raises_for_parity_mismatch(self):
+        df = pd.DataFrame(
+            [
+                {"ATOM_ID": 1, "ATOM_NAME": "O", "ELEMENT": "O"},
+                {"ATOM_ID": 2, "ATOM_NAME": "H1", "ELEMENT": "H"},
+                {"ATOM_ID": 3, "ATOM_NAME": "H2", "ELEMENT": "H"},
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "parity mismatch"):
+            electron_checker.validate_charge_multiplicity_from_pdb(df, charge=0, multiplicity=2)
 
 
 if __name__ == "__main__":

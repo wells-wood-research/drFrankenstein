@@ -52,7 +52,7 @@ def run_tleap_to_make_params(inMol2: FilePath,
     tleapOutput: FilePath = p.join(outDir, f"tleap.out")
 
     tleapCommand: list = ["tleap", "-f", tleapInput, ">", tleapOutput]
-
+    os.chdir(outDir)
     call(tleapCommand, stdout=PIPE)
 
     return prmtop

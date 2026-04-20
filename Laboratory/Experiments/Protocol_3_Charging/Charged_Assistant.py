@@ -43,6 +43,11 @@ def round_charges_carefully(config):
         carbonNames = chargeDf.loc[carbonIndexes, 'ATOM_NAME'][chargeDf.loc[carbonIndexes, 'Charge'].abs().sort_values().index].tolist()
 
         if not carbonNames:
+            ## fallback to using start of atom names
+            carbonIndexes = cappedDf[(cappedDf["ATOM_NAME"].str.startswith("C")) & (~cappedDf["ATOM_NAME"].isin(["C_C", "C2_C", "C_N"])) & (~cappedDf["ATOM_NAME"].str.startswith("CL"))].index
+            carbonNames = chargeDf.loc[carbonIndexes, 'ATOM_NAME'][chargeDf.loc[carbonIndexes, 'Charge'].abs().sort_values().index].tolist()
+
+        if not carbonNames:
             raise ValueError("No carbon atoms available to adjust charges.")
 
         modifier = 0.001 if difference > 0 else -0.001

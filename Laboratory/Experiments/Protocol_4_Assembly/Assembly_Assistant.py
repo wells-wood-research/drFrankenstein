@@ -144,6 +144,7 @@ def make_mol2_with_antechamber(inPdb: FilePath,
     ## set RES_ID to 1 for all atoms to keep antechamber happy
     pdbDf = pdbUtils.pdb2df(inPdb)
     pdbDf["RES_ID"] = 1
+    pdbDf["RES_NAME"] = moleculeName
     tmpPdb = p.join(workingDir, "tmp.pdb")
     pdbUtils.df2pdb(pdbDf, tmpPdb)
     ## get index, set path for antechamber to write outputs

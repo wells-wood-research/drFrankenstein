@@ -100,7 +100,7 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
 
     # Optional keys
     optionalKeys = {
-        "chargeGroups": dict,
+        "chargeGroups": (dict, type(None)),
         "backboneAliases": dict,
     }
 

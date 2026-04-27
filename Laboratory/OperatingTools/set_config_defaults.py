@@ -54,8 +54,10 @@ def apply_defaults_and_validate(config):
             errors['pathInfo']['outputDir'] = "Cannot set default, 'moleculeName' is missing or invalid."
 
     if 'amberHome' not in pathInfo:
-        errors['pathInfo']['amberHome'] = f"Default Used: {os.environ.get('AMBERHOME')}"
-    pathInfo.setdefault('amberHome', os.environ.get('AMBERHOME'))
+        amber_home = os.environ.get('AMBERHOME')
+        errors['pathInfo']['amberHome'] = f"Default Used: {amber_home}"
+        if amber_home is not None:
+            pathInfo['amberHome'] = amber_home
     
     if 'cgenffExe' not in pathInfo:
         errors['pathInfo']['cgenffExe'] = f"Default Used: {None}"
@@ -83,10 +85,16 @@ def apply_defaults_and_validate(config):
 
     # --- Section: torsionScanInfo ---
     errors['torsionScanInfo'] = {}
-    torsionScanInfo = config.get('torsionScanInfo', {})
-    if not torsionScanInfo:
-        errors['torsionScanInfo'] = "Missing required key."
+    torsionScanInfo = config.setdefault('torsionScanInfo', {})
+    if not isinstance(torsionScanInfo, dict):
+        errors['torsionScanInfo']['section'] = "Must be a dictionary."
+        torsionScanInfo = {}
+        config['torsionScanInfo'] = torsionScanInfo
     runScansOn = torsionScanInfo.setdefault('runScansOn', {})
+    if not isinstance(runScansOn, dict):
+        errors['torsionScanInfo']['runScansOn'] = "Must be type dict."
+        runScansOn = {}
+        torsionScanInfo['runScansOn'] = runScansOn
     errors['torsionScanInfo']['runScansOn'] = {}
     for key in ['phiPsi', 'polarProtons', 'nonPolarProtons', 'amides', 'nonAromaticRings']:
         if key not in runScansOn:
@@ -100,6 +108,10 @@ def apply_defaults_and_validate(config):
 
     if 'scanMethod' not in torsionScanInfo:
         errors['torsionScanInfo']['scanMethod'] = "Required: use a SIMPLE INPUT line from the ORCA input library"
+    elif not isinstance(torsionScanInfo['scanMethod'], str):
+        errors['torsionScanInfo']['scanMethod'] = "Must be type str."
+    else:
+        errors['torsionScanInfo']['scanMethod'] = None
     # --- Simplified setdefault and error logging for remaining sections ---
     def set_default(section, key, default_value, error_dict):
         if key not in section:
@@ -124,6 +136,8 @@ def apply_defaults_and_validate(config):
     set_default(chargeFittingInfo, 'nCoresPerCalculation', 1, errors['chargeFittingInfo'])
     if chargeFittingInfo.get('chargeFittingProtocol') == 'SOLVATOR':
         set_default(chargeFittingInfo, 'waterDensity', 10, errors['chargeFittingInfo'])
+    else:
+        set_default(chargeFittingInfo, 'waterDensity', None, errors['chargeFittingInfo'])
 
     # --- Section: parameterFittingInfo ---
     errors['parameterFittingInfo'] = {}

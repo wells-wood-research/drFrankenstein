@@ -64,7 +64,7 @@ def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
 
     # Optional keys
     optionalKeys = {
-        "amberHome": str,
+        "amberHome": (str, type(None)),
         "cgenffExe": (str, type(None)),
     }
 
@@ -101,7 +101,7 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
     # Optional keys
     optionalKeys = {
         "chargeGroups": (dict, type(None)),
-        "backboneAliases": dict,
+        "backboneAliases": (dict, type(None)),
     }
 
     for key, expectedType in requiredKeys.items():
@@ -271,7 +271,13 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
                 elif key == "sagvolSmoothing" and not isinstance(value, bool):
                     _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
-    if sectionData["minShuffles"] > sectionData["maxShuffles"]:
+    if (
+        "minShuffles" in sectionData
+        and "maxShuffles" in sectionData
+        and isinstance(sectionData["minShuffles"], int)
+        and isinstance(sectionData["maxShuffles"], int)
+        and sectionData["minShuffles"] > sectionData["maxShuffles"]
+    ):
         _add_error(errors, f"{sectionName}.minShuffles", f"Value for 'minShuffles' must be less than or equal to 'maxShuffles'.")
 
 def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):

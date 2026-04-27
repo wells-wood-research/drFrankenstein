@@ -120,7 +120,7 @@ def  sort_out_directories(config: dict) -> dict:
         config (dict): updated config
     """
     outputDir = config["pathInfo"]["outputDir"]
-    conformerDir = p.join(outputDir, "03_GOAT_conformers")
+    conformerDir = p.join(outputDir, "02_GOAT_conformers")
     os.makedirs(conformerDir, exist_ok=True) 
     config["runtimeInfo"]["madeByConformers"]["conformerDir"] = conformerDir
 

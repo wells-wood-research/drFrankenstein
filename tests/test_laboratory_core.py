@@ -63,6 +63,7 @@ from Laboratory.OperatingTools import electron_checker
 from Laboratory.OperatingTools import make_internal_coords
 from Laboratory.OperatingTools import pdb_checker
 from Laboratory.OperatingTools import set_config_defaults
+from Laboratory.OperatingTools import validate_config
 
 
 PCY_ROOT = os.path.join(REPO_ROOT, "__PCY__")
@@ -150,6 +151,65 @@ class TestConfigDefaults(unittest.TestCase):
         self.assertTrue(result["pathInfo"]["outputDir"].endswith("PCY_FrankenParams"))
         self.assertIn("runScansOn", result["torsionScanInfo"])
         self.assertIn("phiPsi", result["torsionScanInfo"]["runScansOn"])
+
+    def test_apply_defaults_sets_charge_groups_to_none_when_missing(self):
+        config = {
+            "moleculeInfo": {"charge": 0, "multiplicity": 1, "moleculeName": "PCY"},
+            "pathInfo": {"multiWfnDir": "/tmp", "orcaExe": "/etc/hosts"},
+            "torsionScanInfo": {"scanMethod": "XTB2"},
+            "chargeFittingInfo": {
+                "chargeFittingProtocol": "RESP2",
+                "optMethod": "R2SCAN-3c",
+                "singlePointMethod": "wB97X-3c",
+            },
+            "parameterFittingInfo": {"forceField": "AMBER"},
+            "miscInfo": {},
+        }
+
+        result = set_config_defaults.apply_defaults_and_validate(copy.deepcopy(config))
+        self.assertIsNone(result["moleculeInfo"]["chargeGroups"])
+
+    def test_validate_config_accepts_null_charge_groups(self):
+        config = {
+            "moleculeInfo": {
+                "charge": 0,
+                "multiplicity": 1,
+                "moleculeName": "PCY",
+                "chargeGroups": None,
+                "backboneAliases": {"N": ["N"], "C": ["C"]},
+            },
+            "pathInfo": {
+                "inputDir": "/tmp",
+                "outputDir": "/tmp",
+                "multiWfnDir": "/tmp",
+                "orcaExe": "/etc/hosts",
+            },
+            "torsionScanInfo": {
+                "runScansOn": {"phiPsi": True},
+                "nConformers": -1,
+                "scanMethod": "XTB2",
+            },
+            "chargeFittingInfo": {
+                "chargeFittingProtocol": "RESP2",
+                "nConformers": -1,
+                "nCoresPerCalculation": 1,
+                "optMethod": "R2SCAN-3c",
+                "singlePointMethod": "wB97X-3c",
+            },
+            "parameterFittingInfo": {
+                "forceField": "AMBER",
+                "maxCosineFunctions": 4,
+                "maxShuffles": 50,
+                "minShuffles": 10,
+                "l2DampingFactor": 0.1,
+                "sagvolSmoothing": True,
+            },
+            "miscInfo": {
+                "availableCpus": 1,
+            },
+        }
+
+        self.assertIsNotNone(validate_config.validate_config(config))
 
 
 class TestPdbChecker(unittest.TestCase):

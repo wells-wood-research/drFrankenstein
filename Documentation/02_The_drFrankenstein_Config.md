@@ -24,12 +24,12 @@ This section defines the necessary file system paths for the script to locate in
 *   `inputDir`:
     *   **Description**: The full, absolute path to the directory containing input files (like the initial PDB).
     *   **Type**: `String` (Path)
-    *   **Default**: `The current working directory`
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `outputDir`:
     *   **Description**: The full, absolute path to the directory where all output files will be generated. This directory will be created if it does not exist.
     *   **Type**: `String` (Path)
-    *   **Default**: `/$cwd/output` 
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `multiWfnDir`:
     *   **Description**: The full, absolute path to the installation directory of Multiwfn. The script needs this to find the Multiwfn executable.
@@ -40,15 +40,15 @@ This section defines the necessary file system paths for the script to locate in
     *   **Type**: `String` (Path)
     *   **Default**: `NONE` - absence will throw an error!
 
-*   `gaff2Dat`:
-    *   **Description**: The full, absolute path to the AMBER `gaff2.dat` parameter file. This is likely used as a reference or starting point, especially if AMBER format output is requested.
-    *   **Type**: `String` (Path)
-    *   **Default**: automatically finds it using the `$AMBERHOME` environment variable
+*   `amberHome`:
+    *   **Description**: Optional path to your AMBER installation.
+    *   **Type**: `String` (Path) or `Null`
+    *   **Default**: `Null` (optional)
 
 *   `cgenffExe`:
-    *   **Description**: The full, absolute path to the CHARMM's `cgenff` executable. [NOT YET IMPLEMENTED]
-    *   **Type**: `String` (Path)
-    *   **Default**: `NONE` - without this, the user is propmted to use the `cgenff webserver` instead
+    *   **Description**: Optional full, absolute path to the CHARMM `cgenff` executable.
+    *   **Type**: `String` (Path) or `Null`
+    *   **Default**: `Null` (optional; server workflow can be used instead)
 
 
 ---
@@ -74,7 +74,8 @@ This section provides details about the specific molecule being parameterized.
 
 *   `chargeGroups`:
     *   **Description**: Defines groups of heavy atoms (non-hydrogens) that should have a specific combined integer charge during charge fitting (e.g., RESP). This helps maintain integer charges on chemically relevant functional groups. Any heavy atoms *not* listed in any group will be placed in a "left-overs" group, which will be assigned the remaining charge needed to reach the `moleculeInfo.charge`.
-    *   **Type**: `Dictionary`
+    *   **Type**: `Dictionary` or `Null`
+    *   **Default**: `Null` (fully optional)
         *   **Keys**: User-defined names for the charge groups (e.g., `CO`, `CAN`).
         *   **Values**: A dictionary for each group containing:
             *   `atoms`: (`List` of `String`) The names of the heavy atoms belonging to this group.
@@ -82,7 +83,7 @@ This section provides details about the specific molecule being parameterized.
 
 * `backboneAliases`:
     *   **Description**: A dictionary containing alternative names for backbone atoms (e.g., the main chain nitrogen in an amino acid). Keys in this dictionary must be [`N`, `H` `CA`, `HA` `C`, `O`], corresponding to the main chain nitrogen, its hydrogen, the alpha carbon, its hydrogen, the carbonyl carbon, and the carbonyl oxygen, respectively. In cases where you have a non-canonical amino acid that does not have a standard backbone structure (the chromophore in GFP for example), simply provide aliases for `N` and `C` entries. This will be used for adding capping groups. 
-    *   **Type**: `Dictionary`
+    *   **Type**: `Dictionary` or `Null`
         *   **Keys**: `N`, `H`, `CA`, `HA`, `C`, `O`
         *   **Values**: `List` of `String` corresponding to the names of the atoms in your molecule.
 
@@ -121,15 +122,15 @@ This section controls the parameters for the conformational search performed via
     *   **Description**: A dictionary specifying which types of torsions should be scanned.
     *   **Type**: `Dictionary` - each option is a `Boolean` (True/False)
     *   **Options**:
-        * `phiPsi` *(default True)* - setting this to `True` will instruct **drFrankenstein** re-parameterise torsion angles that correspond to the backbone phi (φ) and psi (ψ) dihedral angles. Setting this to `False` will instruct **deFrankenstein** to use the default parameters in for phi and psi angles present in either CHARMM or AMBER force fields (as applicable).
-        * `polarProtons` *(default True)* - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a polar proton. Setting this to `False` skip this step and default parameters will be used.
-        * `nonPolarProtons` *(default False)* - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a non-polar proton. Setting this to `False` skip this step and default parameters will be used.
+        * `phiPsi` - setting this to `True` will instruct **drFrankenstein** re-parameterise torsion angles that correspond to the backbone phi (φ) and psi (ψ) dihedral angles. Setting this to `False` will instruct **deFrankenstein** to use the default parameters in for phi and psi angles present in either CHARMM or AMBER force fields (as applicable).
+        * `polarProtons` - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a polar proton. Setting this to `False` skip this step and default parameters will be used.
+        * `nonPolarProtons` - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a non-polar proton. Setting this to `False` skip this step and default parameters will be used.
 
 > NOTE: Setting `polarProtons` and `nonPolarProtons` to `True` will often greatly increase the number of torsions that need to scanned, resulting in a large increase in computational cost.  
 *   `nConformers`:
     *   **Description**: The maximum number of low-energy conformers identified during the scan that will be kept for subsequent steps (like single point calculations or charge fitting). Set to `-1` to use all conformers found below a certain energy threshold (threshold not specified here, likely internal).
-    *   **Type**: `Integer` (`-1` or positive integer)
-    *   **Default**: `-1` (all conformers)
+    *   **Type**: `Integer` (`-1` or any integer >= `0`)
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `scanMethod`:
     *   **Description**: The quantum mechanics (QM) method used for the geometry optimizations *during* the torsion scan. Typically a computationally cheaper method. Examples: `XTB2`, `PM6`, `revPBE def2-SVP D3BJ`.
@@ -144,7 +145,7 @@ This section controls the parameters for the conformational search performed via
 *   `singlePointMethod`:
     *   **Description**: The QM method used for single point energy calculations on the selected conformers *after* the torsion scan is complete. This is typically a more accurate (and computationally expensive) method than `scanMethod`. Set to `Null` or `None` to skip this step. Examples: `revPBE def2-SVP D3BJ`, `B3LYP/6-31G*`.
     *   **Type**: `String` (ORCA QM method specification) or `Null`
-    *   **Default**: `NONE` - absence will throw an error
+    *   **Default**: `Null` (optional; if omitted/null, this step is skipped)
 
 *   `singlePointSolvationMethod`:
     *   **Description**: The implicit solvation model used for the post-scan single point energy calculations. Use `Null` or `None` for gas-phase calculations.
@@ -181,13 +182,13 @@ This section defines the parameters for calculating partial atomic charges.
 
 *   `nConformers`:
     *   **Description**: The maximum number of conformers (selected from the torsion scan results or provided separately) to be used in the charge fitting procedure. Using multiple conformers generally leads to more robust charges. Set to `-1` to use all available/selected conformers.
-    *   **Type**: `Integer` (`-1` or positive integer)
-    *   **Default**: `-1` (all conformers)
+    *   **Type**: `Integer` (`-1` or any integer >= `0`)
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `nCoresPerCalculation`:
     *   **Description**: The number of CPU cores to allocate for each individual QM calculation performed during the charge fitting process (optimizations and single points).
     *   **Type**: `Integer`
-    *   **Default**: `1`
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `optMethod`:
     *   **Description**: The QM method used for geometry optimization of the selected conformers *before* the final single point calculations used for charge fitting.
@@ -213,8 +214,8 @@ This section defines the parameters for calculating partial atomic charges.
 
  *   `waterDensity`: 
     *   **Description**: Only used for the `SOLVATOR` charge fitting protocol. This is the number of water molecules to add per nm^2 of molecular surface area. More water molecules added may result in more accurate charges, but at the cost of longer calculation times.
-    *   **Type**: `int` (positive number)
-    *   **Default**: 10
+    *   **Type**: `Integer`, `Float`, or `Null`
+    *   **Default**: `Null` (optional)
 
 **Examples**
 
@@ -259,7 +260,7 @@ This section controls the fitting of other bonded and non-bonded parameters, pri
 *   `maxCosineFunctions`:
     *   **Description**: The maximum number of cosine terms (multiplicities) to use when fitting the potential energy profile for each scanned dihedral angle.
     *   **Type**: `Integer` (Positive integer, e.g., `4`)
-    *   **Default**: `3`
+    *   **Default**: `NONE` - absence will throw an error
 
 > NOTE:  A higher number allows for more complex energy profiles but increases the risk of over-fitting. 
 In our experience, too many terms can lead to unstable fits.
@@ -267,27 +268,22 @@ In our experience, too many terms can lead to unstable fits.
 *   `maxShuffles`:
     *   **Description**: The maximum number of rounds for the parameter fitting optimization algorithm. If the parameterisation procedure has not converged within this number of iterations, it will terminate.
     *   **Type**: `Integer` (Positive integer, e.g., `10`)
-    *   **Default**: `50`
+    *   **Default**: `NONE` - absence will throw an error
 
 *   `minShuffles`: 
     * **Description**: The minimum number of rounds for the parameter fitting optimization algorithm. Even if the parameterisation procedue has converged, it will not terminate before this number of iterations.
     * **Type**: `Integer` (Positive integer, e.g., `5`)
-    * **Default**: `10`
+    * **Default**: `NONE` - absence will throw an error
 
-*  `convergenceTolerance`:
-    * **Description**: The mean average error (MAE) tolerance (in kcal/mol) for the torsion and total components of the parameter fitting optimization. Used to decide when the parameterisation procedure has converged. 
-    * **Type**: `Float` (positive number)
-    * **Default**: `Null` - convergence checking disabled
-
-*  `l2DampeningFactor`: 
+*  `l2DampingFactor`: 
     * **Description**: The L2 dampening factor for the parameter fitting optimization. This is a regularization term that prevents amplitudes from becoming too large.
-    * **Type**: `Float` (positive number)
-    * **Default**: `0.1`
+    * **Type**: `Float` (positive number) or `Null`
+    * **Default**: `Null` (optional)
 
 *  `sagvolSmoothing`: 
     * **Description**: Whether to apply a SAGVOL smoothing term to the parameter fitting optimization. This can prevent the QM[torsion] term from becoming too choppy, which may lead to unstable fits.
     * **Type**: `Boolean` (`True` or `False`)
-    * **Default**: `True`
+    * **Default**: `NONE` - absence will throw an error
 
 
 **Example**
@@ -297,7 +293,6 @@ parameterFittingInfo:
   maxCosineFunctions: 3         ## use a maximum of 3 cosine terms 
   maxShuffles: 100              ## run for a maximum of 100 iterations
   minShuffles: 20               ## do not converge until at least 20 iterations
-  convergenceTolerance: 1.0     ## consider convergence when MAE < 1.0 kcal/mol          
   l2DampingFactor: 0.1          ## apply a L2 dampening factor of 0.1
   sagvolSmoothing: true         ## apply a SAGVOL smoothing term to QM[torsion] term
 ```
@@ -314,12 +309,18 @@ This section contains miscellaneous settings affecting the overall script execut
 *   `availableCpus`:
     *   **Description**: The total number of CPU cores available on the machine that the Dr. Frankenstein script can utilize for parallel tasks (like running multiple QM calculations simultaneously). This should not exceed the actual number of cores available.
     *   **Type**: `Integer`
-    *   **Default**: Uses `all` available cores
+    *   **Default**: `NONE` - absence will throw an error
 *   `cleanUpLevel`:
     *   **Description**: Controls the deletion of intermediate files generated during the workflow. The higher the value, the more files will be deleted.
     *   **Type**: `int`
     *   **Allowed Values**: `0`, `1`, `2`, `3`
     *   **Default**: `1`
+
+*   `assemblyProtocol`:
+    *   **Description**: Controls which assembly backend to use.
+    *   **Type**: `String`
+    *   **Allowed Values**: `ANTECHAMBER`, `CGENFF`, `AGNOSTIC`
+    *   **Default**: Optional
 
 **Example**
 ```yaml

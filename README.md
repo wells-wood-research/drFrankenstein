@@ -28,6 +28,7 @@ python ./Laboratory/drFrankenstein.py --config config.yaml
 ```
 
 **drFrankenstein** takes one command line argument, which is the path to the `config.yaml` file. This file contains all the parameters needed to run **drFrankenstein**.
+Example input/config bundles are provided in [`Specimens/`](./Specimens).
 
 ## The **drFrankenstein** Config file
 For a detailed explanation of the `config.yaml` file and its parameters, please see the [Configuration File Guide](./Documentation/02_The_drFrankenstein_Config.md).

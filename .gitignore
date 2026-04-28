@@ -24,3 +24,16 @@ __pycache__
 *.bak
 *.swp
 __*
+ROADMAP.md
+Config_files
+Inputs
+01.*
+02.*
+03.*
+04.*
+05.*
+06.*
+/_*
+/_*
+.benchmarks
+.pytest_cache

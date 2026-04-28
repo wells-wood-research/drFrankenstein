@@ -186,9 +186,9 @@
             <div class="tab-container">
                 <div class="tab-nav">
                     <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer Generation</button>
-                    <button class="tab-button" onclick="openTab(event, 'torsionScan')">Torsion Scanning</button>
                     <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
-                    <button class="tab-button" onclick="openTab(event, 'paramFit')">Parameter Fitting</button>
+                    <button class="tab-button" onclick="openTab(event, 'torsions')">Torsions</button>
+                    <button class="tab-button" onclick="openTab(event, 'methodsTab')">Methods</button>
                     <button class="tab-button" onclick="openTab(event, 'timeReport')">Time Report</button>
                 </div>
 
@@ -196,16 +196,16 @@
                     {% include 'conformer_generation.html' %}
                 </div>
 
-                <div id="torsionScan" class="tab-content">
-                    {% include 'torsion_scanning.html' %}
-                </div>
-
                 <div id="chargeCalc" class="tab-content">
                     {% include 'charge_calculations.html' %}
                 </div>
 
-                <div id="paramFit" class="tab-content">
-                    {% include 'parameter_fitting.html' %}
+                <div id="torsions" class="tab-content">
+                    {% include 'torsions.html' %}
+                </div>
+
+                <div id="methodsTab" class="tab-content">
+                    {% include 'methods.html' %}
                 </div>
 
                 <div id="timeReport" class="tab-content">

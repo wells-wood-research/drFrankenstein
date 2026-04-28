@@ -130,26 +130,6 @@
         <p>Conformer visualization HTML files not available.</p>
     {% endif %}
 
-    {% if methods_data and methods_data.conformerMethods %}
-        <h2>Charge Calculation Methods</h2>
-        <div class="info">
-            <div class="protocol-content-text">
-                {{ methods_data.conformerMethods }}
-            </div>
-
-            {% if citation_data and citation_data.forConformers %}
-                {# All citation sections... #}
-                {% if citation_data.forConformers.essential_papers %}
-                    <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
-                    {% for paper in citation_data.forConformers.essential_papers %}
-                        <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
-                    {% endfor %}
-                {% endif %}
-                {# ... other paper types ... #}
-            {% endif %}
-        </div>
-    {% endif %} 
-
 {% else %}
     <p>No conformer generation data available.</p>
 {% endif %}

@@ -1,0 +1,98 @@
+<style>
+    .methods-section {
+        margin-bottom: 20px;
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .methods-section h3 {
+        margin-top: 0;
+        color: #00ff00;
+    }
+
+    .methods-citations {
+        margin-top: 12px;
+    }
+
+    .methods-citations .protocol-content-text strong {
+        color: #ffffff;
+    }
+
+    .methods-citations .protocol-content-text a {
+        color: yellow;
+    }
+</style>
+
+{% macro render_citations(citation_block) -%}
+    {% if citation_block %}
+        <div class="methods-citations">
+            {% if citation_block.essential_papers %}
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                {% for paper in citation_block.essential_papers %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {% if citation_block.high_priority_papers %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                {% for paper in citation_block.high_priority_papers %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {% if citation_block.suggested_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                {% for paper in citation_block.suggested_additional_citations %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+
+            {% if citation_block.optional_additional_citations %}
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                {% for paper in citation_block.optional_additional_citations %}
+                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endif %}
+{%- endmacro %}
+
+<h2>Methods</h2>
+
+{% if methods_data %}
+    {% if methods_data.conformerMethods %}
+        <div class="methods-section">
+            <h3>Conformer Generation</h3>
+            <div class="protocol-content-text">{{ methods_data.conformerMethods }}</div>
+            {{ render_citations(citation_data.forConformers if citation_data else none) }}
+        </div>
+    {% endif %}
+
+    {% if methods_data.scanningMethods %}
+        <div class="methods-section">
+            <h3>Torsion Scanning</h3>
+            <div class="protocol-content-text">{{ methods_data.scanningMethods }}</div>
+            {{ render_citations(citation_data.forStitching if citation_data else none) }}
+        </div>
+    {% endif %}
+
+    {% if methods_data.chargeMethods %}
+        <div class="methods-section">
+            <h3>Charge Calculations</h3>
+            <div class="protocol-content-text">{{ methods_data.chargeMethods }}</div>
+            {{ render_citations(citation_data.forCharges if citation_data else none) }}
+        </div>
+    {% endif %}
+
+    {% if methods_data.fittingMethods %}
+        <div class="methods-section">
+            <h3>Parameter Fitting</h3>
+            <div class="protocol-content-text">{{ methods_data.fittingMethods }}</div>
+            {{ render_citations(citation_data.forStitching if citation_data else none) }}
+        </div>
+    {% endif %}
+{% else %}
+    <p>No methods data available.</p>
+{% endif %}

@@ -420,53 +420,6 @@
     <p>No torsion scanning data available.</p>
 {% endif %}
 
-{% if methods_data and methods_data.scanningMethods %}
-    <h2>Charge Calculation Methods</h2>
-    <div class="info"> <!-- Using .info class for consistent box styling -->
-        <div class="protocol-content-text">
-            {{ methods_data.scanningMethods }}
-        </div>
-
-        {% if citation_data and citation_data.forStitching %}
-
-            {# Essential Papers Section #}
-            {% if citation_data.forStitching.essential_papers %}
-                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
-                {% for paper in citation_data.forStitching.essential_papers %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
-                {% endfor %}
-            {% endif %}
-
-            {# High Priority Papers Section #}
-            {% if citation_data.forStitching.high_priority_papers %}
-                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
-                {% for paper in citation_data.forStitching.high_priority_papers %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
-                {% endfor %}
-            {% endif %}
-
-            {# Suggested Additional Citations Section #}
-            {% if citation_data.forStitching.suggested_additional_citations %}
-                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
-                {% for paper in citation_data.forStitching.suggested_additional_citations %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
-                {% endfor %}
-            {% endif %}
-
-            {# Optional Additional Citations Section #}
-            {% if citation_data.forStitching.optional_additional_citations %}
-                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
-                {% for paper in citation_data.forStitching.optional_additional_citations %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank" style="color: yellow;">{{ paper.doi }}</a></div>
-                {% endfor %}
-            {% endif %}
-
-        {% endif %} {# Closes: if citation_data and citation_data.forStitching #}
-
-    </div> <!-- Closes: div class="info" -->
-{% endif %} 
-
-
 <script>
     function bindTorsionIframeErrorHandling(scopeElement) {
         if (!scopeElement) return;

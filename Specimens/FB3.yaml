@@ -12,7 +12,7 @@ pathInfo:
   ## full path to input files
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_AIB
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_FB3
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
@@ -34,34 +34,37 @@ pathInfo:
 ##########################################################################################################################
 moleculeInfo:
   ## total formal charge of the molecule
-  charge: 0
+  charge: +3
   ## spin multiplicity (2S+1)
   multiplicity: 1
   ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
-  moleculeName: AIB
+  moleculeName: FB3
   ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
   ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
   chargeGroups:
-    CO: 
-      atoms: [C, O]
+    chainA:
+      atoms: [NA, CAA, CA, OA, CCA, NAA, CDA, NBA, CEA, CFA, CGA, CHA, CIA, CJA, CKA, CNA, COA, FEA]
       charge: 0
-    CAN:
-      atoms: [CA, N]
+    chainB:
+      atoms: [NB, CAB, CB, OB, CCB, NAB, CDB, NBB, CEB, CFB, CGB, CHB, CIB, CJB, CKB, CNB, COB]
       charge: 0
-    CB1: 
-      atoms: [CB1]
-      charge: 0
-    CB2: 
-      atoms: [CB2]
+    chainC:
+      atoms: [NC, CAC, CC, OC, CCC, NAC, CDC, NBC, CEC, CFC, CGC, CHC, CIC, CJC, CKC, CNC, COC]
       charge: 0    
   backboneAliases:
-    CA: [CA]
-    HA: [HA]
-    C: [C]
-    N: [N]
-    O: [O]
-    H: [HN]      
+    CA: [CAA, CAB, CAC]
+    HA: [HCAA, HCAB, HCAC]
+    C: [CA, CB, CC]
+    N: [NA, NB, NC]
+    O: [OA, OB, OC]
+    H: [HN1A, HN1B, HN1C]      
 
+  stapleSeparation:
+    breakBonds: [[NAA, FEA], [NBA, FEA], [NAB, FEA], [NBB, FEA], [NAC, FEA], [NBC, FEA]]
+    groupContents: 
+      AAA: [NAA, CAA, CA, OA, CCA]
+      BBB: [NBA, CAB, CB, OB, CCB]
+      CCC: [NAC, CAC, CC, OC, CCC]
 
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #
@@ -75,13 +78,13 @@ moleculeInfo:
 torsionScanInfo:
   ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
   runScansOn:
-    phiPsi : true         ## DEFAULT TRUE
+    phiPsi : false         ## DEFAULT TRUE
     polarProtons : false   ## DEFAULT TRUE
     nonPolarProtons : false  ## DEFAULT FALSE
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 4
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
@@ -154,4 +157,4 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
-  assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
+  assemblyProtocol: AGNOSTIC ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

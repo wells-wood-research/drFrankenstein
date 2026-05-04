@@ -16,7 +16,6 @@ import glob
 import re
 from shutil import rmtree
 from scipy.signal import argrelextrema
-import random
 import parmed
 from parmed.charmm import CharmmParameterSet, CharmmPsfFile
 
@@ -378,12 +377,9 @@ def exclude_backbone_torsions(config: dict) -> dict:
     return config
 
         
-        
-
-
-
+    
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_conformer_xyzs(config, seed=1818, temperature=300):
+def get_conformer_xyzs(config, temperature=300):
     ## get conformer XYZ files
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     conformerEnergies = config["runtimeInfo"]["madeByConformers"]["conformerEnergies"]
@@ -393,7 +389,8 @@ def get_conformer_xyzs(config, seed=1818, temperature=300):
         return conformerXyzs  # Return all conformers if nConformers is -1 or too large
 
     # Boltzmann sampling
-    random.seed(seed)
+    seed = config["miscInfo"]["seed"]
+    rng = np.random.default_rng(seed)
     kBoltzmann = 0.0019872041  # Boltzmann constant in kcal/mol·K
     kT = kBoltzmann * temperature
 
@@ -408,7 +405,7 @@ def get_conformer_xyzs(config, seed=1818, temperature=300):
     sortedConformerXyzs = [conformerXyzs[list(conformerEnergies.keys()).index(key)] for key in sortedKeys]
 
     # Sample conformers based on Boltzmann probabilities
-    selectedIndices = np.random.choice(
+    selectedIndices = rng.choice(
         len(sortedConformerXyzs),
         size=nConformers,
         replace=False,  # No replacement to avoid duplicates
@@ -809,7 +806,6 @@ def merge_scan_dfs(scanDfs):
         mergedDf.rename(columns={"Energy":f"Energy_{colIndex + 1}"}, inplace=True)
     return mergedDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
 
 
 

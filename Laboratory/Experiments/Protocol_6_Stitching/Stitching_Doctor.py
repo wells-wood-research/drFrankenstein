@@ -2,7 +2,6 @@
 import os
 from os import path as p
 import sys
-import random
 from tqdm import tqdm
 import pandas as pd
 from collections import defaultdict
@@ -87,13 +86,14 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     maxShuffles = config["parameterFittingInfo"]["maxShuffles"]
     minShuffles = config["parameterFittingInfo"]["minShuffles"]
+    seed = config["miscInfo"]["seed"]
     # Standardize on maeTol keys, assuming this is the consistent naming in the config
     converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
 
 
     ## Remove torsions that failed QM scans and shuffle the rest
     torsionTags = Stitching_Assistant.remove_exploded_torsions(config)
-    shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles)
+    shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed)
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
     ## init empties for storing data, counters, and flags

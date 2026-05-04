@@ -91,7 +91,7 @@ def make_charge_gradient_colors():
     chargeGradientColors =['#FF00FF', '#FF66FF', '#FFCCFF', '#FFF5FF', '#FFFFFF', '#F5FFF5', '#CCFFCC', '#33FF33', '#00FF00']
     return chargeGradientColors
 
-def compute_physics_layout(atoms_df, bonds_df, iterations=300, lr=0.05):
+def compute_physics_layout(atoms_df, bonds_df, iterations=300, lr=0.05, seed=1818):
     """Simulates springs to flatten molecule while maintaining bonds and angles."""
     import networkx as nx
     import numpy as np
@@ -132,7 +132,8 @@ def compute_physics_layout(atoms_df, bonds_df, iterations=300, lr=0.05):
     cov = np.cov(coords_centered.T)
     evals, evecs = np.linalg.eigh(cov)
     pos_2d = coords_centered @ evecs[:, -2:] # Project onto 2 largest principal components
-    pos_2d += np.random.normal(scale=0.05, size=pos_2d.shape) # Jitter to prevent locking
+    rng = np.random.default_rng(seed)
+    pos_2d += rng.normal(scale=0.05, size=pos_2d.shape) # Jitter to prevent locking
 
     # D. Physics Simulation (Iterative Force Application)
     for _ in range(iterations):
@@ -633,7 +634,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
     atoms_df, bonds_df = parse_mol2_file(cappedMol2)
     
     # Run the custom physics simulation to fetch beautifully scaled 2D coords
-    pos_2d = compute_physics_layout(atoms_df, bonds_df)
+    pos_2d = compute_physics_layout(atoms_df, bonds_df, seed=config["miscInfo"]["seed"])
     
     atom_names = atoms_df['atom_name'].values
     
@@ -871,7 +872,7 @@ def create_interactive_graph_visualization(G, outDir, config):
     bonds_df_mock = pd.DataFrame(bonds_data)
     
     # Compute 2D layout using the custom physics engine
-    pos_2d = compute_physics_layout(atoms_df_mock, bonds_df_mock)
+    pos_2d = compute_physics_layout(atoms_df_mock, bonds_df_mock, seed=config["miscInfo"]["seed"])
     
     # Extract node attributes
     node_names = []

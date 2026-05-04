@@ -64,11 +64,6 @@ def validate_charge_multiplicity_from_pdb(pdb_df, charge: int, multiplicity: int
     if multiplicity < 1:
         raise ValueError(f"Multiplicity must be >= 1, got {multiplicity}.")
 
-    if charge % 2 != 0 and multiplicity % 2 != 0:
-        raise ValueError(
-            f"Charge ({charge}) and multiplicity ({multiplicity}) are both odd. "
-            "This is an obvious parity mismatch."
-        )
 
     total_electrons = calculate_total_electrons(pdb_df, charge)
     if total_electrons % 2 == multiplicity % 2:

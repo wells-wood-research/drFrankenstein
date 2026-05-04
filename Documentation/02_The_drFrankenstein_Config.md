@@ -322,6 +322,11 @@ This section contains miscellaneous settings affecting the overall script execut
     *   **Allowed Values**: `ANTECHAMBER`, `CGENFF`, `AGNOSTIC`
     *   **Default**: Optional
 
+    `seed`:
+    *   **Description**: Seed for random number generator.
+    *   **Type**: `Integer`
+    *   **Default**: 1818
+
 **Example**
 ```yaml
 miscInfo:

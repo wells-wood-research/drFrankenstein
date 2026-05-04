@@ -143,5 +143,6 @@ miscInfo:
   availableCpus: 30     ## DEFAULT = mp.cpu_count()
   ## How many file do you want to delete? Accepts integers 0, 1, 2, 3
   cleanUpLevel: 1   ## DEFAULT = 1
+  ## random seed used for all stochastic selections
+  seed: 1818
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
-

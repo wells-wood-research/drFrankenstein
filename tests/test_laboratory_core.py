@@ -151,6 +151,7 @@ class TestConfigDefaults(unittest.TestCase):
         self.assertTrue(result["pathInfo"]["outputDir"].endswith("PCY_FrankenParams"))
         self.assertIn("runScansOn", result["torsionScanInfo"])
         self.assertIn("phiPsi", result["torsionScanInfo"]["runScansOn"])
+        self.assertEqual(result["miscInfo"]["seed"], 1818)
 
     def test_apply_defaults_sets_charge_groups_to_none_when_missing(self):
         config = {
@@ -206,6 +207,7 @@ class TestConfigDefaults(unittest.TestCase):
             },
             "miscInfo": {
                 "availableCpus": 1,
+                "seed": 1818,
             },
         }
 

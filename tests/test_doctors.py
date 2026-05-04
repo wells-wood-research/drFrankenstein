@@ -203,7 +203,7 @@ class DoctorTestBase(unittest.TestCase):
                 "minShuffles": 1,
                 "converganceTolerance": 999.0,
             },
-            "miscInfo": {"availableCpus": 1, "assemblyProtocol": "ANTECHAMBER"},
+            "miscInfo": {"availableCpus": 1, "assemblyProtocol": "ANTECHAMBER", "seed": 1818},
             "runtimeInfo": {
                 "madeByCapping": {"cappedPdb": os.path.join(out_dir, "capped.pdb")},
                 "madeByConformers": {"conformerXyzs": [os.path.join(out_dir, "c1.xyz")]},

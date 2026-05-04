@@ -160,6 +160,7 @@ def apply_defaults_and_validate(config):
     miscInfo = config.setdefault('miscInfo', {})
     set_default(miscInfo, 'availableCpus', mp.cpu_count(), errors['miscInfo'])
     set_default(miscInfo, 'cleanUpLevel', 1, errors['miscInfo'])
+    set_default(miscInfo, 'seed', 1818, errors['miscInfo'])
 
     # --- Final Error Check ---
     if _has_fatal_errors(errors):

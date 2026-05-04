@@ -62,6 +62,11 @@ cp ~/bin/xtb-dist/bin/xtb ~/bin/orca_6_1_0_linux_x86-64_shared_openmpi416/otool_
 ```bash
 unzip ~/bin/Multiwfn_3.8_dev_bin_Linux_noGUI.zip
 ```
+4. Give yourself permission to use `MultiWFN`
+```bash
+cd ~/bin/Multiwfn_3.8_dev_bin_Linux_noGUI
+chmod +x Multiwfn_noGUI
+```
 
 >This will create a `~/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/` directory. You will need to supply drFrankenstein with the full path to this directory in the `pathInfo`.`multiWfnDir` parameter in all of your config.yaml files
 

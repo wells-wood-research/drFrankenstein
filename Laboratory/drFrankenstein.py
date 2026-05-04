@@ -49,11 +49,8 @@ def main():
 
         config = set_config_defaults.apply_defaults_and_validate(config)
 
-
-
         ## check config for errors#
         config = validate_config.validate_config(config)
-
 
         ## unpack config to find outputDir, make directory
         outputDir = config["pathInfo"]["outputDir"]

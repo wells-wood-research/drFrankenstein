@@ -67,7 +67,7 @@ def init_tqdm_bar_options() -> dict:
     }
     return tqdmBarOptions
 
-def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int) -> list[str]:
+def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int, seed: int) -> list[str]:
     """
     Re-orders the torsion tags in a random order
     
@@ -77,9 +77,14 @@ def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int) -> list[str]:
         shuffledTorsionTags: torsionTags re-ordered
     """
     shuffledTorsionTags = []
+    baseTorsionTags = list(torsionTags)
     for i in range(maxShuffles):
-        random.shuffle(torsionTags)
-        shuffledTorsionTags.extend(torsionTags)
+        shuffleIndex = i + 1
+        # Use a per-shuffle derived seed so each shuffle order is generated independently.
+        derivedSeed = seed * shuffleIndex if seed != 0 else shuffleIndex
+        workingTorsionTags = list(baseTorsionTags)
+        random.Random(derivedSeed).shuffle(workingTorsionTags)
+        shuffledTorsionTags.extend(workingTorsionTags)
 
     return shuffledTorsionTags
 

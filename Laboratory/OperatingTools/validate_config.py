@@ -299,6 +299,7 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
     optionalKeys = {
         "cleanUpLevel": int,
         "assemblyProtocol": str,
+        "seed": int,
     }
 
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
@@ -320,6 +321,8 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     _add_error(errors, keyPath, f"Value for '{key}' must be between 0 and 3, but got {value}.")
                 elif key == "assemblyProtocol" and isinstance(value, str):
                     _validate_allowed_values(value, allowedAssemblyProtocols, keyPath, errors)
+                elif key == "seed" and isinstance(value, int) and value < 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
 
 
 

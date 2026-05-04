@@ -20,6 +20,31 @@ class FilePath:
 class DirectoryPath:
     pass
 
+class PlaceholderParameterError(ValueError):
+    """Raised when a frcmod file contains placeholder parameters."""
+    pass
+def check_for_placeholder_parameters(frcmodFile: FilePath) -> None:
+    """
+    Check for placeholder parameters in the frcmod file and raise an error if any are found.
+
+    Args:
+        frcmodFile (FilePath): Path to the frcmod file to check.
+
+        Raises:
+            ValueError: If placeholder parameters are found in the frcmod file.
+        Returns:
+            None
+    """
+    with open(frcmodFile, 'r') as f:
+        for line in f:
+            if "ATTN: needs revision" in line:
+                raise PlaceholderParameterError(
+                "ParmChk2 was not able to assign parameters for your molecule. \n\
+                    Try running using the agnostic parameter assembly protocol: \n\
+                    - config['miscInfo']['assemblyProtocol'] = 'AGNOSTIC'")
+
+    return
+
 def run_tleap_to_make_params(inMol2: FilePath,
                             molFrcmod: FilePath,
                               outDir: DirectoryPath,

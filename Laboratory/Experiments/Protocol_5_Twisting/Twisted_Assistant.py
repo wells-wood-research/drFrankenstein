@@ -379,41 +379,53 @@ def exclude_backbone_torsions(config: dict) -> dict:
         
     
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_conformer_xyzs(config, temperature=300):
-    ## get conformer XYZ files
+def get_ordered_conformer_xyzs(config, temperature=300):
+    """
+    Returns all conformers in Boltzmann-weighted random order (no replacement).
+    """
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
-    conformerEnergies = config["runtimeInfo"]["madeByConformers"]["conformerEnergies"]
-    nConformers = config["torsionScanInfo"]["nConformers"]
+    conformerEnergies = config["runtimeInfo"]["madeByConformers"].get("conformerEnergies")
+    if len(conformerXyzs) <= 1:
+        return conformerXyzs
+    if not conformerEnergies or len(conformerEnergies) != len(conformerXyzs):
+        return conformerXyzs
 
-    if nConformers == -1 or nConformers >= len(conformerXyzs):
-        return conformerXyzs  # Return all conformers if nConformers is -1 or too large
-
-    # Boltzmann sampling
     seed = config["miscInfo"]["seed"]
     rng = np.random.default_rng(seed)
     kBoltzmann = 0.0019872041  # Boltzmann constant in kcal/mol·K
     kT = kBoltzmann * temperature
 
-    # Get energies and compute Boltzmann weights
-    energies = [conformerEnergies[key] for key in sorted(conformerEnergies.keys())]
-    boltzmannFactors = [np.exp(-energy / kT) for energy in energies]
-    totalWeight = sum(boltzmannFactors)
-    probabilities = [factor / totalWeight for factor in boltzmannFactors]
-
     # Ensure conformerXyzs is aligned with sorted energies
     sortedKeys = sorted(conformerEnergies.keys())
     sortedConformerXyzs = [conformerXyzs[list(conformerEnergies.keys()).index(key)] for key in sortedKeys]
+    energies = [conformerEnergies[key] for key in sortedKeys]
+    minEnergy = min(energies)
+    shiftedEnergies = [energy - minEnergy for energy in energies]
 
-    # Sample conformers based on Boltzmann probabilities
+    boltzmannFactors = [np.exp(-energy / kT) for energy in shiftedEnergies]
+    totalWeight = sum(boltzmannFactors)
+    probabilities = [factor / totalWeight for factor in boltzmannFactors]
+
     selectedIndices = rng.choice(
         len(sortedConformerXyzs),
-        size=nConformers,
-        replace=False,  # No replacement to avoid duplicates
+        size=len(sortedConformerXyzs),
+        replace=False,
         p=probabilities
     )
-    selectedConformerXyzs = [sortedConformerXyzs[i] for i in selectedIndices]
 
-    return selectedConformerXyzs
+    return [sortedConformerXyzs[i] for i in selectedIndices]
+
+
+def get_conformer_xyzs(config, temperature=300):
+    ## get conformer XYZ files
+    conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
+    nConformers = config["torsionScanInfo"]["nConformers"]
+
+    if nConformers == -1 or nConformers >= len(conformerXyzs):
+        return conformerXyzs  # Return all conformers if nConformers is -1 or too large
+
+    orderedConformerXyzs = get_ordered_conformer_xyzs(config, temperature=temperature)
+    return orderedConformerXyzs[:nConformers]
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
@@ -807,6 +819,4 @@ def merge_scan_dfs(scanDfs):
         mergedDf.rename(columns={"Energy":f"Energy_{colIndex + 1}"}, inplace=True)
     return mergedDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-
-
 

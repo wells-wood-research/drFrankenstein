@@ -1,6 +1,7 @@
 
 import os
 from os import path as p
+import hashlib
 import pandas as pd
 
 ## MULTIPROCESSING AND LOADING BAR LIBRARIES ##
@@ -25,7 +26,7 @@ from OperatingTools import drLogger
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Torsion Scanning")
-def twist_protocol(config):
+def twist_protocol(config, forceScanFailPercent: float = 0.0):
     ## create an entry in runtimeInfo for twist
     """
     Main protocol for torsion scanning
@@ -61,7 +62,14 @@ def twist_protocol(config):
     nRotatableBonds = len(torsionsToScan)
     config["runtimeInfo"]["madeByTwisting"]["nRotatableBonds"] = nRotatableBonds
     for torsionIndex, (torsionTag, torsionData) in enumerate(torsionsToScan.items()):
-        config = run_torsion_scanning(torsionTag, torsionData, torsionIndex, nRotatableBonds, config)
+        config = run_torsion_scanning(
+            torsionTag,
+            torsionData,
+            torsionIndex,
+            nRotatableBonds,
+            config,
+            forceScanFailPercent=forceScanFailPercent
+        )
     config["checkpointInfo"]["scanningComplete"] = True
 
     return config
@@ -72,7 +80,8 @@ def run_torsion_scanning(torsionTag: str,
                             torsionIndex: int,
                               nRotatableBonds: int,
                                 config: dict,
-                                  debug: bool = False) -> dict:
+                                  debug: bool = False,
+                                  forceScanFailPercent: float = 0.0) -> dict:
 
     """
     Runs torsion scanning for a given torsion.
@@ -99,23 +108,56 @@ def run_torsion_scanning(torsionTag: str,
     config["runtimeInfo"]["madeByTwisting"]["torsionDirs"].append(torsionDir)
     config["runtimeInfo"]["madeByTwisting"]["torsionTags"].append(torsionTag)
 
-    conformerXyzs = Twisted_Assistant.get_conformer_xyzs(config)
-    drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
-    if debug:
-        ## run in serial
-        scanDfs, scanDirs = scan_in_serial(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], config = config)
-        if config["torsionScanInfo"]["singlePointMethod"] is None:
-            singlePointDfs = None
-        else:
-            singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag,  config = config)
+    allConformerXyzs = Twisted_Assistant.get_ordered_conformer_xyzs(config)
+    nConformersRequested = config["torsionScanInfo"]["nConformers"]
+    if nConformersRequested == -1 or nConformersRequested >= len(allConformerXyzs):
+        nConformersTarget = len(allConformerXyzs)
     else:
-        # run torsion scans in parallel
-        scanDfs, scanDirs = scan_in_parallel(torsionDir, conformerXyzs, torsionData["ATOM_INDEXES"], torsionTag, config = config)
-        ## run single point scans in parallel
-        if config["torsionScanInfo"]["singlePointMethod"] == None:
-            singlePointDfs = None
+        nConformersTarget = nConformersRequested
+
+    scanDfs = []
+    scanDirs = []
+    remainingConformerXyzs = allConformerXyzs.copy()
+    drSplash.show_torsion_being_scanned(torsionTag, torsionIndex, nRotatableBonds)
+    while remainingConformerXyzs and len(scanDfs) // 2 < nConformersTarget:
+        nNeeded = nConformersTarget - (len(scanDfs) // 2)
+        batchSize = min(len(remainingConformerXyzs), nNeeded)
+        conformerBatch = remainingConformerXyzs[:batchSize]
+        remainingConformerXyzs = remainingConformerXyzs[batchSize:]
+
+        if debug:
+            batchScanDfs, batchScanDirs = scan_in_serial(
+                torsionDir,
+                conformerBatch,
+                torsionData["ATOM_INDEXES"],
+                config=config,
+                forceScanFailPercent=forceScanFailPercent
+            )
         else:
-            singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, torsionTag, config = config)
+            batchScanDfs, batchScanDirs = scan_in_parallel(
+                torsionDir,
+                conformerBatch,
+                torsionData["ATOM_INDEXES"],
+                torsionTag,
+                config=config,
+                forceScanFailPercent=forceScanFailPercent
+            )
+
+        scanDfs.extend(batchScanDfs)
+        scanDirs.extend(batchScanDirs)
+
+    if len(scanDfs) == 0:
+        raise RuntimeError(
+            f"No complete torsion scans finished for torsion '{torsionTag}'. "
+            "All sampled conformers failed before completing forwards and backwards scans."
+        )
+
+    if config["torsionScanInfo"]["singlePointMethod"] is None:
+        singlePointDfs = None
+    elif debug:
+        singlePointDfs = single_points_in_serial(scanDirs, scanDfs, torsionDir, torsionTag,  config = config)
+    else:
+        singlePointDfs = single_points_in_parallel(scanDirs, scanDfs, torsionTag, config = config)
     ## Merge scan data, calculate averages, rolling averages and mean average errors
     scanEnergiesCsv, scanAveragesDf  = Twisted_Assistant.process_scan_data(scanDfs, torsionDir, torsionTag)
     if  config["torsionScanInfo"]["singlePointMethod"] is None:
@@ -137,7 +179,7 @@ def run_torsion_scanning(torsionTag: str,
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Torsion Scanning (serial)", "TORSION_SCANS")
-def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tuple[pd.DataFrame, DirectoryPath]:
+def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config, forceScanFailPercent: float = 0.0) -> Tuple[pd.DataFrame, DirectoryPath]:
     """
     Runs torsion scanning for a given torsion in serial.
 
@@ -153,7 +195,7 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
     Returns:
         Tuple[pd.DataFrame, DirectoryPath]: tuple of dataframes and directories
     """
-    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
+    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config, forceScanFailPercent) for  conformerXyz in conformerXyzs]
     scanDfs = []
     scanDirs = []
     for args in argsList:
@@ -168,7 +210,7 @@ def scan_in_serial(torsionScanDir, conformerXyzs, torsionIndexes, config) -> Tup
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @Timer.time_function("Torsion Scanning", "TORSION_SCANS")
-def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config) -> Tuple[pd.DataFrame, DirectoryPath]:
+def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, config, forceScanFailPercent: float = 0.0) -> Tuple[pd.DataFrame, DirectoryPath]:
     """
     Executes torsion scanning in parallel for a given torsion.
 
@@ -200,10 +242,12 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
         "ncols": 124,
         "dynamic_ncols": False    }
 
-    argsList = [(conformerXyz, torsionScanDir,  torsionIndexes, config) for  conformerXyz in conformerXyzs]
+    argsList = [(conformerXyz, torsionScanDir, torsionIndexes, config, forceScanFailPercent) for conformerXyz in conformerXyzs]
 
     ## save on cores 
-    nCores = min(len(argsList), config["miscInfo"]["availableCpus"])
+    nCores = min(len(argsList),                             ## total number of conformers created
+                  config["miscInfo"]["availableCpus"],      ## number of available CPUs
+                  config["torsionScanInfo"]["nConformers"]) ## number of conformers we want to scan
 
     with WorkerPool(n_jobs = nCores) as pool:
         results = pool.map(do_the_twist_worker,
@@ -359,9 +403,19 @@ def do_the_twist_worker(args):
         Returns None values if a scan crashes due to FileNotFoundError.
     """
     ## unpack args tuple
-    conformerXyz, torsionScanDir,  torsionIndexes, config= args
+    if len(args) == 4:
+        conformerXyz, torsionScanDir, torsionIndexes, config = args
+        forceScanFailPercent = 0.0
+    else:
+        conformerXyz, torsionScanDir, torsionIndexes, config, forceScanFailPercent = args
     try:
-        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir  = do_the_twist(conformerXyz, torsionScanDir, torsionIndexes, config=config)
+        scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir  = do_the_twist(
+            conformerXyz,
+            torsionScanDir,
+            torsionIndexes,
+            config=config,
+            forceScanFailPercent=forceScanFailPercent
+        )
         return scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir
     except FileNotFoundError as e:
         ## this is fine TODO: make a custom error to look for - this is when a scan crashes
@@ -374,7 +428,8 @@ def do_the_twist_worker(args):
 def do_the_twist(conformerXyz: FilePath,
                  torsionScanDir: DirectoryPath,
                  torsionIndexes: List[int],
-                 config: dict) -> Tuple[pd.DataFrame]:
+                 config: dict,
+                 forceScanFailPercent: float = 0.0) -> Tuple[pd.DataFrame]:
 
     """
     Runs torsion scanning for a given conformer.
@@ -394,8 +449,17 @@ def do_the_twist(conformerXyz: FilePath,
         Returns None values if a scan crashes due to FileNotFoundError.
     """
     conformerId = p.basename(conformerXyz).split(".")[0]
-
     conformerScanDir = p.join(torsionScanDir, f"scans_{conformerId}")
+    os.makedirs(conformerScanDir, exist_ok=True)
+    if should_force_scan_fail(conformerId, torsionIndexes, config, forceScanFailPercent):
+        forcedFailFile = p.join(conformerScanDir, "FORCED_FAIL.txt")
+        with open(forcedFailFile, "w") as f:
+            f.write(
+                "This torsion scan was intentionally terminated for testing.\n"
+                f"forceScanFailPercent={forceScanFailPercent}\n"
+            )
+        return None, None, None, None
+
     optXyz = Twisted_Monster.run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config)
     ## get angle of torsion in this conformer
     initialTorsionAngle = Twisted_Assistant.measure_current_torsion_angle(optXyz, torsionIndexes)
@@ -414,4 +478,21 @@ def do_the_twist(conformerXyz: FilePath,
     scanBackwardsDf = Twisted_Assistant.process_energy_outputs(scanBackwardsDf)
 
     return  scanForwardsDf, scanBackwardsDf, forwardsDir, backwardsDir
+
+
+def should_force_scan_fail(conformerId: str,
+                           torsionIndexes: List[int],
+                           config: dict,
+                           forceScanFailPercent: float) -> bool:
+    if forceScanFailPercent <= 0:
+        return False
+    if forceScanFailPercent >= 100:
+        return True
+
+    seed = str(config["miscInfo"]["seed"])
+    torsionTag = "_".join(str(index) for index in torsionIndexes)
+    hashInput = f"{seed}:{torsionTag}:{conformerId}".encode("utf-8")
+    hashInt = int(hashlib.sha256(hashInput).hexdigest()[:8], 16)
+    threshold = hashInt / 0xFFFFFFFF * 100
+    return threshold < forceScanFailPercent
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

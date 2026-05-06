@@ -16,6 +16,64 @@ class FilePath:
 class DirectoryPath:
     pass
 
+AMBER19_DEFAULT_BACKBONE_CHARGES = {
+    "N": -0.4157,
+    "H": 0.2719,
+    "CA": 0.0337,
+    "HA": 0.0823,
+    "C": 0.5973,
+    "O": -0.5679,
+}
+
+def _get_backbone_alias_atom_names(config: dict) -> list[str]:
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+    requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+    backboneAtoms = []
+    for backboneKey in requiredBackboneKeys:
+        backboneAtoms.extend(backboneAliases[backboneKey])
+    return list(dict.fromkeys(backboneAtoms))
+
+def _rebalance_non_backbone_charges(
+    chargeDf: pd.DataFrame,
+    totalCharge: float,
+    protectedAtomNames: list[str],
+) -> pd.DataFrame:
+    currentSum = chargeDf["Charge"].sum()
+    difference = round(totalCharge - currentSum, 4)
+    if difference == 0:
+        return chargeDf
+
+    protectedNamesSet = set(protectedAtomNames)
+
+    candidateDf = chargeDf[
+        chargeDf["ATOM_NAME"].str.startswith("C")
+        & (~chargeDf["ATOM_NAME"].isin(["C_C", "C2_C", "C_N"]))
+        & (~chargeDf["ATOM_NAME"].str.startswith("CL"))
+        & (~chargeDf["ATOM_NAME"].isin(protectedNamesSet))
+    ]
+    candidateNames = candidateDf.loc[candidateDf["Charge"].abs().sort_values().index, "ATOM_NAME"].tolist()
+
+    if not candidateNames:
+        candidateDf = chargeDf[~chargeDf["ATOM_NAME"].isin(protectedNamesSet)]
+        candidateNames = candidateDf["ATOM_NAME"].tolist()
+
+    if not candidateNames:
+        raise ValueError("No non-backbone atoms available to rebalance charges after enforcing default backbone charges.")
+
+    modifier = 0.0001 if difference > 0 else -0.0001
+    nSteps = int(round(abs(difference / modifier)))
+    for i in range(nSteps):
+        atomName = candidateNames[i % len(candidateNames)]
+        atomIndexToModify = chargeDf[chargeDf["ATOM_NAME"] == atomName].index
+        chargeDf.loc[atomIndexToModify, "Charge"] += modifier
+
+    finalSum = chargeDf["Charge"].sum()
+    if not np.isclose(finalSum, totalCharge, atol=1e-4):
+        raise ValueError(
+            f"Failed to rebalance charges after enforcing default backbone charges: final sum {finalSum} != target {totalCharge}"
+        )
+    return chargeDf
+
 
 def round_charges_carefully(config):
     """
@@ -115,6 +173,42 @@ def process_charge_csv(config: dict) -> dict:
 
     pdbUtils.df2pdb(cappedDf, cappedPdb)
     chargeDf.to_csv(chargeCsv)
+
+def enforce_default_backbone_charges(config: dict) -> dict:
+    """
+    Replaces fitted backbone charges with canonical AMBER19 values and rebalances
+    non-backbone atoms so total charge is preserved.
+    """
+    if not config["chargeFittingInfo"].get("enforceDefaultBackboneCharges", False):
+        return config
+
+    chargeCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
+    totalCharge = config["moleculeInfo"]["charge"]
+    backboneAliases = config["moleculeInfo"]["backboneAliases"]
+
+    chargeDf = pd.read_csv(chargeCsv, index_col="Unnamed: 0")
+
+    requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+    aliasToCharge = {}
+    for backboneKey in requiredBackboneKeys:
+        for alias in backboneAliases[backboneKey]:
+            aliasToCharge[alias] = AMBER19_DEFAULT_BACKBONE_CHARGES[backboneKey]
+
+    for atomName, defaultCharge in aliasToCharge.items():
+        atomMask = chargeDf["ATOM_NAME"] == atomName
+        if not atomMask.any():
+            raise ValueError(f"Backbone alias atom '{atomName}' was not found in fitted charge table.")
+        chargeDf.loc[atomMask, "Charge"] = defaultCharge
+
+    protectedAtomNames = _get_backbone_alias_atom_names(config)
+    chargeDf = _rebalance_non_backbone_charges(
+        chargeDf=chargeDf,
+        totalCharge=totalCharge,
+        protectedAtomNames=protectedAtomNames,
+    )
+    chargeDf.to_csv(chargeCsv)
+
+    return config
 
 
 

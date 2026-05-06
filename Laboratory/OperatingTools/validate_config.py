@@ -209,6 +209,7 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
         "optSolvationMethod": (str, type(None)),
         "singlePointSolvationMethod": (str, type(None)),
         "waterDensity": (int, float, type(None)),
+        "enforceDefaultBackboneCharges": bool,
     }
 
     allowedProtocols = ["RESP", "RESP2", "SOLVATOR"]
@@ -324,6 +325,45 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                 elif key == "seed" and isinstance(value, int) and value < 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
 
+def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]):
+    """
+    Cross-section validation for enforceDefaultBackboneCharges.
+    """
+    chargeFittingInfo = config.get("chargeFittingInfo")
+    moleculeInfo = config.get("moleculeInfo")
+    if not isinstance(chargeFittingInfo, dict) or not isinstance(moleculeInfo, dict):
+        return
+
+    if not chargeFittingInfo.get("enforceDefaultBackboneCharges", False):
+        return
+
+    backboneAliases = moleculeInfo.get("backboneAliases")
+    requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+    keyPathPrefix = "moleculeInfo.backboneAliases"
+
+    if not isinstance(backboneAliases, dict):
+        _add_error(
+            errors,
+            keyPathPrefix,
+            "When chargeFittingInfo.enforceDefaultBackboneCharges is True, moleculeInfo.backboneAliases must be a dictionary containing N, H, CA, HA, C, and O.",
+        )
+        return
+
+    for backboneKey in requiredBackboneKeys:
+        aliasKeyPath = f"{keyPathPrefix}.{backboneKey}"
+        if backboneKey not in backboneAliases:
+            _add_error(errors, aliasKeyPath, f"Missing required key '{backboneKey}' when enforceDefaultBackboneCharges is True.")
+            continue
+        aliases = backboneAliases[backboneKey]
+        if not isinstance(aliases, list):
+            _add_error(errors, aliasKeyPath, f"Invalid type. Expected list, but got {type(aliases).__name__}")
+            continue
+        if len(aliases) == 0:
+            _add_error(errors, aliasKeyPath, "Alias list cannot be empty when enforceDefaultBackboneCharges is True.")
+            continue
+        if not all(isinstance(alias, str) for alias in aliases):
+            _add_error(errors, aliasKeyPath, "All aliases must be strings.")
+
 
 
 
@@ -373,6 +413,7 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
     _validate_charge_fitting_info(config.get("chargeFittingInfo"), "chargeFittingInfo", errors)
     _validate_parameter_fitting_info(config.get("parameterFittingInfo"), "parameterFittingInfo", errors)
     _validate_misc_info(config.get("miscInfo"), "miscInfo", errors)
+    _validate_backbone_charge_enforcement(config, errors)
 
     if len(errors) == 0:
         return config # Validation successful

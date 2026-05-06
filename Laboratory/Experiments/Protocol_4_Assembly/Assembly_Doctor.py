@@ -74,7 +74,7 @@ def amber_assembly_protocol(config:dict) -> dict:
     moleculeFrcmod = p.join(assemblyDir, f"{moleculeName}_capped.frcmod")
     Antechamber_Assembly_Assistant.create_frcmod_file(moleculeMol2, moleculeFrcmod, gaff2Dat)
 
-    Antechamber_Assembly_Assistant.check_for_placeholder_parameters(moleculeFrcmod, config)
+    Antechamber_Assembly_Assistant.check_for_placeholder_parameters(moleculeFrcmod)
     ## replace gaff2 params with amber19sb parameters
     Antechamber_Assembly_Monster.replace_parameters(moleculeFrcmod, parm19Dat)
     ## create a PRMTOP file

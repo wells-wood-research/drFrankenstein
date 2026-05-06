@@ -87,6 +87,7 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
 
     Charged_Assistant.process_charge_csv(config)
     Charged_Assistant.round_charges_carefully(config)
+    Charged_Assistant.enforce_default_backbone_charges(config)
 
 
     ## clean up
@@ -383,7 +384,7 @@ def  partial_charge_RESP_protocol(outDir: DirectoryPath,
     conformerListTxt = Charged_Assistant.generate_conformer_list_file(orcaDir,
                                                                        fittingDir,
                                                                        conformerNames=usedConformerNames)
-    if config["moleculeInfo"]["chargeGroups"] is not None:
+    if len(config["runtimeInfo"]["madeByCharges"]["chargeGroups"]) > 0:
         chargeConstraintsTxt = Charged_Assistant.generate_charge_constraints_file(config, fittingDir)
     else:
         chargeConstraintsTxt = None
@@ -477,6 +478,4 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     raise NotImplementedError
-
-
 

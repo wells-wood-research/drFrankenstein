@@ -340,6 +340,30 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
 
     chargeGroupsInput = config["moleculeInfo"]["chargeGroups"]
     if chargeGroupsInput is None:
+        chargeGroupsInput = {}
+    else:
+        chargeGroupsInput = deepcopy(chargeGroupsInput)
+
+    enforceDefaultBackboneCharges = config["chargeFittingInfo"].get("enforceDefaultBackboneCharges", False)
+    if enforceDefaultBackboneCharges:
+        backboneAliases = config["moleculeInfo"]["backboneAliases"]
+        requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+        backboneAtoms = []
+        for backboneKey in requiredBackboneKeys:
+            backboneAtoms.extend(backboneAliases[backboneKey])
+        backboneAtoms = list(dict.fromkeys(backboneAtoms))
+
+        for groupData in chargeGroupsInput.values():
+            groupData["atoms"] = [atom for atom in groupData["atoms"] if atom not in backboneAtoms]
+        chargeGroupsInput = {
+            groupName: groupData
+            for groupName, groupData in chargeGroupsInput.items()
+            if len(groupData["atoms"]) > 0
+        }
+
+        chargeGroupsInput["enforced_backbone"] = {"atoms": backboneAtoms, "charge": 0}
+
+    if len(chargeGroupsInput) == 0:
         config["runtimeInfo"]["madeByCharges"]["chargeGroups"] = {}
         return config
 
@@ -354,15 +378,16 @@ def get_charge_group_indexes(pdbFile: FilePath, config: dict) -> dict:
     userDefinedAtoms = []
     userDefinedCharge = 0
     for chargeGroupName, chargeGroupData in chargeGroupsInput.items():
-        ## get heavy atom names
-        heavyChargeGroupAtoms = chargeGroupData["atoms"]
+        chargeGroupInputAtoms = chargeGroupData["atoms"]
         ## fill in hydrogen atom names
         protonNames = []
-        for heavyAtom in heavyChargeGroupAtoms:
+        for heavyAtom in chargeGroupInputAtoms:
+            if heavyAtom.startswith("H"):
+                continue
             boundProtons = find_bonded_atoms(pdbDf, heavyAtom)
             protonNames.extend(boundProtons)
         protonNames = [atomName for atomName in protonNames if atomName.startswith("H")] ##TODO: make this nicer
-        chargeGroupAtoms = heavyChargeGroupAtoms + protonNames
+        chargeGroupAtoms = list(dict.fromkeys(chargeGroupInputAtoms + protonNames))
         chargeGroupIndexes = uncappedDf[uncappedDf["ATOM_NAME"].isin(chargeGroupAtoms)]["ATOM_ID"].to_list()
         chargeGroups[chargeGroupName]["indexes"] = chargeGroupIndexes
         userDefinedCharge += chargeGroupData["charge"]

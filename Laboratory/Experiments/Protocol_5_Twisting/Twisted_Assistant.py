@@ -46,16 +46,16 @@ def choose_torsions_to_scan(config: dict) -> dict:
     ## unpack config
     runScansOn = config["torsionScanInfo"]["runScansOn"]
     allDihedrals = config["runtimeInfo"]["madeByTwisting"]["allDihedrals"]
-
     torsionsToScan = allDihedrals["remainingDihedrals"]
+    assemblyProtocol = config["miscInfo"]["assemblyProtocol"]
 
-    if runScansOn["phiPsi"]:
+    if runScansOn["phiPsi"] or assemblyProtocol == "AGNOSTIC":
         torsionsToScan = {**torsionsToScan, **allDihedrals["phiPsiDihedrals"]}
-    if runScansOn["nonPolarProtons"]:
+    if runScansOn["nonPolarProtons"] or assemblyProtocol == "AGNOSTIC":
         torsionsToScan = {**torsionsToScan, **allDihedrals["nonPolarProtonsDihedrals"]}
-    if runScansOn["polarProtons"]:
+    if runScansOn["polarProtons"] or assemblyProtocol == "AGNOSTIC":
         torsionsToScan = {**torsionsToScan, **allDihedrals["polarProtonDihedrals"]}
-    if runScansOn["nonAromaticRings"]:
+    if runScansOn["nonAromaticRings"] or assemblyProtocol == "AGNOSTIC":
         torsionsToScan = {**torsionsToScan, **allDihedrals["nonAromaticRingDihedrals"]}
 
 
@@ -758,6 +758,7 @@ def extract_dihedral_atom_names(dihedral: parmed.topologyobjects.Dihedral) -> Tu
 def boltzmann_weighted_average(row: pd.Series):
 
     ## set constants
+    
     T = 300
     kB = 0.0019872041  # Boltzmann constant in kcal/mol·K
     beta = 1 / (kB * T)

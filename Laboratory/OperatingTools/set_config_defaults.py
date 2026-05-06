@@ -134,10 +134,14 @@ def apply_defaults_and_validate(config):
     
     set_default(chargeFittingInfo, 'nConformers', -1, errors['chargeFittingInfo'])
     set_default(chargeFittingInfo, 'nCoresPerCalculation', 1, errors['chargeFittingInfo'])
+    set_default(chargeFittingInfo, 'enforceDefaultBackboneCharges', False, errors['chargeFittingInfo'])
     if chargeFittingInfo.get('chargeFittingProtocol') == 'SOLVATOR':
         set_default(chargeFittingInfo, 'waterDensity', 10, errors['chargeFittingInfo'])
     else:
         set_default(chargeFittingInfo, 'waterDensity', None, errors['chargeFittingInfo'])
+
+    if not isinstance(chargeFittingInfo.get('enforceDefaultBackboneCharges'), bool):
+        errors['chargeFittingInfo']['enforceDefaultBackboneCharges'] = "Must be type bool."
 
     # --- Section: parameterFittingInfo ---
     errors['parameterFittingInfo'] = {}

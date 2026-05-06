@@ -152,6 +152,7 @@ class TestConfigDefaults(unittest.TestCase):
         self.assertIn("runScansOn", result["torsionScanInfo"])
         self.assertIn("phiPsi", result["torsionScanInfo"]["runScansOn"])
         self.assertEqual(result["miscInfo"]["seed"], 1818)
+        self.assertFalse(result["chargeFittingInfo"]["enforceDefaultBackboneCharges"])
 
     def test_apply_defaults_sets_charge_groups_to_none_when_missing(self):
         config = {
@@ -212,6 +213,50 @@ class TestConfigDefaults(unittest.TestCase):
         }
 
         self.assertIsNotNone(validate_config.validate_config(config))
+
+    def test_validate_config_requires_full_backbone_aliases_when_enforcing_default_backbone_charges(self):
+        config = {
+            "moleculeInfo": {
+                "charge": 0,
+                "multiplicity": 1,
+                "moleculeName": "PCY",
+                "chargeGroups": None,
+                "backboneAliases": {"N": ["N"], "C": ["C"]},
+            },
+            "pathInfo": {
+                "inputDir": "/tmp",
+                "outputDir": "/tmp",
+                "multiWfnDir": "/tmp",
+                "orcaExe": "/etc/hosts",
+            },
+            "torsionScanInfo": {
+                "runScansOn": {"phiPsi": True},
+                "nConformers": -1,
+                "scanMethod": "XTB2",
+            },
+            "chargeFittingInfo": {
+                "chargeFittingProtocol": "RESP2",
+                "nConformers": -1,
+                "nCoresPerCalculation": 1,
+                "optMethod": "R2SCAN-3c",
+                "singlePointMethod": "wB97X-3c",
+                "enforceDefaultBackboneCharges": True,
+            },
+            "parameterFittingInfo": {
+                "forceField": "AMBER",
+                "maxCosineFunctions": 4,
+                "maxShuffles": 50,
+                "minShuffles": 10,
+                "l2DampingFactor": 0.1,
+                "sagvolSmoothing": True,
+            },
+            "miscInfo": {
+                "availableCpus": 1,
+                "seed": 1818,
+            },
+        }
+
+        self.assertIsNone(validate_config.validate_config(config))
 
 
 class TestPdbChecker(unittest.TestCase):

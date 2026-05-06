@@ -23,6 +23,37 @@ def run_orca(orcaInput, orcaOutput, config):
                 logger.log_subprocess_error(orcaCommand, e)
             raise(e)
 ########################################
+
+def make_orca_input_for_constrained_opt(inputXyz: FilePath,
+                             outDir: DirectoryPath,
+                               moleculeInfo: dict,
+                                 qmMethod: str,
+                                   solvationMethod: str,
+                                     geomOptions:str = None,
+                                     constrainIndexes: list = None) -> FilePath:
+    ## unpack moleculeInfo
+    charge = moleculeInfo["charge"]
+    multiplicity = moleculeInfo["multiplicity"]
+    ## create orca input file
+    orcaInputFile = p.join(outDir, "orca_opt.inp")
+    with open(orcaInputFile, "w") as f:
+        f.write(" # --------------------------------- #\n")
+        f.write(" #  Geometry Optimisation            #\n")
+        f.write(" # --------------------------------- #\n")
+        ## METHOD
+        if solvationMethod is None:
+            f.write(f"! {qmMethod} Opt\n")
+        else:
+            f.write(f"! {qmMethod} {solvationMethod} Opt\n") 
+
+        if not geomOptions is None:
+            f.write(f"%geom\n{geomOptions}\nend\n")
+        ## GEOMETRY
+        f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
+
+    return orcaInputFile
+
+########################################
 def make_orca_input_qmmm_opt(inputXyz: FilePath,
                                 outDir: DirectoryPath,
                                 moleculeInfo: dict,

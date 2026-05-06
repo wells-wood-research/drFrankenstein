@@ -3,12 +3,82 @@ from os import path as p
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from pdbUtils import pdbUtils
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
 class DirectoryPath:
     pass
 from typing import List, Tuple
+
+def create_constraint_geom_option(pdbFile: FilePath, config: dict = None) -> str:   
+    """
+    Creates the geometry option string for constrained optimisation in ORCA
+
+    Args:
+        pdbFile (FilePath): path to the capped PDB file
+        config (dict): drFrankenstein config
+    Returns:
+        constraintGeomOption (str): the geometry option string for constrained optimisation
+    """
+    pdbDf = pdbUtils.pdb2df(pdbFile)
+
+    ## get indexes of non-capping atoms
+    constrainIndexes = pdbDf[~pdbDf["RES_NAME"].isin(["ACE", "NME"])]["ATOM_ID"].tolist()
+    constrainIndexes = [i-1 for i in constrainIndexes] ## convert to 0 indexing for ORCA
+    minIndex = min(constrainIndexes)
+    maxIndex = max(constrainIndexes)
+
+    backboneAliases = {}
+    if config is not None:
+        backboneAliases = config.get("moleculeInfo", {}).get("backboneAliases", {}) or {}
+
+    nTerminalAtomNames = set(backboneAliases.get("N", ["N"]))
+    cTerminalAtomNames = set(backboneAliases.get("C", ["C"]))
+
+    nonCapDf = pdbDf[~pdbDf["RES_NAME"].isin(["ACE", "NME"])].copy()
+    nTerminalDf = nonCapDf[nonCapDf["ATOM_NAME"].isin(nTerminalAtomNames)].copy()
+    cTerminalDf = nonCapDf[nonCapDf["ATOM_NAME"].isin(cTerminalAtomNames)].copy()
+    aceCarbonDf = pdbDf[(pdbDf["RES_NAME"] == "ACE") & (pdbDf["ATOM_NAME"] == "C_C")].copy()
+    nmeNitrogenDf = pdbDf[(pdbDf["RES_NAME"] == "NME") & (pdbDf["ATOM_NAME"] == "N_N")].copy()
+
+    constraintLines = [f"{{ C {minIndex}:{maxIndex} C }}"]
+
+    def _build_attachment_constraints(terminalDf: pd.DataFrame,
+                                      capDf: pd.DataFrame,
+                                      maxBondLength: float = 2.0) -> list:
+        if terminalDf.empty or capDf.empty:
+            return []
+
+        terminalCoords = terminalDf.loc[:, ["X", "Y", "Z"]].astype(float).values
+        capCoords = capDf.loc[:, ["X", "Y", "Z"]].astype(float).values
+        constraints = []
+        seenPairs = set()
+
+        for capRow, capCoord in zip(capDf.itertuples(index=False), capCoords):
+            distances = np.linalg.norm(terminalCoords - capCoord, axis=1)
+            nearestIndex = int(np.argmin(distances))
+            nearestDistance = float(distances[nearestIndex])
+            if nearestDistance > maxBondLength:
+                continue
+
+            terminalAtomId = int(terminalDf.iloc[nearestIndex]["ATOM_ID"]) - 1
+            capAtomId = int(getattr(capRow, "ATOM_ID")) - 1
+            pair = (terminalAtomId, capAtomId)
+            if pair in seenPairs:
+                continue
+            seenPairs.add(pair)
+            constraints.append(f"{{ B {terminalAtomId} {capAtomId} C }}")
+
+        return constraints
+
+    constraintLines.extend(_build_attachment_constraints(nTerminalDf, aceCarbonDf))
+    constraintLines.extend(_build_attachment_constraints(cTerminalDf, nmeNitrogenDf))
+
+    constraintGeomOption = "CONSTRAINTS \n" + "\n".join(constraintLines) + "\nEND"
+
+    return constraintGeomOption
+
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def reorder_atom_ids(pdbDf: pd.DataFrame) -> pd.DataFrame:
     """

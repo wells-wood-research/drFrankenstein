@@ -41,14 +41,15 @@ def optimise_capped_structures(cappedPdb: FilePath, config:dict) -> FilePath:
     xyzFile = p.join(optDir, f"{moleculeName}_capped.xyz")
     file_parsers.pdb2xyz(cappedPdb, xyzFile)
 
-
+    constraintGeomOption = Capping_Assistant.create_constraint_geom_option(cappedPdb, config)
     ## make an ORCA input file for optimisation
     optOrcaInput: FilePath = drOrca.make_orca_input_for_opt(inputXyz=xyzFile,
                                                    outDir = optDir,
                                                    moleculeInfo=config["moleculeInfo"],
                                                    qmMethod="XTB2",
                                                     solvationMethod="ALPB(water)",
-                                                    geomOptions="MaxIter 100")
+                                                    geomOptions=constraintGeomOption,
+                                                    )
     optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
     drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
 

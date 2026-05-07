@@ -486,7 +486,6 @@ def run_charge_fitting(config: dict,
 
         ## Spawn the child process with logfile enabled
         chargeFittingCommand = f"{multiWfnExe} {moldenFile}"
-        print(chargeFittingCommand)
         child = pexpect.spawn(chargeFittingCommand, encoding='utf-8', logfile=logFile)
 
         ####### GET TO RESP MAIN MENU #######
@@ -545,34 +544,30 @@ def run_charge_fitting(config: dict,
 
         totalTickProgress = nConformers * 100.00
         progress_bar = tqdm(total=totalTickProgress, **tqdmBarOptions)
-        waitForEnd = False
         try:
             while True:
-                # Expect either a progress line or the end of the process (EOF)
+                # Track fitting progress and stop once final charges are printed.
                 index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %",                              ## 0 - update progress bar
                                       r" Sum of charges:*",                                              ## 1 - process finished flag
-                                      " 11 Choose ESP type, current: Nuclear + Electronic",             ## 2 - place to stop
-                                      r".*\(y/n\)[\n\r]?",                                              ## 3 - process finished unexpectedly
-                                        pexpect.TIMEOUT],                                               ## 4 - timeout
-                                      timeout=10)
+                                      pexpect.EOF,                                                      ## 2 - process ended before expected output
+                                        pexpect.TIMEOUT],                                               ## 3 - no fresh output yet
+                                      timeout=5)
                 if index == 0:  # Progress line matched
                     progress_bar.update(1)  # Update the tqdm bar by 1 tick
-                
-                elif index == 1:  # (process finished as expected)
-                    print(f"Charge fitting process finished, waiting for last bit of file [{index}]")
-                    waitForEnd = True
-                elif index == 2 and waitForEnd: # (process finished unexpectedly) 
-                    print(f"Charge fitting process finished [{index}]")
+
+                elif index == 1:  # process finished as expected
                     break
-                elif index in [3, 4]:  # Timeout (no output for 5 seconds)
-                    print(f"Charge fitting process ended unexpectedly [{index}]")
+                elif index == 2:  # EOF before expected completion marker
                     break
+                elif index == 3:  # timeout, keep waiting silently
+                    continue
 
         except pexpect.ExceptionPexpect as e:
-            raise f"Charge fitting process failed: {e}" from e
-
-        # Close the child process
-        child.close()
+            raise RuntimeError(f"Charge fitting process failed: {e}") from e
+        finally:
+            progress_bar.close()
+            # We only need the raw text output; parser validates completion.
+            child.close(force=True)
 
     return outputFile
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲

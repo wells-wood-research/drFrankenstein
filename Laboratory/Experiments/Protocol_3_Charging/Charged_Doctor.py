@@ -17,9 +17,9 @@ class DirectoryPath:
 
 ## drFRANKENSTEIN LIBRARIES ##
 from OperatingTools import Timer, cleaner, drLogger
+from OperatingTools import select_conformers
 from . import Charged_Monster
 from . import Charged_Assistant
-from ..Protocol_5_Twisting import Twisted_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Charge Calculation")
@@ -50,7 +50,10 @@ def charge_protocol(config: dict, debug: bool = False) -> dict:
     config = Charged_Assistant.set_up_directories(config, protocol)
 
     ## get conformers via Boltzmann sampling
-    conformerXyzsForCharges = Twisted_Assistant.get_conformer_xyzs(config)
+    conformerXyzsForCharges = select_conformers.select_conformer_xyzs(
+        config,
+        nConformers=config["chargeFittingInfo"]["nConformers"],
+    )
     config["runtimeInfo"]["madeByCharges"]["conformerXyzsForCharges"] = conformerXyzsForCharges
 
     ## For RESP protocol, just run charge fitting once
@@ -478,4 +481,3 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 if __name__ == "__main__":
     raise NotImplementedError
-

@@ -23,6 +23,7 @@ from . import Twisted_Plotter
 from OperatingTools import drSplash
 from OperatingTools import Timer
 from OperatingTools import drLogger
+from OperatingTools import select_conformers
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Torsion Scanning")
@@ -108,7 +109,7 @@ def run_torsion_scanning(torsionTag: str,
     config["runtimeInfo"]["madeByTwisting"]["torsionDirs"].append(torsionDir)
     config["runtimeInfo"]["madeByTwisting"]["torsionTags"].append(torsionTag)
 
-    allConformerXyzs = Twisted_Assistant.get_ordered_conformer_xyzs(config)
+    allConformerXyzs = select_conformers.get_ordered_conformer_xyzs(config)
     nConformersRequested = config["torsionScanInfo"]["nConformers"]
     if nConformersRequested == -1 or nConformersRequested >= len(allConformerXyzs):
         nConformersTarget = len(allConformerXyzs)

@@ -23,6 +23,8 @@ def process_fitting_results(config: dict) -> dict:
         "torsionsToScan": config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"],
         "finalParameters": config["runtimeInfo"]["madeByStitching"]["finalParameters"],
         "maxCosineFunctions": config["parameterFittingInfo"]["maxCosineFunctions"],
+        "progressiveCosineFitting": config["parameterFittingInfo"].get("progressiveCosineFitting", False),
+        "freezeConvergedTorsions": config["parameterFittingInfo"].get("freezeConvergedTorsions", False),
         "sagvolSmoothing": config["parameterFittingInfo"]["sagvolSmoothing"],
         "l2DampingFactor": config["parameterFittingInfo"]["l2DampingFactor"],
     }

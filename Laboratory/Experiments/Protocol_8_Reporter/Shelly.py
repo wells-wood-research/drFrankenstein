@@ -245,6 +245,9 @@ The final partial charges were then calculated using a 60:40weighted average bet
 def write_fitting_methods(config: dict) -> str:
     ## unpack config
     maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
+    fittingProtocol = config["parameterFittingInfo"].get("fittingProtocol", "ROBUST_SPARSE_HARMONIC")
+    progressiveCosineFitting = config["parameterFittingInfo"].get("progressiveCosineFitting", False)
+    freezeConvergedTorsions = config["parameterFittingInfo"].get("freezeConvergedTorsions", False)
     shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
     fittingMethods = dedent(f"""
 To obtain MM force field parameters that accurately represent the energies obtained in the previous torsion-scanning step, \
@@ -255,8 +258,11 @@ QM(total) is the scan energies obtained in the previous torsion-scanning step. \
 MM(total) is obtained by performing single-point energy calculations at the MM level on the geometries from the torsion-scanning step, \
 these calculations were performed in OpenMM using the Langevin integrator. \
 MM(torsion) is obtained directly as a sum of cosine components described in the current parameter file for the torsion of interest. \
-Once the QM(torsion) energies have been calculated, a maximum of {maxCosineFunctions} cosine functions were fit to the energy profile \
-using the Fast Fourier transform method implemented in the numpy library. 
+Once the QM(torsion) energies have been calculated, cosine functions were fit to the energy profile \
+using the configured harmonic fitting protocol. \
+The selected fitting protocol was {fittingProtocol}. \
+{f"The fit was staged from 1 cosine term up to {maxCosineFunctions} terms, only advancing to the next stage after convergence." if progressiveCosineFitting else f"A maximum of {maxCosineFunctions} cosine functions was allowed throughout the fitting procedure."}
+{f" Torsions meeting the per-torsion convergence criterion were frozen and excluded from later updates." if freezeConvergedTorsions else ""}
 The amplitudes, phases and periodicities of the cosine functions were then used to update the parameters for the torsion of interest. \
 As this iterative fitting process proceeds, the evaluation of QM(torsion) for each torsion is calculated using the updated parameters. \
 This process was repeated {shufflesCompleted} times, each time the order of the torsions was shuffled to remove any artifacts from the arbitrary order of the torsions. \

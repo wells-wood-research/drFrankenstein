@@ -6,6 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 from collections import defaultdict
 import gc
+import random
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -86,22 +87,19 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     torsionTags = config["runtimeInfo"]["madeByTwisting"]["torsionTags"]
     maxShuffles = config["parameterFittingInfo"]["maxShuffles"]
     minShuffles = config["parameterFittingInfo"]["minShuffles"]
+    maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
+    fittingProtocol = config["parameterFittingInfo"].get("fittingProtocol", "ROBUST_SPARSE_HARMONIC")
+    progressiveCosineFitting = config["parameterFittingInfo"].get("progressiveCosineFitting", False)
+    freezeConvergedTorsions = config["parameterFittingInfo"].get("freezeConvergedTorsions", False)
     seed = config["miscInfo"]["seed"]
-    # Standardize on maeTol keys, assuming this is the consistent naming in the config
     converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
+    torsionConvergenceTolerance = config["parameterFittingInfo"].get("torsionConvergenceTolerance", converganceTolerance)
 
 
     ## Remove torsions that failed QM scans and shuffle the rest
     torsionTags = Stitching_Assistant.remove_exploded_torsions(config)
-    shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed)
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
-    ## init empties for storing data, counters, and flags
-    meanAverageErrorTorsion = defaultdict(list)
-    meanAverageErrorTotal = defaultdict(list)
-    counter = 1
-    shuffleIndex = 1
-    converged = False
 
     ## Set up Mean Average Error CSV for memory-efficient logging
     maeCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
@@ -110,92 +108,145 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         f.write("shuffle,torsion_tag,mae_torsion,mae_total\n")
 
 
-    convergedTags = []
-    ### START OF FITTING LOOP ###
-    ## Run the torsion fitting protocol, shuffling the torsion order each iteration
-    for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
+    activeTorsionTags = list(torsionTags)
+    frozenTorsionTags = []
+    totalShufflesCompleted = 0
+    firstFittingStep = True
 
-        if torsionTag in convergedTags:
-            continue
+    globalJointFitting = fittingProtocol == "GLOBAL_JOINT_HARMONIC"
 
-        ## Update the config with the current parameters, unless first iteration
-        if counter > 1:
-            if forcefield == "AMBER":
-                 helper_functions.run_tleap_to_make_params(paramFile, config)
+    # OVERFIT_PRUNE_HARMONIC and GLOBAL_JOINT_HARMONIC already avoid
+    # order-dependent staged growth in their own design.
+    if fittingProtocol in ["OVERFIT_PRUNE_HARMONIC", "GLOBAL_JOINT_HARMONIC"]:
+        progressiveCosineFitting = False
+    if globalJointFitting:
+        # Global joint mode is a single global round (all torsions fit from
+        # the same parameter state, then all updates applied together).
+        maxShuffles = 1
+        minShuffles = 1
 
-        ## Use OpenMM to get MM total energies using scan geometries
-        mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
-        ## Extract torsion energies from parameters
-        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile)
-        ## Fit torsion parameters using Fourier Transform
-        torsionParameterDf, maeTorsion, maeTotal = QMMM_fitting_protocol.fit_torsion_parameters(
-            config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
-        )
-        ## Store mean average errors for the current shuffle
-        meanAverageErrorTorsion[torsionTag].append(maeTorsion)
-        meanAverageErrorTotal[torsionTag].append(maeTotal)
+    if progressiveCosineFitting:
+        cosineSchedule = list(range(1, maxCosineFunctions + 1))
+    else:
+        cosineSchedule = [maxCosineFunctions]
 
+    for cosineLimit in cosineSchedule:
+        if not activeTorsionTags:
+            break
 
-        ## Update parameter file 
-        paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
+        stageConverged = False
+        for stageShuffleIndex in tqdm(range(1, maxShuffles + 1), **tqdmBarOptions):
+            if not activeTorsionTags:
+                stageConverged = True
+                break
 
-        ##################### END OF SHUFFLE ####################
-        ## At the end of one shuffle, check for convergence
-        if counter % len(torsionTags) == 0:
-            ## Calculate RMS of MAE for torsion and total fits
+            meanAverageErrorTorsion = defaultdict(list)
+            meanAverageErrorTotal = defaultdict(list)
+
+            globalShuffleIndex = totalShufflesCompleted + stageShuffleIndex
+            workingTorsionTags = list(activeTorsionTags)
+            if not globalJointFitting:
+                derivedSeed = seed * globalShuffleIndex if seed != 0 else globalShuffleIndex
+                random.Random(derivedSeed).shuffle(workingTorsionTags)
+            resetAppliedByTorsion = {}
+            pendingTorsionUpdates = {}
+
+            if forcefield == "AMBER" and not firstFittingStep:
+                helper_functions.run_tleap_to_make_params(paramFile, config)
+
+            for torsionTag in workingTorsionTags:
+                if forcefield == "AMBER" and not firstFittingStep and not globalJointFitting:
+                    helper_functions.run_tleap_to_make_params(paramFile, config)
+
+                mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
+                mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile)
+                torsionParameterDf, maeTorsion, maeTotal, resetApplied = QMMM_fitting_protocol.fit_torsion_parameters(
+                    config,
+                    torsionTag,
+                    mmTotalEnergy,
+                    mmTorsionEnergy,
+                    globalShuffleIndex,
+                    mmCosineComponents,
+                    maxCosineFunctions=cosineLimit,
+                    debug=debug,
+                )
+
+                meanAverageErrorTorsion[torsionTag].append(maeTorsion)
+                meanAverageErrorTotal[torsionTag].append(maeTotal)
+                resetAppliedByTorsion[torsionTag] = resetApplied
+                if globalJointFitting:
+                    pendingTorsionUpdates[torsionTag] = torsionParameterDf
+                else:
+                    paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, globalShuffleIndex)
+                    firstFittingStep = False
+
+            if globalJointFitting:
+                for torsionTag in workingTorsionTags:
+                    torsionParameterDf = pendingTorsionUpdates[torsionTag]
+                    paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, globalShuffleIndex)
+                if len(workingTorsionTags) > 0:
+                    firstFittingStep = False
+
             rmsMaeTorsion = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion)
             rmsMaeTotal = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal)
 
-            ## Write buffer to CSV file and clear it to save memory
             with open(maeCsv, "a") as f:
                 for tag in meanAverageErrorTorsion:
                     maeTorsionTag = meanAverageErrorTorsion[tag][-1]
                     maeTotalTag = meanAverageErrorTotal[tag][-1]
-                    f.write(f"{shuffleIndex},{tag},{maeTorsionTag},{maeTotalTag}\n")
-                f.write(f"{shuffleIndex},All_Torsions,{rmsMaeTorsion},{rmsMaeTotal}\n")
-            
-            ## Check for convergence
-            if Stitching_Assistant.check_mae_convergence(
-                rmsMaeTorsion, rmsMaeTotal, converganceTolerance, 
-            ) and shuffleIndex >= minShuffles:
-                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                converged = True
+                    f.write(f"{globalShuffleIndex},{tag},{maeTorsionTag},{maeTotalTag}\n")
+                f.write(f"{globalShuffleIndex},All_Torsions,{rmsMaeTorsion},{rmsMaeTotal}\n")
+
+            if (
+                freezeConvergedTorsions
+                and torsionConvergenceTolerance is not None
+                and stageShuffleIndex >= minShuffles
+            ):
+                for torsionTag in list(activeTorsionTags):
+                    latestMae = meanAverageErrorTorsion.get(torsionTag, [None])[-1]
+                    if resetAppliedByTorsion.get(torsionTag, False):
+                        continue
+                    if latestMae is not None and latestMae < torsionConvergenceTolerance:
+                        activeTorsionTags.remove(torsionTag)
+                        if torsionTag not in frozenTorsionTags:
+                            frozenTorsionTags.append(torsionTag)
+
+            if not activeTorsionTags:
+                stageConverged = True
+                totalShufflesCompleted = globalShuffleIndex
                 break
-            ## every 10 shuffles, check to see if parameterisation is flatlined
-            if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
+
+            if (
+                Stitching_Assistant.check_mae_convergence(
+                    rmsMaeTorsion, rmsMaeTotal, converganceTolerance
+                )
+                and stageShuffleIndex >= minShuffles
+            ):
+                stageConverged = True
+                totalShufflesCompleted = globalShuffleIndex
+                break
+
+            if stageShuffleIndex % 10 == 0 and stageShuffleIndex >= minShuffles:
                 if Stitching_Assistant.check_mae_flatline(maeCsv):
-                    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                    converged = True
+                    stageConverged = True
+                    totalShufflesCompleted = globalShuffleIndex
                     break
-            # for torsionTag in torsionTags:
-            #     print(meanAverageErrorTorsion[torsionTag], meanAverageErrorTotal[torsionTag])
 
-            #     print("\n", torsionTag, meanAverageErrorTorsion[torsionTag][-1], meanAverageErrorTotal[torsionTag][-1])
-            #     if Stitching_Assistant.check_mae_convergence(
-            #         meanAverageErrorTorsion[torsionTag][-1],
-            #         meanAverageErrorTotal[torsionTag][-1],
-            #         converganceTolTorsion,
-            #         converganceTolTotal):
-            #         convergedTags.append(torsionTag)
+            totalShufflesCompleted = globalShuffleIndex
 
-
-            ## at the end of eacj shuffle, clear memory
             meanAverageErrorTorsion.clear()
             meanAverageErrorTotal.clear()
             del rmsMaeTorsion
             del rmsMaeTotal
             gc.collect()
 
+        if not stageConverged:
+            break
+        if not progressiveCosineFitting:
+            break
 
-            shuffleIndex += 1
-        counter += 1
-
-
-    ### END OF FITTING LOOP ###
-
-    ## If the protocol does not converge, update the config with max shuffles
-    if not converged:
-        config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = maxShuffles
+    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = totalShufflesCompleted
+    config["runtimeInfo"]["madeByStitching"]["frozenTorsionTags"] = frozenTorsionTags
 
     ## Update config with final parameters
     config["runtimeInfo"]["madeByStitching"][param_key] = paramFile

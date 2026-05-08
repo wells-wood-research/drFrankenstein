@@ -252,7 +252,28 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
         "l2DampingFactor": float | None,
         "sagvolSmoothing": bool
     }
+    optionalKeys = {
+        "fittingProtocol": str,
+        "converganceTolerance": float | None,
+        "torsionConvergenceTolerance": float | None,
+        "progressiveCosineFitting": bool,
+        "freezeConvergedTorsions": bool,
+        "amplitudeExplosionRatioThreshold": float | None,
+        "robustHuberDelta": float,
+        "robustLambdaCount": int,
+        "robustLambdaRatio": float,
+        "robustOuterIterations": int,
+        "robustInnerIterations": int,
+        "robustConvergenceTolerance": float,
+        "overfitInitialFunctions": int,
+        "overfitMinFunctions": int,
+        "overfitPruneMaeIncreaseTolerance": float,
+        "overfitRidge": float,
+        "overfitMaxTermAmplitudeFactor": float,
+        "overfitMaxTotalAmplitudeFactor": float,
+    }
     allowedForceFields = ["CHARMM", "AMBER"]
+    allowedFittingProtocols = ["ROBUST_SPARSE_HARMONIC", "OVERFIT_PRUNE_HARMONIC", "GLOBAL_JOINT_HARMONIC"]
 
     for key, expectedType in expectedKeys.items():
         keyPath = f"{sectionName}.{key}"
@@ -272,6 +293,28 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
                 elif key == "sagvolSmoothing" and not isinstance(value, bool):
                     _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
+
+    for key, expectedType in optionalKeys.items():
+        if key in sectionData:
+            keyPath = f"{sectionName}.{key}"
+            value = sectionData[key]
+            if _validate_type(value, expectedType, keyPath, errors):
+                if key in ["converganceTolerance", "torsionConvergenceTolerance"] and isinstance(value, float) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
+                elif key == "fittingProtocol" and isinstance(value, str):
+                    _validate_allowed_values(value, allowedFittingProtocols, keyPath, errors)
+                elif key == "amplitudeExplosionRatioThreshold" and isinstance(value, float) and value <= 1:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be greater than 1.0, but got {value}.")
+                elif key in ["robustHuberDelta", "robustLambdaRatio", "robustConvergenceTolerance", "overfitPruneMaeIncreaseTolerance", "overfitRidge", "overfitMaxTermAmplitudeFactor", "overfitMaxTotalAmplitudeFactor"] and isinstance(value, float) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
+                elif key in ["robustOuterIterations", "robustInnerIterations", "robustLambdaCount", "overfitInitialFunctions", "overfitMinFunctions"] and isinstance(value, int) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
+                elif key == "robustLambdaRatio" and isinstance(value, float) and value >= 1:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be less than 1.0, but got {value}.")
+                elif key == "overfitMaxTotalAmplitudeFactor" and isinstance(value, float):
+                    term_factor = sectionData.get("overfitMaxTermAmplitudeFactor", None)
+                    if isinstance(term_factor, float) and value < term_factor:
+                        _add_error(errors, keyPath, f"Value for '{key}' must be greater than or equal to overfitMaxTermAmplitudeFactor.")
     if (
         "minShuffles" in sectionData
         and "maxShuffles" in sectionData

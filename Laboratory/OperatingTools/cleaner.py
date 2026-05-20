@@ -2,6 +2,7 @@ import os
 from os import path as p
 from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
+import re
 ## CLEAN CODE ##
 class FilePath:
     pass
@@ -227,6 +228,7 @@ def clean_up_stitching(config: dict) -> None:
     qmmmParameterFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
+    finalMoleculeFrcmod = config["runtimeInfo"]["madeByStitching"].get("moleculeFrcmod")
 
 
     if cleanUpLevel in [1, 2, 3]:
@@ -241,15 +243,34 @@ def clean_up_stitching(config: dict) -> None:
             pngsToZip = [p.join(qmmmParameterFittingDir, torsionTag, file) for file in os.listdir(p.join(qmmmParameterFittingDir, torsionTag)) if file.endswith(".png")]
             if cleanUpLevel == 1:
                 zip_files(pngsToZip, p.join(qmmmParameterFittingDir, torsionTag, "PNG_FILES.zip"))
-            ## delete extra PNG files, except the last and MAE ##
-            pngsToDelete = [file for file in pngsToZip if not file.endswith(f"_{shufflesCompleted}.png") and not file.endswith("mean_average_error.png")]
+            ## preserve the latest fitting plot for each torsion, even if it converged early ##
+            finalShufflePattern = re.compile(r"fitting_shuffle_(\d+)(?:_nCosines_(\d+))?\.png$")
+            fittingPlots = [file for file in pngsToZip if finalShufflePattern.search(p.basename(file))]
+            latestFittingPlot = None
+            if fittingPlots:
+                latestFittingPlot = max(
+                    fittingPlots,
+                    key=lambda file: (
+                        int(finalShufflePattern.search(p.basename(file)).group(1)),
+                        int(finalShufflePattern.search(p.basename(file)).group(2) or 0),
+                    ),
+                )
+            ## delete extra PNG files, except the latest fitting plot and MAE ##
+            pngsToDelete = [
+                file for file in pngsToZip
+                if not file.endswith("mean_average_error.png")
+                and file != latestFittingPlot
+            ]
             for png in pngsToDelete:
                 os.remove(p.join(qmmmParameterFittingDir, torsionTag, png))
         ## zip PRM / FRCMOD files
         paramFiles = [p.join(moleculeParameterDir, file) for file in os.listdir(moleculeParameterDir) 
                       if file.endswith(".prm") or file.endswith(".frcmod")]
         ## remove the last PRM / FRCMOD file
-        paramFiles = [file for file in paramFiles if not p.splitext(file)[0].endswith(f"_{shufflesCompleted}")]
+        paramFiles = [
+            file for file in paramFiles
+            if file != finalMoleculeFrcmod and not p.splitext(file)[0].endswith(f"_{shufflesCompleted}")
+        ]
                 
         if cleanUpLevel == 1:
             zip_files(paramFiles, p.join(moleculeParameterDir, "PARAM_FILES.zip"))

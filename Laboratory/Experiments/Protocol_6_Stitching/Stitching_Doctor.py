@@ -24,6 +24,159 @@ from . import Stitching_Assistant
 from . import Stitching_Plotter
 from OperatingTools import Timer, cleaner, drLogger
 
+
+def _run_fitting_loop(
+    config: dict,
+    forcefield: str,
+    helper_functions,
+    total_protocol,
+    torsion_protocol,
+    update_param_func,
+    paramFile: FilePath,
+    torsionTags: list,
+    shuffledTorsionTags: list,
+    tqdmBarOptions: dict,
+    minShuffles: int,
+    converganceTolerance,
+    maeCsv: FilePath,
+    debug: bool,
+) -> tuple[FilePath, bool]:
+    ## init empties for storing data, counters, and flags
+    meanAverageErrorTorsion = defaultdict(list)
+    meanAverageErrorTotal = defaultdict(list)
+    fitScoreTorsion = defaultdict(list)
+    fitScoreTotal = defaultdict(list)
+    torsionMetricsByTag = {}
+    totalMetricsByTag = {}
+    counter = 1
+    shuffleIndex = 1
+    converged = False
+
+    convergedTags = set()
+    if not torsionTags:
+        config["runtimeInfo"]["madeByStitching"]["convergedTags"] = []
+        return paramFile, True
+
+    ## Run the torsion fitting protocol, shuffling the torsion order each iteration
+    for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
+
+        if torsionTag in convergedTags:
+            continue
+
+        ## Update the config with the current parameters, unless first iteration
+        if counter > 1:
+            if forcefield == "AMBER":
+                helper_functions.run_tleap_to_make_params(paramFile, config)
+
+        ## Use OpenMM to get MM total energies using scan geometries
+        mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
+        ## Extract torsion energies from parameters
+        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile)
+        ## Fit torsion parameters using Fourier Transform
+        torsionParameterDf, torsionMetrics, totalMetrics, maeTorsion, maeTotal, torsionConverged = QMMM_fitting_protocol.fit_torsion_parameters(
+            config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
+        )
+        ## Store mean average errors for the current shuffle
+        meanAverageErrorTorsion[torsionTag].append(maeTorsion)
+        meanAverageErrorTotal[torsionTag].append(maeTotal)
+        fitScoreTorsion[torsionTag].append(torsionMetrics["composite_score"])
+        fitScoreTotal[torsionTag].append(totalMetrics["composite_score"])
+        torsionMetricsByTag[torsionTag] = torsionMetrics
+        totalMetricsByTag[torsionTag] = totalMetrics
+
+        ## Update parameter file
+        paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
+
+        ## Freeze torsions as soon as the torsion score is within tolerance.
+        if torsionConverged:
+            print(
+                f"CONVERGED: {torsionTag} at shuffle {shuffleIndex} "
+                f"(nCosines={config['runtimeInfo']['madeByStitching']['maxTorsions']}, "
+                f"torsion_score={torsionMetrics['composite_score']:.3f})"
+            )
+            convergedTags.add(torsionTag)
+
+        ##################### END OF SHUFFLE ####################
+        ## At the end of one shuffle, check for convergence
+        if counter % len(torsionTags) == 0:
+            ## Calculate RMS of MAE for torsion and total fits
+            rmsMaeTorsion = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion)
+            rmsMaeTotal = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal)
+            rmsScoreTorsion = Stitching_Assistant.rms_of_mae_dict(fitScoreTorsion)
+            rmsScoreTotal = Stitching_Assistant.rms_of_mae_dict(fitScoreTotal)
+
+            ## Write buffer to CSV file and clear it to save memory
+            with open(maeCsv, "a") as f:
+                for tag in meanAverageErrorTorsion:
+                    maeTorsionTag = meanAverageErrorTorsion[tag][-1]
+                    maeTotalTag = meanAverageErrorTotal[tag][-1]
+                    scoreTorsionTag = fitScoreTorsion[tag][-1]
+                    scoreTotalTag = fitScoreTotal[tag][-1]
+                    torsionMetricsTag = torsionMetricsByTag[tag]
+                    totalMetricsTag = totalMetricsByTag[tag]
+                    f.write(
+                        f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},{tag},"
+                        f"{maeTorsionTag},{maeTotalTag},{scoreTorsionTag},{scoreTotalTag},"
+                        f"{torsionMetricsTag['location_score']},{torsionMetricsTag['amplitude_score']},"
+                        f"{torsionMetricsTag['stationary_count_score']},{torsionMetricsTag['normalized_mae_score']},"
+                        f"{totalMetricsTag['location_score']},{totalMetricsTag['amplitude_score']},"
+                        f"{totalMetricsTag['stationary_count_score']},{totalMetricsTag['normalized_mae_score']}\n"
+                    )
+                tagCount = max(len(torsionMetricsByTag), 1)
+                summaryTorsionLocation = sum(m["location_score"] for m in torsionMetricsByTag.values()) / tagCount
+                summaryTorsionAmplitude = sum(m["amplitude_score"] for m in torsionMetricsByTag.values()) / tagCount
+                summaryTorsionCount = sum(m["stationary_count_score"] for m in torsionMetricsByTag.values()) / tagCount
+                summaryTorsionNormMae = sum(m["normalized_mae_score"] for m in torsionMetricsByTag.values()) / tagCount
+                summaryTotalLocation = sum(m["location_score"] for m in totalMetricsByTag.values()) / tagCount
+                summaryTotalAmplitude = sum(m["amplitude_score"] for m in totalMetricsByTag.values()) / tagCount
+                summaryTotalCount = sum(m["stationary_count_score"] for m in totalMetricsByTag.values()) / tagCount
+                summaryTotalNormMae = sum(m["normalized_mae_score"] for m in totalMetricsByTag.values()) / tagCount
+                f.write(
+                    f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},All_Torsions,"
+                    f"{rmsMaeTorsion},{rmsMaeTotal},{rmsScoreTorsion},{rmsScoreTotal},"
+                    f"{summaryTorsionLocation},{summaryTorsionAmplitude},{summaryTorsionCount},{summaryTorsionNormMae},"
+                    f"{summaryTotalLocation},{summaryTotalAmplitude},{summaryTotalCount},{summaryTotalNormMae}\n"
+                )
+
+            ## Check for convergence
+            if Stitching_Assistant.check_mae_convergence(
+                rmsScoreTorsion, rmsScoreTotal, converganceTolerance,
+            ) and shuffleIndex >= minShuffles:
+                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
+                converged = True
+                break
+            ## every 10 shuffles, check to see if parameterisation is flatlined
+            if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
+                if Stitching_Assistant.check_mae_flatline(maeCsv):
+                    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
+                    converged = True
+                    break
+
+            if len(convergedTags) == len(torsionTags):
+                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
+                converged = True
+                break
+
+            ## at the end of each shuffle, clear memory
+            meanAverageErrorTorsion.clear()
+            meanAverageErrorTotal.clear()
+            fitScoreTorsion.clear()
+            fitScoreTotal.clear()
+            torsionMetricsByTag.clear()
+            totalMetricsByTag.clear()
+            del rmsMaeTorsion
+            del rmsMaeTotal
+            del rmsScoreTorsion
+            del rmsScoreTotal
+            gc.collect()
+
+            shuffleIndex += 1
+        counter += 1
+
+    config["runtimeInfo"]["madeByStitching"]["convergedTags"] = sorted(convergedTags)
+    return paramFile, converged
+
+
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Torsion Parameter Fitting")
 @Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
@@ -90,108 +243,59 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     # Standardize on maeTol keys, assuming this is the consistent naming in the config
     converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
 
+    ## duplicate maxTorsions to runtimeInfo for easy access
+    config["runtimeInfo"]["madeByStitching"]["maxTorsions"] = config["parameterFittingInfo"]["maxCosineFunctions"]
+
 
     ## Remove torsions that failed QM scans and shuffle the rest
-    torsionTags = Stitching_Assistant.remove_exploded_torsions(config)
+    allTorsionTags = Stitching_Assistant.remove_exploded_torsions(config)
+    torsionTags = list(allTorsionTags)
     shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed)
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
-    ## init empties for storing data, counters, and flags
-    meanAverageErrorTorsion = defaultdict(list)
-    meanAverageErrorTotal = defaultdict(list)
-    counter = 1
-    shuffleIndex = 1
-    converged = False
 
     ## Set up Mean Average Error CSV for memory-efficient logging
     maeCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
     config["runtimeInfo"]["madeByStitching"]["maeCsv"] = maeCsv
     with open(maeCsv, "w") as f:
-        f.write("shuffle,torsion_tag,mae_torsion,mae_total\n")
-
-
-    convergedTags = []
-    ### START OF FITTING LOOP ###
-    ## Run the torsion fitting protocol, shuffling the torsion order each iteration
-    for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
-
-        if torsionTag in convergedTags:
-            continue
-
-        ## Update the config with the current parameters, unless first iteration
-        if counter > 1:
-            if forcefield == "AMBER":
-                 helper_functions.run_tleap_to_make_params(paramFile, config)
-
-        ## Use OpenMM to get MM total energies using scan geometries
-        mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
-        ## Extract torsion energies from parameters
-        mmTorsionEnergy, mmCosineComponents = torsion_protocol.get_MM_torsion_energies(config, torsionTag, paramFile)
-        ## Fit torsion parameters using Fourier Transform
-        torsionParameterDf, maeTorsion, maeTotal = QMMM_fitting_protocol.fit_torsion_parameters(
-            config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
+        f.write(
+            "shuffle,n_cosines,torsion_tag,mae_torsion,mae_total,fit_score_torsion,fit_score_total,"
+            "torsion_location_score,torsion_amplitude_score,torsion_stationary_count_score,torsion_normalized_mae_score,"
+            "total_location_score,total_amplitude_score,total_stationary_count_score,total_normalized_mae_score\n"
         )
-        ## Store mean average errors for the current shuffle
-        meanAverageErrorTorsion[torsionTag].append(maeTorsion)
-        meanAverageErrorTotal[torsionTag].append(maeTotal)
 
 
-        ## Update parameter file 
-        paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
+    cosineScheme = range(2, config["parameterFittingInfo"]["maxCosineFunctions"]+1)
+    cosineScheme = [config["parameterFittingInfo"]["maxCosineFunctions"]]
+    for nCosines in cosineScheme:
+        config["runtimeInfo"]["madeByStitching"]["maxTorsions"] = nCosines
+        paramFile, converged = _run_fitting_loop(
+            config=config,
+            forcefield=forcefield,
+            helper_functions=helper_functions,
+            total_protocol=total_protocol,
+            torsion_protocol=torsion_protocol,
+            update_param_func=update_param_func,
+            paramFile=paramFile,
+            torsionTags=torsionTags,
+            shuffledTorsionTags=shuffledTorsionTags,
+            tqdmBarOptions=tqdmBarOptions,
+            minShuffles=minShuffles,
+            converganceTolerance=converganceTolerance,
+            maeCsv=maeCsv,
+            debug=debug,
+        )
 
-        ##################### END OF SHUFFLE ####################
-        ## At the end of one shuffle, check for convergence
-        if counter % len(torsionTags) == 0:
-            ## Calculate RMS of MAE for torsion and total fits
-            rmsMaeTorsion = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTorsion)
-            rmsMaeTotal = Stitching_Assistant.rms_of_mae_dict(meanAverageErrorTotal)
+        convergedTags = set(config["runtimeInfo"]["madeByStitching"].get("convergedTags", []))
+        torsionTags = [tag for tag in torsionTags if tag not in convergedTags]
+        torsionTags = Stitching_Assistant._remove_converged_torsion_tags(maeCsv, converganceTolerance, torsionTags, topN = 2)
+        shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed) if torsionTags else []
 
-            ## Write buffer to CSV file and clear it to save memory
-            with open(maeCsv, "a") as f:
-                for tag in meanAverageErrorTorsion:
-                    maeTorsionTag = meanAverageErrorTorsion[tag][-1]
-                    maeTotalTag = meanAverageErrorTotal[tag][-1]
-                    f.write(f"{shuffleIndex},{tag},{maeTorsionTag},{maeTotalTag}\n")
-                f.write(f"{shuffleIndex},All_Torsions,{rmsMaeTorsion},{rmsMaeTotal}\n")
-            
-            ## Check for convergence
-            if Stitching_Assistant.check_mae_convergence(
-                rmsMaeTorsion, rmsMaeTotal, converganceTolerance, 
-            ) and shuffleIndex >= minShuffles:
-                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                converged = True
-                break
-            ## every 10 shuffles, check to see if parameterisation is flatlined
-            if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
-                if Stitching_Assistant.check_mae_flatline(maeCsv):
-                    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                    converged = True
-                    break
-            # for torsionTag in torsionTags:
-            #     print(meanAverageErrorTorsion[torsionTag], meanAverageErrorTotal[torsionTag])
+        print("Remaining torsions after convergence check:", torsionTags)
+        ## run again with the remaining torsions to try to get more to converge, but only if some have not converged and we have not exceeded max shuffles
 
-            #     print("\n", torsionTag, meanAverageErrorTorsion[torsionTag][-1], meanAverageErrorTotal[torsionTag][-1])
-            #     if Stitching_Assistant.check_mae_convergence(
-            #         meanAverageErrorTorsion[torsionTag][-1],
-            #         meanAverageErrorTotal[torsionTag][-1],
-            #         converganceTolTorsion,
-            #         converganceTolTotal):
-            #         convergedTags.append(torsionTag)
-
-
-            ## at the end of eacj shuffle, clear memory
-            meanAverageErrorTorsion.clear()
-            meanAverageErrorTotal.clear()
-            del rmsMaeTorsion
-            del rmsMaeTotal
-            gc.collect()
-
-
-            shuffleIndex += 1
-        counter += 1
-
-
-    ### END OF FITTING LOOP ###
+        if not torsionTags:
+            break
 
     ## If the protocol does not converge, update the config with max shuffles
     if not converged:
@@ -201,11 +305,11 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     config["runtimeInfo"]["madeByStitching"][param_key] = paramFile
 
     ##TODO: construct final parameters
-    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = Stitching_Assistant.construct_final_params(config, paramFile, param_extraction_function, torsionTags)
+    config["runtimeInfo"]["madeByStitching"]["finalParameters"] = Stitching_Assistant.construct_final_params(config, paramFile, param_extraction_function, allTorsionTags)
     
 
     ## Run plotting protocols
-    for torsionTag in torsionTags:
+    for torsionTag in allTorsionTags:
         fittingGif = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag, "torsion_fitting.gif")
         torsionFittingDir = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], torsionTag)
         ## Create a GIF for each torsion being fitted

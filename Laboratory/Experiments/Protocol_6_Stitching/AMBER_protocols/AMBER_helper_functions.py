@@ -35,7 +35,7 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
     mmTorsionEnergy = np.zeros_like(angle)
     ## loop through terms for torsion parameter
     mmCosineComponents = {}
-    for parameter in mmTorsionParameters:
+    for termIndex, parameter in enumerate(mmTorsionParameters, start=1):
         ## extract params from dict
         potentialConstant = float(parameter["k"])
         # inverseDivisionFactor = float(parameter["multiplicity"])
@@ -45,7 +45,8 @@ def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
         cosineComponent: np.array = (potentialConstant) * (1 + np.cos(periodicityNumber * angle - phase)) 
         ## add to torsion energy
         mmTorsionEnergy += cosineComponent
-        mmCosineComponents[periodicityNumber] = cosineComponent
+        componentKey = f"term_{termIndex}_n{periodicityNumber:g}"
+        mmCosineComponents[componentKey] = cosineComponent
         
     return mmTorsionEnergy, mmCosineComponents
 

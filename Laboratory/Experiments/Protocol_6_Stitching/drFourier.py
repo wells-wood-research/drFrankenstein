@@ -15,11 +15,14 @@ class DirPath:
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+from . import Stitching_Assistant
+
+
 def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, config):
                             #    sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):    
 
     ## unpack config
-    maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
+    maxCosineFunctions = config["runtimeInfo"]["madeByStitching"]["maxTorsions"]
     l2Damping = config["parameterFittingInfo"]["l2DampingFactor"]
     forceField = config["parameterFittingInfo"]["forceField"]
     sampleSpacing = 10
@@ -41,19 +44,25 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, c
     paramDf: pd.DataFrame = convert_params_to_amber_charmm_format(fourierDf)
     if forceField == "AMBER":
         ## construct cosine components from parameters
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(paramDf, angle, maxCosineFunctions)
+        selectedParamDf, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(
+            paramDf, angle, maxCosineFunctions, qmTorsionEnergy
+        )
 
     elif forceField == "CHARMM":
-        reconstructedSignal, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(paramDf, angle, maxCosineFunctions)
+        selectedParamDf, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(
+            paramDf, angle, maxCosineFunctions, qmTorsionEnergy
+        )
 
     ## write data to csv file
     outCsv: FilePath = p.join(torsionFittingDir, f"{torsionTag}.csv")
-    paramDf.iloc[:nFunctionsUsed].to_csv(outCsv)
+    selectedParamDf.to_csv(outCsv)
 
+    reconstructedSignal = np.sum([component for _, component in cosineComponents], axis=0) if cosineComponents else np.zeros(len(qmTorsionEnergy))
     ## calculate mean average error
     meanAverageError = np.mean(np.abs(reconstructedSignal - qmTorsionEnergy))
+    fitScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, reconstructedSignal)
 
-    return paramDf.iloc[:nFunctionsUsed], cosineComponents, meanAverageError   
+    return selectedParamDf, cosineComponents, reconstructedSignal, meanAverageError, fitScore   
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
@@ -105,82 +114,51 @@ def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
     return charmmDf
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components_CHARMM(charmmParamDf: pd.DataFrame,
-                                 angle: np.array,
-                                     maxFunctions: int,
-                                       tolerance: float = 0.2) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
-    
-    amplitudes = charmmParamDf["Amplitude"]
-    periods = charmmParamDf["Period"]
-    phases = charmmParamDf["Phase"]
-
-    sampleSpacing = 10
-    signalLength = 36
-    
-    # Angle array
-    angle = np.arange(signalLength) * sampleSpacing  # Shape: (N,)
-    
-    # Initialize reconstructed signal
-    reconstructedSignal = np.zeros(signalLength)
-    previousSignal = np.zeros(signalLength)
-
-    ## init mean average error
-    meanAverageError = np.inf
-    ## collect cosine components for plotting
-    cosineComponents = []
-    # Construct each cosine component
-    while True:
-        for nFunctionsUsed in range(1, maxFunctions + 1):
-            charmmComponent = amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
-            previousSignal = reconstructedSignal.copy()
-            reconstructedSignal += charmmComponent
-            meanAverageError = np.mean(np.abs(reconstructedSignal - previousSignal))
-            cosineComponents.append((nFunctionsUsed, charmmComponent))
-            if meanAverageError < tolerance:
-                break
-        break  # Exit the while loop after the for loop completes or breaks
-
-    return reconstructedSignal, cosineComponents, nFunctionsUsed
+def construct_cosine_components_CHARMM(
+    charmmParamDf: pd.DataFrame,
+    angle: np.array,
+    maxFunctions: int,
+    qmTorsionEnergy: np.array,
+    tolerance: float = 0.2,
+) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+    return _construct_cosine_components(charmmParamDf, maxFunctions, qmTorsionEnergy)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def construct_cosine_components_AMBER(amberParamDf: pd.DataFrame,
-                                 angle: np.array,
-                                     maxFunctions: int,
-                                       tolerance: float = 0.05) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
-    
+def construct_cosine_components_AMBER(
+    amberParamDf: pd.DataFrame,
+    angle: np.array,
+    maxFunctions: int,
+    qmTorsionEnergy: np.array,
+    tolerance: float = 0.05,
+) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+    return _construct_cosine_components(amberParamDf, maxFunctions, qmTorsionEnergy)
 
-    amplitudes = amberParamDf["Amplitude"]
-    phases = amberParamDf["Phase"]
-    periods = amberParamDf["Period"]
 
-
+def _construct_cosine_components(
+    paramDf: pd.DataFrame,
+    maxFunctions: int,
+    qmTorsionEnergy: np.array,
+) -> Tuple[pd.DataFrame, List[Tuple[float, np.array]], int]:
     sampleSpacing = 10
-    signalLength = 36
-    
-    # Angle array
-    angle = np.arange(signalLength) * sampleSpacing  # Shape: (N,)
-    
-    # Initialize reconstructed signal
+    signalLength = len(qmTorsionEnergy)
+    angle = np.arange(signalLength) * sampleSpacing
+
     reconstructedSignal = np.zeros(signalLength)
-    previousSignal = np.zeros(signalLength)
-
-    ## init mean average error
-    meanAverageError = np.inf
-    ## collect cosine components for plotting
+    bestScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, reconstructedSignal)
     cosineComponents = []
-    # Construct each cosine component
-    while True:
-        for nFunctionsUsed in range(1, maxFunctions+1):
-            amberComponent =  amplitudes[nFunctionsUsed] * (1 + np.cos(np.radians(periods[nFunctionsUsed] * angle - phases[nFunctionsUsed])))
+    selectedRowIndexes = []
 
-            previousSignal = reconstructedSignal.copy()
-            reconstructedSignal += amberComponent
-            meanAverageError =  np.mean(np.abs(reconstructedSignal - previousSignal))
-            cosineComponents.append((nFunctionsUsed , amberComponent))
-            if meanAverageError < tolerance:
-                break
-        # if meanAverageError < tolerance:
-        break
-    return reconstructedSignal, cosineComponents, nFunctionsUsed
+    for _, row in paramDf.iloc[:maxFunctions].iterrows():
+        candidateComponent = row["Amplitude"] * (1 + np.cos(np.radians(row["Period"] * angle - row["Phase"])))
+        candidateSignal = reconstructedSignal + candidateComponent
+        candidateScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, candidateSignal)
+        if candidateScore < bestScore:
+            reconstructedSignal = candidateSignal
+            bestScore = candidateScore
+            selectedRowIndexes.append(row.name)
+            cosineComponents.append((len(cosineComponents) + 1, candidateComponent))
+
+    selectedParamDf = paramDf.loc[selectedRowIndexes]
+    return selectedParamDf, cosineComponents, len(cosineComponents)
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:

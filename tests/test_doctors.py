@@ -6,6 +6,7 @@ import types
 import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
+import numpy as np
 
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -177,6 +178,7 @@ from Laboratory.Experiments.Protocol_3_Charging import Charged_Doctor
 from Laboratory.Experiments.Protocol_4_Assembly import Assembly_Doctor
 from Laboratory.Experiments.Protocol_5_Twisting import Twisted_Doctor
 from Laboratory.Experiments.Protocol_6_Stitching import Stitching_Doctor
+from Laboratory.Experiments.Protocol_6_Stitching.AMBER_protocols import AMBER_total_protocol
 from Laboratory.Experiments.Protocol_7_Creation import AMBER_creation
 from Laboratory.Experiments.Protocol_8_Reporter import Reporting_Doctor
 
@@ -199,6 +201,7 @@ class DoctorTestBase(unittest.TestCase):
             },
             "parameterFittingInfo": {
                 "forceField": "AMBER",
+                "maxCosineFunctions": 2,
                 "maxShuffles": 1,
                 "minShuffles": 1,
                 "converganceTolerance": 999.0,
@@ -310,6 +313,22 @@ class TestTwistedDoctor(DoctorTestBase):
 
 
 class TestStitchingDoctor(DoctorTestBase):
+    def test_profile_fit_score_prefers_matching_curve_shape(self):
+        qm = np.array([0.0, 2.0, 0.0, 1.5, 0.0, 1.0, 0.0])
+        same = qm.copy()
+        shifted = np.array([0.0, 0.0, 2.0, 0.0, 1.5, 0.0, 1.0])
+        flat = np.zeros_like(qm)
+
+        same_score = Stitching_Doctor.Stitching_Assistant.calculate_profile_fit_score(qm, same, sampleSpacingDegrees=10)
+        shifted_score = Stitching_Doctor.Stitching_Assistant.calculate_profile_fit_score(qm, shifted, sampleSpacingDegrees=10)
+        flat_metrics = Stitching_Doctor.Stitching_Assistant.calculate_profile_fit_metrics(qm, flat, sampleSpacingDegrees=10)
+
+        self.assertAlmostEqual(same_score, 0.0)
+        self.assertGreater(shifted_score, same_score)
+        self.assertEqual(flat_metrics["amplitude_score"], 1.0)
+        self.assertEqual(flat_metrics["stationary_count_score"], 1.0)
+        self.assertGreaterEqual(flat_metrics["composite_score"], 1.0)
+
     def test_torsion_fitting_protocol_converges_single_shuffle(self):
         with tempfile.TemporaryDirectory() as tmp:
             cfg = self.make_base_config(tmp)
@@ -325,7 +344,7 @@ class TestStitchingDoctor(DoctorTestBase):
                  patch.object(Stitching_Doctor.Stitching_Assistant, "init_tqdm_bar_options", return_value={"disable": True}), \
                  patch.object(Stitching_Doctor.AMBER_total_protocol, "get_MM_total_energies", return_value=[0.0]), \
                  patch.object(Stitching_Doctor.AMBER_torsion_protocol, "get_MM_torsion_energies", return_value=([0.0], [])), \
-                 patch.object(Stitching_Doctor.QMMM_fitting_protocol, "fit_torsion_parameters", return_value=(MagicMock(), 0.0, 0.0)), \
+                  patch.object(Stitching_Doctor.QMMM_fitting_protocol, "fit_torsion_parameters", return_value=(MagicMock(), {"composite_score": 0.0, "location_score": 0.0, "amplitude_score": 0.0, "stationary_count_score": 0.0, "normalized_mae_score": 0.0}, {"composite_score": 0.0, "location_score": 0.0, "amplitude_score": 0.0, "stationary_count_score": 0.0, "normalized_mae_score": 0.0}, 0.0, 0.0, True)), \
                  patch.object(Stitching_Doctor.AMBER_helper_functions, "update_frcmod", return_value=os.path.join(tmp, "updated.frcmod")), \
                  patch.object(Stitching_Doctor.Stitching_Assistant, "check_mae_convergence", return_value=True), \
                  patch.object(Stitching_Doctor.Stitching_Assistant, "construct_final_params", return_value={"t1": "ok"}), \
@@ -337,6 +356,105 @@ class TestStitchingDoctor(DoctorTestBase):
 
             self.assertTrue(result["checkpointInfo"]["torsionFittingComplete"])
             self.assertEqual(result["runtimeInfo"]["madeByStitching"]["shufflesCompleted"], 1)
+
+    def test_torsion_fitting_protocol_skips_converged_torsions_in_later_shuffles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            cfg["parameterFittingInfo"]["maxCosineFunctions"] = 2
+            cfg["parameterFittingInfo"]["maxShuffles"] = 2
+            cfg["parameterFittingInfo"]["minShuffles"] = 1
+            cfg["parameterFittingInfo"]["converganceTolerance"] = 1.0
+            cfg["runtimeInfo"]["madeByTwisting"]["torsionTags"] = ["t1", "t2"]
+            cfg["runtimeInfo"]["madeByStitching"] = {}
+
+            def _fit_torsion_parameters(*args, **kwargs):
+                torsion_tag = args[1]
+                if torsion_tag == "t1":
+                    metric = {"composite_score": 0.0, "location_score": 0.0, "amplitude_score": 0.0, "stationary_count_score": 0.0, "normalized_mae_score": 0.0}
+                    return MagicMock(), metric, metric, 0.0, 0.0, True
+                metric = {"composite_score": 5.0, "location_score": 5.0, "amplitude_score": 5.0, "stationary_count_score": 5.0, "normalized_mae_score": 5.0}
+                return MagicMock(), metric, metric, 5.0, 5.0, False
+
+            with patch.object(Stitching_Doctor.Stitching_Assistant, "sort_out_directories", side_effect=lambda c: {**c, "runtimeInfo": {**c["runtimeInfo"], "madeByStitching": {"qmmmParameterFittingDir": tmp}}}), \
+                 patch.object(Stitching_Doctor.AMBER_helper_functions, "copy_assembled_parameters", side_effect=lambda c: c), \
+                 patch.object(Stitching_Doctor.AMBER_helper_functions, "edit_mol2_partial_charges"), \
+                 patch.object(Stitching_Doctor.AMBER_helper_functions, "run_tleap_to_make_params"), \
+                 patch.object(Stitching_Doctor.Stitching_Assistant, "remove_exploded_torsions", return_value=["t1", "t2"]), \
+                 patch.object(Stitching_Doctor.Stitching_Assistant, "shuffle_torsion_tags", return_value=["t1", "t2", "t1", "t2"]), \
+                 patch.object(Stitching_Doctor.Stitching_Assistant, "init_tqdm_bar_options", return_value={"disable": True}), \
+                 patch.object(Stitching_Doctor.AMBER_total_protocol, "get_MM_total_energies", return_value=[0.0]), \
+                 patch.object(Stitching_Doctor.AMBER_torsion_protocol, "get_MM_torsion_energies", return_value=([0.0], [])), \
+                 patch.object(Stitching_Doctor.QMMM_fitting_protocol, "fit_torsion_parameters", side_effect=_fit_torsion_parameters) as fit, \
+                 patch.object(Stitching_Doctor.AMBER_helper_functions, "update_frcmod", return_value=os.path.join(tmp, "updated.frcmod")) as update, \
+                 patch.object(Stitching_Doctor.Stitching_Assistant, "construct_final_params", return_value={"t1": "ok", "t2": "ok"}), \
+                 patch.object(Stitching_Doctor.Stitching_Plotter, "make_gif"), \
+                 patch.object(Stitching_Doctor.Stitching_Plotter, "plot_mean_average_error"), \
+                 patch.object(Stitching_Doctor.Stitching_Plotter, "plot_run_mean_average_error"), \
+                 patch.object(Stitching_Doctor.cleaner, "clean_up_stitching"):
+                result = Stitching_Doctor.torsion_fitting_protocol.__wrapped__(config=copy.deepcopy(cfg), debug=True)
+
+            self.assertTrue(result["checkpointInfo"]["torsionFittingComplete"])
+            self.assertEqual(fit.call_count, 3)
+            self.assertEqual(update.call_count, 3)
+            self.assertEqual(result["runtimeInfo"]["madeByStitching"]["convergedTags"], ["t1"])
+
+    def test_clean_up_stitching_preserves_final_outputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            qmmm_dir = os.path.join(tmp, "qmmm")
+            molecule_dir = os.path.join(tmp, "molecule")
+            torsion_dir = os.path.join(qmmm_dir, "t1")
+            os.makedirs(torsion_dir, exist_ok=True)
+            os.makedirs(molecule_dir, exist_ok=True)
+            cfg["miscInfo"]["cleanUpLevel"] = 3
+            cfg["runtimeInfo"]["madeByStitching"] = {
+                "qmmmParameterFittingDir": qmmm_dir,
+                "moleculeParameterDir": molecule_dir,
+                "shufflesCompleted": 5,
+                "moleculeFrcmod": os.path.join(molecule_dir, "PCY_2.frcmod"),
+            }
+
+            final_png = os.path.join(torsion_dir, "fitting_shuffle_4_nCosines_2.png")
+            extra_png = os.path.join(torsion_dir, "fitting_shuffle_1_nCosines_2.png")
+            final_frcmod = os.path.join(molecule_dir, "PCY_2.frcmod")
+            extra_frcmod = os.path.join(molecule_dir, "PCY_1.frcmod")
+            for path in [final_png, extra_png, final_frcmod, extra_frcmod]:
+                with open(path, "w") as handle:
+                    handle.write("x")
+
+            Stitching_Doctor.cleaner.clean_up_stitching(cfg)
+
+            self.assertTrue(os.path.exists(final_png))
+            self.assertTrue(os.path.exists(final_frcmod))
+            self.assertFalse(os.path.exists(extra_png))
+            self.assertFalse(os.path.exists(extra_frcmod))
+
+
+class TestAmberTotalProtocol(DoctorTestBase):
+    def test_minimisation_uses_current_torsion_indexes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            scan_dir = os.path.join(tmp, "scan")
+            os.makedirs(scan_dir, exist_ok=True)
+            for idx in range(2):
+                with open(os.path.join(scan_dir, f"orca_scan.{idx:03d}.xyz"), "w") as handle:
+                    handle.write("1\ncomment\nH 0.0 0.0 0.0\n")
+
+            torsion_indexes = [4, 5, 6, 7]
+            cfg["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]["t1"]["ATOM_INDEXES"] = torsion_indexes
+
+            with patch.object(AMBER_total_protocol.file_parsers, "convert_traj_xyz_to_pdb", return_value=["a.pdb", "b.pdb"]) as convert, \
+                 patch.object(AMBER_total_protocol, "run_mm_constrained_em", return_value=[("0", 1.5), ("1", 2.5)]) as minimise, \
+                 patch.object(AMBER_total_protocol.Stitching_Assistant, "get_scan_angles_from_orca_inp", return_value=[0, 10]), \
+                 patch.object(AMBER_total_protocol.Stitching_Assistant, "rescale_angles_0_360", side_effect=lambda x: x):
+                result = AMBER_total_protocol.get_singlepoint_energies_for_torsion_scan(
+                    0, scan_dir, tmp, cfg["runtimeInfo"]["madeByCapping"]["cappedPdb"], "fake.prmtop", torsion_indexes, debug=True
+                )
+
+            convert.assert_called_once()
+            minimise.assert_called_once_with(["a.pdb", "b.pdb"], "fake.prmtop", torsionIndexes=torsion_indexes)
+            self.assertEqual(result["Energy"].tolist(), [1.5, 2.5])
+            self.assertEqual(result["Angle"].tolist(), [0, 10])
 
 
 class TestReportingDoctor(DoctorTestBase):
@@ -356,6 +474,73 @@ class TestReportingDoctor(DoctorTestBase):
 
             self.assertIn("madeByReporting", result["runtimeInfo"])
             self.assertTrue(result["runtimeInfo"]["madeByReporting"]["reportHtml"].endswith("drFrankenstein_report.html"))
+
+    def test_process_fitting_results_uses_new_shuffle_filename(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            reporter_dir = os.path.join(tmp, "report")
+            images_dir = os.path.join(reporter_dir, "Images")
+            qmmm_dir = os.path.join(tmp, "qmmm")
+            torsion_dir = os.path.join(qmmm_dir, "t1")
+            os.makedirs(torsion_dir, exist_ok=True)
+            os.makedirs(images_dir, exist_ok=True)
+            cfg["runtimeInfo"]["madeByReporting"] = {"reporterDir": reporter_dir, "imagesDir": images_dir}
+            cfg["runtimeInfo"]["madeByStitching"] = {
+                "qmmmParameterFittingDir": qmmm_dir,
+                "shufflesCompleted": 25,
+                "maxTorsions": 4,
+                "finalParameters": {"t1": "params"},
+            }
+            cfg["parameterFittingInfo"]["sagvolSmoothing"] = None
+            cfg["parameterFittingInfo"]["l2DampingFactor"] = 0.1
+
+            final_png = os.path.join(torsion_dir, "fitting_shuffle_4_nCosines_4.png")
+            mae_png = os.path.join(torsion_dir, "mean_average_error.png")
+            gif = os.path.join(torsion_dir, "torsion_fitting.gif")
+            all_mae = os.path.join(qmmm_dir, "run_mean_average_error.png")
+            for path, content in [(final_png, "latest"), (mae_png, "mae"), (gif, "gif"), (all_mae, "all")]:
+                with open(path, "w") as handle:
+                    handle.write(content)
+
+            result = Reporting_Doctor.Reporting_Monster.process_fitting_results(cfg)
+
+            self.assertTrue(result["fittingImages"]["t1"]["fittingPng"].endswith("t1_final.png"))
+            self.assertTrue(result["fittingImages"]["t1"]["fittingGif"].endswith("t1_fitting.gif"))
+            self.assertTrue(os.path.exists(os.path.join(images_dir, "fitting_images", "t1_final.png")))
+            with open(os.path.join(images_dir, "fitting_images", "t1_final.png")) as handle:
+                self.assertEqual(handle.read(), "latest")
+
+    def test_process_fitting_results_keeps_gif_and_png_separate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            reporter_dir = os.path.join(tmp, "report")
+            images_dir = os.path.join(reporter_dir, "Images")
+            qmmm_dir = os.path.join(tmp, "qmmm")
+            torsion_dir = os.path.join(qmmm_dir, "t1")
+            os.makedirs(torsion_dir, exist_ok=True)
+            os.makedirs(images_dir, exist_ok=True)
+            cfg["runtimeInfo"]["madeByReporting"] = {"reporterDir": reporter_dir, "imagesDir": images_dir}
+            cfg["runtimeInfo"]["madeByStitching"] = {
+                "qmmmParameterFittingDir": qmmm_dir,
+                "shufflesCompleted": 25,
+                "maxTorsions": 4,
+                "finalParameters": {"t1": "params"},
+            }
+            cfg["parameterFittingInfo"]["sagvolSmoothing"] = None
+            cfg["parameterFittingInfo"]["l2DampingFactor"] = 0.1
+
+            gif = os.path.join(torsion_dir, "torsion_fitting.gif")
+            mae_png = os.path.join(torsion_dir, "mean_average_error.png")
+            all_mae = os.path.join(qmmm_dir, "run_mean_average_error.png")
+            for path, content in [(gif, "gif"), (mae_png, "mae"), (all_mae, "all")]:
+                with open(path, "w") as handle:
+                    handle.write(content)
+
+            result = Reporting_Doctor.Reporting_Monster.process_fitting_results(cfg)
+
+            self.assertIsNone(result["fittingImages"]["t1"]["fittingPng"])
+            self.assertTrue(result["fittingImages"]["t1"]["fittingGif"].endswith("t1_fitting.gif"))
+            self.assertTrue(os.path.exists(os.path.join(images_dir, "fitting_images", "t1_fitting.gif")))
 
 
 class TestAmberCreation(unittest.TestCase):

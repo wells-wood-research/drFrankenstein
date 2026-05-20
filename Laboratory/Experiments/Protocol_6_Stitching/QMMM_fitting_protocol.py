@@ -19,6 +19,7 @@ sys.path.append(srcDir)
 ## drFRANKENSTEIN LIBRARIES ##
 from . import drFourier
 from . import Stitching_Plotter
+from . import Stitching_Assistant
 
 ##############################################################################
 def fit_torsion_parameters(config: dict,
@@ -31,6 +32,7 @@ def fit_torsion_parameters(config: dict,
     ## unpack config
     qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
     sagvolSmoothing = config["parameterFittingInfo"]["sagvolSmoothing"]
+    converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
 
     ## make the dir if it doesn't exist
     qmmmTorsionFittingDir = p.join(qmmmFittingDir, torsionTag)
@@ -46,25 +48,33 @@ def fit_torsion_parameters(config: dict,
     qmTorsionEnergy = qmTorsionEnergy - qmTorsionEnergy.min()
 
     if not sagvolSmoothing is None:
-        qmTorsionEnergy = savgol_filter(qmTorsionEnergy, window_length=5, polyorder=2)
+        qmTorsionEnergy = savgol_filter(qmTorsionEnergy, window_length=9, polyorder=2)
 
+    meanAverageErrorTotal = np.mean(np.abs(qmTotalEnergy - mmTotalEnergy))
+    totalMetrics = Stitching_Assistant.calculate_profile_fit_metrics(qmTotalEnergy, mmTotalEnergy)
     
-    Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy,
-                                          qmTorsionEnergy,
-                                            mmTotalEnergy,
-                                              mmTorsionEnergy,
-                                                mmCosineComponents,
-                                                  qmmmTorsionFittingDir,
-                                                    shuffleIndex)
-
-    torsionParametersDf, cosineComponents, meanAverageErrorTorsion = drFourier.fourier_transform_protocol(qmTorsionEnergy,
+    torsionParametersDf, cosineComponents, reconstructedSignal, meanAverageErrorTorsion, fitScoreTorsion = drFourier.fourier_transform_protocol(qmTorsionEnergy,
                                                                                   torsionTag,
                                                                                     qmmmTorsionFittingDir,
                                                                                     config=config)
-    
-    meanAverageErrorTotal = np.mean(np.abs(qmTotalEnergy - mmTotalEnergy))
+    torsionMetrics = Stitching_Assistant.calculate_profile_fit_metrics(qmTorsionEnergy, reconstructedSignal)
+    torsionConverged = Stitching_Assistant.check_torsion_convergence(torsionMetrics["composite_score"], converganceTolerance)
 
-    return torsionParametersDf, meanAverageErrorTorsion, meanAverageErrorTotal
+    Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy,
+                                          qmTorsionEnergy,
+                                            mmTotalEnergy,
+                                              reconstructedSignal,
+                                                cosineComponents,
+                                                  torsionMetrics,
+                                                    totalMetrics,
+                                                    meanAverageErrorTorsion,
+                                                    meanAverageErrorTotal,
+                                                    config["runtimeInfo"]["madeByStitching"]["maxTorsions"],
+                                                    torsionConverged,
+                                                    qmmmTorsionFittingDir,
+                                                      shuffleIndex)
+
+    return torsionParametersDf, torsionMetrics, totalMetrics, meanAverageErrorTorsion, meanAverageErrorTotal, torsionConverged
 
 ##############################################################################
 def get_qm_scan_energies(config: dict, torsionTag: str) -> np.array:

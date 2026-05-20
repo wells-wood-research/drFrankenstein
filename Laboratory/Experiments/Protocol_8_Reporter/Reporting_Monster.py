@@ -3,8 +3,18 @@ import os.path as p
 from copy import deepcopy
 from shutil import copy
 import os
+import re
 
 from . import Reporting_Assistant
+
+
+def _fit_plot_sort_key(filename: str) -> tuple[int, int]:
+    match = re.search(r"fitting_shuffle_(\d+)(?:_nCosines_(\d+))?\.png$", p.basename(filename))
+    if match:
+        shuffle_index = int(match.group(1))
+        n_cosines = int(match.group(2)) if match.group(2) is not None else 0
+        return shuffle_index, n_cosines
+    return (-1, -1)
 
 def process_fitting_results(config: dict) -> dict:
     ## unpack config
@@ -41,20 +51,25 @@ def process_fitting_results(config: dict) -> dict:
         if not p.isdir(torsionFittingDir):
             continue
         maePng = p.join(torsionFittingDir, f"mean_average_error.png")
-        finalPng = p.join(torsionFittingDir, f"fitting_shuffle_{shufflesCompleted}.png")
+        fittingCandidates = [
+            p.join(torsionFittingDir, file)
+            for file in os.listdir(torsionFittingDir)
+            if file.startswith("fitting_shuffle_") and file.endswith(".png")
+        ]
         fittingGif = p.join(torsionFittingDir, f"torsion_fitting.gif")
+        fittingPng = max(fittingCandidates, key=_fit_plot_sort_key) if fittingCandidates else None
         destPng = p.join(fittingImagesDir, f"{torsionTag}_final.png")
         destGif = p.join(fittingImagesDir, f"{torsionTag}_fitting.gif")
         destMaePng = p.join(fittingImagesDir, f"{torsionTag}_mae.png")
-        copy(finalPng, destPng)
-        copy(fittingGif, destGif)
+        if fittingPng:
+            copy(fittingPng, destPng)
+        if p.exists(fittingGif):
+            copy(fittingGif, destGif)
         copy(maePng, destMaePng)
-        relativePng = p.relpath(destPng, reporterDir)
-        relativeGif = p.relpath(destGif, reporterDir)
         relativeMaePng = p.relpath(destMaePng, reporterDir)
         fittingImages[torsionTag] = {
-            "finalPng": relativePng,
-            "fittingGif": relativeGif,
+            "fittingPng": p.relpath(destPng, reporterDir) if fittingPng else None,
+            "fittingGif": p.relpath(destGif, reporterDir) if p.exists(fittingGif) else None,
             "maePng": relativeMaePng,
         }
     fittingData["fittingImages"] = fittingImages

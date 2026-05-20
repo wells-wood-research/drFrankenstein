@@ -380,7 +380,7 @@
             {% for dihedral_name, details in torsions_for_tabs.items() %}
                 <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
                         onclick="openTorsionsSubTab(event, 'torsions_sub_tab_{{ loop.index }}')">
-                    {% set fit_preview = fitting_data.fittingImages.get(dihedral_name).finalPng if fitting_data and fitting_data.fittingImages and fitting_data.fittingImages.get(dihedral_name) and fitting_data.fittingImages.get(dihedral_name).finalPng else none %}
+                    {% set fit_preview = fitting_data.fittingImages.get(dihedral_name).fittingPng if fitting_data and fitting_data.fittingImages and fitting_data.fittingImages.get(dihedral_name) and fitting_data.fittingImages.get(dihedral_name).fittingPng else none %}
                     {% set single_point_preview = details.spPng if details and details.spPng else none %}
                     {% set scan_preview = details.scanPng if details and details.scanPng else none %}
                     <span class="torsion-sub-tab-tile">
@@ -490,10 +490,10 @@
                             <div class="image-holder"><p>Fitting GIF not available.</p></div>
                         {% endif %}
 
-                        {% if fitting_images and fitting_images.finalPng %}
+                        {% if fitting_images and fitting_images.fittingPng %}
                             <div class="image-holder">
                                 <p><strong>Final Fit (PNG)</strong></p>
-                                <img src="{{ fitting_images.finalPng }}" alt="Final fit for {{ dihedral_name }}">
+                                <img src="{{ fitting_images.fittingPng }}" alt="Final fit for {{ dihedral_name }}">
                             </div>
                         {% else %}
                             <div class="image-holder"><p>Final PNG not available.</p></div>

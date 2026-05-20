@@ -77,7 +77,17 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 
 ## HOTFIXES
 
-[] CONSTRAIN NON-CAPPING ATOMS in CAPPING OPT
-[] MAKE CHARGE FITTING EXIT CONDITIONS FOR MULTIFN MORE ELEGANT - weird pause at the end?
+[x] CONSTRAIN NON-CAPPING ATOMS in CAPPING OPT
+[x] MAKE CHARGE FITTING EXIT CONDITIONS FOR MULTIFN MORE ELEGANT - weird pause at the end?
 [] WHERES ASSEMBLY SPLASH GONE?
 [] FOR TRICKY TORSIONS, WE CAN TRY NEW CONFORMERS AS STARTS. IF THIS FAILS COMPLETELY DO WE NEED A NEW PROTOCOL?
+[] L2DAMPENING can be set to 0 or False 
+
+
+## BETTER MAE 
+I want to construct a better score than Mean Average Error to determine how well fit a set of parameters is to the QM data.
+I want this scoring function to incorporate the following:
+- Location of stationary points along the x-axis
+- Overal ampitudue of the curve
+- Number of stationary points
+- some kind of MAE type score but normalised by amplitude

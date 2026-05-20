@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Agg')  # Set the Agg backend before importing pyplot
 import matplotlib.pyplot as plt
 import numpy as np
+import re
 from subprocess import call, PIPE
 import pandas as pd
 from PIL import Image
@@ -123,6 +124,13 @@ def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, 
 def _extract_number(filename):
     # Extract the number from the filename
     return int(filename.split('_')[-1].split('.')[0])
+
+
+def _extract_fit_frame_key(filename):
+    match = re.search(r"fitting_shuffle_(\d+)_nCosines_(\d+)\.png$", os.path.basename(filename))
+    if match:
+        return int(match.group(2)), int(match.group(1))
+    return (0, _extract_number(filename))
     
 #####################################################################
 
@@ -140,7 +148,7 @@ def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, durati
     pngGenerator = (
         item for item in sorted(
             (os.path.join(inDir, f) for f in os.listdir(inDir) if f.endswith(".png") and f.startswith("fitting_shuffle")),
-            key=_extract_number
+            key=_extract_fit_frame_key
         )
     )
     frames = [Image.open(png) for png in pngGenerator]
@@ -193,8 +201,14 @@ def set_rc_params():
 def plot_qmmm_energies(qmTotalEnergy,
                         qmTorsionEnergy,
                         mmTotalEnergy, 
-                        mmTorsionEnergy,
+                        mmFittedTorsionEnergy,
                         cosineComponents,
+                        torsionMetrics,
+                        totalMetrics,
+                        maeTorsion,
+                        maeTotal,
+                        nCosines,
+                        converged,
                         outDir,
                         shuffleIndex):
     
@@ -204,28 +218,31 @@ def plot_qmmm_energies(qmTotalEnergy,
     white :str = '#FFFFFF'
     magenta : str = '#FF00FF'
     brightCyan: str = '#00FFFF'
-    ## construct angles
-    angles = np.linspace(0, 360, len(qmTotalEnergy))
+    shuffleLabel = f"fitting_shuffle_{shuffleIndex}_nCosines_{nCosines}"
+    if not (len(qmTotalEnergy) == len(qmTorsionEnergy) == len(mmTotalEnergy) == len(mmFittedTorsionEnergy)):
+        raise ValueError(
+            f"{shuffleLabel}: QM/MM arrays must have matching lengths "
+            f"(qm_total={len(qmTotalEnergy)}, qm_torsion={len(qmTorsionEnergy)}, "
+            f"mm_total={len(mmTotalEnergy)}, mm_torsion={len(mmFittedTorsionEnergy)})."
+        )
+    ## construct angles on the 10-degree fitting grid used by the scan/protocol
+    angleStepDegrees = 10
+    angles = np.arange(len(qmTotalEnergy), dtype=float) * angleStepDegrees
 
     fig, axis = plt.subplots( nrows=1, ncols=2, figsize=(12, 8))  # create figure
-    fig.subplots_adjust(bottom=0.25)  # Adjust the bottom margin
 
     ## plot QM and MM total energies GLOW
     for n in range(1, 7):
         axis[0].plot(angles, qmTotalEnergy, color=magenta, linewidth=1+n, alpha=0.1)
         axis[0].plot(angles, mmTotalEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
     ## plot main traces
-    axis[0].plot(angles, qmTotalEnergy, label='QM', linewidth=2, color=magenta)
-    axis[0].plot(angles, mmTotalEnergy, label='MM', linewidth=2, color=brightCyan)
-    ## LEGEND ##
-    axis[0].legend(['QM', 'MM'],
-                    loc="upper center",
-                    bbox_to_anchor=(0.5, -0.12),
-                    ncol=2,
-                    handlelength=0,
-                    handletextpad=0,
-                    labelcolor=[magenta, brightCyan])
-    
+    axis[0].plot(angles, qmTotalEnergy, label='QM target', linewidth=2, color=magenta)
+    axis[0].plot(angles, mmTotalEnergy, label='MM fit', linewidth=2, color=brightCyan)
+    axis[0].legend(loc="upper right")
+    axis[0].text(0.02, 0.98, _format_metrics_box("Total", totalMetrics, maeTotal), transform=axis[0].transAxes,
+                 color="red", fontsize=11, va="top", family="monospace",
+                 bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.3"))
+
     axis[0].set_xlabel('Torsion Angle')
     axis[0].set_ylabel('Energy (Kcal / mol)')
     axis[0].set_title("Total Energies")
@@ -235,40 +252,56 @@ def plot_qmmm_energies(qmTotalEnergy,
     ## plot QM and MM torsion energies GLOW
     for n in range(1, 7):
         axis[1].plot(angles, qmTorsionEnergy, color=magenta, linewidth=1+n, alpha=0.1)
-        axis[1].plot(angles, mmTorsionEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
+        axis[1].plot(angles, mmFittedTorsionEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
     ## plot main traces
-    axis[1].plot(angles, qmTorsionEnergy, label='QM', linewidth=2, color=magenta)
-    axis[1].plot(angles, mmTorsionEnergy, label='MM', linewidth=2, color=brightCyan)
+    axis[1].plot(angles, qmTorsionEnergy, label='QM target', linewidth=2, color=magenta)
+    axis[1].plot(angles, mmFittedTorsionEnergy, label='MM fit', linewidth=2, color=brightCyan)
+    axis[1].text(0.02, 0.98, _format_metrics_box("Torsion", torsionMetrics, maeTorsion), transform=axis[1].transAxes,
+                 color="red", fontsize=11, va="top", family="monospace",
+                 bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.3"))
+    if converged:
+        axis[1].text(
+            0.72,
+            0.08,
+            "CONVERGED",
+            transform=axis[1].transAxes,
+            color="lime",
+            fontsize=18,
+            fontweight="bold",
+            bbox=dict(facecolor="none", edgecolor="lime", boxstyle="round,pad=0.3"),
+        )
 
     ## plot cosine components
-    for freq, cosineComponent in cosineComponents.items():
+    if isinstance(cosineComponents, dict):
+        componentItems = cosineComponents.items()
+    else:
+        componentItems = cosineComponents
+    for freq, cosineComponent in componentItems:
         axis[1].plot(angles, cosineComponent, linestyle='--',
-                     label=f'Cosine Component {freq:.0f}', color=white, alpha=0.5)
+                     color=white, alpha=0.5)
     # Dummy plot for legend
     axis[1].plot([], [], linestyle='--', color=white, alpha=0.5,
                  label='Parameters')
-    ## LEGEND ##
-    axis[1].legend(['QM', 'MM', 'Parameters'],
-                    loc="upper center",
-                    bbox_to_anchor=(0.5, -0.12),
-                    ncol=3,
-                    handlelength=0,
-                    handletextpad=0,
-                    labelcolor=[magenta, brightCyan, white])
+    axis[1].legend(loc="upper right")
 
-    axis[1].set_xlabel('Torison Angle')
+    axis[1].set_xlabel('Torsion Angle')
     axis[1].set_ylabel('Energy (Kcal / mol)')
     axis[1].set_title("Torsion Energies")
     axis[1].set_xlim(0, 360)
     axis[1].set_xticks(np.arange(0, 361, 60))
 
-    ## add a shuffle index label
-    fig.text(0.1, 0.9, f'{shuffleIndex + 1}', fontsize=16,
-             color='yellow', bbox=dict(facecolor='none', 
-             edgecolor='yellow', boxstyle='round,pad=0.5'))
-
-
-    fig.savefig(p.join(outDir, f"fitting_shuffle_{shuffleIndex+1}.png"))
+    fig.savefig(p.join(outDir, f"{shuffleLabel}.png"))
     plt.close(fig)
-#####################################################################
 
+
+def _format_metrics_box(label, metrics, mae):
+    return (
+        f"{label}\n"
+        f"Score {metrics['composite_score']:.3f}\n"
+        f"Loc   {metrics['location_score']:.3f}\n"
+        f"Amp   {metrics['amplitude_score']:.3f}\n"
+        f"Count {metrics['stationary_count_score']:.3f}\n"
+        f"nMAE  {metrics['normalized_mae_score']:.3f}\n"
+        f"MAE   {mae:.3f}"
+    )
+#####################################################################

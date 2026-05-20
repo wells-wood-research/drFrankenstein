@@ -9,6 +9,7 @@ from pdbUtils import pdbUtils
 from shutil import move, copy
 import random
 from functools import reduce
+from scipy.signal import find_peaks
 
 
 ## CLEAN CODE CLASSES ##
@@ -35,8 +36,11 @@ def check_mae_flatline(maeCsv: FilePath, windowSize = 5, diffTolerance = 0.1) ->
 
     allMaeDf = maeDf[maeDf["torsion_tag"] == "All_Torsions"]
 
-    diffTorsion = allMaeDf["mae_torsion"].diff().abs()
-    diffTotal = allMaeDf["mae_total"].diff().abs()
+    torsionCol = "fit_score_torsion" if "fit_score_torsion" in allMaeDf.columns else "mae_torsion"
+    totalCol = "fit_score_total" if "fit_score_total" in allMaeDf.columns else "mae_total"
+
+    diffTorsion = allMaeDf[torsionCol].diff().abs()
+    diffTotal = allMaeDf[totalCol].diff().abs()
 
     torsionFlatLined = np.all(diffTorsion.tail(windowSize) < diffTolerance)
     totalFlatLined  = np.all(diffTotal.tail(windowSize) < diffTolerance)
@@ -90,18 +94,123 @@ def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int, seed: int) ->
 
 def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, converganceTolerance: float | None) -> bool:
     """
-    Checks Mean Average Errors to see if they have converged
+    Checks fit scores to see if they have converged.
     
     Args:
-        maeTotal (float): mean average error for total energy
-        maeTorsion (float): mean average error for torsion energy
-        maeTolTotal (float | None): mean average error tolerance for total energy, None gets ignored
-        maeTolTorsion (float | None): mean average error tolerance for torsion energy, None gets ignored
+        latestRmsMaeTorsion (float): torsion fit score
+        latestRmsMaeTotal (float): total fit score
+        converganceTolerance (float | None): fit score tolerance, None gets ignored
     """
     if converganceTolerance is None:
         return False
     else:
         return latestRmsMaeTorsion < converganceTolerance and latestRmsMaeTotal < converganceTolerance
+
+
+def check_torsion_convergence(latestTorsionScore: float, converganceTolerance: float | None) -> bool:
+    """
+    Checks whether a torsion fit score is within tolerance.
+    """
+    if converganceTolerance is None:
+        return False
+    return latestTorsionScore < converganceTolerance
+
+
+def _stationary_point_angles(signal: np.ndarray, sampleSpacingDegrees: int = 10) -> np.ndarray:
+    """
+    Find stationary-point angles by locating local maxima and minima.
+    """
+    signal = np.asarray(signal, dtype=float)
+    maxima, _ = find_peaks(signal)
+    minima, _ = find_peaks(-signal)
+    stationaryIndexes = np.unique(np.concatenate([maxima, minima]))
+    return stationaryIndexes.astype(float) * sampleSpacingDegrees
+
+
+def _circular_angle_distance(angleA: float, angleB: float) -> float:
+    delta = abs(angleA - angleB) % 360.0
+    return min(delta, 360.0 - delta)
+
+
+def calculate_profile_fit_score(
+    qmEnergy: np.ndarray,
+    mmEnergy: np.ndarray,
+    sampleSpacingDegrees: int = 10,
+) -> float:
+    """
+    Composite score for how well an MM torsion profile matches a QM profile.
+
+    Lower is better.
+    """
+    return calculate_profile_fit_metrics(qmEnergy, mmEnergy, sampleSpacingDegrees)["composite_score"]
+
+
+def calculate_profile_fit_metrics(
+    qmEnergy: np.ndarray,
+    mmEnergy: np.ndarray,
+    sampleSpacingDegrees: int = 10,
+) -> dict:
+    """
+    Return the score breakdown for a QM/MM profile comparison.
+    """
+    qmEnergy = np.asarray(qmEnergy, dtype=float)
+    mmEnergy = np.asarray(mmEnergy, dtype=float)
+    if qmEnergy.shape != mmEnergy.shape:
+        raise ValueError("QM and MM energy arrays must have the same shape.")
+
+    qmEnergy = qmEnergy - qmEnergy.min()
+    mmEnergy = mmEnergy - mmEnergy.min()
+    qmAmplitude = float(np.ptp(qmEnergy))
+    mmAmplitude = float(np.ptp(mmEnergy))
+    energyScale = max(qmAmplitude, np.finfo(float).eps)
+    qmIsFlat = qmAmplitude <= np.finfo(float).eps
+    mmIsFlat = mmAmplitude <= np.finfo(float).eps
+
+    qmStationaryAngles = _stationary_point_angles(qmEnergy, sampleSpacingDegrees)
+    mmStationaryAngles = _stationary_point_angles(mmEnergy, sampleSpacingDegrees)
+
+    if qmIsFlat and mmIsFlat:
+        locationScore = 0.0
+        amplitudeScore = 0.0
+        stationaryCountScore = 0.0
+        normalizedMaeScore = 0.0
+    elif qmIsFlat != mmIsFlat:
+        locationScore = 1.0
+        amplitudeScore = 1.0
+        stationaryCountScore = 1.0
+        normalizedMaeScore = 1.0
+    else:
+        amplitudeScore = abs(qmAmplitude - mmAmplitude) / energyScale
+        normalizedMaeScore = float(np.mean(np.abs(qmEnergy - mmEnergy)) / energyScale)
+
+        if len(qmStationaryAngles) == 0 or len(mmStationaryAngles) == 0:
+            locationScore = 1.0
+            stationaryCountScore = 1.0
+        else:
+            matchedPoints = min(len(qmStationaryAngles), len(mmStationaryAngles))
+            locationScore = float(
+                np.mean(
+                    [
+                        _circular_angle_distance(qmAngle, mmAngle) / 180.0
+                        for qmAngle, mmAngle in zip(qmStationaryAngles[:matchedPoints], mmStationaryAngles[:matchedPoints])
+                    ]
+                )
+            )
+            stationaryCountScore = abs(len(qmStationaryAngles) - len(mmStationaryAngles)) / max(
+                len(qmStationaryAngles), len(mmStationaryAngles), 1
+            )
+
+    return {
+        "composite_score": float(np.mean([locationScore, amplitudeScore, stationaryCountScore, normalizedMaeScore])),
+        "location_score": locationScore,
+        "amplitude_score": amplitudeScore,
+        "stationary_count_score": stationaryCountScore,
+        "normalized_mae_score": normalizedMaeScore,
+        "qm_stationary_count": int(len(qmStationaryAngles)),
+        "mm_stationary_count": int(len(mmStationaryAngles)),
+        "qm_amplitude": qmAmplitude,
+        "mm_amplitude": mmAmplitude,
+    }
 
    
         
@@ -416,3 +525,30 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
 
     pdbUtils.df2pdb(inDf, outPdb)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
+
+
+
+def _remove_converged_torsion_tags(maeCsv, converganceTolerance, torsionTags, topN = 5):
+    """
+    Reads through the MAE csv file to find torsions that have converged
+    Removes these from the list of torsions to fit
+
+    Args:
+        maeCsv (FilePath): location of MAE csv file
+        converganceTolerance (float): tolerance for convergence
+        torsionTags (list): list of torsion tags to fit
+    Returns:
+        list: updated list of torsion tags without converged ones
+    """
+    maeDf = pd.read_csv(maeCsv, index_col=False, header=0)
+    maxShuffle = maeDf["shuffle"].max()
+    lastShuffleDf = maeDf[(maeDf["shuffle"] == maxShuffle) & (maeDf["torsion_tag"] != "All_Torsions")]
+    ## sort by MAE total
+    totalCol = "fit_score_total" if "fit_score_total" in lastShuffleDf.columns else "mae_total"
+    lastShuffleDf = lastShuffleDf.sort_values(totalCol)
+    ## get top N torsions by MAE total
+    nonConvergedTorsions = lastShuffleDf[lastShuffleDf[totalCol] > converganceTolerance]["torsion_tag"].tolist()
+
+    nonConvergedTorsions = list(set(nonConvergedTorsions))
+
+    return nonConvergedTorsions

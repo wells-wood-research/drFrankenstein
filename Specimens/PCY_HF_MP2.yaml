@@ -70,13 +70,13 @@ torsionScanInfo:
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 2
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
-  scanMethod: XTB2
+  scanMethod: HF 6-31G* TightSCF
   ## Solvation method for torsion scanning, set to Null for no solvation
-  scanSolvationMethod :  ALPB(water) 
+  scanSolvationMethod :  Null
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: Null
+  singlePointMethod:  RI-MP2 def2-TZVPP def2/J def2-TZVPP/C TightSCF
   ## Solvation method for single point calculations, set to Null for no solvation
   singlePointSolvationMethod: Null
 
@@ -92,20 +92,20 @@ torsionScanInfo:
 ##########################################################################################################################
 chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
-  chargeFittingProtocol: RESP2
+  chargeFittingProtocol: RESP
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
   nConformers: 4
   ## number of cores for charge fitting
   nCoresPerCalculation: 4
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
-  optMethod: XTB2
+  optMethod: HF 6-31G* TightSCF
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
-  optSolvationMethod: ALPB(water)
+  optSolvationMethod: Null
   ## QM method for single point calculations (TIP, this should be more accurate than your optimisation method)
-  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointMethod: HF 6-31G* TightSCF
   ## Solvation method for single point calculations, set to Null for no solvation
   ## for QM/MM protocol, set to "TIP3P" alongside the chargeFittingProtocol being set to "SOLVATOR"
-  singlePointSolvationMethod: CPCM(water)
+  singlePointSolvationMethod: Null
   ## set backbone charges back to GAFF2 defaults (does not work with with CHARMM params YET!)
   enforceDefaultBackboneCharges: True
 ############################################################################################################################
@@ -118,16 +118,20 @@ chargeFittingInfo:
 #        How do you want to run parameter fitting?                                                                         #   
 ############################################################################################################################
 parameterFittingInfo:
+  ## fitting protocol for QM torsion curves
+  # fittingProtocol: AMBER
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
   forceField: AMBER
-  ## maximum cosine functions to be used to fit each torsion parameter
-  maxCosineFunctions: 2
-  ## upper and lower bounds for how many fitting shuffles to run
+  ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
+  maxCosineFunctions: 3
+  ## global joint mode runs a single global round
   maxShuffles: 50
-  minShuffles: 5
+  minShuffles: 10
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true
+  converganceTolerance: 0.1
+
 
 #####################################################
 #              _             ___          __        #

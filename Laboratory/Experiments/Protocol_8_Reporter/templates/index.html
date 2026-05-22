@@ -185,7 +185,7 @@
 
             <div class="tab-container">
                 <div class="tab-nav">
-                    <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer Generation</button>
+                    <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer PCA</button>
                     <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
                     <button class="tab-button" onclick="openTab(event, 'torsions')">Torsions</button>
                     <button class="tab-button" onclick="openTab(event, 'methodsTab')">Methods</button>
@@ -193,7 +193,7 @@
                 </div>
 
                 <div id="conformerGen" class="tab-content active">
-                    {% include 'conformer_generation.html' %}
+                    {% include 'conformer_pca.html' %}
                 </div>
 
                 <div id="chargeCalc" class="tab-content">

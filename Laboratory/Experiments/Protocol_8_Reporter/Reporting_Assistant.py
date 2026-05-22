@@ -554,7 +554,7 @@ def make_conformer_visualisations(config, outDir):
     for idx, xyzFile in enumerate(conformerXyzs):
         name = xyzFile.split("/")[-1].split(".")[0]
         xyzBlock = xyz_to_string(xyzFile)
-        view = py3Dmol.view(width=200, height=200) 
+        view = py3Dmol.view(width=320, height=320) 
         view.addModel(xyzBlock, 'xyz', {"keepH": True})
         color = vibrantColors[idx % len(vibrantColors)]
         view.setStyle({"elem": "C"},{
@@ -574,10 +574,40 @@ def make_conformer_visualisations(config, outDir):
             }
         })
         view.setBackgroundColor("black")
+        view.zoomTo()
+        view.render()
 
         conformerHtml = p.join(outDir, f"{name}.html")
+        html = view._make_html()
+        html = re.sub(r"width:\\s*\\d+px;\\s*height:\\s*\\d+px;", "width: 100%; height: 100%;", html)
+        viewer_id_match = re.search(r'id="(3dmolviewer_[^"]+)"', html)
+        if viewer_id_match:
+            viewer_id = viewer_id_match.group(1)
+            viewer_suffix = viewer_id.replace("3dmolviewer_", "")
+            viewer_var = f"viewer_{viewer_suffix}"
+            style_block = (
+                "<style>"
+                "html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; } "
+                f"#{viewer_id} {{ width: 100% !important; height: 100% !important; display: flex; align-items: center; justify-content: center; }} "
+                f"#{viewer_id} canvas {{ width: auto !important; height: auto !important; max-width: 100%; max-height: 100%; display: block; }}"
+                "</style>"
+            )
+            resize_script = (
+                "<script>"
+                f"function resize_{viewer_suffix}() {{"
+                f"  if (typeof {viewer_var} !== 'undefined' && {viewer_var}) {{"
+                f"    {viewer_var}.resize();"
+                f"    {viewer_var}.render();"
+                f"  }}"
+                f"}}"
+                f"window.addEventListener('load', resize_{viewer_suffix});"
+                f"window.addEventListener('resize', resize_{viewer_suffix});"
+                f"$3Dmolpromise && $3Dmolpromise.then(function(){{ resize_{viewer_suffix}(); }});"
+                "</script>"
+            )
+            html = style_block + html + resize_script
         with open(conformerHtml, 'w') as f:
-            f.write(view._make_html())
+            f.write(html)
 
         relativePath = p.relpath(conformerHtml, reporterDir)
         conformerHtmls.append(relativePath)

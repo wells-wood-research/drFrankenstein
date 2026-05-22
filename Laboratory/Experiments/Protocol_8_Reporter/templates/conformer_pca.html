@@ -1,0 +1,241 @@
+<style>
+    .pca-summary {
+        display: grid;
+        grid-template-columns: minmax(360px, 1.2fr) minmax(320px, 1fr);
+        gap: 20px;
+        align-items: start;
+        margin-top: 15px;
+    }
+
+    .pca-plot {
+        width: 100%;
+        border: 1px solid #555;
+        background: #111;
+    }
+
+    .plot-toggle {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .plot-toggle-btn {
+        padding: 6px 12px;
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #555;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+
+    .plot-toggle-btn.active {
+        background-color: #00FF00;
+        color: #000;
+        border-color: #00FF00;
+    }
+
+    .plot-panel {
+        display: none;
+    }
+
+    .plot-panel.active {
+        display: block;
+    }
+
+    .pca-side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .conformer-viewer {
+        border: 1px solid #555;
+        background: #111;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        min-height: 420px;
+    }
+
+    .conformer-viewer-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .conformer-viewer-label {
+        color: #FFFF00;
+        font-weight: bold;
+        font-size: 0.95em;
+    }
+
+    .conformer-viewer iframe {
+        width: 100%;
+        height: 100%;
+        flex: 1 1 auto;
+        border: 1px solid #333;
+        background: #000;
+    }
+
+    .conformer-viewer-note {
+        margin-top: 8px;
+        font-size: 0.9em;
+        color: #aaa;
+    }
+
+    @media (max-width: 1100px) {
+        .pca-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<h2>Conformer PCA</h2>
+
+{% if conformer_pca_data %}
+    <div class="info">
+        <h3><strong>Conformers:</strong> {{ conformer_pca_data.nConformers }}</h3>
+    </div>
+
+    <div class="pca-summary">
+        <div>
+            {% if conformer_pca_data.ramachandranAvailable %}
+                <div class="plot-toggle" id="conformerPlotToggle">
+                    <button class="plot-toggle-btn active" data-target="pcaPlotPanel">PCA</button>
+                    <button class="plot-toggle-btn" data-target="ramachandranPlotPanel">Phi/Psi</button>
+                </div>
+            {% endif %}
+
+            <div id="pcaPlotPanel" class="plot-panel active">
+                <div id="conformerPcaPlot" class="pca-plot">
+                    {{ conformer_pca_data.plotHtml | safe }}
+                </div>
+            </div>
+
+            {% if conformer_pca_data.ramachandranAvailable %}
+                <div id="ramachandranPlotPanel" class="plot-panel">
+                    <div id="ramachandranPlot" class="pca-plot">
+                        {{ conformer_pca_data.ramachandranPlotHtml | safe }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="pca-side-panel">
+            <div id="conformerViewerContainer" class="conformer-viewer">
+                <div class="conformer-viewer-header">
+                    <h3>Conformer Viewer</h3>
+                    <span id="conformerViewerLabel" class="conformer-viewer-label">None selected</span>
+                </div>
+                <iframe
+                    id="conformerViewerFrame"
+                    title="Conformer 3D Viewer"
+                    sandbox="allow-scripts allow-same-origin">
+                    Your browser does not support iframes.
+                </iframe>
+                <div class="conformer-viewer-note">Hover to preview, click to lock, double-click to unlock.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const conformerHtmlMap = {{ conformer_pca_data.conformerHtmlMap | tojson }};
+            const plotContainer = document.querySelector('#conformerPcaPlot .plotly-graph-div');
+            const ramachandranContainer = document.querySelector('#ramachandranPlot .plotly-graph-div');
+            const viewerFrame = document.getElementById('conformerViewerFrame');
+            const viewerLabel = document.getElementById('conformerViewerLabel');
+            const viewerContainer = document.getElementById('conformerViewerContainer');
+            if (!plotContainer || !viewerFrame || !viewerLabel || !viewerContainer) return;
+
+            let locked = false;
+            let currentConformer = null;
+            function setViewer(conformerName) {
+                const viewerPath = conformerHtmlMap[conformerName];
+                if (!viewerPath) return;
+                viewerFrame.setAttribute('src', viewerPath);
+                viewerLabel.textContent = conformerName + (locked ? ' (locked)' : '');
+                currentConformer = conformerName;
+            }
+
+            const defaultConformer = Object.keys(conformerHtmlMap)[0];
+            if (defaultConformer) {
+                setViewer(defaultConformer);
+            }
+
+            function handleEvent(eventData, shouldLock) {
+                const point = eventData && eventData.points ? eventData.points[0] : null;
+                const conformerName = point && point.customdata ? point.customdata[0] : null;
+                if (!conformerName) return;
+                locked = shouldLock;
+                setViewer(conformerName);
+            }
+
+            function syncViewerHeight() {
+                const activePlot = document.querySelector('.plot-panel.active .pca-plot');
+                if (!activePlot) return;
+                const plotHeight = activePlot.getBoundingClientRect().height;
+                if (plotHeight > 0) {
+                    viewerContainer.style.height = `${plotHeight}px`;
+                }
+            }
+
+            function attachPlotHandlers(container) {
+                if (!container) return;
+                container.on('plotly_hover', function(eventData) {
+                    if (locked) return;
+                    handleEvent(eventData, false);
+                });
+                container.on('plotly_click', function(eventData) {
+                    handleEvent(eventData, true);
+                });
+                container.on('plotly_doubleclick', function() {
+                    locked = false;
+                    if (currentConformer) {
+                        setViewer(currentConformer);
+                    }
+                });
+                container.on('plotly_afterplot', syncViewerHeight);
+            }
+
+            attachPlotHandlers(plotContainer);
+            attachPlotHandlers(ramachandranContainer);
+            window.addEventListener('resize', syncViewerHeight);
+            setTimeout(syncViewerHeight, 0);
+
+            const toggleButtons = document.querySelectorAll('.plot-toggle-btn');
+            const plotPanels = document.querySelectorAll('.plot-panel');
+
+            function resizePlot(panel) {
+                const plotDiv = panel.querySelector('.plotly-graph-div');
+                if (plotDiv && window.Plotly && window.Plotly.Plots) {
+                    window.Plotly.Plots.resize(plotDiv);
+                }
+            }
+
+            if (toggleButtons.length > 0) {
+                toggleButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (button.classList.contains('active')) return;
+                        toggleButtons.forEach((btn) => btn.classList.remove('active'));
+                        plotPanels.forEach((panel) => panel.classList.remove('active'));
+                        const targetPanel = document.getElementById(button.dataset.target);
+                        if (targetPanel) {
+                            targetPanel.classList.add('active');
+                            resizePlot(targetPanel);
+                            syncViewerHeight();
+                        }
+                        button.classList.add('active');
+                    });
+                });
+            }
+        });
+    </script>
+{% else %}
+    <p>No conformer PCA data available.</p>
+{% endif %}

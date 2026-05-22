@@ -7,6 +7,7 @@ import os
 from os import path as p
 
 from . import Reporting_Monster
+from . import Conformer_PCA_Monster
 from . import Reporting_Assistant
 from . import plot_time_gantt
 from . import Shelly
@@ -42,6 +43,7 @@ def reporter_protocol(config: dict) -> None:
     ## run protocols
     timeGanttPng    = plot_time_gantt.generate_gantt_chart(config)
     wriggleData     = Reporting_Monster.process_wriggle_results(config)
+    conformerPcaData = Conformer_PCA_Monster.process_conformer_pca_results(config)
     twistData       = Reporting_Monster.process_twist_results(config)
     chargesData     = Reporting_Monster.process_charges_results(config)
     fittingData     = Reporting_Monster.process_fitting_results(config)
@@ -49,7 +51,7 @@ def reporter_protocol(config: dict) -> None:
     citationsData   = Shelly.gather_citations(config)
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
-    make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
+    make_html_report(timeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
 
     ## update config
     # config["checkpointInfo"]["reportingComplete"] = True
@@ -57,7 +59,7 @@ def reporter_protocol(config: dict) -> None:
     return config
 
 
-def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
+def make_html_report(timeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
 
     templateDir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(templateDir):
@@ -79,6 +81,7 @@ def make_html_report(timeGanttPng, wriggleData, twistData, chargesData, fittingD
         job_name=moleculeName,
         timeGanttPng=timeGanttPng,
         conformer_data=wriggleData,
+        conformer_pca_data=conformerPcaData,
         torsion_data=twistData,
         charge_data=chargesData,
         fitting_data=fittingData,

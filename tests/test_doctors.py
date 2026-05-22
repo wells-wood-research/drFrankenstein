@@ -180,6 +180,7 @@ from Laboratory.Experiments.Protocol_5_Twisting import Twisted_Doctor
 from Laboratory.Experiments.Protocol_6_Stitching import Stitching_Doctor
 from Laboratory.Experiments.Protocol_6_Stitching.AMBER_protocols import AMBER_total_protocol
 from Laboratory.Experiments.Protocol_7_Creation import AMBER_creation
+from Laboratory.Experiments.Protocol_8_Reporter import Conformer_PCA_Monster
 from Laboratory.Experiments.Protocol_8_Reporter import Reporting_Doctor
 
 
@@ -464,6 +465,7 @@ class TestReportingDoctor(DoctorTestBase):
             with patch.object(Reporting_Doctor.Reporting_Assistant, "copy_images"), \
                  patch.object(Reporting_Doctor.plot_time_gantt, "generate_gantt_chart", return_value="gantt.png"), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_wriggle_results", return_value={}), \
+                 patch.object(Reporting_Doctor.Conformer_PCA_Monster, "process_conformer_pca_results", return_value={}), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_twist_results", return_value={}), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_charges_results", return_value={}), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_fitting_results", return_value={}), \
@@ -474,6 +476,61 @@ class TestReportingDoctor(DoctorTestBase):
 
             self.assertIn("madeByReporting", result["runtimeInfo"])
             self.assertTrue(result["runtimeInfo"]["madeByReporting"]["reportHtml"].endswith("drFrankenstein_report.html"))
+
+    def test_conformer_pca_protocol_generates_plot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = self.make_base_config(tmp)
+            report_dir = os.path.join(tmp, "report")
+            images_dir = os.path.join(report_dir, "Images")
+            os.makedirs(images_dir, exist_ok=True)
+            conformer_images_dir = os.path.join(images_dir, "conformer_images")
+            os.makedirs(conformer_images_dir, exist_ok=True)
+            cfg["runtimeInfo"]["madeByReporting"] = {"reporterDir": report_dir, "imagesDir": images_dir}
+            cfg["runtimeInfo"]["madeByConformers"] = {
+                "conformerXyzs": [os.path.join(tmp, "c1.xyz"), os.path.join(tmp, "c2.xyz")],
+                "conformerEnergies": {"c1": 0.0, "c2": 1.5},
+            }
+            cfg["runtimeInfo"]["madeByTwisting"]["allDihedrals"] = {
+                "aromaticDihedrals": {
+                    "a1": {"ATOM_INDEXES": [0, 1, 2, 3]},
+                    "a2": {"ATOM_INDEXES": [1, 2, 3, 4]},
+                },
+                "remainingDihedrals": {
+                    "r1": {"ATOM_INDEXES": [0, 2, 3, 4]},
+                },
+                "phiPsiDihedrals": {},
+                "nonPolarProtonsDihedrals": {},
+                "polarProtonDihedrals": {},
+                "nonAromaticRingDihedrals": {},
+            }
+
+            with open(cfg["runtimeInfo"]["madeByConformers"]["conformerXyzs"][0], "w") as handle:
+                handle.write("5\ncomment\n")
+                handle.write("C 0.0 0.0 0.0\n")
+                handle.write("C 1.0 0.0 0.0\n")
+                handle.write("C 1.0 1.0 0.0\n")
+                handle.write("C 0.0 1.0 0.0\n")
+                handle.write("C 0.0 1.0 1.0\n")
+
+            with open(cfg["runtimeInfo"]["madeByConformers"]["conformerXyzs"][1], "w") as handle:
+                handle.write("5\ncomment\n")
+                handle.write("C 0.0 0.0 0.0\n")
+                handle.write("C 1.0 0.0 0.0\n")
+                handle.write("C 1.0 0.0 1.0\n")
+                handle.write("C 0.0 1.0 1.0\n")
+                handle.write("C 0.0 1.0 2.0\n")
+            for name in ["c1", "c2"]:
+                with open(os.path.join(conformer_images_dir, f"{name}.html"), "w") as handle:
+                    handle.write("<html></html>")
+
+            result = Conformer_PCA_Monster.process_conformer_pca_results(cfg)
+
+            self.assertIn("plotly", result["plotHtml"].lower())
+            self.assertEqual(result["nConformers"], 2)
+            self.assertEqual(result["nTorsions"], 3)
+            self.assertEqual(len(result["pcaCoordinates"]), 2)
+            self.assertIn("energy", result["pcaCoordinates"][0])
+            self.assertIn("c1", result["conformerHtmlMap"])
 
     def test_process_fitting_results_uses_new_shuffle_filename(self):
         with tempfile.TemporaryDirectory() as tmp:

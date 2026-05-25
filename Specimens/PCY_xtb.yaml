@@ -12,7 +12,7 @@ pathInfo:
   ## full path to input files
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY_XTB
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
@@ -149,3 +149,4 @@ miscInfo:
   ## random seed used for all stochastic selections
   seed: 1818
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
+  conformerSelectionMethods: DIVERSE

@@ -82,6 +82,9 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 [] WHERES ASSEMBLY SPLASH GONE?
 [] FOR TRICKY TORSIONS, WE CAN TRY NEW CONFORMERS AS STARTS. IF THIS FAILS COMPLETELY DO WE NEED A NEW PROTOCOL?
 [] L2DAMPENING can be set to 0 or False 
+[] electron checker needs to run AFTER capping (or ignore N and C termini)
+[] diversity-based conformer selection method (Torsion_PCA -> Silouette_kNN -> BolzSample from clusters)
+[] nCpus option for scanning
 
 
 ## BETTER MAE 

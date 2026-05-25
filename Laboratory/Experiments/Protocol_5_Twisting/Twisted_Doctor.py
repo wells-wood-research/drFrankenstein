@@ -245,10 +245,16 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
 
     argsList = [(conformerXyz, torsionScanDir, torsionIndexes, config, forceScanFailPercent) for conformerXyz in conformerXyzs]
 
+    nCoresPerCalculation = config["torsionScanInfo"].get("nCoresPerCalculation", 1)
+    availableCpus = config["miscInfo"]["availableCpus"]
+    maxPoolCores = max(1, availableCpus // nCoresPerCalculation)
+    conformerLimit = config["torsionScanInfo"]["nConformers"]
+    if conformerLimit == -1:
+        conformerLimit = len(argsList)
     ## save on cores 
     nCores = min(len(argsList),                             ## total number of conformers created
-                  config["miscInfo"]["availableCpus"],      ## number of available CPUs
-                  config["torsionScanInfo"]["nConformers"]) ## number of conformers we want to scan
+                  maxPoolCores,                             ## number of available CPUs per calculation
+                  conformerLimit)                           ## number of conformers we want to scan
 
     with WorkerPool(n_jobs = nCores) as pool:
         results = pool.map(do_the_twist_worker,
@@ -331,7 +337,11 @@ def single_points_in_parallel(scanDirs, scanDfs, torsionTag, config):
         "dynamic_ncols": False
     }
 
-    with WorkerPool(n_jobs = config["miscInfo"]["availableCpus"]) as pool:
+    nCoresPerCalculation = config["torsionScanInfo"].get("nCoresPerCalculation", 1)
+    availableCpus = config["miscInfo"]["availableCpus"]
+    maxPoolCores = max(1, availableCpus // nCoresPerCalculation)
+    nCores = min(len(argsList), maxPoolCores)
+    with WorkerPool(n_jobs = nCores) as pool:
         results = pool.map(do_the_single_point_worker,
                             make_single_arguments(argsList),
                               progress_bar=True,

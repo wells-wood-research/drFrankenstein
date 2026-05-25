@@ -63,6 +63,7 @@ def run_qmmm_singlepoint(qmmmSinglepointArgs):
     qmAtoms = config["runtimeInfo"]["madeByCharges"]["qmAtoms"]
     solvatedParams = config["runtimeInfo"]["madeByCharges"]["solvatedParams"]
 
+    nCoresPerCalculation = config["chargeFittingInfo"]["nCoresPerCalculation"]
     ## get conformer name, make a dir for qmmm opt calculations
     conformerName = p.basename(solvatedOptXyz).split(".")[0]
     
@@ -74,7 +75,8 @@ def run_qmmm_singlepoint(qmmmSinglepointArgs):
                                                                        moleculeInfo= config["moleculeInfo"],
                                                                        qmMethod= config["chargeFittingInfo"]["singlePointMethod"],
                                                                        qmAtoms=qmAtoms,
-                                                                       parameterFile=solvatedParams)
+                                                                       parameterFile=solvatedParams,
+                                                                       nCpus=nCoresPerCalculation)
     qmmmSinglepointOrcaOutput = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp.out")
     qmmmSinglepointBase = p.join(conformerQmmmSinglepointDir, "QMMM_orca_sp")
     qmmmSinglepointGbw = f"{qmmmSinglepointBase}.gbw"
@@ -171,12 +173,14 @@ def run_orca_solvator_for_charge_calculations(args: tuple) -> FilePath:
     conformerSolvatorDir = p.join(solvatorDir, conformerName)
     os.makedirs(conformerSolvatorDir, exist_ok=True)
 
+    nCoresPerCalculation = chargeFittingInfo["nCoresPerCalculation"]
     solvatorOrcaInput = drOrca.make_orca_input_for_solvator(inputXyz = conformerXyz,
                                                     outDir = conformerSolvatorDir,
                                                     moleculeInfo = moleculeInfo,
                                                     qmMethod = chargeFittingInfo["optMethod"],
                                                     solvationMethod = chargeFittingInfo["optSolvationMethod"],
-                                                    nWaters= nWaters)
+                                                    nWaters= nWaters,
+                                                    nCpus=nCoresPerCalculation)
     solvatorOrcaOutput = p.join(conformerSolvatorDir, "SOLVATOR_orca.out")
     solvatedXyz = p.join(conformerSolvatorDir, f"{conformerName}.xyz")
 
@@ -196,6 +200,7 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
 
     assemblyProtocol = config["miscInfo"]["assemblyProtocol"]
     chargeFittingProtocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
+    nCoresPerCalculation = chargeFittingInfo["nCoresPerCalculation"]
 
     conformerName = p.basename(conformerXyz).split(".")[0]
     
@@ -213,7 +218,8 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                     outDir = conformerQmDir,
                                                     moleculeInfo = moleculeInfo,
                                                     qmMethod = chargeFittingInfo["optMethod"],
-                                                    solvationMethod = optSolvation)
+                                                    solvationMethod = optSolvation,
+                                                    nCpus=nCoresPerCalculation)
     
     orcaOptOutput = p.join(conformerQmDir, "orca_opt.out")
     optXyz = p.join(conformerQmDir, "orca_opt.xyz")
@@ -237,7 +243,8 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                                     outDir = conformerQmDir,
                                                                     moleculeInfo = moleculeInfo,
                                                                     qmMethod = chargeFittingInfo["singlePointMethod"],
-                                                                    solvationMethod = singlePointSolvation)
+                                                                    solvationMethod = singlePointSolvation,
+                                                                    nCpus=nCoresPerCalculation)
         
         orcaCalculationOutput = p.join(conformerQmDir, "orca_opt_freq.out")
     else:
@@ -245,7 +252,8 @@ def run_orca_singlepoint_for_charge_calculations(args) -> None:
                                                                        outDir= conformerQmDir,
                                                                        moleculeInfo= moleculeInfo,
                                                                        qmMethod= chargeFittingInfo["singlePointMethod"],
-                                                                       solvationMethod = singlePointSolvation)
+                                                                       solvationMethod = singlePointSolvation,
+                                                                       nCpus=nCoresPerCalculation)
         orcaCalculationOutput = p.join(conformerQmDir, "orca_sp.out")
 
     calculationName = p.splitext(p.basename(orcaCalculationInput))[0]

@@ -21,11 +21,13 @@ from OperatingTools import drOrca, Timer
 def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
     optDir: DirectoryPath = p.join(conformerScanDir, f"{conformerId}_opt")
     os.makedirs(optDir, exist_ok=True)
+    nCoresPerCalculation = config["torsionScanInfo"].get("nCoresPerCalculation", 1)
     ## make an ORCA input file for optimisation
     optOrcaInput: FilePath = drOrca.make_orca_input_for_opt(inputXyz=conformerXyz,
                                                    outDir = optDir,moleculeInfo=config["moleculeInfo"],
                                                    qmMethod=config["torsionScanInfo"]["scanMethod"],
-                                                    solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"])
+                                                    solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
+                                                    nCpus=nCoresPerCalculation)
     flags = [p.join(optOrcaInput, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
                         
     if not any ([p.isfile(flag) for flag in flags]):
@@ -54,7 +56,8 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
                                                         qmMethod=config["torsionScanInfo"]["scanMethod"],
                                                         solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
                                                         torsionIndexes=torsionIndexes,
-                                                        scanAngles = forwardsScanText)
+                                                        scanAngles = forwardsScanText,
+                                                        nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1))
 
     
     flags = [p.join(forwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
@@ -92,7 +95,8 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
                                                         qmMethod=config["torsionScanInfo"]["scanMethod"],
                                                         solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
                                                         torsionIndexes=torsionIndexes,
-                                                        scanAngles = backwardsScanText)
+                                                        scanAngles = backwardsScanText,
+                                                        nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1))
 
 
     flags = [p.join(backwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
@@ -133,7 +137,8 @@ def run_singlepoints_on_scans(scanDir, scanDf, conformerId,  config):
                                                                        outDir= spDir,
                                                                        moleculeInfo=config["moleculeInfo"],
                                                                        qmMethod=config["torsionScanInfo"]["singlePointMethod"],
-                                                                       solvationMethod=config["torsionScanInfo"]["singlePointSolvationMethod"])
+                                                                       solvationMethod=config["torsionScanInfo"]["singlePointSolvationMethod"],
+                                                                       nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1))
         spOrcaOutput : FilePath = p.join(spDir, "orca_sp.out")
         if not p.isfile(spOrcaOutput):
             drOrca.run_orca(spOrcaInput, spOrcaOutput, config)

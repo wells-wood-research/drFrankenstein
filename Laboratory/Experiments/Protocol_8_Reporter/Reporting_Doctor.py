@@ -41,7 +41,8 @@ def reporter_protocol(config: dict) -> None:
     Reporting_Assistant.copy_images(config)
 
     ## run protocols
-    timeGanttPng    = plot_time_gantt.generate_gantt_chart(config)
+    timeGanttPng    = plot_time_gantt.generate_gantt_chart(config, time_key="executionTime", output_name="gantt_chart.png", time_label="Total Time")
+    cpuTimeGanttPng = plot_time_gantt.generate_gantt_chart(config, time_key="cpuTime", output_name="gantt_chart_cpu.png", time_label="CPU Time")
     wriggleData     = Reporting_Monster.process_wriggle_results(config)
     conformerPcaData = Conformer_PCA_Monster.process_conformer_pca_results(config)
     twistData       = Reporting_Monster.process_twist_results(config)
@@ -51,7 +52,7 @@ def reporter_protocol(config: dict) -> None:
     citationsData   = Shelly.gather_citations(config)
 
     reportHtml = p.join(reporterDir, "drFrankenstein_report.html")
-    make_html_report(timeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
+    make_html_report(timeGanttPng, cpuTimeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml)
 
     ## update config
     # config["checkpointInfo"]["reportingComplete"] = True
@@ -59,7 +60,7 @@ def reporter_protocol(config: dict) -> None:
     return config
 
 
-def make_html_report(timeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
+def make_html_report(timeGanttPng, cpuTimeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
 
     templateDir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(templateDir):
@@ -80,6 +81,7 @@ def make_html_report(timeGanttPng, wriggleData, conformerPcaData, twistData, cha
     renderedHtml = template.render(
         job_name=moleculeName,
         timeGanttPng=timeGanttPng,
+        cpuTimeGanttPng=cpuTimeGanttPng,
         conformer_data=wriggleData,
         conformer_pca_data=conformerPcaData,
         torsion_data=twistData,

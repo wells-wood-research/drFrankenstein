@@ -137,6 +137,11 @@ This section controls the parameters for the conformational search performed via
     *   **Type**: `String` (ORCA QM method specification)
     *   **Default**: `NONE` - absence will throw an error
 
+*   `nCoresPerCalculation`:
+    *   **Description**: The number of CPU cores to allocate for each torsion scan or single-point ORCA calculation. This value controls both the ORCA core count per calculation and the size of the multiprocessing pool.
+    *   **Type**: `Integer`
+    *   **Default**: `1`
+
 *   `scanSolvationMethod`:
     *   **Description**: The implicit solvation model applied during the torsion scan optimizations. Use `Null` or `None` (check script implementation for exact keyword) for gas-phase calculations. Examples: `ALPB(water)`, `CPCM(water)`.
     *   **Type**: `String` (ORCA solvation keyword) or `Null`
@@ -161,6 +166,7 @@ torsionScanInfo:
     nonPolarProtons: false                      ## Skip torsions ending in non-polar protons
   nConformers: -1                               ## Use all conformers
   scanMethod: XTB2                              ## Optimise geometries with XTB2 (cheap and fast!)
+  nCoresPerCalculation: 1                       ## One core per torsion scan calculation
   scanSolvationMethod: ALPB(water)              ## XTB2 compatible water model
   singlePointMethod: revPBE def2-SVP D3BJ       ## More accurate single point method
   singlePointSolvationMethod: CPCM(water)       ## revPBE compatible water model
@@ -316,6 +322,12 @@ This section contains miscellaneous settings affecting the overall script execut
     *   **Allowed Values**: `0`, `1`, `2`, `3`
     *   **Default**: `1`
 
+*   `conformerSelectionMethods`:
+    *   **Description**: Strategy for selecting conformers before charge fitting. `ENERGY` uses Boltzmann-weighted random sampling; `DIVERSE` clusters conformers in PCA torsion space (same protocol as the reporter PCA) and selects the lowest-energy conformer from each cluster.
+    *   **Type**: `String`
+    *   **Allowed Values**: `ENERGY`, `DIVERSE`
+    *   **Default**: `ENERGY`
+
 *   `assemblyProtocol`:
     *   **Description**: Controls which assembly backend to use.
     *   **Type**: `String`
@@ -332,6 +344,7 @@ This section contains miscellaneous settings affecting the overall script execut
 miscInfo:
   availableCpus: 8      ## use 8 cores
   cleanUpLevel: 2       ## delete intermediate files
+  conformerSelectionMethods: DIVERSE  ## cluster conformers in PCA space
 ```
 <div style="clear: both;"></div> 
 

@@ -158,6 +158,7 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
         "scanSolvationMethod": (str, type(None)),
         "singlePointMethod": (str, type(None)),
         "singlePointSolvationMethod": (str, type(None)),
+        "nCoresPerCalculation": int,
     }
 
     for key, expectedType in requiredKeys.items():
@@ -172,7 +173,9 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
             value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
+            if _validate_type(value, expectedType, keyPath, errors):
+                if key == "nCoresPerCalculation" and isinstance(value, int) and value <= 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
 
     # Validate runScansOn structure
     if "runScansOn" in sectionData and isinstance(sectionData["runScansOn"], dict):
@@ -301,9 +304,11 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "cleanUpLevel": int,
         "assemblyProtocol": str,
         "seed": int,
+        "conformerSelectionMethods": str,
     }
 
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
+    allowedSelectionMethods = ["ENERGY", "DIVERSE"]
 
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
@@ -324,6 +329,10 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     _validate_allowed_values(value, allowedAssemblyProtocols, keyPath, errors)
                 elif key == "seed" and isinstance(value, int) and value < 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
+                elif key == "conformerSelectionMethods" and isinstance(value, str):
+                    if value.upper() in allowedSelectionMethods:
+                        continue
+                    _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
 
 def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]):
     """
@@ -363,6 +372,29 @@ def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[s
             continue
         if not all(isinstance(alias, str) for alias in aliases):
             _add_error(errors, aliasKeyPath, "All aliases must be strings.")
+
+
+def _validate_torsion_scan_cores(config: Dict[str, Any], errors: Dict[str, str]):
+    """
+    Cross-section validation for torsionScanInfo.nCoresPerCalculation.
+    """
+    torsionScanInfo = config.get("torsionScanInfo")
+    miscInfo = config.get("miscInfo")
+    if not isinstance(torsionScanInfo, dict) or not isinstance(miscInfo, dict):
+        return
+
+    nCoresPerCalculation = torsionScanInfo.get("nCoresPerCalculation")
+    availableCpus = miscInfo.get("availableCpus")
+    if (
+        isinstance(nCoresPerCalculation, int)
+        and isinstance(availableCpus, int)
+        and nCoresPerCalculation > availableCpus
+    ):
+        _add_error(
+            errors,
+            "torsionScanInfo.nCoresPerCalculation",
+            "nCoresPerCalculation cannot exceed miscInfo.availableCpus.",
+        )
 
 
 
@@ -414,6 +446,7 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
     _validate_parameter_fitting_info(config.get("parameterFittingInfo"), "parameterFittingInfo", errors)
     _validate_misc_info(config.get("miscInfo"), "miscInfo", errors)
     _validate_backbone_charge_enforcement(config, errors)
+    _validate_torsion_scan_cores(config, errors)
 
     if len(errors) == 0:
         return config # Validation successful

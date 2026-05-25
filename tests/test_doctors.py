@@ -463,7 +463,7 @@ class TestReportingDoctor(DoctorTestBase):
         with tempfile.TemporaryDirectory() as tmp:
             cfg = self.make_base_config(tmp)
             with patch.object(Reporting_Doctor.Reporting_Assistant, "copy_images"), \
-                 patch.object(Reporting_Doctor.plot_time_gantt, "generate_gantt_chart", return_value="gantt.png"), \
+                 patch.object(Reporting_Doctor.plot_time_gantt, "generate_gantt_chart", side_effect=["gantt.png", "gantt_cpu.png"]), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_wriggle_results", return_value={}), \
                  patch.object(Reporting_Doctor.Conformer_PCA_Monster, "process_conformer_pca_results", return_value={}), \
                  patch.object(Reporting_Doctor.Reporting_Monster, "process_twist_results", return_value={}), \

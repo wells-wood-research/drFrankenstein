@@ -23,7 +23,7 @@ from . import Charged_Assistant
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Charge Calculation")
-@Timer.time_function("Charge Calculation", "CHARGE_CALCULATION")
+@Timer.time_function("Charge Calculation", "CHARGE_CALCULATIONS")
 def charge_protocol(config: dict, debug: bool = False) -> dict:
     """
     Main protocol for charge fitting
@@ -330,7 +330,8 @@ def add_solvation_shell_with_SOLVATOR(config: dict,
         ## work out how many cpus to use
         availableCpus = config["miscInfo"]["availableCpus"]
         nCoresPerCalculation = chargeFittingInfo["nCoresPerCalculation"]
-        nCpus = min(availableCpus, len(solvatorArgList))
+        maxPoolCores = max(1, availableCpus // nCoresPerCalculation)
+        nCpus = min(maxPoolCores, len(solvatorArgList))
 
         ## set OMP_NUM_THREADS
         with WorkerPool(n_jobs = nCpus) as pool:        
@@ -467,7 +468,10 @@ def run_qm_calculations_for_RESP(conformerXyzs: list[FilePath],
             Charged_Monster.run_orca_singlepoint_for_charge_calculations(arg)
     ## run in parallel
     else:
-        nCpus = min(len(argsList), config["miscInfo"]["availableCpus"])
+        availableCpus = config["miscInfo"]["availableCpus"]
+        nCoresPerCalculation = chargeFittingInfo["nCoresPerCalculation"]
+        maxPoolCores = max(1, availableCpus // nCoresPerCalculation)
+        nCpus = min(len(argsList), maxPoolCores)
         with WorkerPool(n_jobs = nCpus) as pool:        
 
             pool.map(Charged_Monster.run_orca_singlepoint_for_charge_calculations,

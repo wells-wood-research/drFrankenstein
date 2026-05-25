@@ -18,8 +18,14 @@ def time_function(functionAlias: str, functionGroup: str = None):
         def wrapper(*args, **kwargs):
             config = kwargs["config"]  # Only works when args are explicitly defined as a kwarg
             startTime = time.time()
+            startCpuTimes = os.times()
             result = func(*args, **kwargs)  # Execute the function
             executionTime = time.time() - startTime
+            endCpuTimes = os.times()
+            cpuTime = (
+                (endCpuTimes.user + endCpuTimes.system + endCpuTimes.children_user + endCpuTimes.children_system)
+                - (startCpuTimes.user + startCpuTimes.system + startCpuTimes.children_user + startCpuTimes.children_system)
+            )
             
             functionName = func.__name__
 
@@ -32,9 +38,12 @@ def time_function(functionAlias: str, functionGroup: str = None):
                 config["runtimeInfo"]["timeInfo"][functionName] = {}
                 config["runtimeInfo"]["timeInfo"][functionName]["functionAlias"] = functionAlias
                 config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] = executionTime
+                config["runtimeInfo"]["timeInfo"][functionName]["cpuTime"] = cpuTime
                 config["runtimeInfo"]["timeInfo"][functionName]["functionGroup"] = functionGroup
             else:
                 config["runtimeInfo"]["timeInfo"][functionName]["executionTime"] += executionTime
+                existingCpuTime = config["runtimeInfo"]["timeInfo"][functionName].get("cpuTime", 0.0)
+                config["runtimeInfo"]["timeInfo"][functionName]["cpuTime"] = existingCpuTime + cpuTime
 
             return result  # Return the function's result unchanged
         return wrapper

@@ -94,7 +94,8 @@ def make_orca_input_qmmm_singlepoint(inputXyz: FilePath,
                                 moleculeInfo: dict,
                                 qmMethod: str,
                                 qmAtoms: str,
-                                parameterFile: FilePath) -> FilePath:
+                                parameterFile: FilePath,
+                                nCpus: int | None = None) -> FilePath:
     ## write QM/MM single-point orca input file
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -105,6 +106,8 @@ def make_orca_input_qmmm_singlepoint(inputXyz: FilePath,
         f.write(" # --------------------------------- #\n")  
         ## simpleinput line for method and QMMM flag      
         f.write(f"! QMMM {qmMethod} SP\n")
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## qmmmm options
         f.write("%qmmm\n")
         f.write(f"{' '*4}QMAtoms {qmAtoms} end\n")
@@ -119,7 +122,8 @@ def make_orca_input_for_solvator(inputXyz: FilePath,
                                     moleculeInfo: dict,
                                       qmMethod: str,
                                         solvationMethod: str,
-                                          nWaters: int) -> FilePath:
+                                          nWaters: int,
+                                            nCpus: int | None = None) -> FilePath:
     """
     Creates and ORCA input file to run the SOLVATOR protocol
     """
@@ -133,6 +137,8 @@ def make_orca_input_for_solvator(inputXyz: FilePath,
         f.write(" # --------------------------------- #\n")
         ## method and solvation
         f.write(f"!{qmMethod} {solvationMethod}\n")
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## solvator params
         f.write(f"%SOLVATOR\n")
         f.write(f"{' '*4}NSOLV {nWaters}\n")
@@ -177,7 +183,8 @@ def make_orca_input_for_opt(inputXyz: FilePath,
                                moleculeInfo: dict,
                                  qmMethod: str,
                                    solvationMethod: str,
-                                     geomOptions:str = None) -> FilePath:
+                                     geomOptions:str = None,
+                                       nCpus: int | None = None) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -192,6 +199,8 @@ def make_orca_input_for_opt(inputXyz: FilePath,
             f.write(f"! {qmMethod} Opt\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} Opt\n") 
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
 
         if not geomOptions is None:
             f.write(f"%geom\n{geomOptions}\nend\n")
@@ -207,7 +216,8 @@ def  make_orca_input_for_scan(inputXyz,
                                    qmMethod,
                                      solvationMethod,
                                        torsionIndexes,
-                                         scanAngles):
+                                         scanAngles,
+                                           nCpus: int | None = None):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -222,6 +232,8 @@ def  make_orca_input_for_scan(inputXyz,
             f.write(f"! {qmMethod} Opt\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} Opt\n") 
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## SCAN 
         if not scanAngles is None:
             f.write("%geom Scan\n")
@@ -258,7 +270,7 @@ def  make_orca_input_for_sp(inputXyz, outDir, moleculeInfo, qmMethod, solvationM
 
 
 
-def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -273,13 +285,15 @@ def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solv
             f.write(f"! {qmMethod} Opt Freq\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} Opt Freq\n") 
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## GEOMETRY
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
 
     return orcaInputFile
 
 
-def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -294,6 +308,8 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
             f.write(f"! {qmMethod} SP\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} SP\n") 
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## GEOMETRY
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
 
@@ -301,7 +317,7 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
 
 
 
-def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -316,6 +332,8 @@ def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvatio
             f.write(f"! {qmMethod} RESP\n")
         else:
             f.write(f"! {qmMethod} {solvationMethod} SP\n") 
+        if nCpus is not None:
+            f.write(f"%pal nprocs {nCpus}\nend\n")
         ## GEOMETRY
         f.write(f"*xyzfile {charge} {multiplicity} {inputXyz}\n\n")
 

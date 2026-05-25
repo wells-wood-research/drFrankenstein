@@ -240,7 +240,7 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
 
 
 # Main Visualization Orchestration Functions
-def generate_gantt_chart(config):
+def generate_gantt_chart(config, time_key="executionTime", output_name="gantt_chart.png", time_label="Time"):
     """
     Generates and saves the Gantt chart. X-axis is in hours if total runtime > 5 hours, else minutes.
     """
@@ -269,9 +269,10 @@ def generate_gantt_chart(config):
     # --- Data Preparation ---
     dataForDf = []
     for funcNameKey, detailsDict in timeInfo.items():
+        time_value = detailsDict.get(time_key, 0.0)
         dataForDf.append({
             'functionName': funcNameKey,
-            'executionTimeSeconds': detailsDict['executionTime']
+            'executionTimeSeconds': time_value
         })
     timeDf = pd.DataFrame(dataForDf)
 
@@ -303,10 +304,10 @@ def generate_gantt_chart(config):
     RUNTIME_THRESHOLD_SECONDS = 5 * 3600 # 5 hours
     if totalRuntimeSeconds > RUNTIME_THRESHOLD_SECONDS:
         time_unit_divisor = 3600.0  # Hours
-        x_axis_label_text = "Time (Hours)"
+        x_axis_label_text = f"{time_label} (Hours)"
     else:
         time_unit_divisor = 60.0   # Minutes
-        x_axis_label_text = "Time (Minutes)"
+        x_axis_label_text = f"{time_label} (Minutes)"
 
     max_x_val_on_axis = totalRuntimeSeconds / time_unit_divisor if totalRuntimeSeconds > 0 else 0
     
@@ -347,7 +348,7 @@ def generate_gantt_chart(config):
         x_axis_label_text
     )
 
-    ganttPngPath = p.join(timeImagesDir, "gantt_chart.png")
+    ganttPngPath = p.join(timeImagesDir, output_name)
     plt.savefig(ganttPngPath, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
     plt.close(fig)
 

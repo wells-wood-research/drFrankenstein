@@ -125,8 +125,8 @@ parameterFittingInfo:
   ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
   maxCosineFunctions: 3
   ## global joint mode runs a single global round
-  maxShuffles: 50
-  minShuffles: 10
+  maxShuffles: 5
+  minShuffles: 2
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true

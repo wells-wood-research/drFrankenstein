@@ -62,6 +62,21 @@ def _build_conformer_html_map(conformer_names: list[str], images_dir: str, repor
     return conformer_html_map
 
 
+def _conformer_names_from_xyzs(conformer_xyzs: list[str]) -> list[str]:
+    return [p.splitext(p.basename(conformer_xyz))[0] for conformer_xyz in conformer_xyzs]
+
+
+def _infer_torsion_scan_xyzs(config: dict, conformer_xyzs: list[str]) -> list[str]:
+    n_conformers_requested = config.get("torsionScanInfo", {}).get("nConformers", -1)
+    if n_conformers_requested == -1 or n_conformers_requested >= len(conformer_xyzs):
+        return conformer_xyzs
+
+    from OperatingTools import select_conformers
+
+    ordered_conformers = select_conformers.get_ordered_conformer_xyzs(config)
+    return ordered_conformers[:n_conformers_requested]
+
+
 def _run_pca(angle_df: pd.DataFrame) -> tuple[pd.DataFrame, list[float], bool]:
     feature_columns = [column for column in angle_df.columns if column != "conformer"]
     feature_matrix = angle_df[feature_columns].to_numpy()
@@ -97,9 +112,16 @@ def _run_pca(angle_df: pd.DataFrame) -> tuple[pd.DataFrame, list[float], bool]:
     return pca_df, explained_variance, True
 
 
-def _build_pca_plot_html(pca_df: pd.DataFrame, explained_variance: list[float]) -> str:
+def _build_pca_plot_html(
+    pca_df: pd.DataFrame,
+    explained_variance: list[float],
+    selected_for_charges: set[str] | None = None,
+    selected_for_scans: set[str] | None = None,
+) -> str:
     energy_values = pca_df["energy"].astype(float).tolist()
     colorscale, cmin, cmax = _build_energy_colorscale(energy_values)
+    selected_for_charges = selected_for_charges or set()
+    selected_for_scans = selected_for_scans or set()
 
     fig = go.Figure(
         data=[
@@ -107,6 +129,7 @@ def _build_pca_plot_html(pca_df: pd.DataFrame, explained_variance: list[float]) 
                 x=pca_df["pc1"],
                 y=pca_df["pc2"],
                 mode="markers",
+                showlegend=False,
                 customdata=np.column_stack((pca_df["conformer"], pca_df["energy"])),
                 hovertemplate=(
                     "<b>%{customdata[0]}</b><br>"
@@ -121,9 +144,13 @@ def _build_pca_plot_html(pca_df: pd.DataFrame, explained_variance: list[float]) 
                     cmin=cmin,
                     cmax=cmax,
                     colorbar=dict(
-                        title=dict(text="Energy (kcal/mol)", font=dict(color="yellow")),
+                        title=dict(text="Relative Energy\n(kcal/mol)", font=dict(color="yellow")),
                         tickfont=dict(color="yellow"),
                         outlinecolor="yellow",
+                        x=1.05,
+                        y=0.4,
+                        len=0.8,
+                        thickness=16,
                     ),
                     line=dict(color="black", width=1),
                 ),
@@ -131,13 +158,71 @@ def _build_pca_plot_html(pca_df: pd.DataFrame, explained_variance: list[float]) 
         ]
     )
 
+    scan_selected_df = pca_df[pca_df["conformer"].isin(selected_for_scans)]
+    if not scan_selected_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=scan_selected_df["pc1"],
+                y=scan_selected_df["pc2"],
+                mode="markers",
+                name="Torsion scan",
+                customdata=np.column_stack((scan_selected_df["conformer"], scan_selected_df["energy"])),
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "PC1: %{x:.4f}<br>"
+                    "PC2: %{y:.4f}<br>"
+                    "Energy: %{customdata[1]:.4f} kcal/mol<extra></extra>"
+                ),
+                marker=dict(
+                    size=18,
+                    color="#00FFFF",
+                    symbol="square-open",
+                    line=dict(color="#00FFFF", width=2),
+                ),
+            )
+        )
+
+    charge_selected_df = pca_df[pca_df["conformer"].isin(selected_for_charges)]
+    if not charge_selected_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=charge_selected_df["pc1"],
+                y=charge_selected_df["pc2"],
+                mode="markers",
+                name="Charge fitting",
+                customdata=np.column_stack((charge_selected_df["conformer"], charge_selected_df["energy"])),
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "PC1: %{x:.4f}<br>"
+                    "PC2: %{y:.4f}<br>"
+                    "Energy: %{customdata[1]:.4f} kcal/mol<extra></extra>"
+                ),
+                marker=dict(
+                    size=18,
+                    color="#FFA500",
+                    symbol="diamond-open",
+                    line=dict(color="#FFA500", width=2),
+                ),
+            )
+        )
+
     fig.update_layout(
         title=dict(text="Conformer PCA of torsional space", font=dict(color="yellow")),
         template="plotly_dark",
         paper_bgcolor="#111111",
         plot_bgcolor="#111111",
         font=dict(color="yellow", family="Consolas, Courier New, monospace"),
-        margin=dict(l=70, r=40, t=60, b=60),
+        margin=dict(l=70, r=150, t=60, b=60),
+        legend=dict(
+            x=1.05,
+            y=0.98,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(0, 0, 0, 0.6)",
+            bordercolor="yellow",
+            borderwidth=1,
+            font=dict(color="yellow"),
+        ),
     )
     fig.update_xaxes(
         title=dict(text=f"PC1 ({explained_variance[0] * 100:.1f}% variance)", font=dict(color="yellow")),
@@ -232,9 +317,15 @@ def _measure_ramachandran_angles(conformer_xyzs: list[str], phi_psi_pairs: list[
     return ramachan_rows
 
 
-def _build_ramachandran_plot_html(rama_df: pd.DataFrame) -> str:
+def _build_ramachandran_plot_html(
+    rama_df: pd.DataFrame,
+    selected_for_charges: set[str] | None = None,
+    selected_for_scans: set[str] | None = None,
+) -> str:
     energy_values = rama_df["energy"].astype(float).tolist()
     colorscale, cmin, cmax = _build_energy_colorscale(energy_values)
+    selected_for_charges = selected_for_charges or set()
+    selected_for_scans = selected_for_scans or set()
 
     fig = go.Figure(
         data=[
@@ -242,6 +333,7 @@ def _build_ramachandran_plot_html(rama_df: pd.DataFrame) -> str:
                 x=rama_df["phi"],
                 y=rama_df["psi"],
                 mode="markers",
+                showlegend=False,
                 customdata=np.column_stack((rama_df["conformer"], rama_df["residueKey"], rama_df["energy"])),
                 hovertemplate=(
                     "<b>%{customdata[0]}</b><br>"
@@ -260,6 +352,10 @@ def _build_ramachandran_plot_html(rama_df: pd.DataFrame) -> str:
                         title=dict(text="Energy (kcal/mol)", font=dict(color="yellow")),
                         tickfont=dict(color="yellow"),
                         outlinecolor="yellow",
+                        x=1.05,
+                        y=0.4,
+                        len=0.8,
+                        thickness=16,
                     ),
                     line=dict(color="black", width=1),
                 ),
@@ -267,13 +363,77 @@ def _build_ramachandran_plot_html(rama_df: pd.DataFrame) -> str:
         ]
     )
 
+    scan_selected_df = rama_df[rama_df["conformer"].isin(selected_for_scans)]
+    if not scan_selected_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=scan_selected_df["phi"],
+                y=scan_selected_df["psi"],
+                mode="markers",
+                name="Torsion scan",
+                customdata=np.column_stack(
+                    (scan_selected_df["conformer"], scan_selected_df["residueKey"], scan_selected_df["energy"])
+                ),
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "%{customdata[1]}<br>"
+                    "Phi: %{x:.1f}°<br>"
+                    "Psi: %{y:.1f}°<br>"
+                    "Energy: %{customdata[2]:.4f} kcal/mol<extra></extra>"
+                ),
+                marker=dict(
+                    size=16,
+                    color="#00FFFF",
+                    symbol="square-open",
+                    line=dict(color="#00FFFF", width=2),
+                ),
+            )
+        )
+
+    charge_selected_df = rama_df[rama_df["conformer"].isin(selected_for_charges)]
+    if not charge_selected_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=charge_selected_df["phi"],
+                y=charge_selected_df["psi"],
+                mode="markers",
+                name="Charge fitting",
+                customdata=np.column_stack(
+                    (charge_selected_df["conformer"], charge_selected_df["residueKey"], charge_selected_df["energy"])
+                ),
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "%{customdata[1]}<br>"
+                    "Phi: %{x:.1f}°<br>"
+                    "Psi: %{y:.1f}°<br>"
+                    "Energy: %{customdata[2]:.4f} kcal/mol<extra></extra>"
+                ),
+                marker=dict(
+                    size=16,
+                    color="#FFA500",
+                    symbol="diamond-open",
+                    line=dict(color="#FFA500", width=2),
+                ),
+            )
+        )
+
     fig.update_layout(
         title=dict(text="Ramachandran plot (Phi vs Psi)", font=dict(color="yellow")),
         template="plotly_dark",
         paper_bgcolor="#111111",
         plot_bgcolor="#111111",
         font=dict(color="yellow", family="Consolas, Courier New, monospace"),
-        margin=dict(l=70, r=40, t=60, b=60),
+        margin=dict(l=70, r=150, t=60, b=60),
+        legend=dict(
+            x=1.05,
+            y=0.98,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(0, 0, 0, 0.6)",
+            bordercolor="yellow",
+            borderwidth=1,
+            font=dict(color="yellow"),
+        ),
     )
     fig.update_xaxes(
         title=dict(text="Phi (°)", font=dict(color="yellow")),
@@ -320,7 +480,19 @@ def process_conformer_pca_results(config: dict) -> dict:
         _lookup_conformer_energy(conformer_name, conformer_energies)
         for conformer_name in pca_df["conformer"]
     ]
-    plot_html = _build_pca_plot_html(pca_df, explained_variance)
+    charges_xyzs = config.get("runtimeInfo", {}).get("madeByCharges", {}).get("conformerXyzsForCharges", [])
+    torsion_scan_xyzs = config.get("runtimeInfo", {}).get("madeByTwisting", {}).get("conformerXyzsForTorsionScans", [])
+    if not torsion_scan_xyzs:
+        torsion_scan_xyzs = _infer_torsion_scan_xyzs(config, conformer_xyzs)
+        if torsion_scan_xyzs:
+            config.setdefault("runtimeInfo", {}).setdefault("madeByTwisting", {})[
+                "conformerXyzsForTorsionScans"
+            ] = torsion_scan_xyzs
+    selected_for_charges = set(_conformer_names_from_xyzs(charges_xyzs))
+    selected_for_scans = set(_conformer_names_from_xyzs(torsion_scan_xyzs))
+    pca_df["selectedForCharges"] = pca_df["conformer"].isin(selected_for_charges)
+    pca_df["selectedForTorsionScans"] = pca_df["conformer"].isin(selected_for_scans)
+    plot_html = _build_pca_plot_html(pca_df, explained_variance, selected_for_charges, selected_for_scans)
     conformer_html_map = _build_conformer_html_map(
         pca_df["conformer"].tolist(),
         images_dir,
@@ -342,7 +514,7 @@ def process_conformer_pca_results(config: dict) -> dict:
             rama_rows = _measure_ramachandran_angles(conformer_xyzs, phi_psi_pairs, conformer_energies)
             if rama_rows:
                 rama_df = pd.DataFrame(rama_rows)
-                ramachandran_plot_html = _build_ramachandran_plot_html(rama_df)
+                ramachandran_plot_html = _build_ramachandran_plot_html(rama_df, selected_for_charges, selected_for_scans)
                 ramachandran_available = True
 
     pca_data = {
@@ -355,6 +527,8 @@ def process_conformer_pca_results(config: dict) -> dict:
         "ramachandranPlotHtml": ramachandran_plot_html,
         "ramachandranAvailable": ramachandran_available,
         "conformerHtmlMap": conformer_html_map,
+        "selectedConformersForCharges": sorted(selected_for_charges),
+        "selectedConformersForTorsionScans": sorted(selected_for_scans),
         "nConformers": len(conformer_xyzs),
         "nTorsions": len(torsions),
     }

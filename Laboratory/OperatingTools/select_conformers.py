@@ -105,6 +105,9 @@ def _select_conformers_by_pca_kmeans(config: dict, nConformers: int) -> list[Fil
 
     twisting_info = config.get("runtimeInfo", {}).get("madeByTwisting", {})
     if "allDihedrals" not in twisting_info:
+        config = _ensure_torsion_definitions(config)
+        twisting_info = config.get("runtimeInfo", {}).get("madeByTwisting", {})
+    if "allDihedrals" not in twisting_info:
         raise ValueError("PCA selection requires runtimeInfo.madeByTwisting.allDihedrals.")
 
     torsions = Conformer_PCA_Monster._flatten_all_dihedrals(config)
@@ -141,3 +144,48 @@ def _select_conformers_by_pca_kmeans(config: dict, nConformers: int) -> list[Fil
 
     name_to_xyz = {p.splitext(p.basename(conformer_xyz))[0]: conformer_xyz for conformer_xyz in conformerXyzs}
     return [name_to_xyz[conformer_name] for conformer_name in selected_names if conformer_name in name_to_xyz]
+
+
+def _ensure_torsion_definitions(config: dict) -> dict:
+    runtime_info = config.setdefault("runtimeInfo", {})
+    twisting_info = runtime_info.setdefault("madeByTwisting", {})
+    if "allDihedrals" in twisting_info:
+        return config
+
+    config = _ensure_assembly_ready(config)
+
+    from Experiments.Protocol_5_Twisting import Twisted_Assistant
+
+    force_field = config.get("parameterFittingInfo", {}).get("forceField")
+    if not force_field:
+        raise ValueError("PCA selection requires parameterFittingInfo.forceField.")
+
+    return Twisted_Assistant.identify_rotatable_bonds(config, mode=force_field)
+
+
+def _ensure_assembly_ready(config: dict) -> dict:
+    runtime_info = config.setdefault("runtimeInfo", {})
+    assembly_info = runtime_info.get("madeByAssembly", {})
+    assembly_protocol = config.get("miscInfo", {}).get("assemblyProtocol")
+    if not assembly_protocol:
+        raise ValueError("PCA selection requires miscInfo.assemblyProtocol to run torsion identification early.")
+
+    force_field = config.get("parameterFittingInfo", {}).get("forceField")
+    if not force_field:
+        raise ValueError("PCA selection requires parameterFittingInfo.forceField to run torsion identification early.")
+
+    if force_field == "AMBER":
+        needs_assembly = not assembly_info or "assembledPrmtop" not in assembly_info
+    elif force_field == "CHARMM":
+        needs_assembly = not assembly_info or any(
+            key not in assembly_info for key in ("assembledPsf", "assembledPrm", "assembledRtf")
+        )
+    else:
+        needs_assembly = not assembly_info
+
+    if needs_assembly:
+        from Experiments.Protocol_4_Assembly import Assembly_Doctor
+
+        config = Assembly_Doctor.parameter_assembly_protocol(config)
+
+    return config

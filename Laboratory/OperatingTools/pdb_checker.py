@@ -13,17 +13,33 @@ class DirectoryPath:
 def check_pdb(config: dict) -> None:
     inputDir = config["pathInfo"]["inputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
-    charge = config["moleculeInfo"]["charge"]
-    multiplicity = config["moleculeInfo"]["multiplicity"]
     molPdb = p.join(inputDir, f"{moleculeName}.pdb")
     pdbDf = pdb2df(molPdb)
 
     check_for_duplicate_atoms(pdbDf)
+
+
+def validate_charge_multiplicity(config: dict, pdb_path: FilePath) -> None:
+    charge = config["moleculeInfo"]["charge"]
+    multiplicity = config["moleculeInfo"]["multiplicity"]
+    pdbDf = pdb2df(pdb_path)
     electron_checker.validate_charge_multiplicity_from_pdb(
         pdb_df=pdbDf,
         charge=charge,
         multiplicity=multiplicity
     )
+
+
+def get_capped_pdb_path(config: dict) -> FilePath:
+    runtime_info = config.get("runtimeInfo", {})
+    made_by_capping = runtime_info.get("madeByCapping", {})
+    capped_pdb = made_by_capping.get("cappedPdb")
+    if not capped_pdb:
+        raise ValueError(
+            "Capped PDB not found in runtimeInfo.madeByCapping.cappedPdb. "
+            "Ensure the capping protocol has completed before running the electron check."
+        )
+    return capped_pdb
 
 
 def check_for_duplicate_atoms(pdbDf: pd.DataFrame):

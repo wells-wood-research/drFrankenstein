@@ -116,6 +116,11 @@ def run_torsion_scanning(torsionTag: str,
     else:
         nConformersTarget = nConformersRequested
 
+    if "conformerXyzsForTorsionScans" not in config["runtimeInfo"]["madeByTwisting"]:
+        config["runtimeInfo"]["madeByTwisting"]["conformerXyzsForTorsionScans"] = (
+            allConformerXyzs[:nConformersTarget]
+        )
+
     scanDfs = []
     scanDirs = []
     remainingConformerXyzs = allConformerXyzs.copy()

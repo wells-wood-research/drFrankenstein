@@ -80,11 +80,15 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 [x] CONSTRAIN NON-CAPPING ATOMS in CAPPING OPT
 [x] MAKE CHARGE FITTING EXIT CONDITIONS FOR MULTIFN MORE ELEGANT - weird pause at the end?
 [] WHERES ASSEMBLY SPLASH GONE?
-[] FOR TRICKY TORSIONS, WE CAN TRY NEW CONFORMERS AS STARTS. IF THIS FAILS COMPLETELY DO WE NEED A NEW PROTOCOL?
+[x] FOR TRICKY TORSIONS, WE CAN TRY NEW CONFORMERS AS STARTS. IF THIS FAILS COMPLETELY DO WE NEED A NEW PROTOCOL?
 [] L2DAMPENING can be set to 0 or False 
 [] electron checker needs to run AFTER capping (or ignore N and C termini)
-[] diversity-based conformer selection method (Torsion_PCA -> Silouette_kNN -> BolzSample from clusters)
+[x] diversity-based conformer selection method (Torsion_PCA -> Silouette_kNN -> BolzSample from clusters)
 [] nCpus option for scanning
+[] change CONVERGED messege during stitching
+[x] plotting of conformers - make cbar and labels not overlap
+[] page for capping?
+
 
 
 ## BETTER MAE 

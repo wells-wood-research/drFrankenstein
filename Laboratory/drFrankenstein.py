@@ -80,6 +80,9 @@ def main():
             drSplash.show_capping_splash()
             config = Capping_Doctor.capping_protocol(config=config)
             drYaml.write_config_to_yaml(config, outputDir)
+
+        cappedPdb = pdb_checker.get_capped_pdb_path(config)
+        pdb_checker.validate_charge_multiplicity(config, cappedPdb)
         
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:

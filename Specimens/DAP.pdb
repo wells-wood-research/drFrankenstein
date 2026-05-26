@@ -1,0 +1,33 @@
+ATOM      1  N   DAP A  10      -0.124 -26.449   6.865  1.00 48.92           N  
+ATOM      2  CA  DAP A  10       0.240 -26.796   8.283  1.00 46.05           C  
+ATOM      3  C   DAP A  10       0.740 -28.224   8.437  1.00 45.57           C  
+ATOM      4  O1  DAP A  10       1.129 -28.782   7.275  1.00 41.56           O  
+ATOM      5  CB  DAP A  10      -1.001 -26.604   9.166  1.00 41.63           C  
+ATOM      6  NG  DAP A  10      -1.744 -25.415   8.639  1.00 37.89           N1+
+ATOM      7  O   DAP A  10       0.791 -28.834   9.490  1.00 45.57           O  
+ATOM      8  H03 DAP A  10       1.470 -29.677   7.504  1.00 41.56           H  
+ATOM      9  H   DAP A  10      -0.428 -27.325   6.408  1.00 48.92           H  
+ATOM     10  HA  DAP A  10       1.038 -26.115   8.599  1.00  0.00           H  
+ATOM     11  HB1 DAP A  10      -1.693 -27.450   9.097  1.00  0.00           H  
+ATOM     12  HB2 DAP A  10      -0.757 -26.405  10.213  1.00  0.00           H  
+ATOM     13  HG1 DAP A  10      -1.337 -24.527   8.951  1.00  0.00           H  
+ATOM     14  HG2 DAP A  10      -1.618 -25.441   7.606  1.00  0.00           H  
+ATOM     15  HG3 DAP A  10      -2.747 -25.428   8.852  1.00  0.00           H  
+ATOM     16  H01 DAP A  10       0.765 -26.291   6.366  1.00 48.92           H  
+CONECT    1    2    9   16
+CONECT    2    1    3    5   10
+CONECT    3    2    7    4
+CONECT    4    3    8
+CONECT    5    2    6   11   12
+CONECT    6    5   13   14   15
+CONECT    7    3
+CONECT    8    4
+CONECT    9    1
+CONECT   10    2
+CONECT   11    5
+CONECT   12    5
+CONECT   13    6
+CONECT   14    6
+CONECT   15    6
+CONECT   16    1
+END

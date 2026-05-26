@@ -558,7 +558,8 @@ def run_charge_fitting(config: dict,
                 index = child.expect([r"Progress: \[.*?\]\s+(\d+\.\d+) %",                              ## 0 - update progress bar
                                       r" Sum of charges:*",                                              ## 1 - process finished flag
                                       pexpect.EOF,                                                      ## 2 - process ended before expected output
-                                        pexpect.TIMEOUT],                                               ## 3 - no fresh output yet
+                                        pexpect.TIMEOUT,
+                                        " Error: Convergence failed!"],                                               ## 3 - no fresh output yet
                                       timeout=5)
                 if index == 0:  # Progress line matched
                     progress_bar.update(1)  # Update the tqdm bar by 1 tick
@@ -569,6 +570,8 @@ def run_charge_fitting(config: dict,
                     break
                 elif index == 3:  # timeout, keep waiting silently
                     continue
+                elif index == 4:  # convergence failed
+                    raise RuntimeError("Charge fitting process failed: Convergence failed!")
 
         except pexpect.ExceptionPexpect as e:
             raise RuntimeError(f"Charge fitting process failed: {e}") from e

@@ -12,6 +12,7 @@ import tempfile
 from itertools import islice
 from matplotlib.ticker import MaxNLocator
 
+import matplotlib.gridspec as gridspec
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -85,6 +86,8 @@ def plot_run_mean_average_error(outDir, maeCsv):
 
     plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
     plt.close()
+
+
 
 def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, torsionTag: str):
 
@@ -194,7 +197,7 @@ def set_rc_params():
     plt.rcParams['xtick.labelsize'] = 18
     plt.rcParams['ytick.labelsize'] = 18
     plt.rcParams['legend.fontsize'] = 18
-
+    plt.rcParams.update({'font.family': 'monospace'}) 
 
 
 #####################################################################
@@ -210,98 +213,155 @@ def plot_qmmm_energies(qmTotalEnergy,
                         nCosines,
                         converged,
                         outDir,
-                        shuffleIndex):
+                        shuffleIndex,
+                        tol):
     
-
     set_rc_params()
-    ## init some colors to be used
     white :str = '#FFFFFF'
     magenta : str = '#FF00FF'
     brightCyan: str = '#00FFFF'
     shuffleLabel = f"fitting_shuffle_{shuffleIndex}_nCosines_{nCosines}"
+
     if not (len(qmTotalEnergy) == len(qmTorsionEnergy) == len(mmTotalEnergy) == len(mmFittedTorsionEnergy)):
-        raise ValueError(
-            f"{shuffleLabel}: QM/MM arrays must have matching lengths "
-            f"(qm_total={len(qmTotalEnergy)}, qm_torsion={len(qmTorsionEnergy)}, "
-            f"mm_total={len(mmTotalEnergy)}, mm_torsion={len(mmFittedTorsionEnergy)})."
-        )
-    ## construct angles on the 10-degree fitting grid used by the scan/protocol
+        raise ValueError("QM/MM arrays must have matching lengths.")
+
     angleStepDegrees = 10
     angles = np.arange(len(qmTotalEnergy), dtype=float) * angleStepDegrees
 
-    fig, axis = plt.subplots( nrows=1, ncols=2, figsize=(12, 8))  # create figure
+    # Increased width ratio for the table column (0.6 instead of 0.4) to accommodate bigger tables
+    fig = plt.figure(figsize=(18, 9))
+    gs = gridspec.GridSpec(1, 3, width_ratios=[1, 1, 0.75])
+    
+    ax0 = fig.add_subplot(gs[0])
+    ax1 = fig.add_subplot(gs[1])
+    ax_table = fig.add_subplot(gs[2])
+    ax_table.axis('off')
 
-    ## plot QM and MM total energies GLOW
+    # --- Plotting Logic (Same as before) ---
     for n in range(1, 7):
-        axis[0].plot(angles, qmTotalEnergy, color=magenta, linewidth=1+n, alpha=0.1)
-        axis[0].plot(angles, mmTotalEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
-    ## plot main traces
-    axis[0].plot(angles, qmTotalEnergy, label='QM target', linewidth=2, color=magenta)
-    axis[0].plot(angles, mmTotalEnergy, label='MM fit', linewidth=2, color=brightCyan)
-    axis[0].legend(loc="upper right")
-    axis[0].text(0.02, 0.98, _format_metrics_box("Total", totalMetrics, maeTotal), transform=axis[0].transAxes,
-                 color="red", fontsize=11, va="top", family="monospace",
-                 bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.3"))
+        ax0.plot(angles, qmTotalEnergy, color=magenta, linewidth=1+n, alpha=0.1)
+        ax0.plot(angles, mmTotalEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
+    ax0.plot(angles, qmTotalEnergy, label='QM target', linewidth=2, color=magenta)
+    ax0.plot(angles, mmTotalEnergy, label='MM fit', linewidth=2, color=brightCyan)
+    ax0.set_title("Total Energies", fontsize=14)
+    ax0.set_xlabel('Torsion Angle')
+    ax0.set_ylabel('Energy (Kcal / mol)')
+    ax0.set_xlim(0, 360)
+    ax0.set_xticks(np.arange(0, 361, 60))
+    ax0.legend(loc="upper right")
 
-    axis[0].set_xlabel('Torsion Angle')
-    axis[0].set_ylabel('Energy (Kcal / mol)')
-    axis[0].set_title("Total Energies")
-    axis[0].set_xlim(0, 360)
-    axis[0].set_xticks(np.arange(0, 361, 60))
-
-    ## plot QM and MM torsion energies GLOW
     for n in range(1, 7):
-        axis[1].plot(angles, qmTorsionEnergy, color=magenta, linewidth=1+n, alpha=0.1)
-        axis[1].plot(angles, mmFittedTorsionEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
-    ## plot main traces
-    axis[1].plot(angles, qmTorsionEnergy, label='QM target', linewidth=2, color=magenta)
-    axis[1].plot(angles, mmFittedTorsionEnergy, label='MM fit', linewidth=2, color=brightCyan)
-    axis[1].text(0.02, 0.98, _format_metrics_box("Torsion", torsionMetrics, maeTorsion), transform=axis[1].transAxes,
-                 color="red", fontsize=11, va="top", family="monospace",
-                 bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.3"))
-    if converged:
-        axis[1].text(
-            0.72,
-            0.08,
-            "CONVERGED",
-            transform=axis[1].transAxes,
-            color="lime",
-            fontsize=18,
-            fontweight="bold",
-            bbox=dict(facecolor="none", edgecolor="lime", boxstyle="round,pad=0.3"),
-        )
-
-    ## plot cosine components
+        ax1.plot(angles, qmTorsionEnergy, color=magenta, linewidth=1+n, alpha=0.1)
+        ax1.plot(angles, mmFittedTorsionEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
+    ax1.plot(angles, qmTorsionEnergy, label='QM target', linewidth=2, color=magenta)
+    ax1.plot(angles, mmFittedTorsionEnergy, label='MM fit', linewidth=2, color=brightCyan)
+    
     if isinstance(cosineComponents, dict):
         componentItems = cosineComponents.items()
     else:
         componentItems = cosineComponents
     for freq, cosineComponent in componentItems:
-        axis[1].plot(angles, cosineComponent, linestyle='--',
-                     color=white, alpha=0.5)
-    # Dummy plot for legend
-    axis[1].plot([], [], linestyle='--', color=white, alpha=0.5,
-                 label='Parameters')
-    axis[1].legend(loc="upper right")
+        ax1.plot(angles, cosineComponent, linestyle='--', color=white, alpha=0.4)
+    
+    ax1.plot([], [], linestyle='--', color=white, alpha=0.5, label='Parameters')
+    ax1.set_title("Torsion Energies", fontsize=14)
+    ax1.set_xlabel('Torsion Angle')
+    ax1.set_xlim(0, 360)
+    ax1.set_xticks(np.arange(0, 361, 60))
+    ax1.legend(loc="upper right")
 
-    axis[1].set_xlabel('Torsion Angle')
-    axis[1].set_ylabel('Energy (Kcal / mol)')
-    axis[1].set_title("Torsion Energies")
-    axis[1].set_xlim(0, 360)
-    axis[1].set_xticks(np.arange(0, 361, 60))
+    # --- Table Logic ---
+    
+    # Display Tolerance at the very top
+    ax_table.text(0.5, 0.98, f"Target Tolerance: {tol:.4f}", 
+                  color="cyan", fontsize=14, fontweight='bold', ha='center', va='top', family='monospace')
 
-    fig.savefig(p.join(outDir, f"{shuffleLabel}.png"))
+    def create_table_data(metrics, mae):
+        return [
+            ["Score", f"{metrics['composite_score']:.3f}"],
+            ["Loc", f"{metrics['location_score']:.3f}"],
+            ["Amp", f"{metrics['amplitude_score']:.3f}"],
+            ["Count", f"{metrics['stationary_count_score']:.3f}"],
+            ["nMAE", f"{metrics['normalized_mae_score']:.3f}"],
+            ["MAE", f"{mae:.3f}"]
+        ]
+
+    # Helper to style the table according to your specific rules
+    def style_metric_table(table, tolerance):
+        table.auto_set_font_size(False)
+        table.set_fontsize(14) # Bigger text
+        
+        for (row, col), cell in table.get_celld().items():
+            # Background and Edges
+            cell.set_facecolor("#151515")
+            cell.set_edgecolor("#444444")
+            
+            # Text properties
+            cell_text = cell.get_text()
+            cell_text.set_family("monospace")
+            
+            # Rule 1: Text (Labels in Col 0) are Yellow
+            if col == 0:
+                cell_text.set_color("yellow")
+                # Rule 2: Score heading (Row 0) is Bold
+                if row == 0:
+                    cell_text.set_weight("bold")
+            elif row == 5:
+                cell_text.set_color("white")
+                cell_text.set_weight("bold")
+            
+            # Rule 3: Numeric Values (Col 1)
+            else:
+                try:
+                    val = float(cell_text.get_text())
+                    # Rule 4: Green < tol, Orange < 2*tol, Red > 2*tol
+                    if val < tolerance:
+                        color = "lime"
+                    elif val < (2 * tolerance):
+                        color = "orange"
+                    else:
+                        color = "red"
+                    
+                    cell_text.set_color(color)
+                    # Rule 2: Score value (Row 0, Col 1) also Bold
+                    if row == 0:
+                        cell_text.set_weight("bold")
+                except ValueError:
+                    cell_text.set_color("white")
+
+    # Position Table 1: Total Metrics
+    ax_table.text(0.1, 0.90, "TOTAL METRICS", color=white, fontweight='bold', ha='left', fontsize=12)
+    table_total = ax_table.table(
+        cellText=create_table_data(totalMetrics, maeTotal),
+        colWidths=[0.5, 0.4],
+        cellLoc='center',
+        bbox=[0.1, 0.60, 0.8, 0.28] # Taller bbox for "bigger" tables
+    )
+    style_metric_table(table_total, tol)
+
+    # Position Table 2: Torsion Metrics
+    ax_table.text(0.1, 0.52, "TORSION METRICS", color=white, fontweight='bold', ha='left', fontsize=12)
+    table_torsion = ax_table.table(
+        cellText=create_table_data(torsionMetrics, maeTorsion),
+        colWidths=[0.5, 0.4],
+        cellLoc='center',
+        bbox=[0.1, 0.22, 0.8, 0.28]
+    )
+    style_metric_table(table_torsion, tol)
+
+    # Convergence status
+    conv_color = "lime" if converged else "red"
+    conv_text = "CONVERGED" if converged else "NOT CONVERGED"
+    ax_table.text(
+        0.5, 0.08, conv_text,
+        color=conv_color, fontsize=18, fontweight="bold", ha="center",
+        bbox=dict(facecolor="none", edgecolor=conv_color, boxstyle="round,pad=0.5")
+    )
+
+    plt.tight_layout()
+    # Save with figure facecolor to maintain dark theme if set_rc_params defines it
+    fig.savefig(p.join(outDir, f"{shuffleLabel}.png"), facecolor=fig.get_facecolor())
     plt.close(fig)
 
 
-def _format_metrics_box(label, metrics, mae):
-    return (
-        f"{label}\n"
-        f"Score {metrics['composite_score']:.3f}\n"
-        f"Loc   {metrics['location_score']:.3f}\n"
-        f"Amp   {metrics['amplitude_score']:.3f}\n"
-        f"Count {metrics['stationary_count_score']:.3f}\n"
-        f"nMAE  {metrics['normalized_mae_score']:.3f}\n"
-        f"MAE   {mae:.3f}"
-    )
 #####################################################################

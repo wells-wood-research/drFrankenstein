@@ -67,7 +67,7 @@ def init_tqdm_bar_options() -> dict:
         "dynamic_ncols": False, 
         "ncols": 102,
         "leave": True,
-        "position": 1
+        "position": 0
     }
     return tqdmBarOptions
 

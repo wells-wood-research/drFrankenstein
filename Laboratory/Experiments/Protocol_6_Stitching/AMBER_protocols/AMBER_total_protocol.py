@@ -126,12 +126,13 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
 
     singlePointEnergyDf = pd.DataFrame(minimisedEnergies, columns=["TrajIndex", "Energy"])
 
-    scanAngles = Stitching_Assistant.get_scan_angles_from_orca_inp(scanDir)
+    scanAngles = np.array(Stitching_Assistant.get_scan_angles_from_orca_inp(scanDir))
     if len(scanAngles) != len(singlePointEnergyDf):
         raise(ValueError(f"Number of scan angles ({len(scanAngles)}) does not match number of single point energies ({len(singlePointEnergyDf)})"))
-    singlePointEnergyDf["Angle"] = scanAngles
 
-    singlePointEnergyDf["Angle"] = singlePointEnergyDf["Angle"].apply(Stitching_Assistant.rescale_angles_0_360)
+    # Ensure angles are numeric and in 0-360 range without per-row apply (avoids pandas concat issues)
+    scanAngles = np.mod(scanAngles, 360)
+    singlePointEnergyDf["Angle"] = scanAngles
 
     if not debug:
         rmtree(fittingRoundDir)

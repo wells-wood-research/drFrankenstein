@@ -22,7 +22,7 @@ from .CHARMM_protocols import CHARMM_torsion_protocol
 from . import QMMM_fitting_protocol
 from . import Stitching_Assistant
 from . import Stitching_Plotter
-from OperatingTools import Timer, cleaner, drLogger
+from OperatingTools import Timer, cleaner, drLogger, drSplash
 
 
 def _run_fitting_loop(
@@ -40,6 +40,12 @@ def _run_fitting_loop(
     converganceTolerance,
     maeCsv: FilePath,
     debug: bool,
+    statusTableRows: list | None = None,
+    statusTableTags: list | None = None,
+    statusTableColumns: int = 4,
+    statusTableNcols: int | None = None,
+    displayConvergedTags: set | None = None,
+    displayScores: dict | None = None,
 ) -> tuple[FilePath, bool]:
     ## init empties for storing data, counters, and flags
     meanAverageErrorTorsion = defaultdict(list)
@@ -53,6 +59,10 @@ def _run_fitting_loop(
     converged = False
 
     convergedTags = set()
+    if displayConvergedTags is None:
+        displayConvergedTags = set()
+    if displayScores is None:
+        displayScores = {}
     if not torsionTags:
         config["runtimeInfo"]["madeByStitching"]["convergedTags"] = []
         return paramFile, True
@@ -83,18 +93,24 @@ def _run_fitting_loop(
         fitScoreTotal[torsionTag].append(totalMetrics["composite_score"])
         torsionMetricsByTag[torsionTag] = torsionMetrics
         totalMetricsByTag[torsionTag] = totalMetrics
+        displayScores[torsionTag] = torsionMetrics["composite_score"]
 
         ## Update parameter file
         paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
 
         ## Freeze torsions as soon as the torsion score is within tolerance.
         if torsionConverged:
-            print(
-                f"CONVERGED: {torsionTag} at shuffle {shuffleIndex} "
-                f"(nCosines={config['runtimeInfo']['madeByStitching']['maxTorsions']}, "
-                f"torsion_score={torsionMetrics['composite_score']:.3f})"
-            )
             convergedTags.add(torsionTag)
+            displayConvergedTags.add(torsionTag)
+        if statusTableRows and statusTableTags:
+            drSplash.update_torsion_status_table(
+                statusTableRows,
+                statusTableTags,
+                displayConvergedTags,
+                scores=displayScores,
+                columns=statusTableColumns,
+                ncols=statusTableNcols,
+            )
 
         ##################### END OF SHUFFLE ####################
         ## At the end of one shuffle, check for convergence
@@ -253,6 +269,50 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed)
     ## Get options for tqdm loading bar and initialize containers
     tqdmBarOptions = Stitching_Assistant.init_tqdm_bar_options()
+    statusLine = None
+    bannerLine = None
+    statusTableRows = None
+    statusTableTags = list(allTorsionTags)
+    statusTableColumns = 4
+    statusTableNcols = tqdmBarOptions.get("ncols", 102)
+    displayConvergedTags: set[str] = set()
+    displayScores: dict[str, float] = {}
+    if not tqdmBarOptions.get("disable", False):
+        statusLine = tqdm(
+            total=1,
+            initial=1,
+            desc="",
+            bar_format="{desc}",
+            position=1,
+            leave=True,
+            ncols=statusTableNcols,
+            mininterval=0,
+        )
+        statusLine.refresh()
+        drSplash.set_status_line(statusLine)
+    tableStartPosition = 2 if statusLine else 1
+    if statusTableTags and not tqdmBarOptions.get("disable", False):
+        bannerLine = tqdm(
+            total=1,
+            initial=1,
+            desc=drSplash.build_torsion_status_banner(),
+            bar_format="{desc}",
+            position=tableStartPosition,
+            leave=True,
+            ncols=statusTableNcols,
+            mininterval=0,
+        )
+        bannerLine.refresh()
+        tableStartPosition += 1
+        statusTableRows = drSplash.init_torsion_status_table(
+            statusTableTags,
+            convergedTags=displayConvergedTags,
+            scores=displayScores,
+            columns=statusTableColumns,
+            ncols=statusTableNcols,
+            position=tableStartPosition,
+            tol = config["parameterFittingInfo"].get("converganceTolerance", 0.1)
+        )
 
     ## Set up Mean Average Error CSV for memory-efficient logging
     maeCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
@@ -284,6 +344,12 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
             converganceTolerance=converganceTolerance,
             maeCsv=maeCsv,
             debug=debug,
+            statusTableRows=statusTableRows,
+            statusTableTags=statusTableTags,
+            statusTableColumns=statusTableColumns,
+            statusTableNcols=statusTableNcols,
+            displayConvergedTags=displayConvergedTags,
+            displayScores=displayScores,
         )
 
         convergedTags = set(config["runtimeInfo"]["madeByStitching"].get("convergedTags", []))
@@ -300,6 +366,14 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     ## If the protocol does not converge, update the config with max shuffles
     if not converged:
         config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = maxShuffles
+
+    if statusTableRows:
+        drSplash.close_torsion_status_table(statusTableRows)
+    if bannerLine:
+        bannerLine.close()
+    if statusLine:
+        drSplash.clear_status_line()
+        statusLine.close()
 
     ## Update config with final parameters
     config["runtimeInfo"]["madeByStitching"][param_key] = paramFile

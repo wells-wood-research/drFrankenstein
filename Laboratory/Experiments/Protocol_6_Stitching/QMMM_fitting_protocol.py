@@ -72,7 +72,8 @@ def fit_torsion_parameters(config: dict,
                                                     config["runtimeInfo"]["madeByStitching"]["maxTorsions"],
                                                     torsionConverged,
                                                     qmmmTorsionFittingDir,
-                                                      shuffleIndex)
+                                                      shuffleIndex,
+                                                      tol=converganceTolerance)
 
     return torsionParametersDf, torsionMetrics, totalMetrics, meanAverageErrorTorsion, meanAverageErrorTotal, torsionConverged
 

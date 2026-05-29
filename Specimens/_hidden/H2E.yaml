@@ -12,7 +12,7 @@ pathInfo:
   ## full path to input files
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY_XTB
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_H2E
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
@@ -21,6 +21,7 @@ pathInfo:
   amberHome: /home/esp/anaconda3/envs/Igor/
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null
+
 
 
 ##########################################################################################################################
@@ -33,25 +34,22 @@ pathInfo:
 #        What is your molecule?                                                                                          #
 ##########################################################################################################################
 moleculeInfo:
-  ## total formal charge of the molecule
-  charge: 0
-  ## spin multiplicity (2S+1)
-  multiplicity: 1
-  ## Three-letter name of your molecule, will appear in the RES_NAME column of a PDB file
-  moleculeName: PCY
-  ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
-  ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
+  charge: -2
+  multiplicity: 1 
+  moleculeName: H2E
+    #  nelectrons: 122
+
   chargeGroups: Null
+
   backboneAliases:
-    CA: [CA]
-    HA: [HA]
-    C: [C]
-    N: [N]
-    O: [O]
-    H: [H]      
-  enforceBackboneAtomTypes: True  ## if True, will enforce backbone atom types to be the same as the ones defined in backboneAliases, if False, will assign backbone atom types "by analogy" like all other atoms
-
-
+      CA: [C1]
+      HA: [H3]
+      C: [C2]
+      N: [N1]
+      O: [O1]
+      H: [H1]      ## NONSTANDARD 
+        
+  
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #
 #  | |_    ___    _ __   ___  (_)   ___    _ __   / ___|    ___    __ _   _ __   |_ _|  _ __    / _|   ___               #
@@ -60,25 +58,28 @@ moleculeInfo:
 #   \__|  \___/  |_|    |___/ |_|  \___/  |_| |_| |____/   \___|  \__,_| |_| |_| |___| |_| |_| |_|    \___/              #
 #                                                                                                                        #
 #     How do you want to run torsion scanning?                                                                           #                                          
-###########################################################################################################################
+##########################################################################################################################
+
+##########################################################################################################################
 torsionScanInfo:
   ## what types of torsions do you want to scan, if set to false, torsion parameters will be assigned "by-analogy"
-  runScansOn:
-    phiPsi : false         ## DEFAULT TRUE
-    polarProtons : false   ## DEFAULT TRUE
-    nonPolarProtons : false  ## DEFAULT FALSE
+  runScansOn:                    ## DEFAULT is all of the below defaults   
+    phiPsi: true          ## DEFAULT TRUE
+    polarProtons: false    ## DEFAULT TRUE
+    nonPolarProtons: false   ## DEFAULT FALSE
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: -1     ## DEFAULT = -1
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
-  scanMethod: XTB2
+  scanMethod: XTB2        ## NO DEFAULT, throw error if absent
   ## Solvation method for torsion scanning, set to Null for no solvation
-  scanSolvationMethod :  ALPB(water) 
+  scanSolvationMethod: ALPB(water)   ## DEFAULT = Null
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: Null
+  singlePointMethod:  Null   ## DEFAULT = Null
   ## Solvation method for single point calculations, set to Null for no solvation
-  singlePointSolvationMethod: Null
+  singlePointSolvationMethod:  Null    ## DEFAULT = Null
+
 
 ##########################################################################################################################
 #          _                                     _____   _   _     _     _                   ___            __           #
@@ -92,22 +93,22 @@ torsionScanInfo:
 ##########################################################################################################################
 chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
-  chargeFittingProtocol: RESP2
+  chargeFittingProtocol: RESP2 ## NO DEFAULT, throw error if absent
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: -1
+  nConformers: -1     ## DEFAULT = -1
   ## number of cores for charge fitting
-  nCoresPerCalculation: 4
+  nCoresPerCalculation: 1 ## DEFAULT = 1
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
-  optMethod: XTB2
+  optMethod: XTB2   ## NO DEFAULT, throw error if absent
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
-  optSolvationMethod: ALPB(water)
+  optSolvationMethod: ALPB(water) ## DEFAULT = Null
   ## QM method for single point calculations (TIP, this should be more accurate than your optimisation method)
-  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointMethod: revPBE def2-SVP D3BJ ## NO DEFAULT, throw error if absent
   ## Solvation method for single point calculations, set to Null for no solvation
-  ## for QM/MM protocol, set to "TIP3P" alongside the chargeFittingProtocol being set to "SOLVATOR"
-  singlePointSolvationMethod: CPCM(water)
-  ## set backbone charges back to GAFF2 defaults (does not work with with CHARMM params YET!)
-  enforceDefaultBackboneCharges: True
+  singlePointSolvationMethod: CPCM(water) ## DEFAULT = Null
+  ## number of water molecules to add per NM^2 of surface area, only used fro SOLVATOR protocol
+  waterDensity:       ## DEFAULT = 10 if chargeFittingProtocol = SOLVATOR, else DEFAULT = Null
+
 ############################################################################################################################
 #                                              _               _____  _  _    _    _                ___          __        #
 #   _ __    __ _  _ __  __ _  _ __ ___    ___ | |_  ___  _ __ |  ___|(_)| |_ | |_ (_) _ __    __ _ |_ _| _ __   / _|  ___  #
@@ -125,8 +126,8 @@ parameterFittingInfo:
   ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
   maxCosineFunctions: 3
   ## global joint mode runs a single global round
-  maxShuffles: 5
-  minShuffles: 2
+  maxShuffles: 50
+  minShuffles: 10
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true
@@ -149,4 +150,3 @@ miscInfo:
   ## random seed used for all stochastic selections
   seed: 1818
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
-  conformerSelectionMethods: DIVERSE

@@ -82,19 +82,11 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 [] WHERES ASSEMBLY SPLASH GONE?
 [x] FOR TRICKY TORSIONS, WE CAN TRY NEW CONFORMERS AS STARTS. IF THIS FAILS COMPLETELY DO WE NEED A NEW PROTOCOL?
 [] L2DAMPENING can be set to 0 or False 
-[] electron checker needs to run AFTER capping (or ignore N and C termini)
+[x] electron checker needs to run AFTER capping (or ignore N and C termini)
 [x] diversity-based conformer selection method (Torsion_PCA -> Silouette_kNN -> BolzSample from clusters)
-[] nCpus option for scanning
+[x] nCpus option for scanning
 [] change CONVERGED messege during stitching
 [x] plotting of conformers - make cbar and labels not overlap
 [] page for capping?
-
-
-
-## BETTER MAE 
-I want to construct a better score than Mean Average Error to determine how well fit a set of parameters is to the QM data.
-I want this scoring function to incorporate the following:
-- Location of stationary points along the x-axis
-- Overal ampitudue of the curve
-- Number of stationary points
-- some kind of MAE type score but normalised by amplitude
+[] sort out padding in stitching table
+[] plot scores instead of MAE 

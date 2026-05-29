@@ -16,7 +16,14 @@ def time_function(functionAlias: str, functionGroup: str = None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            config = kwargs["config"]  # Only works when args are explicitly defined as a kwarg
+            # Support extracting the config either as a kwarg "config" or as the first positional arg
+            if "config" in kwargs:
+                config = kwargs["config"]
+            elif len(args) > 0:
+                config = args[0]
+            else:
+                raise KeyError("config")
+
             startTime = time.time()
             startCpuTimes = os.times()
             result = func(*args, **kwargs)  # Execute the function

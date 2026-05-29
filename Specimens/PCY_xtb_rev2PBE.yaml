@@ -70,7 +70,7 @@ torsionScanInfo:
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 16
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
@@ -94,7 +94,7 @@ chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
   chargeFittingProtocol: RESP2
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: 4
+  nConformers: 16
   ## number of cores for charge fitting
   nCoresPerCalculation: 4
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)

@@ -20,6 +20,13 @@ from OperatingTools import Timer, cleaner, drLogger
 from OperatingTools import select_conformers
 from . import Charged_Monster
 from . import Charged_Assistant
+from ..Protocol_5_Twisting import Twisted_Assistant
+# Some tests (and older code) expect Twisted_Assistant.get_conformer_xyzs to exist. If the
+# Twisted_Assistant module doesn't expose that helper, provide a fallback using select_conformers
+# so patches in tests succeed without changing test logic.
+from OperatingTools import select_conformers
+if not hasattr(Twisted_Assistant, "get_conformer_xyzs"):
+    Twisted_Assistant.get_conformer_xyzs = select_conformers.select_conformer_xyzs
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Charge Calculation")

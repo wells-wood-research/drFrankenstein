@@ -12,7 +12,7 @@ pathInfo:
   ## full path to input files
   inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY_XTB
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY_xtb_HF_xtb_MP2
   ## full path to Multiwfn install directory
   multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
@@ -70,13 +70,13 @@ torsionScanInfo:
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 16
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
   scanSolvationMethod :  ALPB(water) 
   ## QM method for single point calculations (TIP, this should be more accurate than your scan method), set to Null to skip single point step
-  singlePointMethod: Null
+  singlePointMethod: HF 6-31G* TightSCF
   ## Solvation method for single point calculations, set to Null for no solvation
   singlePointSolvationMethod: Null
 
@@ -92,9 +92,9 @@ torsionScanInfo:
 ##########################################################################################################################
 chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
-  chargeFittingProtocol: RESP2
+  chargeFittingProtocol: RESP
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: -1
+  nConformers: 4
   ## number of cores for charge fitting
   nCoresPerCalculation: 4
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
@@ -102,10 +102,10 @@ chargeFittingInfo:
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
   optSolvationMethod: ALPB(water)
   ## QM method for single point calculations (TIP, this should be more accurate than your optimisation method)
-  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointMethod: HF 6-31G* TightSCF
   ## Solvation method for single point calculations, set to Null for no solvation
   ## for QM/MM protocol, set to "TIP3P" alongside the chargeFittingProtocol being set to "SOLVATOR"
-  singlePointSolvationMethod: CPCM(water)
+  singlePointSolvationMethod: Null
   ## set backbone charges back to GAFF2 defaults (does not work with with CHARMM params YET!)
   enforceDefaultBackboneCharges: True
 ############################################################################################################################
@@ -125,8 +125,8 @@ parameterFittingInfo:
   ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
   maxCosineFunctions: 3
   ## global joint mode runs a single global round
-  maxShuffles: 5
-  minShuffles: 2
+  maxShuffles: 50
+  minShuffles: 10
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true
@@ -149,4 +149,3 @@ miscInfo:
   ## random seed used for all stochastic selections
   seed: 1818
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
-  conformerSelectionMethods: DIVERSE

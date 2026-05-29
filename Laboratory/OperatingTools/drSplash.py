@@ -3,6 +3,142 @@ from os import path as p
 import time
 import sys
 import re
+from tqdm import tqdm
+
+_status_line = None
+
+def set_status_line(status_line) -> None:
+    global _status_line
+    _status_line = status_line
+
+def clear_status_line() -> None:
+    global _status_line
+    _status_line = None
+
+def _truncate_table_tag(tag: str, max_width: int) -> str:
+
+    noAnsiTag = strip_ansi_codes(tag)
+    if len(noAnsiTag) <= max_width:
+        return tag
+    if max_width <= 3:
+        return tag[:max_width]
+    return f"{tag[:max_width-3]}..."
+
+def _format_torsion_table_cell(tag: str, converged: bool, cell_width: int, score: float | None = None, tol: float = 0.1) -> str:
+    orangeText = "\033[38;5;208m"
+    greenText = "\033[32m"
+    resetTextColor = "\033[0m"
+    scoreText = f"{score:.3f}" if isinstance(score, (int, float)) else "--"
+    print(score, tol)
+    color = colour_by_score(score, tol=tol) if isinstance(score, (int, float)) else orangeText
+
+    label = f"{tag} [{color}{scoreText}{resetTextColor}]"
+    trimmedTag = _truncate_table_tag(label, cell_width)
+    padding = " " * (cell_width - len(trimmedTag))
+    color = greenText if converged else orangeText
+    return f"{trimmedTag}{padding}"
+
+def build_torsion_status_banner() -> str:
+    yellowText = "\033[33m"
+    greenText = "\033[32m"
+    orangeText = "\033[38;5;208m"
+    resetTextColor = "\033[0m"
+    return (
+        f"{yellowText}{'🗲 '*51}{resetTextColor}\n"
+        f"{yellowText}🗲🗲{' '*19}{resetTextColor} "
+        f"{resetTextColor}TORSIONS BEING PARAMETERISED: "
+        f"[{greenText}converged{yellowText} | {orangeText}not-converged{yellowText}] "
+        f"{' '*19}{yellowText}🗲🗲{resetTextColor}"
+        )
+
+
+def colour_by_score(score: float, tol: float) -> str:
+    greenText = "\033[32m"
+    orangeText = "\033[38;5;208m"
+    redText = "\033[31m"
+    print("color", score, tol)
+    if score < tol:
+        return greenText
+    elif score > tol * 2:
+        return redText
+    else:
+        return orangeText
+
+def build_torsion_status_table_rows(
+    torsionTags: list[str],
+    convergedTags: set[str],
+    scores: dict[str, float] | None = None,
+    columns: int = 4,
+    ncols: int | None = 102,
+    tol: float = 0.1,
+) -> list[str]:
+    if not torsionTags:
+        return []
+    if ncols is None:
+        ncols = 102
+    yellowText = "\033[33m"
+    resetTextColor = "\033[0m"
+    separator = f" {yellowText}|{resetTextColor} "
+    separatorWidth = 3
+    availableWidth = max(ncols - (columns - 1) * separatorWidth, columns)
+    cellWidth = max(1, availableWidth // columns)
+    rows = []
+    for start in range(0, len(torsionTags), columns):
+        rowTags = torsionTags[start:start + columns]
+        print("row", tol)
+        rowCells = [
+            _format_torsion_table_cell(tag, tag in convergedTags, cellWidth, None if scores is None else scores.get(tag), tol = tol)
+            for tag in rowTags
+        ]
+        while len(rowCells) < columns:
+            rowCells.append(" " * cellWidth)
+        rows.append(separator.join(rowCells).rstrip())
+    return rows
+
+def init_torsion_status_table(
+    torsionTags: list[str],
+    convergedTags: set[str] | None = None,
+    scores: dict[str, float] | None = None,
+    columns: int = 4,
+    ncols: int | None = 102,
+    position: int = 1,
+    tol: float = 0.1,
+) -> list[tqdm]:
+    convergedTags = convergedTags or set()
+    rows = build_torsion_status_table_rows(torsionTags, convergedTags, scores, columns, ncols, tol=tol)
+    tableRows: list[tqdm] = []
+    for rowIndex, rowText in enumerate(rows):
+        rowBar = tqdm(
+            total=1,
+            initial=1,
+            desc=rowText,
+            bar_format="{desc}",
+            position=position + rowIndex,
+            leave=True,
+            ncols=ncols,
+            mininterval=0,
+        )
+        rowBar.refresh()
+        tableRows.append(rowBar)
+    return tableRows
+
+def update_torsion_status_table(
+    tableRows: list[tqdm],
+    torsionTags: list[str],
+    convergedTags: set[str],
+    scores: dict[str, float] | None = None,
+    columns: int = 4,
+    ncols: int | None = 102,
+    tol: float = 0.1,
+) -> None:
+    rows = build_torsion_status_table_rows(torsionTags, convergedTags, scores, columns, ncols, tol=tol)
+    for rowBar, rowText in zip(tableRows, rows):
+        rowBar.set_description_str(rowText, refresh=True)
+        rowBar.refresh()
+
+def close_torsion_status_table(tableRows: list[tqdm]) -> None:
+    for rowBar in tableRows:
+        rowBar.close()
 
 
 
@@ -124,7 +260,7 @@ def strip_ansi_codes(text):
     ansiPattern = re.compile(r'\033\[[0-9;]*m')
     return ansiPattern.sub('', text)
 
-def show_getting_mm_total(torsionTag):
+def show_getting_mm_total(torsionTag, inline: bool = True):
     greenText = "\033[32m"
     redText = "\033[31m"
     orangeText = "\033[38;5;172m"
@@ -139,8 +275,15 @@ def show_getting_mm_total(torsionTag):
     nSpaces = 102 - len(visibleText) - 3  # Account for trailing spaces and 🗲🗲
     text += f"{' '*nSpaces}{yellowText}🗲🗲{resetTextColor}"
 
-    sys.stdout.write("\r\033[K" + text)  # \r: move to start of line, \033[K: clear line
-    sys.stdout.flush()
+    if _status_line is not None:
+        _status_line.set_description_str(text, refresh=True)
+        _status_line.refresh()
+        return
+    if inline:
+        sys.stdout.write("\r\033[K" + text)  # \r: move to start of line, \033[K: clear line
+        sys.stdout.flush()
+    else:
+        tqdm.write(text)
 
 
 

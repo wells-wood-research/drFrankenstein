@@ -19,12 +19,13 @@ from OperatingTools import drLogger
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Conformer Generation")
 @Timer.time_function("Conformer Generation", "CONFORMER_GENERATION")
-def conformer_generation_protocol(config: dict) -> dict:
+def conformer_generation_protocol(config: dict, debug: bool) -> dict:
     """
     Runs conformer generation protocol using ORCA's GOAT program
 
     Args:
         config (dict): dictionary containing all information
+        debug (bool): whether to run in debug mode
 
     Returns:
         config (dict): updated config
@@ -57,7 +58,8 @@ def conformer_generation_protocol(config: dict) -> dict:
     ## gather conformer data for report
     config = gather_conformer_data(config, conformerXyzs)
     ## delete unnecessary files
-    cleaner.clean_wriggle(config)
+    if not debug:
+        cleaner.clean_wriggle(config)
 
     ## update checkpoint flags
     config["checkpointInfo"]["conformersComplete"] = True

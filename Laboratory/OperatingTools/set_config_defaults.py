@@ -167,6 +167,7 @@ def apply_defaults_and_validate(config):
     set_default(miscInfo, 'cleanUpLevel', 1, errors['miscInfo'])
     set_default(miscInfo, 'seed', 1818, errors['miscInfo'])
     set_default(miscInfo, 'conformerSelectionMethods', 'ENERGY', errors['miscInfo'])
+    set_default(miscInfo, 'debug', False, errors['miscInfo'])
 
     # --- Final Error Check ---
     if _has_fatal_errors(errors):

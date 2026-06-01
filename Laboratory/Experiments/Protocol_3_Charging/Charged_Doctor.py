@@ -31,7 +31,7 @@ if not hasattr(Twisted_Assistant, "get_conformer_xyzs"):
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Charge Calculation")
 @Timer.time_function("Charge Calculation", "CHARGE_CALCULATIONS")
-def charge_protocol(config: dict, debug: bool = False) -> dict:
+def charge_protocol(config: dict, debug: bool) -> dict:
     """
     Main protocol for charge fitting
     Runs either RESP or RESP2 style charge fitting methods

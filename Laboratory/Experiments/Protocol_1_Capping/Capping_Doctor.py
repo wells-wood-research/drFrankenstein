@@ -23,7 +23,7 @@ from OperatingTools import Timer, cleaner, drLogger
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Termini Capping")
 @Timer.time_function("Termini Capping", "TERMINI_CAPPING")
-def capping_protocol(config: dict) -> dict:
+def capping_protocol(config: dict, debug: bool) -> dict:
     """
     Main protocol for adding capping groups to N and C termini of our non-canonical amino acid
     This is important as it allows for better calculation of charges and torsion angles 
@@ -31,6 +31,7 @@ def capping_protocol(config: dict) -> dict:
 
     Args:
         config (dict) : the drFrankenstein config containing all run information
+        debug (bool): whether to run in debug mode
     Returns:
         config (dict): updated config
     

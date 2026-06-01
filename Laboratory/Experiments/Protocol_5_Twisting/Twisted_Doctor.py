@@ -27,7 +27,7 @@ from OperatingTools import select_conformers
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Torsion Scanning")
-def twist_protocol(config, forceScanFailPercent: float = 0.0):
+def twist_protocol(config: dict, debug: bool, forceScanFailPercent: float = 0.0):
     ## create an entry in runtimeInfo for twist
     """
     Main protocol for torsion scanning
@@ -41,6 +41,8 @@ def twist_protocol(config, forceScanFailPercent: float = 0.0):
 
     Args:
         config (dict): the drFrankenstein config containing all run information
+        debug (bool): whether to run in debug mode
+        forceScanFailPercent (float): percentage of scans to force fail for testing purposes, defaults to 0.0
 
     Returns:
         config (dict): updated config
@@ -69,6 +71,7 @@ def twist_protocol(config, forceScanFailPercent: float = 0.0):
             torsionIndex,
             nRotatableBonds,
             config,
+            debug=debug,
             forceScanFailPercent=forceScanFailPercent
         )
     config["checkpointInfo"]["scanningComplete"] = True
@@ -81,7 +84,7 @@ def run_torsion_scanning(torsionTag: str,
                             torsionIndex: int,
                               nRotatableBonds: int,
                                 config: dict,
-                                  debug: bool = False,
+                                  debug: bool,
                                   forceScanFailPercent: float = 0.0) -> dict:
 
     """
@@ -98,6 +101,7 @@ def run_torsion_scanning(torsionTag: str,
         nRotatableBonds (int): number of rotatable bonds
         config (dict): the drFrankenstein config containing all run information
         debug (bool, optional): whether to run in debug mode. Defaults to False.
+        forceScanFailPercent (float, optional): percentage of scans to force fail for testing purposes. Defaults to 0.0.
 
     Returns:
         dict: updated config

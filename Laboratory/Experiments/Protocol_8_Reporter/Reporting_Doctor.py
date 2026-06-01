@@ -14,12 +14,13 @@ from . import Shelly
 from OperatingTools import drLogger
 
 @drLogger.experiment_logger("Report Generation")
-def reporter_protocol(config: dict) -> None:
+def reporter_protocol(config: dict, debug: bool) -> None:
     """
     Runs the reporter protocol
 
     Args:
         config (dict): Dictionary containing all information needed
+        debug (bool): Whether to run in debug mode
 
     Returns:
         None

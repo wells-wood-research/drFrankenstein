@@ -21,7 +21,7 @@ class DirectoryPath:
 
 
 @drLogger.experiment_logger("Parameter Assembly")
-def parameter_assembly_protocol(config:dict) -> dict:
+def parameter_assembly_protocol(config:dict, debug:bool) -> dict:
     assemblyProtocol = config["miscInfo"]["assemblyProtocol"]
 
     if assemblyProtocol.upper() == "AGNOSTIC":

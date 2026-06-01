@@ -78,52 +78,54 @@ def main():
         checkpointInfo = config["checkpointInfo"]
         if not checkpointInfo["cappingComplete"]:
             drSplash.show_capping_splash()
-            config = Capping_Doctor.capping_protocol(config=config)
+            config = Capping_Doctor.capping_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         cappedPdb = pdb_checker.get_capped_pdb_path(config)
         pdb_checker.validate_charge_multiplicity(config, cappedPdb)
+
+        debug = config["miscInfo"]["debug"]
         
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:
             drSplash.show_wriggle_splash()
-            config = Wriggling_Doctor.conformer_generation_protocol(config=config)
+            config = Wriggling_Doctor.conformer_generation_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         ## run charge calculations
         if not checkpointInfo["chargesComplete"]:
             drSplash.show_charge_splash()
-            config = Charged_Doctor.charge_protocol(config=config)
+            config = Charged_Doctor.charge_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         if not checkpointInfo["assemblyComplete"]:
             ## TODO: drSplash?
-            config = Assembly_Doctor.parameter_assembly_protocol(config=config)
+            config = Assembly_Doctor.parameter_assembly_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
 
         ## run torsion scanning
         if not checkpointInfo["scanningComplete"]:
             drSplash.show_twist_splash()
-            config = Twisted_Doctor.twist_protocol(config=config)
+            config = Twisted_Doctor.twist_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
 
         ## run torsion parameter fitting
         if not checkpointInfo["torsionFittingComplete"]:
             drSplash.show_stitch_splash()
-            config = Stitching_Doctor.torsion_fitting_protocol(config=config)
+            config = Stitching_Doctor.torsion_fitting_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         ## run final creation
         if not checkpointInfo["finalCreationComplete"]:
             drSplash.show_creation_splash()
-            config = drCreator.create_the_monster(config=config)
+            config = drCreator.create_the_monster(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         ## run reporting to make html
         if not checkpointInfo["reportingComplete"]:
-            config = Reporting_Doctor.reporter_protocol(config=config)
+            config = Reporting_Doctor.reporter_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
 
         ## show what we have created SPLASH

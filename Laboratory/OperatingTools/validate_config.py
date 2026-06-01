@@ -305,6 +305,7 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "assemblyProtocol": str,
         "seed": int,
         "conformerSelectionMethods": str,
+        "debug": bool,
     }
 
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
@@ -333,6 +334,8 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     if value.upper() in allowedSelectionMethods:
                         continue
                     _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
+                elif key == "debug" and not isinstance(value, bool):
+                    _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
 
 def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]):
     """

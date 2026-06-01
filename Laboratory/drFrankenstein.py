@@ -120,7 +120,7 @@ def main():
         ## run final creation
         if not checkpointInfo["finalCreationComplete"]:
             drSplash.show_creation_splash()
-            config = drCreator.create_the_monster(config=config, debug=debug)
+            config = drCreator.create_the_monster(config=config)
             drYaml.write_config_to_yaml(config, outputDir)
 
         ## run reporting to make html

@@ -34,55 +34,75 @@ def plot_run_mean_average_error(outDir, maeCsv):
 
     allTorsionsDf = maeDf[maeDf["torsion_tag"] == "All_Torsions"]
     individualTorsionDf = maeDf[maeDf["torsion_tag"] != "All_Torsions"]
-    ## ==================== TORSIONS ================================== ##
-    ## plot average MAE with GLOW
-    for n in range(1, 7):
-        axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_torsion"],color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
-    ## plot main traces
-    axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_torsion"], label='Torsion', linewidth=2, color=brightGreen)
 
-    ## plot subtle traces for individual torsions
-    for torsionTag, df in individualTorsionDf.groupby("torsion_tag"):
-        axis.plot(df["shuffle"], df["mae_torsion"], linewidth=1, color=brightGreen, alpha=0.4)
+    # Determine which columns to plot (backwards compatible)
+    torsion_score_col = "fit_score_torsion" if "fit_score_torsion" in allTorsionsDf.columns else "mae_torsion"
+    total_score_col = "fit_score_total" if "fit_score_total" in allTorsionsDf.columns else "mae_total"
 
-    ## ==================== TOTAL ================================== ##
-    ## plot average MAE with GLOW
+    # ==================== COMPOSITE SCORES (opaque glowing) ====================
+    x = allTorsionsDf["shuffle"]
+    # glow background
     for n in range(1, 7):
-        axis.plot( allTorsionsDf["shuffle"], allTorsionsDf["mae_total"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
-    ## plot main traces
-    axis.plot(allTorsionsDf["shuffle"], allTorsionsDf["mae_total"], label='Total', linewidth=2, color=brightOrange)
-    ## plot subtle traces for individual torsions
+        axis.plot(x, allTorsionsDf[torsion_score_col], color=brightGreen, linewidth=1 + n * 1.25, alpha=0.12)
+    axis.plot(x, allTorsionsDf[torsion_score_col], label='Torsion Score', linewidth=2.5, color=brightGreen, alpha=1.0)
+
+    for n in range(1, 7):
+        axis.plot(x, allTorsionsDf[total_score_col], color=brightOrange, linewidth=1 + n * 1.25, alpha=0.12)
+    axis.plot(x, allTorsionsDf[total_score_col], label='Total Score', linewidth=2.5, color=brightOrange, alpha=1.0)
+
+    # subtle traces for individual torsions (composite score)
     for torsionTag, df in individualTorsionDf.groupby("torsion_tag"):
-        axis.plot( df["shuffle"], df["mae_total"], linewidth=1, color=brightOrange, alpha=0.4)
+        col = "fit_score_torsion" if "fit_score_torsion" in df.columns else "mae_torsion"
+        axis.plot(df["shuffle"], df[col], linewidth=1, color=brightGreen, alpha=0.35)
+        col_total = "fit_score_total" if "fit_score_total" in df.columns else "mae_total"
+        axis.plot(df["shuffle"], df[col_total], linewidth=1, color=brightOrange, alpha=0.25)
+
+    # ==================== SUBCOMPONENTS (thin, semi-transparent) ====================
+    comp_cols = [
+        ("torsion_location_score", "Location"),
+        ("torsion_amplitude_score", "Amplitude"),
+        ("torsion_stationary_count_score", "Count"),
+        ("torsion_normalized_mae_score", "nMAE"),
+    ]
+    comp_colors = ["#FFD700", "#FF69B4", "#87CEFA", "#ADFF2F"]
+    for (col, label), ccol in zip(comp_cols, comp_colors):
+        if col in allTorsionsDf.columns:
+            axis.plot(x, allTorsionsDf[col], linewidth=1.0, color=ccol, alpha=0.6, linestyle='-')
+
+    comp_cols_total = [
+        ("total_location_score", "Total_Loc"),
+        ("total_amplitude_score", "Total_Amp"),
+        ("total_stationary_count_score", "Total_Count"),
+        ("total_normalized_mae_score", "Total_nMAE"),
+    ]
+    for (col, label), ccol in zip(comp_cols_total, comp_colors):
+        if col in allTorsionsDf.columns:
+            axis.plot(x, allTorsionsDf[col], linewidth=1.0, color=ccol, alpha=0.4, linestyle='--')
 
     # Add labels and legend
     axis.set_xlabel('Number of Fitting Shuffles')
-    axis.set_ylabel('Mean Average Error (Kcal / mol)')
-    axis.set_title('Mean Average Error vs Number of Fitting Shuffles')
+    axis.set_ylabel('Composite Fit Score (lower is better)')
+    axis.set_title('Fit Scores vs Number of Fitting Shuffles')
 
-    # Get handles and labels for the legend
+    # Build a concise legend: include main composite traces
     handles, labels = axis.get_legend_handles_labels()
-    # Filter to include only "All_Torsions" entries
-    filtered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in ['Torsion', 'Total']]
+    filtered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in ['Torsion Score', 'Total Score']]
     if filtered_handles_labels:
         handles, labels = zip(*filtered_handles_labels)
         axis.legend(handles, labels)
     else:
         axis.legend()
-    # Get unique shuffle values and ensure they are integers
-    shuffle_values = allTorsionsDf["shuffle"].unique().astype(int)
 
-    # Set x-ticks, ensuring only values >= 0 and <= shuffle_values[-1]
-    axis.set_xticks(shuffle_values)  # Set all integer ticks initially
-    axis.xaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))  # Auto-adjust ticks
-    # Get current ticks and filter to ensure they are >= 0 and <= shuffle_values[-1]
-    current_ticks = axis.get_xticks()
-    valid_ticks = current_ticks[(current_ticks >= 0) & (current_ticks <= shuffle_values[-1])]
-    # Always include the last value if not already present
-    if shuffle_values[-1] not in valid_ticks:
-        valid_ticks = np.append(valid_ticks, shuffle_values[-1])
-    # Sort ticks to maintain order and set them
-    axis.set_xticks(np.sort(valid_ticks))
+    # Get unique shuffle values and ensure they are integers
+    if not allTorsionsDf.empty:
+        shuffle_values = allTorsionsDf["shuffle"].unique().astype(int)
+        axis.set_xticks(shuffle_values)  # Set all integer ticks initially
+        axis.xaxis.set_major_locator(MaxNLocator(integer=True, nbins='auto'))  # Auto-adjust ticks
+        current_ticks = axis.get_xticks()
+        valid_ticks = current_ticks[(current_ticks >= 0) & (current_ticks <= shuffle_values[-1])]
+        if shuffle_values[-1] not in valid_ticks:
+            valid_ticks = np.append(valid_ticks, shuffle_values[-1])
+        axis.set_xticks(np.sort(valid_ticks))
 
     plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
     plt.close()
@@ -103,22 +123,49 @@ def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, 
 
     fig, axis = plt.subplots(nrows=1, ncols=1, figsize=(12, 8))  # create figure
 
-    ## plot torsion MAE with GLOW
-    for n in range(1, 7):
-        axis.plot(torsionMaeDf["mae_torsion"], color=brightGreen, linewidth=1+n*1.25, alpha=0.1)
-    ## plot main traces
-    axis.plot(torsionMaeDf["mae_torsion"], label='Torsion', linewidth=2, color=brightGreen)
+    # Choose columns with fallbacks
+    torsion_score_col = "fit_score_torsion" if "fit_score_torsion" in torsionMaeDf.columns else "mae_torsion"
+    total_score_col = "fit_score_total" if "fit_score_total" in torsionMaeDf.columns else "mae_total"
 
-    ## plot torsion MAE with GLOW
+    x = torsionMaeDf["shuffle"] if "shuffle" in torsionMaeDf.columns else np.arange(len(torsionMaeDf))
+
+    ## plot torsion composite score with GLOW (opaque)
     for n in range(1, 7):
-        axis.plot(torsionMaeDf["mae_total"], color=brightOrange, linewidth=1+n*1.25, alpha=0.1)
-    ## plot main traces
-    axis.plot(torsionMaeDf["mae_total"], label='Total', linewidth=2, color=brightOrange)
+        axis.plot(x, torsionMaeDf[torsion_score_col], color=brightGreen, linewidth=1 + n * 1.25, alpha=0.12)
+    axis.plot(x, torsionMaeDf[torsion_score_col], label='Torsion Score', linewidth=2.5, color=brightGreen, alpha=1.0)
+
+    ## plot total composite score with GLOW (opaque)
+    for n in range(1, 7):
+        axis.plot(x, torsionMaeDf[total_score_col], color=brightOrange, linewidth=1 + n * 1.25, alpha=0.12)
+    axis.plot(x, torsionMaeDf[total_score_col], label='Total Score', linewidth=2.5, color=brightOrange, alpha=1.0)
+
+    # Plot subcomponents for this torsion (thin semi-transparent lines)
+    comp_cols = [
+        ("torsion_location_score", "Location"),
+        ("torsion_amplitude_score", "Amplitude"),
+        ("torsion_stationary_count_score", "Count"),
+        ("torsion_normalized_mae_score", "nMAE"),
+    ]
+    comp_colors = ["#FFD700", "#FF69B4", "#87CEFA", "#ADFF2F"]
+    for (col, label), ccol in zip(comp_cols, comp_colors):
+        if col in torsionMaeDf.columns:
+            axis.plot(x, torsionMaeDf[col], linewidth=1.0, color=ccol, alpha=0.6)
+
+    # Also show the total subcomponents (dashed, fainter)
+    comp_cols_total = [
+        ("total_location_score", "Total_Loc"),
+        ("total_amplitude_score", "Total_Amp"),
+        ("total_stationary_count_score", "Total_Count"),
+        ("total_normalized_mae_score", "Total_nMAE"),
+    ]
+    for (col, label), ccol in zip(comp_cols_total, comp_colors):
+        if col in torsionMaeDf.columns:
+            axis.plot(x, torsionMaeDf[col], linewidth=1.0, color=ccol, alpha=0.4, linestyle='--')
 
     # Add labels and legend
     axis.set_xlabel('Number of Fitting Shuffles')
-    axis.set_ylabel('Mean Average Error (Kcal / mol)')
-    axis.set_title('Mean Average Error vs Number of Fitting Shuffles')
+    axis.set_ylabel('Composite Fit Score (lower is better)')
+    axis.set_title('Fit Scores vs Number of Fitting Shuffles')
     axis.legend()
 
     plt.savefig(p.join(torsionFittingDir, "mean_average_error.png"), bbox_inches='tight')

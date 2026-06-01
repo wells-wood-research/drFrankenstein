@@ -3,6 +3,7 @@ from os import path as p
 import argpass
 import ruamel.yaml as ruamel
 from ruamel.yaml.comments import CommentedMap
+import numpy as np
 
 ## CLEAN CODE ##
 class FilePath:
@@ -89,11 +90,68 @@ def write_config_to_yaml(config, outDir):
     # monkey patch:
     ruamelParser.representer.ignore_aliases = lambda x: True
 
+    # Helper to sanitize values (convert numpy types, arrays, bytes, and other non-serializable objects)
+    def _sanitize_value(v):
+        # Avoid importing numpy repeatedly
+        try:
+            import numpy as _np
+        except Exception:
+            _np = None
+
+        # Handle CommentedMap/dict in-place
+        if isinstance(v, (dict, CommentedMap)):
+            for k in list(v.keys()):
+                v[k] = _sanitize_value(v[k])
+            return v
+
+        # Lists/tuples/sets -> lists
+        if isinstance(v, (list, tuple, set)):
+            return [_sanitize_value(i) for i in v]
+
+        # Numpy arrays -> lists
+        if _np is not None and isinstance(v, _np.ndarray):
+            return _sanitize_value(v.tolist())
+
+        # Numpy scalar types
+        if _np is not None and isinstance(v, (_np.integer,)):
+            return int(v)
+        if _np is not None and isinstance(v, (_np.floating,)):
+            return float(v)
+        if _np is not None and isinstance(v, (_np.bool_ ,)):
+            return bool(v)
+
+        # Bytes -> decode
+        if isinstance(v, (bytes, bytearray)):
+            try:
+                return v.decode("utf-8")
+            except Exception:
+                return v.decode("utf-8", errors="replace")
+
+        # Objects exposing tolist/item
+        try:
+            if hasattr(v, "tolist") and not isinstance(v, (str, bytes, bytearray)):
+                return _sanitize_value(v.tolist())
+            if hasattr(v, "item") and callable(getattr(v, "item")):
+                return _sanitize_value(v.item())
+        except Exception:
+            pass
+
+        # Functions, classes and other callables -> repr
+        if callable(v) or isinstance(v, type):
+            return repr(v)
+
+        # Default: return as-is
+        return v
+
+    # Create a sanitized copy in-place where possible to preserve CommentedMap/comment objects
+    sanitized_config = _sanitize_value(config)
+
     with open(drFrankensteinYaml, "w") as f:
         try:
-            ruamelParser.dump(config, f)
+            ruamelParser.dump(sanitized_config, f)
         except Exception as e:
-            raise(e)
+            # Provide a helpful error message including a sample repr of the problematic object
+            raise RuntimeError(f"Failed to write YAML config to {drFrankensteinYaml}: {e}")
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def get_config_input_arg() -> FilePath:

@@ -95,6 +95,21 @@ def _run_fitting_loop(
         totalMetricsByTag[torsionTag] = totalMetrics
         displayScores[torsionTag] = torsionMetrics["composite_score"]
 
+        # Record the composite score and all subcomponents immediately after this fit
+        try:
+            with open(maeCsv, "a") as f:
+                f.write(
+                    f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},{torsionTag},"
+                    f"{maeTorsion},{maeTotal},{torsionMetrics['composite_score']},{totalMetrics['composite_score']},"
+                    f"{torsionMetrics['location_score']},{torsionMetrics['amplitude_score']},"
+                    f"{torsionMetrics['stationary_count_score']},{torsionMetrics['normalized_mae_score']},"
+                    f"{totalMetrics['location_score']},{totalMetrics['amplitude_score']},"
+                    f"{totalMetrics['stationary_count_score']},{totalMetrics['normalized_mae_score']}\n"
+                )
+        except Exception:
+            # Don't let logging failures break the fitting loop
+            pass
+
         ## Update parameter file
         paramFile = update_param_func(paramFile, config, torsionTag, torsionParameterDf, shuffleIndex)
 
@@ -121,38 +136,27 @@ def _run_fitting_loop(
             rmsScoreTorsion = Stitching_Assistant.rms_of_mae_dict(fitScoreTorsion)
             rmsScoreTotal = Stitching_Assistant.rms_of_mae_dict(fitScoreTotal)
 
-            ## Write buffer to CSV file and clear it to save memory
-            with open(maeCsv, "a") as f:
-                for tag in meanAverageErrorTorsion:
-                    maeTorsionTag = meanAverageErrorTorsion[tag][-1]
-                    maeTotalTag = meanAverageErrorTotal[tag][-1]
-                    scoreTorsionTag = fitScoreTorsion[tag][-1]
-                    scoreTotalTag = fitScoreTotal[tag][-1]
-                    torsionMetricsTag = torsionMetricsByTag[tag]
-                    totalMetricsTag = totalMetricsByTag[tag]
+            # Write only the All_Torsions summary line to CSV (per-fit rows are written immediately after each fit)
+            tagCount = max(len(torsionMetricsByTag), 1)
+            summaryTorsionLocation = sum(m["location_score"] for m in torsionMetricsByTag.values()) / tagCount
+            summaryTorsionAmplitude = sum(m["amplitude_score"] for m in torsionMetricsByTag.values()) / tagCount
+            summaryTorsionCount = sum(m["stationary_count_score"] for m in torsionMetricsByTag.values()) / tagCount
+            summaryTorsionNormMae = sum(m["normalized_mae_score"] for m in torsionMetricsByTag.values()) / tagCount
+            summaryTotalLocation = sum(m["location_score"] for m in totalMetricsByTag.values()) / tagCount
+            summaryTotalAmplitude = sum(m["amplitude_score"] for m in totalMetricsByTag.values()) / tagCount
+            summaryTotalCount = sum(m["stationary_count_score"] for m in totalMetricsByTag.values()) / tagCount
+            summaryTotalNormMae = sum(m["normalized_mae_score"] for m in totalMetricsByTag.values()) / tagCount
+            try:
+                with open(maeCsv, "a") as f:
                     f.write(
-                        f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},{tag},"
-                        f"{maeTorsionTag},{maeTotalTag},{scoreTorsionTag},{scoreTotalTag},"
-                        f"{torsionMetricsTag['location_score']},{torsionMetricsTag['amplitude_score']},"
-                        f"{torsionMetricsTag['stationary_count_score']},{torsionMetricsTag['normalized_mae_score']},"
-                        f"{totalMetricsTag['location_score']},{totalMetricsTag['amplitude_score']},"
-                        f"{totalMetricsTag['stationary_count_score']},{totalMetricsTag['normalized_mae_score']}\n"
+                        f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},All_Torsions,"
+                        f"{rmsMaeTorsion},{rmsMaeTotal},{rmsScoreTorsion},{rmsScoreTotal},"
+                        f"{summaryTorsionLocation},{summaryTorsionAmplitude},{summaryTorsionCount},{summaryTorsionNormMae},"
+                        f"{summaryTotalLocation},{summaryTotalAmplitude},{summaryTotalCount},{summaryTotalNormMae}\n"
                     )
-                tagCount = max(len(torsionMetricsByTag), 1)
-                summaryTorsionLocation = sum(m["location_score"] for m in torsionMetricsByTag.values()) / tagCount
-                summaryTorsionAmplitude = sum(m["amplitude_score"] for m in torsionMetricsByTag.values()) / tagCount
-                summaryTorsionCount = sum(m["stationary_count_score"] for m in torsionMetricsByTag.values()) / tagCount
-                summaryTorsionNormMae = sum(m["normalized_mae_score"] for m in torsionMetricsByTag.values()) / tagCount
-                summaryTotalLocation = sum(m["location_score"] for m in totalMetricsByTag.values()) / tagCount
-                summaryTotalAmplitude = sum(m["amplitude_score"] for m in totalMetricsByTag.values()) / tagCount
-                summaryTotalCount = sum(m["stationary_count_score"] for m in totalMetricsByTag.values()) / tagCount
-                summaryTotalNormMae = sum(m["normalized_mae_score"] for m in totalMetricsByTag.values()) / tagCount
-                f.write(
-                    f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},All_Torsions,"
-                    f"{rmsMaeTorsion},{rmsMaeTotal},{rmsScoreTorsion},{rmsScoreTotal},"
-                    f"{summaryTorsionLocation},{summaryTorsionAmplitude},{summaryTorsionCount},{summaryTorsionNormMae},"
-                    f"{summaryTotalLocation},{summaryTotalAmplitude},{summaryTotalCount},{summaryTotalNormMae}\n"
-                )
+            except Exception:
+                # Don't let logging failures break the fitting loop
+                pass
 
             ## Check for convergence
             if Stitching_Assistant.check_mae_convergence(

@@ -41,19 +41,8 @@ moleculeInfo:
   moleculeName: AIB
   ## List of charge groups, do not include hydrogen atoms, needs fields "atoms":[list_of_atom_names] and "charge":int
   ## Any heavy atoms left out of these groups will be assigned to the "left-overs" group, this will be assigned the remaining charge value
-  chargeGroups:
-    CO: 
-      atoms: [C, O]
-      charge: 0
-    CAN:
-      atoms: [CA, N]
-      charge: 0
-    CB1: 
-      atoms: [CB1]
-      charge: 0
-    CB2: 
-      atoms: [CB2]
-      charge: 0    
+  chargeGroups: Null
+   
   backboneAliases:
     CA: [CA]
     HA: [HA]
@@ -128,16 +117,20 @@ chargeFittingInfo:
 #        How do you want to run parameter fitting?                                                                         #   
 ############################################################################################################################
 parameterFittingInfo:
+  ## fitting protocol for QM torsion curves
+  # fittingProtocol: AMBER
   ## what forcefield parameters do you want to create? Accepts ["CHARMM", "AMBER"]
   forceField: AMBER
-  ## maximum cosine functions to be used to fit each torsion parameter
-  maxCosineFunctions: 2
-  ## upper and lower bounds for how many fitting shuffles to run
-  maxShuffles: 50
-  minShuffles: 5
+  ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
+  maxCosineFunctions: 3
+  ## global joint mode runs a single global round
+  maxShuffles: 5
+  minShuffles: 2
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true
+  converganceTolerance: 0.1
+
 
 #####################################################
 #              _             ___          __        #
@@ -154,4 +147,5 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
-  assemblyProtocol: AGNOSTIC ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
+  assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
+  conformerSelectionMethods: DIVERSE

@@ -90,3 +90,4 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 [] page for capping?
 [] sort out padding in stitching table
 [] plot scores instead of MAE 
+[] remove PRINTS from fitting

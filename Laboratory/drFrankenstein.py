@@ -72,6 +72,7 @@ def main():
         config = drYaml.initialise_runtime_info(config)
         ## save config back to yaml
         drYaml.write_config_to_yaml(config, outputDir)
+        debug = config["miscInfo"]["debug"]
 
         ## add capping groups to input molecule
         ## TODO: cope with staples etc. that need 2 or more capping groups
@@ -84,7 +85,6 @@ def main():
         cappedPdb = pdb_checker.get_capped_pdb_path(config)
         pdb_checker.validate_charge_multiplicity(config, cappedPdb)
 
-        debug = config["miscInfo"]["debug"]
         
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:

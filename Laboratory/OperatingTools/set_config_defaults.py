@@ -2,6 +2,7 @@ import os
 import io
 import multiprocessing as mp
 from ruamel.yaml import YAML
+import openmm as _openmm
 
 from OperatingTools import drSplash
 
@@ -13,6 +14,16 @@ def _has_fatal_errors(d):
         return True
     return False
 
+
+def _detect_gpu_platform():
+    """Detects available GPU platforms in order of preference: CUDA > HIP > OpenCL."""
+    for candidate in ["CUDA", "HIP", "OpenCL"]:
+        try:
+            _openmm.Platform.getPlatformByName(candidate)
+            return candidate
+        except Exception:
+            continue
+    return "CPU"
 
 def apply_defaults_and_validate(config):
     """Reads the yaml file, applies defaults, and validates all parameters."""
@@ -168,6 +179,16 @@ def apply_defaults_and_validate(config):
     set_default(miscInfo, 'seed', 1818, errors['miscInfo'])
     set_default(miscInfo, 'conformerSelectionMethods', 'ENERGY', errors['miscInfo'])
     set_default(miscInfo, 'debug', False, errors['miscInfo'])
+
+    # Detect GPU platform once and store in miscInfo.gpuPlatform (default)
+
+
+    if 'gpuPlatform' not in miscInfo or miscInfo.get('gpuPlatform') is None:
+        detected = _detect_gpu_platform()
+        miscInfo['gpuPlatform'] = detected
+        errors['miscInfo']['gpuPlatform'] = f"Default Used: {detected}"
+    else:
+        errors['miscInfo']['gpuPlatform'] = None
 
     # --- Final Error Check ---
     if _has_fatal_errors(errors):

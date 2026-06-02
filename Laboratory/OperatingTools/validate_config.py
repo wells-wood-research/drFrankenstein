@@ -306,6 +306,7 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "seed": int,
         "conformerSelectionMethods": str,
         "debug": bool,
+        "gpuPlatform": (str, type(None)),
     }
 
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
@@ -336,6 +337,10 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
                 elif key == "debug" and not isinstance(value, bool):
                     _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
+                elif key == "gpuPlatform" and isinstance(value, str):
+                    allowedGpu = ["CUDA", "HIP", "OpenCL", "CPU"]
+                    if value.upper() not in allowedGpu:
+                        _add_error(errors, keyPath, f"Invalid value '{value}'. Allowed values are: {allowedGpu}")
 
 def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]):
     """

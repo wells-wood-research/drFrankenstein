@@ -57,10 +57,16 @@ def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     os.makedirs(torsionFittingDir, exist_ok=True)
     torsionIndexes = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["ATOM_INDEXES"]
 
+    # Thread gpuPlatform from config (set earlier in set_config_defaults)
+    gpuPlatform = None
+    if isinstance(config, dict):
+        gpuPlatform = config.get("miscInfo", {}).get("gpuPlatform", None)
+
+
     if debug:
-        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes)
+        singlePointEnergyDfs = run_serial(completedTorsionScanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform)
     else:
-        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes)
+        singlePointEnergyDfs = run_parallel(completedTorsionScanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform)
 
     ## sort out data
     mergedEnergyDf = Stitching_Assistant.merge_energy_dfs(singlePointEnergyDfs)
@@ -81,8 +87,8 @@ def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     return  finalScanEnergiesDf["smoothedEnergy"].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop) for  scanIndex, scanDir in enumerate(scanDirs)]
+def run_serial(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, gpuPlatform) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(*args, torsionIndexes)
@@ -91,8 +97,8 @@ def run_serial(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionInde
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes):
-    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb,  moleculePrmtop) for scanIndex, scanDir in enumerate(scanDirs)]
+def run_parallel(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None):
+    argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb,  moleculePrmtop, gpuPlatform) for scanIndex, scanDir in enumerate(scanDirs)]
 
     # Use multiprocessing Pool without tqdm progress bar
     with multiprocessing.Pool() as pool:
@@ -102,16 +108,16 @@ def run_parallel(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIn
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def single_point_worker(args):
-    (scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop), torsionIndexes = args
+    (scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, gpuPlatform), torsionIndexes = args
     try:
-        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes)
+        singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform)
         return singlePointEnergyDf
 
     except Exception as e:
         raise(e)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, debug=False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None, debug=False):
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
     os.makedirs(fittingRoundDir, exist_ok=True)
 
@@ -122,7 +128,7 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
 
 
     trajPdbs = file_parsers.convert_traj_xyz_to_pdb(trajXyzs, cappedPdb, fittingRoundDir)
-    minimisedEnergies = run_mm_constrained_em(trajPdbs, moleculePrmtop, torsionIndexes=torsionIndexes)
+    minimisedEnergies = run_mm_constrained_em(trajPdbs, moleculePrmtop, torsionIndexes=torsionIndexes, gpuPlatform=gpuPlatform)
 
     singlePointEnergyDf = pd.DataFrame(minimisedEnergies, columns=["TrajIndex", "Energy"])
 
@@ -177,7 +183,7 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> float:
 
     return singlePointEnergies
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, torsionIndexes: List[int]) -> List[Tuple[str, float]]:
+def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, torsionIndexes: List[int], gpuPlatform: str | None = None) -> List[Tuple[str, float]]:
     """
     Runs a constrained energy minimization for each provided structure
     and returns the final potential energy.
@@ -190,6 +196,7 @@ def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, to
         moleculePrmtop (FilePath): The topology file path (AMBER prmtop).
         torsionIndexes (List[int]): A list of 0-based atom indices to constrain
                                      during the minimization.
+        gpuPlatform (str|None): Preferred platform name ('CUDA','HIP','OpenCL','CPU') or None to use defaults.
 
     Returns:
         List[Tuple[str, float]]: A list of tuples, where each tuple contains the
@@ -209,7 +216,10 @@ def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, to
     # 3. Set up the simulation object
     # An integrator is required, but it's not used by the local energy minimizer.
     integrator = openmm.LangevinIntegrator(300*unit.kelvin, 1/unit.picosecond, 0.002*unit.picoseconds)
-    platform = openmm.Platform.getPlatformByName('CUDA') # Or 'CUDA', 'OpenCL' for faster computation
+
+    ## set GPU platform (or CPU to disable)
+    platform = openmm.Platform.getPlatformByName(gpuPlatform)
+
 
     simulation = app.Simulation(prmtop.topology, system, integrator, platform)
 
@@ -221,10 +231,6 @@ def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, to
         # Set the starting positions for this frame
         simulation.context.setPositions(pdbFile.positions)
         
-        # Get energy before minimization (optional, for comparison)
-        initial_state = simulation.context.getState(getEnergy=True)
-        initial_energy = initial_state.getPotentialEnergy().value_in_unit(unit.kilocalories_per_mole)
-
         # 5. Run the energy minimization
         simulation.minimizeEnergy()
 

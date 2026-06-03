@@ -173,7 +173,13 @@ def write_goat_input(conformerDir, cappedXyz, config):
         f.write("\tMAXITERMULT 1\n")            ## only do one round (save some time)
         f.write("\tFREEZEAMIDES TRUE\n")           ## freeze amides
         f.write("\tFREEZECISTRANS TRUE\n ")         ## freeze cis-trans bonds
+        f.write(("\tMAXEN 12.0\n"))              ## only accept conformers within 12 kcal/mol of the lowest energy
         f.write("END\n")
+        ## constrain bond lengths to prevent dissociation during conformer generation
+        f.write("%geom Constraints\n")
+        f.write("{ B * * C }\n")
+        f.write("end\n")
+        f.write("end\n")
         f.write(f"*xyzfile {charge} {multiplicity} {cappedXyz}\n")
     return goatOrcaInput
 

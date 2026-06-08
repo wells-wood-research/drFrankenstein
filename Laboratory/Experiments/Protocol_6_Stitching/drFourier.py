@@ -67,8 +67,9 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, c
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
     """
-    Applies a L2 damping to the amplitudes
-    This may help prevent escalating amplitudes as nShuffles increases
+    Applies L2 (ridge-style) damping to amplitudes.
+
+    Scales amplitudes by 1 / (1 + l2Damping), independent of amplitude magnitude.
 
     Args:
         amplitudes (np.array): array of amplitudes
@@ -76,9 +77,16 @@ def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
 
     Returns:
         dampenedAmplitudes (np.array): dampened amplitudes
-    
     """
-    dampenedAmplitudes = amplitudes / (1 + l2Damping * np.abs(amplitudes))
+    # If no damping requested, return original amplitudes unchanged
+    try:
+        ld = float(l2Damping)
+    except Exception:
+        ld = 0.0
+    if ld == 0.0:
+        return amplitudes
+
+    dampenedAmplitudes = amplitudes / (1.0 + ld)
 
     return dampenedAmplitudes
 

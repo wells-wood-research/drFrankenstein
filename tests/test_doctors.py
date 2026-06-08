@@ -432,6 +432,25 @@ class TestStitchingDoctor(DoctorTestBase):
 
 
 class TestAmberTotalProtocol(DoctorTestBase):
+    def test_cpu_gpu_platform_disables_gpu_visibility_env(self):
+        with patch.dict(os.environ, {}, clear=True):
+            result = AMBER_total_protocol.configure_openmm_gpu_access("CPU")
+
+            self.assertEqual(result, "CPU")
+            self.assertEqual(os.environ["CUDA_VISIBLE_DEVICES"], "-1")
+            self.assertEqual(os.environ["HIP_VISIBLE_DEVICES"], "-1")
+            self.assertEqual(os.environ["ROCR_VISIBLE_DEVICES"], "-1")
+            self.assertEqual(os.environ["GPU_DEVICE_ORDINAL"], "-1")
+            self.assertEqual(os.environ["OPENMM_DEFAULT_PLATFORM"], "CPU")
+
+    def test_gpu_platform_leaves_gpu_visibility_env_untouched(self):
+        with patch.dict(os.environ, {"CUDA_VISIBLE_DEVICES": "0"}, clear=True):
+            result = AMBER_total_protocol.configure_openmm_gpu_access("CUDA")
+
+            self.assertEqual(result, "CUDA")
+            self.assertEqual(os.environ["CUDA_VISIBLE_DEVICES"], "0")
+            self.assertNotIn("OPENMM_DEFAULT_PLATFORM", os.environ)
+
     def test_minimisation_uses_current_torsion_indexes(self):
         with tempfile.TemporaryDirectory() as tmp:
             cfg = self.make_base_config(tmp)

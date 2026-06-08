@@ -29,7 +29,6 @@ def _format_torsion_table_cell(tag: str, converged: bool, cell_width: int, score
     greenText = "\033[32m"
     resetTextColor = "\033[0m"
     scoreText = f"{score:.3f}" if isinstance(score, (int, float)) else "--"
-    print(score, tol)
     color = colour_by_score(score, tol=tol) if isinstance(score, (int, float)) else orangeText
 
     label = f"{tag} [{color}{scoreText}{resetTextColor}]"
@@ -56,7 +55,6 @@ def colour_by_score(score: float, tol: float) -> str:
     greenText = "\033[32m"
     orangeText = "\033[38;5;208m"
     redText = "\033[31m"
-    print("color", score, tol)
     if score < tol:
         return greenText
     elif score > tol * 2:
@@ -85,7 +83,6 @@ def build_torsion_status_table_rows(
     rows = []
     for start in range(0, len(torsionTags), columns):
         rowTags = torsionTags[start:start + columns]
-        print("row", tol)
         rowCells = [
             _format_torsion_table_cell(tag, tag in convergedTags, cellWidth, None if scores is None else scores.get(tag), tol = tol)
             for tag in rowTags

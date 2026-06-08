@@ -31,21 +31,49 @@ def construct_final_params(config: dict, paramFile: FilePath, param_extraction_f
     return finalParameters
 
 
-def check_mae_flatline(maeCsv: FilePath, windowSize = 5, diffTolerance = 0.1) -> bool:
-    maeDf = pd.read_csv(maeCsv)
+def score_flatline_status(
+    scoresDf: pd.DataFrame,
+    torsionTag: str = "All_Torsions",
+    windowSize: int = 3,
+    diffTolerance: float = 0.1,
+) -> tuple[bool, bool]:
+    if "torsion_tag" in scoresDf.columns:
+        scoresDf = scoresDf[scoresDf["torsion_tag"] == torsionTag]
+    if scoresDf.empty:
+        return False, False
 
-    allMaeDf = maeDf[maeDf["torsion_tag"] == "All_Torsions"]
+    torsionCol = "fit_score_torsion" if "fit_score_torsion" in scoresDf.columns else "mae_torsion"
+    totalCol = "fit_score_total" if "fit_score_total" in scoresDf.columns else "mae_total"
 
-    torsionCol = "fit_score_torsion" if "fit_score_torsion" in allMaeDf.columns else "mae_torsion"
-    totalCol = "fit_score_total" if "fit_score_total" in allMaeDf.columns else "mae_total"
+    diffTorsion = scoresDf[torsionCol].diff().abs().dropna()
+    diffTotal = scoresDf[totalCol].diff().abs().dropna()
 
-    diffTorsion = allMaeDf[torsionCol].diff().abs()
-    diffTotal = allMaeDf[totalCol].diff().abs()
-
-    torsionFlatLined = np.all(diffTorsion.tail(windowSize) < diffTolerance)
-    totalFlatLined  = np.all(diffTotal.tail(windowSize) < diffTolerance)
+    torsionFlatLined = len(diffTorsion) >= windowSize and np.all(diffTorsion.tail(windowSize) < diffTolerance)
+    totalFlatLined = len(diffTotal) >= windowSize and np.all(diffTotal.tail(windowSize) < diffTolerance)
 
     return torsionFlatLined and totalFlatLined
+
+
+def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], fittingScoresCsv: FilePath, windowSize = 3, diffTolerance = 0.1) -> bool:
+    
+    unconvergedTorsionTags = [tag for tag in torsionTags if tag not in convergedTags]
+
+    scoresDf = pd.read_csv(fittingScoresCsv)
+
+    flatlinedTorsions = []
+    for torsionTag in unconvergedTorsionTags:
+        isFlatlined = score_flatline_status(
+            scoresDf,
+            torsionTag=torsionTag,
+            windowSize=windowSize,
+            diffTolerance=diffTolerance,
+        )
+        if isFlatlined:
+            flatlinedTorsions.append(torsionTag)
+    
+    return flatlinedTorsions
+
+
         
 
 
@@ -107,13 +135,13 @@ def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, 
         return latestRmsMaeTorsion < converganceTolerance and latestRmsMaeTotal < converganceTolerance
 
 
-def check_torsion_convergence(latestTorsionScore: float, converganceTolerance: float | None) -> bool:
+def check_torsion_convergence(latestTorsionScore: float, latestTotalScore: float, converganceTolerance: float | None) -> bool:
     """
     Checks whether a torsion fit score is within tolerance.
     """
     if converganceTolerance is None:
         return False
-    return latestTorsionScore < converganceTolerance
+    return latestTorsionScore < converganceTolerance and latestTotalScore < converganceTolerance
 
 
 def _stationary_point_angles(signal: np.ndarray, sampleSpacingDegrees: int = 10) -> np.ndarray:
@@ -528,19 +556,19 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
 
 
 
-def _remove_converged_torsion_tags(maeCsv, converganceTolerance, torsionTags, topN = 5):
+def _remove_converged_torsion_tags(fittingScoresCsv, converganceTolerance, torsionTags, topN = 5):
     """
     Reads through the MAE csv file to find torsions that have converged
     Removes these from the list of torsions to fit
 
     Args:
-        maeCsv (FilePath): location of MAE csv file
+        fittingScoresCsv (FilePath): location of MAE csv file
         converganceTolerance (float): tolerance for convergence
         torsionTags (list): list of torsion tags to fit
     Returns:
         list: updated list of torsion tags without converged ones
     """
-    maeDf = pd.read_csv(maeCsv, index_col=False, header=0)
+    maeDf = pd.read_csv(fittingScoresCsv, index_col=False, header=0)
     maxShuffle = maeDf["shuffle"].max()
     lastShuffleDf = maeDf[(maeDf["shuffle"] == maxShuffle) & (maeDf["torsion_tag"] != "All_Torsions")]
     ## sort by MAE total

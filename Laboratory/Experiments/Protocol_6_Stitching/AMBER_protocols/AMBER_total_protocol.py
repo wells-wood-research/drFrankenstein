@@ -34,6 +34,25 @@ class FilePath:
 class DirectoryPath:
     pass
 
+GPU_DISABLE_ENV_VARS = (
+    "CUDA_VISIBLE_DEVICES",
+    "HIP_VISIBLE_DEVICES",
+    "ROCR_VISIBLE_DEVICES",
+    "GPU_DEVICE_ORDINAL",
+)
+
+
+def configure_openmm_gpu_access(gpuPlatform):
+    if isinstance(gpuPlatform, str) and gpuPlatform.upper() == "CPU":
+        for envVar in GPU_DISABLE_ENV_VARS:
+            os.environ[envVar] = "-1"
+        os.environ["OPENMM_DEFAULT_PLATFORM"] = "CPU"
+        return "CPU"
+    if isinstance(gpuPlatform, str):
+        platformNames = {"CUDA": "CUDA", "HIP": "HIP", "OPENCL": "OpenCL"}
+        return platformNames.get(gpuPlatform.upper(), gpuPlatform)
+    return gpuPlatform
+
 
 def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     drSplash.show_getting_mm_total(torsionTag)
@@ -61,6 +80,7 @@ def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     gpuPlatform = None
     if isinstance(config, dict):
         gpuPlatform = config.get("miscInfo", {}).get("gpuPlatform", None)
+    gpuPlatform = configure_openmm_gpu_access(gpuPlatform)
 
 
     if debug:
@@ -217,7 +237,7 @@ def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, to
     # An integrator is required, but it's not used by the local energy minimizer.
     integrator = openmm.LangevinIntegrator(300*unit.kelvin, 1/unit.picosecond, 0.002*unit.picoseconds)
 
-    ## set GPU platform (or CPU to disable)
+    gpuPlatform = configure_openmm_gpu_access(gpuPlatform)
     platform = openmm.Platform.getPlatformByName(gpuPlatform)
 
 

@@ -38,7 +38,7 @@ def _run_fitting_loop(
     tqdmBarOptions: dict,
     minShuffles: int,
     converganceTolerance,
-    maeCsv: FilePath,
+    fittingScoresCsv: FilePath,
     debug: bool,
     statusTableRows: list | None = None,
     statusTableTags: list | None = None,
@@ -47,6 +47,9 @@ def _run_fitting_loop(
     displayConvergedTags: set | None = None,
     displayScores: dict | None = None,
 ) -> tuple[FilePath, bool]:
+    
+
+
     ## init empties for storing data, counters, and flags
     meanAverageErrorTorsion = defaultdict(list)
     meanAverageErrorTotal = defaultdict(list)
@@ -59,6 +62,7 @@ def _run_fitting_loop(
     converged = False
 
     convergedTags = set()
+    flatlinedTags = set()
     if displayConvergedTags is None:
         displayConvergedTags = set()
     if displayScores is None:
@@ -70,13 +74,23 @@ def _run_fitting_loop(
     ## Run the torsion fitting protocol, shuffling the torsion order each iteration
     for torsionTag in tqdm(shuffledTorsionTags, **tqdmBarOptions):
 
+        ## Skip fitting for this torsion if it has already converged or flatlined
         if torsionTag in convergedTags:
             continue
+        elif torsionTag in flatlinedTags:
+            continue
+
 
         ## Update the config with the current parameters, unless first iteration
         if counter > 1:
             if forcefield == "AMBER":
                 helper_functions.run_tleap_to_make_params(paramFile, config)
+
+        ## RESET TORSION IN QUESTION TO ZERO BEFORE FITTING TO AVOID PARAMETER INTERFERENCE
+        flattenedTorsionDf =  pd.DataFrame({"Amplitude": [0.0], "Phase": [180], "Period": [1.0]})
+        paramFile = update_param_func(paramFile, config, torsionTag, flattenedTorsionDf, shuffleIndex)
+        if forcefield == "AMBER":
+            helper_functions.run_tleap_to_make_params(paramFile, config)
 
         ## Use OpenMM to get MM total energies using scan geometries
         mmTotalEnergy = total_protocol.get_MM_total_energies(config, torsionTag, paramFile, debug)
@@ -85,7 +99,8 @@ def _run_fitting_loop(
         ## Fit torsion parameters using Fourier Transform
         torsionParameterDf, torsionMetrics, totalMetrics, maeTorsion, maeTotal, torsionConverged = QMMM_fitting_protocol.fit_torsion_parameters(
             config, torsionTag, mmTotalEnergy, mmTorsionEnergy, shuffleIndex, mmCosineComponents, debug
-        )
+        )                
+
         ## Store mean average errors for the current shuffle
         meanAverageErrorTorsion[torsionTag].append(maeTorsion)
         meanAverageErrorTotal[torsionTag].append(maeTotal)
@@ -97,7 +112,7 @@ def _run_fitting_loop(
 
         # Record the composite score and all subcomponents immediately after this fit
         try:
-            with open(maeCsv, "a") as f:
+            with open(fittingScoresCsv, "a") as f:
                 f.write(
                     f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},{torsionTag},"
                     f"{maeTorsion},{maeTotal},{torsionMetrics['composite_score']},{totalMetrics['composite_score']},"
@@ -147,7 +162,7 @@ def _run_fitting_loop(
             summaryTotalCount = sum(m["stationary_count_score"] for m in totalMetricsByTag.values()) / tagCount
             summaryTotalNormMae = sum(m["normalized_mae_score"] for m in totalMetricsByTag.values()) / tagCount
             try:
-                with open(maeCsv, "a") as f:
+                with open(fittingScoresCsv, "a") as f:
                     f.write(
                         f"{shuffleIndex},{config['runtimeInfo']['madeByStitching']['maxTorsions']},All_Torsions,"
                         f"{rmsMaeTorsion},{rmsMaeTotal},{rmsScoreTorsion},{rmsScoreTotal},"
@@ -158,24 +173,12 @@ def _run_fitting_loop(
                 # Don't let logging failures break the fitting loop
                 pass
 
-            ## Check for convergence
-            if Stitching_Assistant.check_mae_convergence(
-                rmsScoreTorsion, rmsScoreTotal, converganceTolerance,
-            ) and shuffleIndex >= minShuffles:
-                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                converged = True
-                break
-            ## every 10 shuffles, check to see if parameterisation is flatlined
-            if shuffleIndex % 10 == 0 and shuffleIndex >= minShuffles:
-                if Stitching_Assistant.check_mae_flatline(maeCsv):
-                    config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                    converged = True
-                    break
+            ## every 3 shuffles, check to see if composite scores are flatlined
+            if shuffleIndex % 3 == 0 and shuffleIndex >= minShuffles:
+                thisRoundFlatlinedTorsions = Stitching_Assistant.check_scores_for_flatline(torsionTags, convergedTags, fittingScoresCsv)
+                if len(thisRoundFlatlinedTorsions) > 0:
+                   flatlinedTags.update(thisRoundFlatlinedTorsions)
 
-            if len(convergedTags) == len(torsionTags):
-                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = shuffleIndex
-                converged = True
-                break
 
             ## at the end of each shuffle, clear memory
             meanAverageErrorTorsion.clear()
@@ -281,6 +284,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
     statusTableNcols = tqdmBarOptions.get("ncols", 102)
     displayConvergedTags: set[str] = set()
     displayScores: dict[str, float] = {}
+    
     if not tqdmBarOptions.get("disable", False):
         statusLine = tqdm(
             total=1,
@@ -319,9 +323,9 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         )
 
     ## Set up Mean Average Error CSV for memory-efficient logging
-    maeCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
-    config["runtimeInfo"]["madeByStitching"]["maeCsv"] = maeCsv
-    with open(maeCsv, "w") as f:
+    fittingScoresCsv = p.join(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], "mean_average_errors.csv")
+    config["runtimeInfo"]["madeByStitching"]["fittingScoresCsv"] = fittingScoresCsv
+    with open(fittingScoresCsv, "w") as f:
         f.write(
             "shuffle,n_cosines,torsion_tag,mae_torsion,mae_total,fit_score_torsion,fit_score_total,"
             "torsion_location_score,torsion_amplitude_score,torsion_stationary_count_score,torsion_normalized_mae_score,"
@@ -346,7 +350,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
             tqdmBarOptions=tqdmBarOptions,
             minShuffles=minShuffles,
             converganceTolerance=converganceTolerance,
-            maeCsv=maeCsv,
+            fittingScoresCsv=fittingScoresCsv,
             debug=debug,
             statusTableRows=statusTableRows,
             statusTableTags=statusTableTags,
@@ -358,7 +362,7 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
 
         convergedTags = set(config["runtimeInfo"]["madeByStitching"].get("convergedTags", []))
         torsionTags = [tag for tag in torsionTags if tag not in convergedTags]
-        torsionTags = Stitching_Assistant._remove_converged_torsion_tags(maeCsv, converganceTolerance, torsionTags, topN = 2)
+        # torsionTags = Stitching_Assistant._remove_converged_torsion_tags(fittingScoresCsv, converganceTolerance, torsionTags, topN = 2)
         shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed) if torsionTags else []
 
         print("Remaining torsions after convergence check:", torsionTags)
@@ -393,11 +397,11 @@ def torsion_fitting_protocol(config: dict, debug=False) -> dict:
         ## Create a GIF for each torsion being fitted
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
         ## Plot mean average errors from the CSV data
-        Stitching_Plotter.plot_mean_average_error(torsionFittingDir, maeCsv, torsionTag)
+        # Stitching_Plotter.plot_mean_average_error(torsionFittingDir, fittingScoresCsv, torsionTag)
 
     ## Load MAE data from CSV for final run-wide analysis and plotting
-    if os.path.exists(maeCsv):
-        Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], maeCsv )
+    if os.path.exists(fittingScoresCsv):
+        Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], fittingScoresCsv )
     ## Clean up temporary files
     cleaner.clean_up_stitching(config)
     ## Update config checkpoint flag

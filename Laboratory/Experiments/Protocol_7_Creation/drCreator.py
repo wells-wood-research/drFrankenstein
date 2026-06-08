@@ -19,8 +19,6 @@ def create_the_monster(config):
 
     ## unpack config
     forceField = config["parameterFittingInfo"]["forceField"]
-
-
     
     ## decide what kind of system we have
     backboneAliases = config["moleculeInfo"]["backboneAliases"]

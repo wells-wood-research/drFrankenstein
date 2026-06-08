@@ -91,3 +91,5 @@ fe2: {MASS: 55.845, NONBONDED: {Radius: 0.0, Well_Depth: 0.0}, CHARGE: 2.0, ELEM
 [] sort out padding in stitching table
 [] plot scores instead of MAE 
 [] remove PRINTS from fitting
+[] add CUDA/CPU option for fitting
+[] sort out flatline plotting for stitching protocol

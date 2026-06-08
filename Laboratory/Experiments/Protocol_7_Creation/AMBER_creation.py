@@ -1,7 +1,7 @@
 import os
 from os import path as p
 import pandas as pd
-from subprocess import call, PIPE
+from subprocess import run
 from shutil import copy
 from copy import copy as object_copy
 import sys
@@ -243,8 +243,7 @@ def get_capping_atom_ids(config):
     creationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     tmpPdb = p.join(creationDir, "tmp.pdb")
     obabelCommand = ["obabel", "-i", "mol2", cappedMol2, "-O", tmpPdb]
-    call(obabelCommand, stdout=PIPE, stderr=PIPE)
-
+    run(obabelCommand, capture_output=True)
     cappingAtomNames = ["N_N", "H_N", "C_N", "H1_N", "H2_N", "H3_N", ## NME cap
                         "C_C", "O_C", "C2_C", "H1_C", "H2_C", "H3_C"] ## ACE cap
 
@@ -283,7 +282,7 @@ def create_final_lib_and_mol2(cappingAtomIds, config):
     tleapCommand: list = ["tleap", "-f", finalTleapInput, ">", tleapOutput]
 
     os.chdir(finalCreationDir)
-    call(tleapCommand, stdout=PIPE)
+    run(tleapCommand, capture_output=True)
 ################################################################################
 def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
     cappingProtonIds = []

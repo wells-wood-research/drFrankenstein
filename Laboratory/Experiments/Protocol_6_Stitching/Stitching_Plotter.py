@@ -13,6 +13,7 @@ from itertools import islice
 from matplotlib.ticker import MaxNLocator
 
 import matplotlib.gridspec as gridspec
+from . import Stitching_Assistant
 
 ## CLEAN CODE CLASSES ##
 class FilePath:
@@ -20,9 +21,9 @@ class FilePath:
 class DirectoryPath:
     pass
 
-def plot_run_mean_average_error(outDir, maeCsv):
+def plot_run_mean_average_error(outDir, fittingScoresCsv):
 
-    maeDf = pd.read_csv(maeCsv)
+    maeDf = pd.read_csv(fittingScoresCsv)
 
     set_rc_params()
     ## init some colors to be used
@@ -84,6 +85,19 @@ def plot_run_mean_average_error(outDir, maeCsv):
     axis.set_ylabel('Composite Fit Score (lower is better)')
     axis.set_title('Fit Scores vs Number of Fitting Shuffles')
 
+    torsionFlatLined, totalFlatLined = Stitching_Assistant.score_flatline_status(maeDf, torsionTag="All_Torsions")
+    if torsionFlatLined and totalFlatLined:
+        axis.text(
+            0.5, 0.92,
+            "FLATLINED (TORSION + TOTAL)",
+            transform=axis.transAxes,
+            color="red",
+            fontsize=14,
+            fontweight="bold",
+            ha="center",
+            bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.4"),
+        )
+
     # Build a concise legend: include main composite traces
     handles, labels = axis.get_legend_handles_labels()
     filtered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in ['Torsion Score', 'Total Score']]
@@ -109,10 +123,10 @@ def plot_run_mean_average_error(outDir, maeCsv):
 
 
 
-def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, torsionTag: str):
+def plot_mean_average_error(torsionFittingDir: DirectoryPath, fittingScoresCsv: FilePath, torsionTag: str):
 
     ## get data from csv
-    maeDf = pd.read_csv(maeCsv)
+    maeDf = pd.read_csv(fittingScoresCsv)
     torsionMaeDf = maeDf[maeDf["torsion_tag"] == torsionTag]
     
 
@@ -166,6 +180,19 @@ def plot_mean_average_error(torsionFittingDir: DirectoryPath, maeCsv: FilePath, 
     axis.set_xlabel('Number of Fitting Shuffles')
     axis.set_ylabel('Composite Fit Score (lower is better)')
     axis.set_title('Fit Scores vs Number of Fitting Shuffles')
+
+    torsionFlatLined, totalFlatLined = Stitching_Assistant.score_flatline_status(maeDf, torsionTag=torsionTag)
+    if torsionFlatLined and totalFlatLined:
+        axis.text(
+            0.5, 0.92,
+            "FLATLINED (TORSION + TOTAL)",
+            transform=axis.transAxes,
+            color="red",
+            fontsize=14,
+            fontweight="bold",
+            ha="center",
+            bbox=dict(facecolor="none", edgecolor="red", boxstyle="round,pad=0.4"),
+        )
     axis.legend()
 
     plt.savefig(p.join(torsionFittingDir, "mean_average_error.png"), bbox_inches='tight')

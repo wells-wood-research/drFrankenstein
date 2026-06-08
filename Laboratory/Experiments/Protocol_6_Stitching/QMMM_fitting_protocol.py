@@ -58,7 +58,7 @@ def fit_torsion_parameters(config: dict,
                                                                                     qmmmTorsionFittingDir,
                                                                                     config=config)
     torsionMetrics = Stitching_Assistant.calculate_profile_fit_metrics(qmTorsionEnergy, reconstructedSignal)
-    torsionConverged = Stitching_Assistant.check_torsion_convergence(torsionMetrics["composite_score"], converganceTolerance)
+    torsionConverged = Stitching_Assistant.check_torsion_convergence(torsionMetrics["composite_score"], totalMetrics["composite_score"], converganceTolerance)
 
     Stitching_Plotter.plot_qmmm_energies(qmTotalEnergy,
                                           qmTorsionEnergy,

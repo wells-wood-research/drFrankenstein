@@ -19,7 +19,8 @@ from typing import Dict, List, Tuple
 
 OPTIONAL_BACKBONE_ALIASES = {"H", "HA"}
 
-def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases: Dict[str, List[str]]):
+def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases: Dict[str, List[str]]) -> dict:
+    """Extract AMBER backbone atom types from a PRMTOP file."""
 
     ## extract backbone atom types from prmtop
     parmedPrmtop = pmd.load_file(moleculePrmtop)
@@ -62,16 +63,7 @@ def extract_backbone_types_from_prmtop(moleculePrmtop: FilePath, backboneAliases
     return backboneAtomTypes
 
 def add_ncaa_ncaa_dihedrals(config: dict) -> None:
-    """
-    In cases where we have re-parameterised Phi/Psi, we will have gaff2 atom types for backbone atoms
-    Where we have a ncAA-ncAA interaction, we need to add params for this interaction
-    
-    Args:
-        config (dict): A dictionary containing the configuration, including the
-                       path to the input frcmod file.
-    Returns:
-        None
-    """
+    """Add ncAA-ncAA dihedral parameters to the final frcmod."""
     ## unpack config
     finalFrcMod = config["runtimeInfo"]["madeByCreator"]["finalFrcmod"]
     moleculePrmtop = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
@@ -113,16 +105,7 @@ def add_ncaa_ncaa_dihedrals(config: dict) -> None:
 
     return None
 def add_wildcard_dihedrals(config: dict) -> None:
-    """
-    Adds wildcard "X" dihedrals to a frcmod file
-    This is needed when we have gaff2 atom types for the backbone atoms
-    
-    Args:
-        config (dict): A dictionary containing the configuration, including the
-                       path to the input frcmod file.
-    Returns:
-        None
-    """
+    """Add wildcard dihedral parameters to the final frcmod."""
     ## unpack config
     finalFrcMod = config["runtimeInfo"]["madeByCreator"]["finalFrcmod"]
     moleculePrmtop = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
@@ -164,20 +147,7 @@ def add_wildcard_dihedrals(config: dict) -> None:
 
 
 def duplicate_capping_parameters(config: dict) -> dict:
-    """
-    Loads a frcmod file, identifies parameters containing the 'CX' atom type,
-    duplicates them by creating new, distinct parameter objects for 'CT' and 'XC',
-    and writes a new frcmod file.
-
-    We need this to account for the case when the ncAA is bound to the terminal residue
-    or a capping group:
-        AAA-ncAA-A
-        SEQ-ncAA-A-NMe
-
-    Args:
-        config (dict): A dictionary containing the configuration, including the
-                       path to the input frcmod file.
-    """
+    """Duplicate capping parameters for terminal and capped ncAA cases."""
     finalFrcMod = config["runtimeInfo"]["madeByCreator"]["finalFrcmod"]
 
     params = pmd.load_file(finalFrcMod)
@@ -216,15 +186,7 @@ def duplicate_capping_parameters(config: dict) -> dict:
 
 ################################################################################
 def copy_final_frcmod(config: dict) -> dict:
-    """
-    Copies the final frcmod file from the Stitching directory to the Creator directory.
-
-    Args:
-        config (dict): The configuration dictionary.
-
-    Returns:
-        config (dict): The updated configuration dictionary.
-    """
+    """Copy the stitched frcmod file into the final creation directory."""
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeFrcmod = config["runtimeInfo"]["madeByStitching"]["moleculeFrcmod"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -237,7 +199,8 @@ def copy_final_frcmod(config: dict) -> dict:
     return config
     
 ################################################################################
-def get_capping_atom_ids(config):
+def get_capping_atom_ids(config: dict) -> list[int]:
+    """Return the atom IDs that belong to the capping groups."""
 
     cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
     creationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
@@ -256,7 +219,8 @@ def get_capping_atom_ids(config):
 
 ################################################################################
 
-def create_final_lib_and_mol2(cappingAtomIds, config):
+def create_final_lib_and_mol2(cappingAtomIds: list[int], config: dict) -> None:
+    """Create the final AMBER lib and mol2 files."""
     cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -284,7 +248,8 @@ def create_final_lib_and_mol2(cappingAtomIds, config):
     os.chdir(finalCreationDir)
     run(tleapCommand, capture_output=True)
 ################################################################################
-def get_capping_proton_ids(cappingHeteroAtomNames, atomDf, bondDf):
+def get_capping_proton_ids(cappingHeteroAtomNames: list[str], atomDf: pd.DataFrame, bondDf: pd.DataFrame) -> list[int]:
+    """Return proton IDs bound to the capping hetero atoms."""
     cappingProtonIds = []
     for cappingHeteroAtomName in cappingHeteroAtomNames:
         heteroAtomId = atomDf[atomDf["ATOM_NAME"]==cappingHeteroAtomName]["ATOM_ID"].to_list()[0]

@@ -29,6 +29,7 @@ def fit_torsion_parameters(config: dict,
                                   shuffleIndex: int,
                                     mmCosineComponents: dict,
                                       debug: bool = False):
+    """Fit torsion parameters to QM data and return fit metrics."""
     ## unpack config
     qmmmFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"] 
     sagvolSmoothing = config["parameterFittingInfo"]["sagvolSmoothing"]
@@ -79,6 +80,7 @@ def fit_torsion_parameters(config: dict,
 
 ##############################################################################
 def get_qm_scan_energies(config: dict, torsionTag: str) -> np.array:
+    """Load the QM scan energies for a torsion tag."""
     qmScanEnergyCsv = config["runtimeInfo"]["madeByTwisting"]["finalScanEnergies"][torsionTag]
     if not p.exists(qmScanEnergyCsv):
         raise FileNotFoundError(f"Couldn't find QM scan energies for torsion {torsionTag}.")

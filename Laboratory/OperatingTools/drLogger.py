@@ -12,13 +12,13 @@ from os import path as p
 _global_logger = None
 
 
-def get_logger() -> Optional['ExperimentLogger']:
-    """Get the global logger instance."""
+def get_logger() -> Optional["ExperimentLogger"]:
+    """Return the global experiment logger, if one has been installed."""
     return _global_logger
 
 
-def set_logger(logger: 'ExperimentLogger') -> None:
-    """Set the global logger instance."""
+def set_logger(logger: "ExperimentLogger") -> None:
+    """Install the global experiment logger."""
     global _global_logger
     _global_logger = logger
 
@@ -43,8 +43,8 @@ class ExperimentLogger:
         self.experiments = {}  # Track active experiments
         self._setup_logger()
 
-    def _setup_logger(self):
-        """Configure the logger with file handler only (no terminal output)."""
+    def _setup_logger(self) -> None:
+        """Configure file-only logging for the experiment."""
         self.logger = logging.getLogger("drFrankenstein")
         self.logger.setLevel(logging.DEBUG)
         
@@ -244,17 +244,7 @@ class ExperimentLogger:
 
 
 def experiment_logger(experiment_name: str):
-    """
-    Decorator to automatically log experiment start/end with timing.
-    
-    Usage:
-        @experiment_logger("My Experiment Name")
-        def my_protocol(config):
-            ...
-    
-    Note: Uses the global logger instance (set via drLogger.set_logger()).
-          Config parameter no longer needs logger, avoiding YAML serialization issues.
-    """
+    """Decorate a protocol function so start and end are logged automatically."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -277,19 +267,8 @@ def experiment_logger(experiment_name: str):
     return decorator
 
 
-def subprocess_wrapper(logger: 'ExperimentLogger'):
-    """
-    Wrapper factory for subprocess.call and subprocess.run that logs all invocations.
-    
-    Usage:
-        from OperatingTools import drLogger
-        logger = drLogger.ExperimentLogger(log_dir)
-        safe_call = drLogger.subprocess_wrapper(logger)(subprocess.call)
-        safe_call(['ls', '-la'])
-    
-    Returns:
-        A wrapped subprocess function that logs calls and returns
-    """
+def subprocess_wrapper(logger: "ExperimentLogger") -> Any:
+    """Wrap a subprocess function so every call is logged through `logger`."""
     def wrapper(original_func):
         @functools.wraps(original_func)
         def wrapped_subprocess(*args, **kwargs):

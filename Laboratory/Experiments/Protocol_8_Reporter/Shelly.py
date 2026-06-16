@@ -10,15 +10,7 @@ class FilePath(str):
 
 
 def read_input_yaml(configFile: FilePath) -> dict:
-    """
-    Reads YAML file into a dict
-
-    Args:
-    - configFile (str): Path to the YAML configuration file.
-
-    Returns:
-    - config (dict): Parsed YAML content as a dictionary.
-    """
+    """Read a YAML file into a Python dictionary."""
     yellow = "\033[33m"
     reset = "\033[0m"
     teal = "\033[38;5;37m"
@@ -51,15 +43,7 @@ def read_input_yaml(configFile: FilePath) -> dict:
         exit(1)
 ############################################################################
 def methods_writer_protocol(config: dict) -> dict:
-    """
-    Runs the methods writer protocol
-
-    Args:
-        config (dict): Dictionary containing all information needed
-
-    Returns:
-        None
-    """
+    """Build the report methods text sections."""
     conformerMethods : str = write_conformer_method(config)
 
 
@@ -82,15 +66,7 @@ def methods_writer_protocol(config: dict) -> dict:
 
 
 def write_conformer_method(config: dict) -> str:
-    """
-    Writes the conformer method to be used in the methods writer protocol
-
-    Args:
-        config (dict): Dictionary containing all information needed
-
-    Returns:
-        conformerMethod (str): The conformer method to be used in the methods writer protocol
-    """
+    """Write the conformer-generation methods text."""
     ## unpack config ##
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
     backboneAliases: dict = config["moleculeInfo"]["backboneAliases"]
@@ -110,15 +86,7 @@ The conformers generated in this step were used as inputs for the subsequent tor
 
 ############################################################################
 def write_torsion_scanning_method(config: dict) -> str:
-    """
-    Writes the method section for the torsion-scanning protocol to be used in the methods writer protocol
-
-    Args:
-        config (dict): Dictionary containing all information needed
-
-    Returns:
-        torsionMethod (str): The torsion-scanning method to be used in the methods writer protocol
-    """
+    """Write the torsion-scanning methods text."""
     ## unpack config ##
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
     nConformersGenerated = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
@@ -158,14 +126,7 @@ After discarding scans with unphysically high energy barriers, the final energy 
     return torsionMethod
 ############################################################################
 def write_charge_calculation_method(config: dict) -> str:
-    """
-    Writes the method section for the charge calculation protocol 
-    Args:
-        config (dict): Dictionary containing all information needed
-
-    Returns:
-        conformerMethod (str): The charge calculation  method to be used in the methods writer protocol
-    """
+    """Write the charge-calculation methods text."""
     ## unpack config ##
     moleculeName: str = config["moleculeInfo"]["moleculeName"]
     nConformersGenerated = config["runtimeInfo"]["madeByConformers"]["nConformersGenerated"]
@@ -243,6 +204,7 @@ The final partial charges were then calculated using a 60:40weighted average bet
 
 
 def write_fitting_methods(config: dict) -> str:
+    """Write the torsion fitting methods text."""
     ## unpack config
     maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
     shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
@@ -268,6 +230,7 @@ This process was repeated {shufflesCompleted} times, each time the order of the 
 
 
 def extract_citations(orcaOut: FilePath) -> dict:
+    """Extract citation metadata from an ORCA output file."""
 
     with open(orcaOut, "r") as f:
         fileContent = f.read()
@@ -383,6 +346,7 @@ def extract_citations(orcaOut: FilePath) -> dict:
 
 ############################################################################################
 def find_orca_output_files(config: dict) -> dict:
+    """Locate ORCA output files for all protocol stages."""
     ## find orca output file for capping geom opt
     cappingDir = config["runtimeInfo"]["madeByCapping"]["cappingDir"]
     cappingOrcaOut = p.join(cappingDir, "geometry_optimisation", "orca_opt.out")
@@ -487,6 +451,7 @@ def find_orca_output_files(config: dict) -> dict:
 
 
 def gather_citations(config: dict) -> dict:
+    """Collect citation metadata for the final report."""
     ##unpack config
     chargeFittingProtocol = config["chargeFittingInfo"]["chargeFittingProtocol"]
     forcefield = config["parameterFittingInfo"]["forceField"]
@@ -512,6 +477,7 @@ def gather_citations(config: dict) -> dict:
 
 
 def get_last_authors(citations: dict) -> dict:
+    """Return a reduced citation structure containing only last authors."""
     for tag in citations:
         for level in citations[tag]:
             for paper in citations[tag][level]:
@@ -524,6 +490,7 @@ def get_last_authors(citations: dict) -> dict:
 
 
 def manual_stitching_citations(forcefield: str) -> list[dict]:
+    """Return manual citations for the stitching force field."""
     essential_papers = [{
             "authors": "P. Eastman; R. Galvelis; R. P. Peláez; C. R. A. Abreu; S. E. Farr; E. Gallicchio; A. Gorenko; M. M. Henry; F. Hu; J. Huang; A. Krämer; J. Michel; J. A. Mitchell; V. S. Pande; \
                   J. PGLM Rodrigues; J. Rodriguez-Guerra; A. C. Simmonett; S. Singh; J. Swails; P. Turner; Y. Wang; I. Zhang; J. D. Chodera; G. De Fabritiis; T. E. Markland",
@@ -578,6 +545,7 @@ def manual_stitching_citations(forcefield: str) -> list[dict]:
     return manualStitchingCitations
 
 def manual_charges_citations(chargeFittingProtocol: str) -> list[dict]:
+    """Return manual citations for the selected charge fitting protocol."""
     manualChargeCitations = [{
                     "authors": "Tian Lu; Feiwu Chen",
                     "title": "Multiwfn: A Multifunctional Wavefunction Analyzer",

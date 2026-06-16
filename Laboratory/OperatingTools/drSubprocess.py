@@ -6,23 +6,14 @@ polluting the config dict (which gets written to YAML).
 """
 
 import subprocess
-from typing import List, Optional
+from typing import Any, List
 
 
-def logged_call(command: List[str], **kwargs) -> int:
-    """
-    Wrapper for subprocess.call that logs the command and result.
-    
-    Args:
-        command: List of command and arguments
-        **kwargs: Additional arguments to pass to subprocess.call
-        
-    Returns:
-        The return code from subprocess.call
-    """
+def logged_call(command: List[str], **kwargs: Any) -> int:
+    """Call a subprocess command and log the result if logging is enabled."""
     from . import drLogger
     logger = drLogger.get_logger()
-    
+
     try:
         result = subprocess.call(command, **kwargs)
         if logger:
@@ -34,20 +25,11 @@ def logged_call(command: List[str], **kwargs) -> int:
         raise
 
 
-def logged_run(command: List[str], **kwargs) -> subprocess.CompletedProcess:
-    """
-    Wrapper for subprocess.run that logs the command and result.
-    
-    Args:
-        command: List of command and arguments
-        **kwargs: Additional arguments to pass to subprocess.run
-        
-    Returns:
-        The CompletedProcess object from subprocess.run
-    """
+def logged_run(command: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
+    """Run a subprocess command and log the result if logging is enabled."""
     from . import drLogger
     logger = drLogger.get_logger()
-    
+
     try:
         result = subprocess.run(command, **kwargs)
         if logger:

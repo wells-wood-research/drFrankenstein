@@ -33,7 +33,7 @@ import os
 import os.path as p
 
 # Utility Functions
-def format_time_hms(seconds):
+def format_time_hms(seconds: float | int) -> str:
     """Converts seconds to HH:MM:SS string format."""
     seconds = int(round(seconds))
     hours = seconds // 3600
@@ -41,17 +41,17 @@ def format_time_hms(seconds):
     secs = seconds % 60
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
-def pdb_to_string(pdbFile):
+def pdb_to_string(pdbFile: str) -> str:
     with open(pdbFile, "r") as f:
         pdbBlock = "".join(f.readlines())
     return pdbBlock
 
-def xyz_to_string(xyzFile):
+def xyz_to_string(xyzFile: str) -> str:
     with open(xyzFile, 'r') as f:
         xyzBlock = "".join(f.readlines())
     return xyzBlock
 
-def make_vibrant_colors():
+def make_vibrant_colors() -> list[str]:
     vibrantColors =[
         "#FF0000",  # Bright Red
         "#00FF00",  # Lime Green
@@ -87,11 +87,11 @@ def make_safe_report_html_name(prefix: str, raw_name: str) -> str:
     short_hash = hashlib.sha1(raw_name_str.encode("utf-8")).hexdigest()[:8]
     return f"{prefix}_{safe_component}_{short_hash}.html"
 
-def make_charge_gradient_colors():
+def make_charge_gradient_colors() -> list[str]:
     chargeGradientColors =['#FF00FF', '#FF66FF', '#FFCCFF', '#FFF5FF', '#FFFFFF', '#F5FFF5', '#CCFFCC', '#33FF33', '#00FF00']
     return chargeGradientColors
 
-def compute_physics_layout(atoms_df, bonds_df, iterations=300, lr=0.05, seed=1818):
+def compute_physics_layout(atoms_df: pd.DataFrame, bonds_df: pd.DataFrame, iterations: int = 300, lr: float = 0.05, seed: int = 1818) -> dict:
     """Simulates springs to flatten molecule while maintaining bonds and angles."""
     import networkx as nx
     import numpy as np
@@ -175,13 +175,13 @@ def compute_physics_layout(atoms_df, bonds_df, iterations=300, lr=0.05, seed=181
     return {atom_ids[i]: (pos_2d[i, 0], pos_2d[i, 1]) for i in range(len(atom_ids))}
 
 # Gantt Chart Helper Functions
-def initialize_matplotlib_settings(defaultFontSize):
+def initialize_matplotlib_settings(defaultFontSize: int) -> None:
     """Sets global Matplotlib rcParams and verifies font."""
     plt.rcParams['font.family'] = 'monospace'
     plt.rcParams['font.monospace'] =['Consolas', 'DejaVu Sans Mono', 'Courier New']
     plt.rcParams['font.size'] = defaultFontSize
 
-def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding):
+def create_figure_and_axes(numFunctions: int, backgroundColor: str, minFigHeight: float, figHeightPerFunction: float, figHeightBasePadding: float) -> tuple:
     """Creates the Matplotlib figure and axes with basic styling."""
     figHeight = max(minFigHeight, numFunctions * figHeightPerFunction + figHeightBasePadding)
     fig, ax = plt.subplots(figsize=(24, figHeight))
@@ -189,7 +189,7 @@ def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeigh
     ax.set_facecolor(backgroundColor)
     return fig, ax
 
-def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize):
+def draw_task_bars(ax, timeDf: pd.DataFrame, barColors: list[str], totalRuntimeSeconds: float, textColor: str, backgroundColor: str, elementColor: str, defaultFontSize: int) -> None:
     """Draws the Gantt chart bars for each task."""
     numFunctions = len(timeDf)
     for i, row in timeDf.iterrows():
@@ -212,12 +212,12 @@ def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgr
                     ha='center', va='center', color=textColor, fontsize=defaultFontSize,
                     path_effects=[mpe.Stroke(linewidth=2, foreground=backgroundColor), mpe.Normal()])
 
-def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
-                           groupLabelColor, groupBoxEdgeColor,
-                           groupBoxPaddingY, groupLabelYOffset, 
-                           groupLabelMaxCharsPerLine, 
-                           estimatedLineHeightForGroupLabel, 
-                           groupLabelFontSize):
+def draw_group_annotations(ax: plt.Axes, timeDf: pd.DataFrame, functionMap: dict, numFunctions: int,
+                           groupLabelColor: str, groupBoxEdgeColor: str,
+                           groupBoxPaddingY: float, groupLabelYOffset: float, 
+                           groupLabelMaxCharsPerLine: int, 
+                           estimatedLineHeightForGroupLabel: float, 
+                           groupLabelFontSize: int) -> tuple[float, list[tuple[str, str]]]:
     """Draws group boxes and numerical labels (in a styled box) on the Gantt chart."""
     yMaxFromGroupLabels = 0.0
     groupLegendDetails =[] 
@@ -298,11 +298,11 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
 
 class HandlerStyledIdBox(HandlerBase):
     """Custom legend handler to draw a text ID within a styled box."""
-    def __init__(self, textColorName, boxFacecolorName, boxEdgecolorName,
-                fontWeight='bold', fontFamily='sans-serif', 
-                boxStyleStr='square,pad=0.3', 
-                fontSizeFactor=0.9, 
-                boxLinewidth=1):
+    def __init__(self, textColorName: str, boxFacecolorName: str, boxEdgecolorName: str,
+                fontWeight: str = 'bold', fontFamily: str = 'sans-serif', 
+                boxStyleStr: str = 'square,pad=0.3', 
+                fontSizeFactor: float = 0.9, 
+                boxLinewidth: float = 1):
         super().__init__()
         self.textColorName = textColorName
         self.boxFacecolorName = boxFacecolorName
@@ -313,8 +313,8 @@ class HandlerStyledIdBox(HandlerBase):
         self.fontSizeFactor = fontSizeFactor
         self.boxLinewidth = boxLinewidth
 
-    def create_artists(self, legend, origHandle, 
-                    xdescent, ydescent, width, height, fontsize, trans):
+    def create_artists(self, legend: object, origHandle: object, 
+                    xdescent: float, ydescent: float, width: float, height: float, fontsize: float, trans: object):
         
         groupIdStr = str(origHandle) 
 
@@ -340,9 +340,9 @@ class HandlerStyledIdBox(HandlerBase):
         
         return [textArtist]
 
-def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
-                          textColor, elementColor, backgroundColor, defaultFontSize,
-                          groupLegendDetails, groupLabelColor, groupBoxEdgeColor):
+def finalize_plot_styling(fig, ax, timeDf: pd.DataFrame, displayNameMap: dict, yMaxForPlot: float, 
+                          textColor: str, elementColor: str, backgroundColor: str, defaultFontSize: int,
+                          groupLegendDetails: list[tuple[str, str]], groupLabelColor: str, groupBoxEdgeColor: str) -> None:
     """Applies final styling to the plot (labels, ticks, limits, grid, spines, and group legend)."""
     numFunctions = len(timeDf)
 
@@ -432,11 +432,8 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
     fig.subplots_adjust(left=0.22, right=0.95, top=0.95, bottom=0.15)
 
 # Main Visualization Orchestration Functions
-def generate_gantt_chart(config):
-    """
-    Generates and saves the Gantt chart based on provided function data dictionary
-    and saves it to a path relative to reporterDir.
-    """
+def generate_gantt_chart(config: dict) -> str:
+    """Generate the time-based Gantt chart HTML and PNG assets."""
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
     timeInfo  = config["runtimeInfo"]["timeInfo"]
     
@@ -514,7 +511,8 @@ def generate_gantt_chart(config):
     relativePath = p.relpath(ganttPngPath, reporterDir)
     return relativePath
 
-def make_charge_color_bar(minCharge, maxCharge, outDir, config):
+def make_charge_color_bar(minCharge: float, maxCharge: float, outDir: str, config: dict) -> str:
+    """Render the charge color bar image and return its relative path."""
     reporterDir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
     chargeGradientColors = make_charge_gradient_colors() 
 
@@ -544,7 +542,8 @@ def make_charge_color_bar(minCharge, maxCharge, outDir, config):
     relativePath = p.relpath(outputFilePath, reporterDir)
     return relativePath
 
-def make_conformer_visualisations(config, outDir):
+def make_conformer_visualisations(config: dict, outDir: str) -> list[str]:
+    """Build HTML visualisations for each conformer."""
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     reporterDir =     config["runtimeInfo"]["madeByReporting"]["reporterDir"]
 
@@ -614,13 +613,8 @@ def make_conformer_visualisations(config, outDir):
 
     return conformerHtmls
 
-def make_highlighted_torsion_visualisations(config, outDir):
-    """
-    Create Plotly-based 2D visualizations highlighting torsion atoms.
-    Uses a custom physics-based spring layout to enforce exact bond lengths 
-    and angles, resulting in a ChemDraw-style 2D projection.
-    Automatically rotates the coords to ensure a landscape orientation.
-    """
+def make_highlighted_torsion_visualisations(config: dict, outDir: str) -> dict:
+    """Create Plotly-based 2D visualizations highlighting torsion atoms."""
     import plotly.graph_objects as go
     import networkx as nx
     import pandas as pd
@@ -628,7 +622,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
     import os.path as p
 
     # --- 1. Helper Parsers ---
-    def parse_mol2_file(mol2_file):
+    def parse_mol2_file(mol2_file: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         with open(mol2_file, 'r') as f:
             lines = f.readlines()
 
@@ -668,7 +662,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
     
     atom_names = atoms_df['atom_name'].values
     
-    def get_element(atom_name):
+    def get_element(atom_name: str) -> str:
         name = atom_name.strip()
         if len(name) >= 2 and name[1].islower(): return name[:2]
         return name[0]
@@ -744,7 +738,7 @@ def make_highlighted_torsion_visualisations(config, outDir):
     
     return htmlFiles
 
-def copy_images(config):
+def copy_images(config: dict) -> None:
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     
     thisDir = os.path.dirname(os.path.abspath(__file__))
@@ -758,18 +752,8 @@ def copy_images(config):
     copy(cobbleJpg, cobbleJpgDest)
 
 
-def parse_mol2_file(mol2_file_path):
-    """
-    Parse a MOL2 file and extract atom and bond information.
-    
-    Args:
-        mol2_file_path (str): Path to the MOL2 file
-        
-    Returns:
-        tuple: (atoms_df, bonds_df) where:
-            - atoms_df: DataFrame with columns [atom_id, atom_name, x, y, z, atom_type, charge]
-            - bonds_df: DataFrame with columns[bond_id, atom1_id, atom2_id, bond_type]
-    """
+def parse_mol2_file(mol2_file_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Parse a MOL2 file into atom and bond DataFrames."""
     with open(mol2_file_path, 'r') as f:
         lines = f.readlines()
     
@@ -814,18 +798,8 @@ def parse_mol2_file(mol2_file_path):
     return atoms_df, bonds_df
 
 
-def build_molecular_graph(atoms_df, bonds_df):
-    """
-    Build a NetworkX graph from parsed MOL2 data.
-    
-    Args:
-        atoms_df: DataFrame with atom information
-        bonds_df: DataFrame with bond information
-        
-    Returns:
-        nx.Graph: Graph with node attributes (atom_name, atom_type, partial_charge, pos) 
-                  and edge attributes (bond_length)
-    """
+def build_molecular_graph(atoms_df: pd.DataFrame, bonds_df: pd.DataFrame) -> object:
+    """Build a NetworkX molecular graph from atom and bond tables."""
     import networkx as nx
     
     G = nx.Graph()
@@ -874,19 +848,8 @@ def build_molecular_graph(atoms_df, bonds_df):
     return G
 
 
-def create_interactive_graph_visualization(G, outDir, config):
-    """
-    Create an interactive 2D molecular graph visualization using plotly.
-    Uses custom physics layout for better ChemDraw-style molecular geometry representation.
-    
-    Args:
-        G: NetworkX graph with molecular data
-        outDir: Output directory for HTML file
-        config: Configuration dictionary
-        
-    Returns:
-        str: Relative path to the generated HTML file
-    """
+def create_interactive_graph_visualization(G: object, outDir: str, config: dict) -> str:
+    """Build the interactive molecular graph HTML visualization."""
     import plotly.graph_objects as go
     import networkx as nx
     import pandas as pd
@@ -963,8 +926,8 @@ def create_interactive_graph_visualization(G, outDir, config):
         normalized_charges = [0.5] * len(node_charges)
     
     # Map normalized charges to gradient colors
-    def get_color_from_gradient(value):
-        """Map a value in [0,1] to the gradient colors"""
+    def get_color_from_gradient(value: float) -> str:
+        """Map a normalized value to one of the charge gradient colors."""
         idx = int(value * (len(chargeGradientColors) - 1))
         idx = max(0, min(idx, len(chargeGradientColors) - 1))
         return chargeGradientColors[idx]

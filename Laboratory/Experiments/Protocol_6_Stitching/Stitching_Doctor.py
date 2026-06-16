@@ -47,7 +47,7 @@ def _run_fitting_loop(
     displayConvergedTags: set | None = None,
     displayScores: dict | None = None,
 ) -> tuple[FilePath, bool]:
-    
+    """Run iterative torsion fitting until convergence or shuffle limit."""
 
 
     ## init empties for storing data, counters, and flags
@@ -203,26 +203,8 @@ def _run_fitting_loop(
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 @drLogger.experiment_logger("Torsion Parameter Fitting")
 @Timer.time_function("Parameter Fitting", "PARAMETER FITTING")
-def torsion_fitting_protocol(config: dict, debug=False) -> dict:
-    """
-    Main protocol for torsion fitting for AMBER or CHARMM parameters.
-    For each torsion that has had QM scans performed (creates QM[total]):
-        1. Get MM total energies for all conformers using OpenMM.
-        2. Get MM torsion energies for all conformers straight from the parameters.
-        3. Calculate QM[Torsion] by {QM[torsion] = QM[total] - MM[total] + MM[torsion]}.
-        4. Use the Fourier transform method to fit cosine parameters to QM[torsion].
-        5. Update parameters (this changes the MM[total] and MM[torsion] for subsequent torsions).
-
-    The above protocol is repeated several times, each time the order of the torsions is shuffled.
-    Memory usage is optimized by writing MAE results to a CSV file after each shuffle and clearing them from memory.
-
-    Args:
-        config (dict): The drFrankenstein config containing all run information.
-        forcefield (str): The force field being used, either "AMBER" or "CHARMM".
-        debug (bool): If True, enables debug mode for additional logging or checks. Defaults to False.
-    Returns:
-        config (dict): Updated config with fitted parameters and runtime information.
-    """
+def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
+    """Run the full torsion fitting protocol for the chosen force field."""
 
     forcefield = config["parameterFittingInfo"]["forceField"]
     # Set up forcefield-specific helpers and keys

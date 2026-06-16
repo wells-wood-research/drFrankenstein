@@ -15,16 +15,7 @@ from OperatingTools import drLogger
 
 @drLogger.experiment_logger("Report Generation")
 def reporter_protocol(config: dict, debug: bool) -> None:
-    """
-    Runs the reporter protocol
-
-    Args:
-        config (dict): Dictionary containing all information needed
-        debug (bool): Whether to run in debug mode
-
-    Returns:
-        None
-    """
+    """Run the reporting protocol and populate the final HTML report."""
     ## unpack config
     outDir = config["pathInfo"]["outputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -61,7 +52,8 @@ def reporter_protocol(config: dict, debug: bool) -> None:
     return config
 
 
-def make_html_report(timeGanttPng, cpuTimeGanttPng, wriggleData, conformerPcaData, twistData, chargesData, fittingData, moleculeName, methodsData, citationsData, reportHtml):
+def make_html_report(timeGanttPng: str, cpuTimeGanttPng: str, wriggleData: dict, conformerPcaData: dict, twistData: dict, chargesData: dict, fittingData: dict, moleculeName: str, methodsData: dict, citationsData: dict, reportHtml: str) -> None:
+    """Render the top-level HTML report from prepared report data."""
 
     templateDir = os.path.join(os.path.dirname(__file__), 'templates')
     if not os.path.exists(templateDir):

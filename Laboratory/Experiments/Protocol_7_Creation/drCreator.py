@@ -13,7 +13,8 @@ from OperatingTools import drLogger
 ################################################################################
 
 @drLogger.experiment_logger("Final Creation")
-def create_the_monster(config):
+def create_the_monster(config: dict) -> dict:
+    """Create the final parameterised system files."""
     ## create a runtimeInfo 
     config["runtimeInfo"]["madeByCreator"] = {}
 

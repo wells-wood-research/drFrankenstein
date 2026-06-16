@@ -4,7 +4,8 @@ from os import path as p
 from OperatingTools import drSplash
 from OperatingTools import file_parsers
 
-def handle_cgenff_dependancy(config):
+def handle_cgenff_dependancy(config: dict) -> dict:
+    """Resolve the CGenFF dependency and populate the capped STR path if needed."""
     if config["pathInfo"]["cgenffExe"] == None:
         inputDir = config["pathInfo"]["inputDir"]
         moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -27,7 +28,8 @@ def handle_cgenff_dependancy(config):
         return config
 
 
-def rename_molecule_mol2(mol2File, moleculeName):
+def rename_molecule_mol2(mol2File: str, moleculeName: str) -> None:
+    """Rename the MOL2 molecule block to match the configured molecule name."""
     tmpMol2 = p.join(p.dirname(mol2File), f"tmp.mol2")
     with open(mol2File, "r") as inMol2, open(tmpMol2, "w") as outMol2:
         moleculeNextLine = False

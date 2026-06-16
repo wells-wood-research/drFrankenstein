@@ -9,6 +9,7 @@ from . import Reporting_Assistant
 
 
 def _fit_plot_sort_key(filename: str) -> tuple[int, int]:
+    """Sort fitting plots by shuffle index and cosine count."""
     match = re.search(r"fitting_shuffle_(\d+)(?:_nCosines_(\d+))?\.png$", p.basename(filename))
     if match:
         shuffle_index = int(match.group(1))
@@ -17,6 +18,7 @@ def _fit_plot_sort_key(filename: str) -> tuple[int, int]:
     return (-1, -1)
 
 def process_fitting_results(config: dict) -> dict:
+    """Collect fitting result assets and metadata for the report."""
     ## unpack config
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     qmmmParameterFittingDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"]
@@ -79,6 +81,7 @@ def process_fitting_results(config: dict) -> dict:
 
 
 def process_charges_results(config: dict) -> dict:
+    """Collect charge fitting assets and metadata for the report."""
     ## unpack config
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     chargesImagesDir = p.join(imagesDir, "charges_images")    
@@ -127,6 +130,7 @@ def process_charges_results(config: dict) -> dict:
 
 
 def process_twist_results(config: dict) -> dict:
+    """Collect torsion scan assets and metadata for the report."""
     # Unpack config
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     torsionImagesDir = p.join(imagesDir, "torsion_images")
@@ -167,6 +171,7 @@ def process_twist_results(config: dict) -> dict:
 
 
 def process_wriggle_results(config: dict) -> dict:
+    """Collect conformer-generation assets and metadata for the report."""
     ## unpack config
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     imagesDir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]

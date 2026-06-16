@@ -11,7 +11,7 @@ from matplotlib.legend_handler import HandlerBase # Base class for custom handle
 import matplotlib.ticker as ticker
 
 # Utility Functions
-def format_time_hms(seconds):
+def format_time_hms(seconds: float | int) -> str:
     """Converts seconds to HH:MM:SS string format."""
     seconds = int(round(seconds))
     hours = seconds // 3600
@@ -19,17 +19,17 @@ def format_time_hms(seconds):
     secs = seconds % 60
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
-def pdb_to_string(pdbFile):
+def pdb_to_string(pdbFile: str) -> str:
     with open(pdbFile, "r") as f:
         pdbBlock = "".join(f.readlines())
     return pdbBlock
 
-def xyz_to_string(xyzFile):
+def xyz_to_string(xyzFile: str) -> str:
     with open(xyzFile, 'r') as f:
         xyzBlock = "".join(f.readlines())
     return xyzBlock
 
-def make_vibrant_colors():
+def make_vibrant_colors() -> list[str]:
     vibrantColors = [
         "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
         "#FF4500", "#32CD32", "#1E90FF", "#FFD700", "#FF69B4", "#00CED1",
@@ -39,13 +39,13 @@ def make_vibrant_colors():
     return vibrantColors
 
 # Gantt Chart Helper Functions
-def initialize_matplotlib_settings(defaultFontSize):
+def initialize_matplotlib_settings(defaultFontSize: int) -> None:
     """Sets global Matplotlib rcParams and verifies font."""
     plt.rcParams['font.family'] = 'monospace'
     plt.rcParams['font.monospace'] = ['Consolas', 'DejaVu Sans Mono', 'Courier New']
     plt.rcParams['font.size'] = defaultFontSize
 
-def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeightPerFunction, figHeightBasePadding):
+def create_figure_and_axes(numFunctions: int, backgroundColor: str, minFigHeight: float, figHeightPerFunction: float, figHeightBasePadding: float):
     """Creates the Matplotlib figure and axes with basic styling."""
     figHeight = max(minFigHeight, numFunctions * figHeightPerFunction + figHeightBasePadding)
     fig, ax = plt.subplots(figsize=(24, figHeight))
@@ -53,7 +53,7 @@ def create_figure_and_axes(numFunctions, backgroundColor, minFigHeight, figHeigh
     ax.set_facecolor(backgroundColor)
     return fig, ax
 
-def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgroundColor, elementColor, defaultFontSize, time_unit_divisor):
+def draw_task_bars(ax, timeDf: pd.DataFrame, barColors: list[str], totalRuntimeSeconds: float, textColor: str, backgroundColor: str, elementColor: str, defaultFontSize: int, time_unit_divisor: float) -> None:
     """Draws the Gantt chart bars for each task, scaled by time_unit_divisor."""
     numFunctions = len(timeDf)
     for i, row in timeDf.iterrows():
@@ -76,13 +76,13 @@ def draw_task_bars(ax, timeDf, barColors, totalRuntimeSeconds, textColor, backgr
                     ha='center', va='center', color=textColor, fontsize=defaultFontSize,
                     path_effects=[mpe.Stroke(linewidth=2, foreground=backgroundColor), mpe.Normal()])
 
-def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
+def draw_group_annotations(ax, timeDf: pd.DataFrame, functionMap: dict, numFunctions: int,
                            groupLabelColor, groupBoxEdgeColor,
                            groupBoxPaddingY, groupLabelYOffset, 
-                           groupLabelMaxCharsPerLine, # Unused in current implementation snippet
-                           estimatedLineHeightForGroupLabel, # Unused in current implementation snippet
-                           groupLabelFontSize,
-                           time_unit_divisor, group_label_x_offset):
+                           groupLabelMaxCharsPerLine: int, # Unused in current implementation snippet
+                           estimatedLineHeightForGroupLabel: float, # Unused in current implementation snippet
+                           groupLabelFontSize: int,
+                           time_unit_divisor: float, group_label_x_offset: float):
     """Draws group boxes and numerical labels, scaled by time_unit_divisor."""
     yMaxFromGroupLabels = 0.0
     groupLegendDetails = [] 
@@ -144,11 +144,11 @@ def draw_group_annotations(ax, timeDf, functionMap, numFunctions,
 
 class HandlerStyledIdBox(HandlerBase):
     """Custom legend handler to draw a text ID within a styled box."""
-    def __init__(self, textColorName, boxFacecolorName, boxEdgecolorName,
-                fontWeight='bold', fontFamily='sans-serif', 
-                boxStyleStr='square,pad=0.3', 
-                fontSizeFactor=0.9, 
-                boxLinewidth=1):
+    def __init__(self, textColorName: str, boxFacecolorName: str, boxEdgecolorName: str,
+                fontWeight: str = 'bold', fontFamily: str = 'sans-serif', 
+                boxStyleStr: str = 'square,pad=0.3', 
+                fontSizeFactor: float = 0.9, 
+                boxLinewidth: float = 1):
         super().__init__()
         self.textColorName = textColorName
         self.boxFacecolorName = boxFacecolorName
@@ -173,10 +173,10 @@ class HandlerStyledIdBox(HandlerBase):
         textArtist.set_bbox(bboxProps)
         return [textArtist]
 
-def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot, 
-                          textColor, elementColor, backgroundColor, defaultFontSize,
-                          groupLegendDetails, groupLabelColor, groupBoxEdgeColor,
-                          x_axis_label_text): # Added x_axis_label_text
+def finalize_plot_styling(fig, ax, timeDf: pd.DataFrame, displayNameMap: dict, yMaxForPlot: float, 
+                          textColor: str, elementColor: str, backgroundColor: str, defaultFontSize: int,
+                          groupLegendDetails: list[tuple[str, str]], groupLabelColor: str, groupBoxEdgeColor: str,
+                          x_axis_label_text: str) -> None:
     """Applies final styling to the plot."""
     numFunctions = len(timeDf)
 
@@ -240,7 +240,7 @@ def finalize_plot_styling(fig, ax, timeDf, displayNameMap, yMaxForPlot,
 
 
 # Main Visualization Orchestration Functions
-def generate_gantt_chart(config, time_key="executionTime", output_name="gantt_chart.png", time_label="Time"):
+def generate_gantt_chart(config: dict, time_key: str = "executionTime", output_name: str = "gantt_chart.png", time_label: str = "Time") -> str:
     """
     Generates and saves the Gantt chart. X-axis is in hours if total runtime > 5 hours, else minutes.
     """

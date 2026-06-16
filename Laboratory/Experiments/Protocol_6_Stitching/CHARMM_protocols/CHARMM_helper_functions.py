@@ -24,15 +24,7 @@ class DirectoryPath:
     pass
 
 def add_CMAP_term(config: dict) -> dict:
-    """
-    Adds CMAP term to a CHARMM RTF file
-
-    Args: 
-        config (dict): contains all run info
-    Returns:
-        config (dict): updated config
-    
-    """
+    """Add the CHARMM CMAP term to the stitched topology inputs."""
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"] 
     moleculeName = config["moleculeInfo"]["moleculeName"]
 
@@ -47,6 +39,7 @@ def add_CMAP_term(config: dict) -> dict:
 
 
 def copy_assembled_parameters(config: dict) -> dict:
+    """Copy assembled CHARMM parameter files into the stitching directory."""
     ## unpack config
     assembledRtf = config["runtimeInfo"]["madeByAssembly"]["assembledRtf"]
     assembledPrm = config["runtimeInfo"]["madeByAssembly"]["assembledPrm"]
@@ -79,10 +72,7 @@ def update_prm(moleculePrm: FilePath,
                   torsionTag: str,
                   torsionParamDf: pd.DataFrame,
                   shuffleIndex: int) -> dict:
-    """
-    Uses Parmed to update a CHARMM PRM file with a torsion parameter block 
-    
-    """
+    """Update a CHARMM PRM file with the fitted torsion parameters."""
     ## unpack config
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
@@ -128,9 +118,7 @@ def update_prm(moleculePrm: FilePath,
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def parse_prm(moleculePrm: FilePath) -> dict:
-    """
-    Reads through a CHARMM 
-    """
+    """Parse a CHARMM PRM file into its parameter sections."""
     ## init a bunch of bools
     readingBonds: bool      = False
     readingAngles: bool     = False
@@ -229,19 +217,13 @@ read param card flex append
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def set_capping_types_to_charmm_defaults(config: dict) -> None:
-    """
-    Sets the capping groups to CHARMM defaults for backbone atoms
-
-    Args:
-        config (dict): contains all run info
-    Returns:
-        None
-    """
+    """Map capping-group atom types back to CHARMM defaults."""
     mapCgenffTypeToCharmmType = set_capping_types_to_charmm_defaults_rtf(config)
     set_capping_types_to_charmm_defaults_prm(config, mapCgenffTypeToCharmmType)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def set_capping_types_to_charmm_defaults_prm(config: dict, mapCgenffTypeToCharmmType: dict) -> None:
+    """Rewrite the CHARMM PRM file with default capping atom types."""
     moleculePrm = config["runtimeInfo"]["madeByStitching"]["moleculePrm"]
     mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
 
@@ -260,6 +242,7 @@ def set_capping_types_to_charmm_defaults_prm(config: dict, mapCgenffTypeToCharmm
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def set_capping_types_to_charmm_defaults_rtf(config: dict) -> dict:
+    """Rewrite the stitched RTF with CHARMM default capping atom types."""
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     mmTorsionCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTorsionCalculationDir"]
 
@@ -292,14 +275,7 @@ def set_capping_types_to_charmm_defaults_rtf(config: dict) -> dict:
                 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def create_atom_type_map(config: dict) -> dict:
-    """
-    Creates a map of atom types for CHARMM given a RTF file
-
-    Args: 
-        config (dict): contains all run info
-    Returns:
-        config (dict): updated config
-    """
+    """Create a mapping from atom names to CHARMM atom types."""
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
 
     atomTypeMap = {}
@@ -315,13 +291,7 @@ def create_atom_type_map(config: dict) -> dict:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def edit_rtf_charges(config: dict) -> dict:
-    """
-    Edits an RTF file to change the charges to those calculated by drFrankenstein
-    Args: 
-        config (dict): contains all run info
-    Returns:
-        config (dict): updated config 
-    """
+    """Update the stitched RTF charges from the calculated charge table."""
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     chargesCsv = config["runtimeInfo"]["madeByCharges"]["chargesCsv"]
     mmTotalCalculationDir = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
@@ -378,14 +348,7 @@ def edit_rtf_charges(config: dict) -> dict:
 #     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def make_charmm_psf(config: dict) -> dict:
-    """
-    Uses PSFGen to generate a PSF file from RTF and PRM files
-
-    Args: 
-        config (dict): contains all run info
-    Returns:
-        config (dict): updated config 
-    """
+    """Generate a CHARMM PSF file from the stitched RTF and coordinates."""
     ## unpack molecule
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     # cgenffRtf = config["runtimeInfo"]["madeByStitching"]["cgenffRtf"]
@@ -416,14 +379,7 @@ def make_charmm_psf(config: dict) -> dict:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲##
 def find_cgenff_params(config: dict) -> dict:
-    """
-    Looks inside the drFrankenstein dir to find CGenFF PRM and RTF files
-
-    Args: 
-        config (dict): contains all run info
-    Returns:
-        config (dict): updated config 
-    """
+    """Locate the bundled CGenFF parameter files and store them in config."""
 
 
     thisDir = Path(__file__).parent

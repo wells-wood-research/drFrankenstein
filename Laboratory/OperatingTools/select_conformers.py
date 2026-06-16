@@ -13,6 +13,7 @@ _LEGACY_PCA_KNN_METHOD = "PCA_KNN"
 
 
 def _normalize_selection_method(selection_method: str) -> str:
+    """Map legacy conformer-selection labels onto the current method names."""
     if not selection_method:
         return _ENERGY_METHOD
     normalized = selection_method.upper()
@@ -26,9 +27,7 @@ def _normalize_selection_method(selection_method: str) -> str:
 
 
 def get_ordered_conformer_xyzs(config: dict, temperature: float = 300) -> list[FilePath]:
-    """
-    Returns all conformers in Boltzmann-weighted random order (no replacement).
-    """
+    """Return conformers in Boltzmann-weighted random order."""
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     conformerEnergies = config["runtimeInfo"]["madeByConformers"].get("conformerEnergies")
     if len(conformerXyzs) <= 1:
@@ -62,9 +61,7 @@ def get_ordered_conformer_xyzs(config: dict, temperature: float = 300) -> list[F
 
 
 def select_conformer_xyzs(config: dict, nConformers: int, temperature: float = 300) -> list[FilePath]:
-    """
-    Returns conformers selected using the miscInfo.conformerSelectionMethods strategy.
-    """
+    """Select conformers using the configured selection strategy."""
     conformerXyzs = config["runtimeInfo"]["madeByConformers"]["conformerXyzs"]
     if nConformers == -1 or nConformers >= len(conformerXyzs):
         return conformerXyzs
@@ -87,6 +84,7 @@ def select_conformer_xyzs(config: dict, nConformers: int, temperature: float = 3
 
 
 def _select_conformers_by_pca_kmeans(config: dict, nConformers: int) -> list[FilePath]:
+    """Select conformers by clustering PCA torsion coordinates."""
     from os import path as p
     import pandas as pd
     from sklearn.cluster import KMeans
@@ -147,6 +145,7 @@ def _select_conformers_by_pca_kmeans(config: dict, nConformers: int) -> list[Fil
 
 
 def _ensure_torsion_definitions(config: dict) -> dict:
+    """Ensure torsion definitions exist before PCA-based selection runs."""
     runtime_info = config.setdefault("runtimeInfo", {})
     twisting_info = runtime_info.setdefault("madeByTwisting", {})
     if "allDihedrals" in twisting_info:
@@ -164,6 +163,7 @@ def _ensure_torsion_definitions(config: dict) -> dict:
 
 
 def _ensure_assembly_ready(config: dict) -> dict:
+    """Run assembly early if PCA selection needs uncached topology data."""
     runtime_info = config.setdefault("runtimeInfo", {})
     assembly_info = runtime_info.get("madeByAssembly", {})
     assembly_protocol = config.get("miscInfo", {}).get("assemblyProtocol")

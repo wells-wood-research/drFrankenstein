@@ -7,15 +7,18 @@ from tqdm import tqdm
 
 _status_line = None
 
-def set_status_line(status_line) -> None:
+def set_status_line(status_line: str) -> None:
+    """Set the live terminal status line buffer."""
     global _status_line
     _status_line = status_line
 
 def clear_status_line() -> None:
+    """Clear the live terminal status line buffer."""
     global _status_line
     _status_line = None
 
 def _truncate_table_tag(tag: str, max_width: int) -> str:
+    """Truncate a table label without breaking ANSI-colored output."""
 
     noAnsiTag = strip_ansi_codes(tag)
     if len(noAnsiTag) <= max_width:
@@ -25,6 +28,7 @@ def _truncate_table_tag(tag: str, max_width: int) -> str:
     return f"{tag[:max_width-3]}..."
 
 def _format_torsion_table_cell(tag: str, converged: bool, cell_width: int, score: float | None = None, tol: float = 0.1) -> str:
+    """Format one torsion status cell for the progress table."""
     orangeText = "\033[38;5;208m"
     greenText = "\033[32m"
     resetTextColor = "\033[0m"
@@ -38,6 +42,7 @@ def _format_torsion_table_cell(tag: str, converged: bool, cell_width: int, score
     return f"{trimmedTag}{padding}"
 
 def build_torsion_status_banner() -> str:
+    """Build the banner that heads the torsion status display."""
     yellowText = "\033[33m"
     greenText = "\033[32m"
     orangeText = "\033[38;5;208m"
@@ -52,6 +57,7 @@ def build_torsion_status_banner() -> str:
 
 
 def colour_by_score(score: float, tol: float) -> str:
+    """Choose a color code for a torsion fit score."""
     greenText = "\033[32m"
     orangeText = "\033[38;5;208m"
     redText = "\033[31m"
@@ -70,6 +76,7 @@ def build_torsion_status_table_rows(
     ncols: int | None = 102,
     tol: float = 0.1,
 ) -> list[str]:
+    """Build rows for the torsion status table."""
     if not torsionTags:
         return []
     if ncols is None:
@@ -101,6 +108,7 @@ def init_torsion_status_table(
     position: int = 1,
     tol: float = 0.1,
 ) -> list[tqdm]:
+    """Create the live torsion status table."""
     convergedTags = convergedTags or set()
     rows = build_torsion_status_table_rows(torsionTags, convergedTags, scores, columns, ncols, tol=tol)
     tableRows: list[tqdm] = []
@@ -128,18 +136,21 @@ def update_torsion_status_table(
     ncols: int | None = 102,
     tol: float = 0.1,
 ) -> None:
+    """Refresh the live torsion status table."""
     rows = build_torsion_status_table_rows(torsionTags, convergedTags, scores, columns, ncols, tol=tol)
     for rowBar, rowText in zip(tableRows, rows):
         rowBar.set_description_str(rowText, refresh=True)
         rowBar.refresh()
 
 def close_torsion_status_table(tableRows: list[tqdm]) -> None:
+    """Close all torsion status progress bars."""
     for rowBar in tableRows:
         rowBar.close()
 
 
 
 def show_mad_man() -> None:
+    """Display the main splash banner."""
     # -- ANSI Color Codes --
     redText = "\033[31m"
     y = "\033[33m"
@@ -184,14 +195,8 @@ def show_mad_man() -> None:
 
     time.sleep(1)
 
-def print_config_error(configErrors) -> None:
-    """
-    Prints a detailed, color-coded error report for the config file and exits.
-    This is only called when at least one fatal error is found.
-
-    Args:
-        configErrors (dict): A dictionary containing error messages or None.
-    """
+def print_config_error(configErrors: dict) -> None:
+    """Print a detailed, color-coded error report for the config file and exit."""
     # -- ANSI Color Codes --
     redText = "\033[31m"
     yellowText = "\033[33m"
@@ -218,11 +223,11 @@ def print_config_error(configErrors) -> None:
     print(f"{resetTextColor}Colour Key: | {greenText}Input Correct{resetTextColor} | {orangeText}Non-Fatal Issue (Default Used){resetTextColor} | {redText}Fatal Issue{resetTextColor} |")
 
     # -- Helper function to print a single line --
-    def print_config_text(argName, argDisorder, textColor, indentationLevel=0) -> None:
+    def print_config_text(argName: str, argDisorder: str, textColor: str, indentationLevel: int = 0) -> None:
         print(f"{' ' * (indentationLevel * 3 + 2)}{yellowText}{argName}: {textColor}{argDisorder}{resetTextColor}")
 
     # -- Helper function to recursively print nested dictionaries --
-    def loop_error_dict(argName, disorderDict, indentationLevel=0) -> None:
+    def loop_error_dict(argName: str, disorderDict: dict, indentationLevel: int = 0) -> None:
         print(f"{'--' * indentationLevel}--> In sub-entry {yellowText}{argName}{resetTextColor}:")
         for sub_argName, sub_argDisorder in disorderDict.items():
             if sub_argDisorder is None:
@@ -252,12 +257,13 @@ def print_config_error(configErrors) -> None:
 
 
 
-def strip_ansi_codes(text):
+def strip_ansi_codes(text: str) -> str:
     """Remove ANSI color codes from a string."""
     ansiPattern = re.compile(r'\033\[[0-9;]*m')
     return ansiPattern.sub('', text)
 
-def show_getting_mm_total(torsionTag, inline: bool = True):
+def show_getting_mm_total(torsionTag: str, inline: bool = True) -> None:
+    """Show the status message for MM torsion energy calculation."""
     greenText = "\033[32m"
     redText = "\033[31m"
     orangeText = "\033[38;5;172m"
@@ -284,7 +290,7 @@ def show_getting_mm_total(torsionTag, inline: bool = True):
 
 
 
-def show_need_cgenff_str(cappedMol2) -> None:
+def show_need_cgenff_str(cappedMol2: str) -> None:
     ## using font ANSI Shadow
     greenText = "\033[32m"
     orangeText = "\033[38;5;172m"
@@ -477,7 +483,7 @@ def show_charge_splash() -> None:
              lightningBar + resetTextColor)
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def show_torsion_being_scanned(torsionTag, torsionIndex, nTorsions) -> None:
+def show_torsion_being_scanned(torsionTag: str, torsionIndex: int, nTorsions: int) -> None:
     greenText = "\033[32m"
     redText = "\033[31m"
     orangeText = "\033[38;5;172m"
@@ -568,7 +574,8 @@ import time
 import os
 import sys
 
-def show_what_have_we_created(config):
+def show_what_have_we_created(config: dict) -> None:
+    """Display a summary of the generated outputs."""
     ## unpack config ##
     moleculeName = config["moleculeInfo"]["moleculeName"]
     reportHtml = config["runtimeInfo"]["madeByReporting"]["reportHtml"]
@@ -610,7 +617,7 @@ def show_what_have_we_created(config):
     
     
     # Clear terminal function that works cross-platform
-    def clear_terminal():
+    def clear_terminal() -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
     
     # Animation parameters
@@ -651,7 +658,7 @@ def show_what_have_we_created(config):
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def print_botched(errorReport) -> None:
+def print_botched(errorReport: dict) -> None:
     greenText = "\033[32m"
     redText = "\033[31m"
     orangeText = "\033[38;5;172m"

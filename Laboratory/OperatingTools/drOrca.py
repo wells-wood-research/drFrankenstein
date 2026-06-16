@@ -9,7 +9,8 @@ class DirectoryPath:
 from OperatingTools import file_parsers
 from OperatingTools import drLogger
 ########################################
-def run_orca(orcaInput, orcaOutput, config):
+def run_orca(orcaInput: FilePath, orcaOutput: FilePath, config: dict) -> None:
+    """Run ORCA with the configured executable and capture stdout/stderr to a file."""
     orcaExe = config["pathInfo"]["orcaExe"]
     orcaCommand = [orcaExe, orcaInput]
     logger = drLogger.get_logger()
@@ -31,6 +32,7 @@ def make_orca_input_for_constrained_opt(inputXyz: FilePath,
                                    solvationMethod: str,
                                      geomOptions:str = None,
                                      constrainIndexes: list = None) -> FilePath:
+    """Write an ORCA constrained optimisation input file."""
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -61,6 +63,7 @@ def make_orca_input_qmmm_opt(inputXyz: FilePath,
                                 qmAtoms: str,
                                 parameterFile: FilePath,
                                 nCpus: int) -> FilePath:
+    """Write an ORCA QM/MM optimisation input file."""
 
     ## write QM/MM opt orca input file
     charge = moleculeInfo["charge"]
@@ -96,6 +99,7 @@ def make_orca_input_qmmm_singlepoint(inputXyz: FilePath,
                                 qmAtoms: str,
                                 parameterFile: FilePath,
                                 nCpus: int | None = None) -> FilePath:
+    """Write an ORCA QM/MM single-point input file."""
     ## write QM/MM single-point orca input file
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -124,9 +128,7 @@ def make_orca_input_for_solvator(inputXyz: FilePath,
                                         solvationMethod: str,
                                           nWaters: int,
                                             nCpus: int | None = None) -> FilePath:
-    """
-    Creates and ORCA input file to run the SOLVATOR protocol
-    """
+    """Write an ORCA SOLVATOR input file."""
     ## write GOAT orca input file
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -153,27 +155,32 @@ def make_orca_input_for_solvator(inputXyz: FilePath,
 
 
 
-def write_goat_input(conformerDir, cappedXyz, config):
+def write_goat_input(conformerDir: DirectoryPath, cappedXyz: FilePath, config: dict) -> FilePath:
+    """Write an ORCA GOAT conformer-generation input file."""
     ## write GOAT orca input file
     charge = config["moleculeInfo"]["charge"]
     multiplicity = config["moleculeInfo"]["multiplicity"]
     availableCpus = config["miscInfo"]["availableCpus"]
 
-
-    useCpus = min(16, availableCpus)
+    conformerGenerationInfo = config["conformerGenerationInfo"]
+    goatMode = conformerGenerationInfo["goatMode"] ## GOAT-ENTROPY or GOAT
+    energyCutoff = conformerGenerationInfo["energyCutoff"] ## energy cutoff for accepting conformers (kcal/mol)
+    goatMethod = conformerGenerationInfo["goatMethod"] ## XTB2 or GFN-FF
 
     goatOrcaInput = p.join(conformerDir, f"GOAT_orca.inp")
+
+    useCpus = min(availableCpus, 16) ## limit to 16 cpus for GOAT to avoid overloading the system
     with open(goatOrcaInput, "w") as f:
         f.write(" # --------------------------------- #\n")
         f.write(" #  GOAT conformation generation     #\n")
         f.write(" # --------------------------------- #\n")
-        f.write("!XTB2 GOAT\n")
+        f.write(f"!{goatMethod} {goatMode}\n")
         f.write(f"%PAL NPROCS {useCpus} END\n")  
         f.write("%GOAT\n")
         f.write("\tMAXITERMULT 1\n")            ## only do one round (save some time)
-        f.write("\tFREEZEAMIDES TRUE\n")           ## freeze amides
-        f.write("\tFREEZECISTRANS TRUE\n ")         ## freeze cis-trans bonds
-        f.write(("\tMAXEN 20.0\n"))              ## only accept conformers within 20 kcal/mol of the lowest energy
+        f.write("\tFREEZEAMIDES TRUE\n")         ## freeze amides
+        f.write("\tFREEZECISTRANS TRUE\n ")      ## freeze cis-trans bonds
+        f.write((f"\tMAXEN {str(energyCutoff)}\n"))   ## only accept conformers within {energyCutoff} kcal/mol of the lowest energy
         f.write("END\n")
         ## constrain bond lengths to prevent dissociation during conformer generation
         f.write("%geom Constraints\n")
@@ -191,6 +198,7 @@ def make_orca_input_for_opt(inputXyz: FilePath,
                                    solvationMethod: str,
                                      geomOptions:str = None,
                                        nCpus: int | None = None) -> FilePath:
+    """Write an ORCA geometry optimisation input file."""
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -253,7 +261,7 @@ def  make_orca_input_for_scan(inputXyz,
 
     return orcaInputFile
 ###################################################################################
-def  make_orca_input_for_sp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod):
+def make_orca_input_for_sp(inputXyz: FilePath, outDir: DirectoryPath, moleculeInfo: dict, qmMethod: str, solvationMethod: str) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -276,7 +284,7 @@ def  make_orca_input_for_sp(inputXyz, outDir, moleculeInfo, qmMethod, solvationM
 
 
 
-def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
+def make_orca_input_for_opt_freq(inputXyz: FilePath, outDir: DirectoryPath, moleculeInfo: dict, qmMethod: str, solvationMethod: str, nCpus: int | None = None) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -299,7 +307,7 @@ def  make_orca_input_for_opt_freq(inputXyz, outDir, moleculeInfo, qmMethod, solv
     return orcaInputFile
 
 
-def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
+def make_orca_input_for_singlepoint(inputXyz: FilePath, outDir: DirectoryPath, moleculeInfo: dict, qmMethod: str, solvationMethod: str, nCpus: int | None = None) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -323,7 +331,7 @@ def  make_orca_input_for_singlepoint(inputXyz, outDir, moleculeInfo, qmMethod, s
 
 
 
-def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvationMethod, nCpus: int | None = None):
+def make_orca_input_for_resp(inputXyz: FilePath, outDir: DirectoryPath, moleculeInfo: dict, qmMethod: str, solvationMethod: str, nCpus: int | None = None) -> FilePath:
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -346,7 +354,7 @@ def  make_orca_input_for_resp(inputXyz, outDir, moleculeInfo, qmMethod, solvatio
     return orcaInputFile
 
 ###################################################################################
-def did_orca_finish_normallly(orcaOut):
+def did_orca_finish_normallly(orcaOut: FilePath) -> bool:
     with open(orcaOut, "r") as f:
         lines = f.readlines()
         for line in reversed(lines):

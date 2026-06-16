@@ -6,7 +6,7 @@ import openmm as _openmm
 
 from OperatingTools import drSplash
 
-def _has_fatal_errors(d):
+def _has_fatal_errors(d: object) -> bool:
     """Recursively checks a dictionary for fatal error messages."""
     if isinstance(d, dict):
         return any(_has_fatal_errors(v) for v in d.values())
@@ -15,7 +15,7 @@ def _has_fatal_errors(d):
     return False
 
 
-def _detect_gpu_platform():
+def _detect_gpu_platform() -> str:
     """Detects available GPU platforms in order of preference: CUDA > HIP > OpenCL."""
     for candidate in ["CUDA", "HIP", "OpenCL"]:
         try:
@@ -25,7 +25,8 @@ def _detect_gpu_platform():
             continue
     return "CPU"
 
-def apply_defaults_and_validate(config):
+def apply_defaults_and_validate(config: dict) -> dict:
+    """Apply config defaults and run basic validation checks."""
     """Reads the yaml file, applies defaults, and validates all parameters."""
     errors = {}
 
@@ -48,6 +49,18 @@ def apply_defaults_and_validate(config):
             errors['moleculeInfo'][key] = None
     moleculeInfo.setdefault('chargeGroups', None)
     moleculeInfo.setdefault('backboneAliases', None)
+
+    # --- Section: conformerGenerationInfo ---
+    errors['conformerGenerationInfo'] = {}
+    conformerGenerationInfo = config.setdefault('conformerGenerationInfo', {})
+    if not isinstance(conformerGenerationInfo, dict):
+        errors['conformerGenerationInfo']['section'] = "Must be a dictionary."
+        conformerGenerationInfo = {}
+        config['conformerGenerationInfo'] = conformerGenerationInfo
+    set_default(conformerGenerationInfo, 'goatMode', 'GOAT', errors['conformerGenerationInfo'])
+    set_default(conformerGenerationInfo, 'energyCutoff', 6.0, errors['conformerGenerationInfo'])
+    set_default(conformerGenerationInfo, 'goatMethod', 'XTB2', errors['conformerGenerationInfo'])
+    set_default(conformerGenerationInfo, 'conformerSelction', 'ENERGY', errors['conformerGenerationInfo'])
 
     # --- Section: pathInfo ---
     errors['pathInfo'] = {}
@@ -124,7 +137,7 @@ def apply_defaults_and_validate(config):
     else:
         errors['torsionScanInfo']['scanMethod'] = None
     # --- Simplified setdefault and error logging for remaining sections ---
-    def set_default(section, key, default_value, error_dict):
+    def set_default(section: dict, key: str, default_value: object, error_dict: dict) -> None:
         if key not in section:
             error_dict[key] = f"Default Used: {default_value}"
         section.setdefault(key, default_value)
@@ -177,7 +190,6 @@ def apply_defaults_and_validate(config):
     set_default(miscInfo, 'availableCpus', mp.cpu_count(), errors['miscInfo'])
     set_default(miscInfo, 'cleanUpLevel', 1, errors['miscInfo'])
     set_default(miscInfo, 'seed', 1818, errors['miscInfo'])
-    set_default(miscInfo, 'conformerSelectionMethods', 'ENERGY', errors['miscInfo'])
     set_default(miscInfo, 'debug', False, errors['miscInfo'])
 
     # Detect GPU platform once and store in miscInfo.gpuPlatform (default)

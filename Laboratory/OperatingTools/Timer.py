@@ -7,12 +7,8 @@ from datetime import datetime
 
 from . import drYaml
 
-def time_function(functionAlias: str, functionGroup: str = None):
-    """
-    Simple decorator to time the execution of a function
-    Writes results to a csv, location is found in config
-    If functionName exists, adds to existing execution time
-    """
+def time_function(functionAlias: str, functionGroup: str | None = None):
+    """Time a function call and store the results in config runtime info."""
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

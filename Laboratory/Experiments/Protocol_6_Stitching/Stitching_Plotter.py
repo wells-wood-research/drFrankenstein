@@ -21,7 +21,8 @@ class FilePath:
 class DirectoryPath:
     pass
 
-def plot_run_mean_average_error(outDir, fittingScoresCsv):
+def plot_run_mean_average_error(outDir: DirectoryPath, fittingScoresCsv: FilePath) -> None:
+    """Plot the run-wide mean average error curves."""
 
     maeDf = pd.read_csv(fittingScoresCsv)
 
@@ -123,7 +124,8 @@ def plot_run_mean_average_error(outDir, fittingScoresCsv):
 
 
 
-def plot_mean_average_error(torsionFittingDir: DirectoryPath, fittingScoresCsv: FilePath, torsionTag: str):
+def plot_mean_average_error(torsionFittingDir: DirectoryPath, fittingScoresCsv: FilePath, torsionTag: str) -> None:
+    """Plot the mean average error curves for one torsion."""
 
     ## get data from csv
     maeDf = pd.read_csv(fittingScoresCsv)
@@ -198,12 +200,14 @@ def plot_mean_average_error(torsionFittingDir: DirectoryPath, fittingScoresCsv: 
     plt.savefig(p.join(torsionFittingDir, "mean_average_error.png"), bbox_inches='tight')
     plt.close()
 #####################################################################
-def _extract_number(filename):
+def _extract_number(filename: str) -> int:
+    """Extract the numeric suffix from a filename."""
     # Extract the number from the filename
     return int(filename.split('_')[-1].split('.')[0])
 
 
-def _extract_fit_frame_key(filename):
+def _extract_fit_frame_key(filename: str) -> tuple[int, int]:
+    """Sort fitting frames by cosine count and shuffle index."""
     match = re.search(r"fitting_shuffle_(\d+)_nCosines_(\d+)\.png$", os.path.basename(filename))
     if match:
         return int(match.group(2)), int(match.group(1))
@@ -211,17 +215,8 @@ def _extract_fit_frame_key(filename):
     
 #####################################################################
 
-def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, duration: int = 100):
-    """
-    Creates a GIF from a generator of PNG file paths using a memory-safe,
-    pure Python approach.
-
-    Args:
-        inDir (str): The directory containing the PNG files.
-        outGif (str): The path to save the final GIF file.
-        batchSize (int): The number of images to process in each batch.
-        duration (int): The duration for each frame in the GIF, in milliseconds.
-    """
+def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, duration: int = 100) -> None:
+    """Create a GIF from fitting PNG frames."""
     pngGenerator = (
         item for item in sorted(
             (os.path.join(inDir, f) for f in os.listdir(inDir) if f.endswith(".png") and f.startswith("fitting_shuffle")),
@@ -250,7 +245,8 @@ def make_gif(inDir: DirectoryPath, outGif: FilePath, batchSize: int = 50, durati
 
 
 #####################################################################
-def set_rc_params():
+def set_rc_params() -> None:
+    """Set matplotlib defaults for stitching plots."""
     darkGrey: str = '#1a1a1a'
 
     yellow: str = '#FFFF00'
@@ -275,20 +271,21 @@ def set_rc_params():
 
 
 #####################################################################
-def plot_qmmm_energies(qmTotalEnergy,
-                        qmTorsionEnergy,
-                        mmTotalEnergy, 
-                        mmFittedTorsionEnergy,
-                        cosineComponents,
-                        torsionMetrics,
-                        totalMetrics,
-                        maeTorsion,
-                        maeTotal,
-                        nCosines,
-                        converged,
-                        outDir,
-                        shuffleIndex,
-                        tol):
+def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
+                        qmTorsionEnergy: np.ndarray,
+                        mmTotalEnergy: np.ndarray,
+                        mmFittedTorsionEnergy: np.ndarray,
+                        cosineComponents: dict,
+                        torsionMetrics: dict,
+                        totalMetrics: dict,
+                        maeTorsion: float,
+                        maeTotal: float,
+                        nCosines: int,
+                        converged: bool,
+                        outDir: DirectoryPath,
+                        shuffleIndex: int,
+                        tol: float) -> None:
+    """Plot QM, MM, and fitted torsion energies for one shuffle."""
     
     set_rc_params()
     white :str = '#FFFFFF'
@@ -350,7 +347,7 @@ def plot_qmmm_energies(qmTotalEnergy,
     ax_table.text(0.5, 0.98, f"Target Tolerance: {tol:.4f}", 
                   color="cyan", fontsize=14, fontweight='bold', ha='center', va='top', family='monospace')
 
-    def create_table_data(metrics, mae):
+    def create_table_data(metrics: dict, mae: float) -> list[list[str]]:
         return [
             ["Score", f"{metrics['composite_score']:.3f}"],
             ["Loc", f"{metrics['location_score']:.3f}"],
@@ -361,7 +358,7 @@ def plot_qmmm_energies(qmTotalEnergy,
         ]
 
     # Helper to style the table according to your specific rules
-    def style_metric_table(table, tolerance):
+    def style_metric_table(table, tolerance: float) -> object:
         table.auto_set_font_size(False)
         table.set_fontsize(14) # Bigger text
         

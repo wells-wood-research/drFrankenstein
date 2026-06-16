@@ -3,19 +3,19 @@ from typing import Dict, Any, List, Union, Optional, Tuple
 from OperatingTools import drSplash
 
 
-def _add_error(errors: Dict[str, str], keyPath: str, message: str):
-    """Adds an error message to the errors dictionary."""
+def _add_error(errors: Dict[str, str], keyPath: str, message: str) -> None:
+    """Record a validation error for a specific config path."""
     errors[keyPath] = message
 
 def _check_key_exists(data: Dict[str, Any], key: str, sectionPath: str, errors: Dict[str, str]) -> bool:
-    """Checks if a key exists in the dictionary. Adds error if missing."""
+    """Check whether a required key exists and record an error if it does not."""
     if key not in data:
         _add_error(errors, f"{sectionPath}.{key}", f"Missing required key '{key}'")
         return False
     return True
 
 def _validate_type(value: Any, expectedType: Union[type, Tuple[type, ...]], keyPath: str, errors: Dict[str, str]) -> bool:
-    """Checks if the value's type matches the expected type(s). Adds error if mismatched."""
+    """Check a value's type against the expected type or tuple of types."""
     if not isinstance(value, expectedType):
         # Improved error message formatting for None/NoneType
         if isinstance(expectedType, type):
@@ -31,7 +31,7 @@ def _validate_type(value: Any, expectedType: Union[type, Tuple[type, ...]], keyP
     return True
 
 def _validate_allowed_values(value: Any, allowedValues: List[Any], keyPath: str, errors: Dict[str, str]) -> bool:
-    """Checks if the value is within the list of allowed values. Adds error if not."""
+    """Check whether a value is one of the allowed configuration values."""
     # Skip check if value is None, as None might be allowed by type but not explicitly in allowedValues list
     if value is None:
         return True # Assume type check already validated None if it was allowed
@@ -44,8 +44,8 @@ def _validate_allowed_values(value: Any, allowedValues: List[Any], keyPath: str,
 
 # --- Section Validators (snake_case names) ---
 
-def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
-    """Validates the pathInfo section."""
+def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
+    """Validate the `pathInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'pathInfo'")
         return
@@ -81,8 +81,8 @@ def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
             _validate_type(value, expectedType, keyPath, errors)
 
 
-def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
-    """Validates the moleculeInfo section."""
+def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
+    """Validate the `moleculeInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'moleculeInfo'")
         return
@@ -136,8 +136,8 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
                             _validate_type(chargeValue, int, chargeKeyPath, errors)
 
 
-def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
-    """Validates the torsionScanInfo section."""
+def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
+    """Validate the `torsionScanInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'torsionScanInfo'")
         return
@@ -186,10 +186,44 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
             if not isinstance(enabled, bool):
                 _add_error(errors, keyPath, f"Scan type '{scanType}' must be a boolean, but got {type(enabled).__name__}")
 
+def _validate_conformer_generation_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
+    """Validate the `conformerGenerationInfo` section."""
+    if sectionData is None:
+        _add_error(errors, sectionName, "Missing required section 'conformerGenerationInfo'")
+        return
+
+    if not isinstance(sectionData, dict):
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
+
+    requiredKeys = {
+        "goatMode": str,
+        "energyCutoff": (int, float),
+        "goatMethod": str,
+        "conformerSelction": str,
+    }
+    allowedGoatModes = ["GOAT", "GOAT-ENTROPY"]
+    allowedSelectionMethods = ["ENERGY", "DIVERSE"]
+    allowedGoatMethods = ["XTB2", "GFN-FF"]
+
+    for key, expectedType in requiredKeys.items():
+        keyPath = f"{sectionName}.{key}"
+        if _check_key_exists(sectionData, key, sectionName, errors):
+            value = sectionData[key]
+            if _validate_type(value, expectedType, keyPath, errors):
+                if key == "goatMode":
+                    _validate_allowed_values(value, allowedGoatModes, keyPath, errors)
+                elif key == "goatMethod":
+                    _validate_allowed_values(value, allowedGoatMethods, keyPath, errors)
+                elif key == "conformerSelction":
+                    _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
+                elif key == "energyCutoff" and isinstance(value, (int, float)) and value < 0:
+                    _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
 
 
-def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
-    """Validates the chargeFittingInfo section."""
+
+def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
+    """Validate the `chargeFittingInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'chargeFittingInfo'")
         return
@@ -235,8 +269,7 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
             value = sectionData[key]
             _validate_type(value, expectedType, keyPath, errors)
 
-
-def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validates the parameterFittingInfo section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'parameterFittingInfo'")
@@ -284,7 +317,7 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
     ):
         _add_error(errors, f"{sectionName}.minShuffles", f"Value for 'minShuffles' must be less than or equal to 'maxShuffles'.")
 
-def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]):
+def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validates the miscInfo section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'miscInfo'")
@@ -342,10 +375,8 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     if value.upper() not in allowedGpu:
                         _add_error(errors, keyPath, f"Invalid value '{value}'. Allowed values are: {allowedGpu}")
 
-def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]):
-    """
-    Cross-section validation for enforceDefaultBackboneCharges.
-    """
+def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]) -> None:
+    """Cross-section validation for `enforceDefaultBackboneCharges`."""
     chargeFittingInfo = config.get("chargeFittingInfo")
     moleculeInfo = config.get("moleculeInfo")
     if not isinstance(chargeFittingInfo, dict) or not isinstance(moleculeInfo, dict):
@@ -382,10 +413,8 @@ def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[s
             _add_error(errors, aliasKeyPath, "All aliases must be strings.")
 
 
-def _validate_torsion_scan_cores(config: Dict[str, Any], errors: Dict[str, str]):
-    """
-    Cross-section validation for torsionScanInfo.nCoresPerCalculation.
-    """
+def _validate_torsion_scan_cores(config: Dict[str, Any], errors: Dict[str, str]) -> None:
+    """Cross-section validation for `torsionScanInfo.nCoresPerCalculation`."""
     torsionScanInfo = config.get("torsionScanInfo")
     miscInfo = config.get("miscInfo")
     if not isinstance(torsionScanInfo, dict) or not isinstance(miscInfo, dict):
@@ -433,6 +462,7 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
     expectedSections = [
         "pathInfo",
         "moleculeInfo",
+        "conformerGenerationInfo",
         "torsionScanInfo",
         "chargeFittingInfo",
         "parameterFittingInfo",
@@ -449,6 +479,7 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
     # Validate each section using helper functions
     _validate_path_info(config.get("pathInfo"), "pathInfo", errors)
     _validate_molecule_info(config.get("moleculeInfo"), "moleculeInfo", errors)
+    _validate_conformer_generation_info(config.get("conformerGenerationInfo"), "conformerGenerationInfo", errors)
     _validate_torsion_scan_info(config.get("torsionScanInfo"), "torsionScanInfo", errors)
     _validate_charge_fitting_info(config.get("chargeFittingInfo"), "chargeFittingInfo", errors)
     _validate_parameter_fitting_info(config.get("parameterFittingInfo"), "parameterFittingInfo", errors)

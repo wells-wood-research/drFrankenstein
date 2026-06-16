@@ -4,6 +4,7 @@ from os import path as p
 import pandas as pd
 from pdbUtils.pdbUtils import pdb2df
 from OperatingTools import electron_checker
+from typing import Any
 ## CLEAN CODE CLASSES ##
 class FilePath:
     pass
@@ -11,6 +12,7 @@ class DirectoryPath:
     pass
 
 def check_pdb(config: dict) -> None:
+    """Validate the input PDB and reject duplicate atom names."""
     inputDir = config["pathInfo"]["inputDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     molPdb = p.join(inputDir, f"{moleculeName}.pdb")
@@ -20,6 +22,7 @@ def check_pdb(config: dict) -> None:
 
 
 def validate_charge_multiplicity(config: dict, pdb_path: FilePath) -> None:
+    """Verify that the PDB electron count matches the configured charge and multiplicity."""
     charge = config["moleculeInfo"]["charge"]
     multiplicity = config["moleculeInfo"]["multiplicity"]
     pdbDf = pdb2df(pdb_path)
@@ -31,6 +34,7 @@ def validate_charge_multiplicity(config: dict, pdb_path: FilePath) -> None:
 
 
 def get_capped_pdb_path(config: dict) -> FilePath:
+    """Return the capped PDB path recorded in runtimeInfo."""
     runtime_info = config.get("runtimeInfo", {})
     made_by_capping = runtime_info.get("madeByCapping", {})
     capped_pdb = made_by_capping.get("cappedPdb")
@@ -42,7 +46,8 @@ def get_capped_pdb_path(config: dict) -> FilePath:
     return capped_pdb
 
 
-def check_for_duplicate_atoms(pdbDf: pd.DataFrame):
+def check_for_duplicate_atoms(pdbDf: pd.DataFrame) -> None:
+    """Raise an error if the PDB contains duplicate atom names."""
     atomNamesChecked = []
     duplicateAtomNames = []
     for _, row in pdbDf.iterrows():

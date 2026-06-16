@@ -17,18 +17,7 @@ class DirectoryPath:
     pass
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
-    """
-    Constructs MM energies from mmTorsionParameters using:
-
-        E(torsion) = (K / Mult) * (1 + cos(periodicity * Angle - Phase))
-    https://ambermd.org/FileFormats.php#frcmod
-
-    Args:
-        mmTorsionParameters (dict): dict containing torsion parameters for each torsion
-
-    Returns:
-        mmTorsionEnergies (dict): dict containing MM energies for each torsion
-    """
+    """Construct MM torsion energies from parameter dictionaries."""
     ## init angle 
     angle = np.radians(np.arange(0, 360, 10, dtype=float))
     ## init empty array
@@ -56,9 +45,7 @@ def update_frcmod(moleculeFrcmod: FilePath,
                   torsionTag: str,
                   torsionParamDf: pd.DataFrame,
                   shuffleIndex: int) -> dict:
-    """
-    Uses parmed to update torsion parameters in a frcmod file based on a DataFrame.
-    """
+    """Update a frcmod file with new torsion parameters."""
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
     moleculeParameterDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
@@ -100,17 +87,7 @@ def update_frcmod(moleculeFrcmod: FilePath,
 
 
 def edit_mol2_partial_charges(config: dict) -> None:
-    """
-    Gets partial charges stored in a dataframe and pastes them into the
-    charges column of a MOL2 file
-
-    Args:
-        config (dict): config with all run information
-
-    Returns:
-        None [path to updated mol2 file already in config]
-    
-    """
+    """Write the fitted partial charges into the stitched MOL2 file."""
 
     ## unpack config ##
     moleculeMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
@@ -151,17 +128,7 @@ def edit_mol2_partial_charges(config: dict) -> None:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def copy_assembled_parameters(config: dict) -> dict:
-    """
-    Copies the FRCMOD created during the assembly stage
-    to the stitching directory
-
-    Args:
-        config (dict): contains all information needed for run
-
-    Returns:
-        config (dict): updated config
-
-    """
+    """Copy assembled parameter files into the stitching directory."""
     ## unpack config
     assembledFrcmod = config["runtimeInfo"]["madeByAssembly"]["assembledFrcmod"]
     assembledPrmtop = config["runtimeInfo"]["madeByAssembly"]["assembledPrmtop"]
@@ -186,19 +153,7 @@ def copy_assembled_parameters(config: dict) -> dict:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_tleap_to_make_params(moleculeFrcmod: FilePath, config: dict) -> None:
-    """
-    Uses TLEAP to create a prmtop inpcrd pair
-
-    Args:
-        inMol2 (FilePath): input MOL2 file
-        molFrcmod (FilePath): input FRCMOD file
-        outDir (DirectoryPath): output directory
-        index (str): identifier for output files
-
-    Returns: 
-        prmtop (FilePath): topology file for AMBER
-        impcrd (FilePath): coordinate file for AMBER
-    """
+    """Run tleap to generate the AMBER topology and coordinate files."""
     ## unpack config
     inMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
     outDir = config["runtimeInfo"]["madeByStitching"]["moleculeParameterDir"]

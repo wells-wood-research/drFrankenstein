@@ -22,7 +22,8 @@ class DirectoryPath:
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 
-def duplicate_capping_parameters(config:dict) -> None:
+def duplicate_capping_parameters(config: dict) -> None:
+    """Duplicate capping parameters for CHARMM finalisation."""
     """
     Accounts for interactions between capping groups and a ncAA by duplicating these params
     and replacing capping types with canonical types
@@ -86,7 +87,8 @@ def duplicate_capping_parameters(config:dict) -> None:
                     ...
 
 
-def copy_final_prm(config: dict) -> None:
+def copy_final_prm(config: dict) -> tuple[str, dict]:
+    """Copy the stitched PRM file into the final creation directory."""
     """
     Copies final PRM file into the final creation directory
 
@@ -112,7 +114,8 @@ def copy_final_prm(config: dict) -> None:
 
     return massBlock, config
 
-def create_final_rtf(config, massBlock, icBlock):
+def create_final_rtf(config: dict, massBlock: str, icBlock: str) -> dict:
+    """Create the final CHARMM RTF file."""
     ## unpack config
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
@@ -177,7 +180,8 @@ def create_final_rtf(config, massBlock, icBlock):
             
 
 
-def create_cmap_terms(config: dict) -> dict:
+def create_cmap_terms(config: dict) -> list[str]:
+    """Create CMAP terms for the final RTF."""
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
     cmapTerms = []
     for nAtom, caAtom, cAtom in zip(backboneAliases["N"], backboneAliases["CA"], backboneAliases["C"]):
@@ -188,19 +192,7 @@ def create_cmap_terms(config: dict) -> dict:
 
 
 def get_donor_acceptors(config: dict, debug: bool = False) -> dict:
-    """
-    Looks though optimised solvated conformers for hydrogen bonds donors and acceptors
-    Creates a dict of DONOR and ACCEPTOR atom pairs,
-    where the first entry is the atom participating in the Hydrogen Bond, 
-    and the second is the (a) heavy atom covalently bound to the first
-
-    Args:
-        config (dict): dictionary containing all run information
-        debug (bool): Whether to run in debug mode (toggles multiprocessing)
-
-    Returns:
-        config (dict): updated config
-    """
+    """Identify donor and acceptor atom pairs from solvated conformers."""
 
     ## unpack config ##
     chargeDir = config["runtimeInfo"]["madeByCharges"]["chargeDir"]
@@ -259,7 +251,8 @@ def get_donor_acceptors(config: dict, debug: bool = False) -> dict:
 
 def detect_hydrogen_bonds_construct_donor_acceptors(solvatedOptXyz: FilePath,
                                                      solvatedDf: pd.DataFrame,
-                                                       moleculeName: str) -> tuple:
+                                                       moleculeName: str) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """Detect donor and acceptor pairs for one solvated conformer."""
     xyzDf = file_parsers.xyz2df(solvatedOptXyz)
     hBonds = detect_hydrogen_bonds(xyzDf)
     donors, acceptors = construct_donor_acceptors(hBonds, solvatedDf, moleculeName)
@@ -268,7 +261,8 @@ def detect_hydrogen_bonds_construct_donor_acceptors(solvatedOptXyz: FilePath,
 
 
 
-def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: str) -> dict:
+def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: str) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """Build donor and acceptor pairs from hydrogen-bond matches."""
     donors = []
     acceptors = []
     for hBond in hBonds:
@@ -300,7 +294,8 @@ def construct_donor_acceptors(hBonds: list, pdbDf: pd.DataFrame, moleculeName: s
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def choose_bonded_atom_for_acceptor(bondedAtoms, pdbDf, moleculeName):
+def choose_bonded_atom_for_acceptor(bondedAtoms: list[str], pdbDf: pd.DataFrame, moleculeName: str) -> str:
+    """Choose the bonded atom to associate with an acceptor."""
     bondedAtoms = [atom for atom in bondedAtoms if not atom.startswith("H")]
     ## remove 
     bondedAtomDf = pdbDf[pdbDf["ATOM_NAME"].isin(bondedAtoms)]
@@ -310,13 +305,8 @@ def choose_bonded_atom_for_acceptor(bondedAtoms, pdbDf, moleculeName):
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float = 3.5, hydrogenBondAngleCutoff: float = 120.0):
-    """
-    Detect hydrogen bonds based on geometric criteria.
-    Criteria: D-H...A where D is donor (O, N), A is acceptor (O, N),
-    H...A distance < distance_cutoff (Angstroms), D-H...A angle > angle_cutoff (degrees).
-    Returns list of (donor_idx, hydrogen_idx, acceptor_idx) tuples.
-    """
+def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float = 3.5, hydrogenBondAngleCutoff: float = 120.0) -> list[tuple[int, int, int]]:
+    """Detect hydrogen bonds based on geometric criteria."""
     hBonds = []
     donorAcceptorTypes = ["N", "O", "F"]  # Exclude C and N
     
@@ -346,12 +336,12 @@ def detect_hydrogen_bonds(xyzDf: pd.DataFrame, hydrogenBondDistanceCutoff: float
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_distance(coord1, coord2):
+def calculate_distance(coord1: np.ndarray, coord2: np.ndarray) -> float:
     """Calculate Euclidean distance between two points."""
     return np.linalg.norm(coord1 - coord2)
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def calculate_angle(coord1, coord2, coord3):
-    """Calculate angle (in degrees) between three points (coord2 is vertex)."""
+def calculate_angle(coord1: np.ndarray, coord2: np.ndarray, coord3: np.ndarray) -> float:
+    """Calculate angle (in degrees) between three points."""
     vec1 = coord1 - coord2
     vec2 = coord3 - coord2
     
@@ -367,14 +357,8 @@ def calculate_angle(coord1, coord2, coord3):
     cosTheta = np.clip(np.dot(vec1Norm, vec2Norm), -1.0, 1.0)
     return np.degrees(np.arccos(cosTheta))
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def pad_pdb_with_waters(config: dict) -> FilePath:
-    """
-    Takes original capped PDB file and adds water molecules with dummy coords
-    
-    Args:
-        pdbFile (FilePath): an unsolvated PDB file
-        nWaters (int): The number of water molecules to add
-    """
+def pad_pdb_with_waters(config: dict) -> tuple[dict, pd.DataFrame]:
+    """Create a solvated PDB dataframe with dummy waters."""
     ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
     nWatersAdded = config["runtimeInfo"]["madeByCharges"]["nWaters"]

@@ -18,8 +18,9 @@ class DirPath:
 from . import Stitching_Assistant
 
 
-def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, config):
-                            #    sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):    
+def fourier_transform_protocol(qmTorsionEnergy: np.array, torsionTag: str, torsionFittingDir: DirPath, config: dict):
+                            #    sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):
+    """Fit Fourier torsion parameters and return the selected components."""
 
     ## unpack config
     maxCosineFunctions = config["runtimeInfo"]["madeByStitching"]["maxTorsions"]
@@ -66,6 +67,7 @@ def fourier_transform_protocol(qmTorsionEnergy, torsionTag, torsionFittingDir, c
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
+    """Apply L2 damping to Fourier amplitudes."""
     """
     Applies L2 (ridge-style) damping to amplitudes.
 
@@ -92,6 +94,7 @@ def apply_l2_damping(amplitudes: np.array, l2Damping: float) -> np.array:
 
 
 def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, phases: np.array) -> pd.DataFrame:
+    """Combine Fourier arrays into a sorted DataFrame."""
     data = {"Frequency": frequencies, "Amplitude": amplitudes, "Phase": phases}
     dataDf = pd.DataFrame(data)
     dataDf = dataDf.sort_values(by='Amplitude', ascending=False).reset_index(drop=True)
@@ -99,6 +102,7 @@ def convert_fourier_params_to_df(frequencies: np.array, amplitudes: np.array, ph
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def convert_params_to_amber_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+    """Convert Fourier parameters into AMBER/CHARMM torsion format."""
     paramDf = pd.DataFrame()
     paramDf["Amplitude"] = fourierDf["Amplitude"]
     paramDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
@@ -111,6 +115,7 @@ def convert_params_to_amber_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFra
     return paramDf
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def convert_params_to_charmm_format(fourierDf: pd.DataFrame) -> pd.DataFrame:
+    """Convert Fourier parameters into CHARMM torsion format."""
     charmmDf = pd.DataFrame()
     charmmDf["Amplitude"] = fourierDf["Amplitude"]
     charmmDf["Period"] = np.degrees(2 * np.pi * fourierDf["Frequency"])
@@ -129,6 +134,7 @@ def construct_cosine_components_CHARMM(
     qmTorsionEnergy: np.array,
     tolerance: float = 0.2,
 ) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+    """Construct cosine components for CHARMM torsions."""
     return _construct_cosine_components(charmmParamDf, maxFunctions, qmTorsionEnergy)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def construct_cosine_components_AMBER(
@@ -138,6 +144,7 @@ def construct_cosine_components_AMBER(
     qmTorsionEnergy: np.array,
     tolerance: float = 0.05,
 ) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
+    """Construct cosine components for AMBER torsions."""
     return _construct_cosine_components(amberParamDf, maxFunctions, qmTorsionEnergy)
 
 
@@ -146,6 +153,7 @@ def _construct_cosine_components(
     maxFunctions: int,
     qmTorsionEnergy: np.array,
 ) -> Tuple[pd.DataFrame, List[Tuple[float, np.array]], int]:
+    """Select cosine components that improve the torsion fit."""
     sampleSpacing = 10
     signalLength = len(qmTorsionEnergy)
     angle = np.arange(signalLength) * sampleSpacing
@@ -170,16 +178,20 @@ def _construct_cosine_components(
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def calculate_rmsd(signal1: np.array, signal2: np.array) -> float:
+    """Calculate the RMSD between two signals."""
     return np.sqrt(np.mean((signal1 - signal2) ** 2))
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 
 def pad_energy_data(energyData: np.array, paddingFactor: int) -> np.array:
+    """Tile energy data for Fourier padding."""
     return np.tile(energyData, paddingFactor)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def pad_angle_data(angleData: np.array, paddingFactor: int) -> np.array:
+    """Tile angle data for Fourier padding."""
     return np.tile(angleData, paddingFactor)
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def rescale_torsion_angles(angle):
+def rescale_torsion_angles(angle) -> float:
+    """Wrap a torsion angle into the 0-360 degree range."""
     angle = angle % 360  # Reduce the angle to the 0-360 range
     if angle < 0:
         angle += 360  # Shift negative angles to the positive side
@@ -187,12 +199,15 @@ def rescale_torsion_angles(angle):
 
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def perform_rfft(signal: np.array) -> np.array:
+    """Perform a real FFT on the signal."""
     return np.fft.rfft(signal)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_frequencies(signalLength: int, sampleSpacing: int) -> np.array:
+    """Return FFT frequency bins for the given signal length."""
     return np.fft.rfftfreq(signalLength, sampleSpacing)
 ##🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def compute_amplitude_and_phase(fftResult: np.array, signalLength: int) -> Tuple[np.array, np.array]:
+    """Convert FFT coefficients into amplitude and phase arrays."""
     amplitudes: np.array = np.abs(fftResult) * 2 / signalLength
     phases: np.array = np.angle(fftResult)
 

@@ -12,7 +12,8 @@ class DirectoryPath:
     pass
 
 
-def initialise_runtime_info(config):
+def initialise_runtime_info(config: dict) -> dict:
+    """Ensure runtimeInfo exists and attach its banner comment on first creation."""
     runtimeBanner = '\n'.join([
         "##########################################################################################################################",                                     
         "                                    _     _                      ___            __                                       #",         
@@ -36,7 +37,8 @@ def initialise_runtime_info(config):
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def read_config_with_checkpoints(config, outDir):
+def read_config_with_checkpoints(config: dict, outDir: DirectoryPath) -> dict:
+    """Reload the output YAML when it already exists so checkpoints are preserved."""
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
     ruamelParser.preserve_quotes = True  # Ensure quotes are preserved
@@ -46,7 +48,8 @@ def read_config_with_checkpoints(config, outDir):
             config = ruamelParser.load(f)
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def init_config_checkpoints(config, outDir):
+def init_config_checkpoints(config: dict, outDir: DirectoryPath) -> dict:
+    """Create the checkpoint structure when no output YAML has been written yet."""
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     checkpointBanner = '\n'.join([
         "##########################################################################################################################",                                     
@@ -79,7 +82,8 @@ def init_config_checkpoints(config, outDir):
     else:
         return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def write_config_to_yaml(config, outDir):
+def write_config_to_yaml(config: dict, outDir: DirectoryPath) -> None:
+    """Write the current config to YAML after sanitising non-serialisable values."""
     drFrankensteinYaml = p.join(outDir, "drFrankenstein.yaml")
     ruamelParser = ruamel.YAML()
     ruamelParser.indent(mapping=2, sequence=4, offset=2)
@@ -91,7 +95,8 @@ def write_config_to_yaml(config, outDir):
     ruamelParser.representer.ignore_aliases = lambda x: True
 
     # Helper to sanitize values (convert numpy types, arrays, bytes, and other non-serializable objects)
-    def _sanitize_value(v):
+    def _sanitize_value(v: object) -> object:
+        """Recursively convert values into YAML-safe primitives."""
         # Avoid importing numpy repeatedly
         try:
             import numpy as _np

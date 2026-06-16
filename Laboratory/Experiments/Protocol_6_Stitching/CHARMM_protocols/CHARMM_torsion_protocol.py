@@ -21,19 +21,7 @@ class DirectoryPath:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def get_MM_torsion_energies(config: dict, torsionTag: str, paramFile: FilePath, debug: bool = False) -> Tuple[dict, dict]:    
-    """
-    Gets MM[torsion] energy for each torsion we have scanned
-    This is done by extracting torsion parameters from FRCMOD file
-    Then reconstructing energy as a sum of the cosine functions described
-
-    Args:
-        config (dict): config containing all run information
-        torsionTag (str): tag for torsion we are interested in
-
-    Returns:
-        mmTorsionEnergies (dict): energies 
-        mmCosineComponents (dict): cosine components
-    """
+    """Compute MM torsion energies and cosine components for a CHARMM scan."""
     if debug:
         print(f"Getting MM torsion energies for torsion {torsionTag}")
     ## get torsion parameters from PRM file
@@ -44,16 +32,7 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, paramFile: FilePath, 
     return  mmTorsionEnergies, mmCosineComponents
 
 def extract_torsion_parameters_from_prm(moleculePrm: FilePath, torsionTag: str, config: dict) -> dict:
-    """
-    Extracts torsion parameters from PRM file
-
-    Args:
-        config (dict): config containing all run information
-        torsionTag (str): tag for torsion we are interested in
-
-    Returns:
-        torsionParameters (dict): torsion parameters
-    """
+    """Extract torsion parameters from the CHARMM PRM/RTF pair."""
     ## unpack config
     moleculeRtf = config["runtimeInfo"]["madeByStitching"]["moleculeRtf"]
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
@@ -83,18 +62,7 @@ def extract_torsion_parameters_from_prm(moleculePrm: FilePath, torsionTag: str, 
 
 
 def construct_MM_torsion_energies(mmTorsionParameters) -> dict:
-    """
-    Constructs MM energies from mmTorsionParameters using:
-
-        E(torsion) = K  * (1 + cos(periodicity * (Angle - Phase)))
-    https://ambermd.org/FileFormats.php#frcmod
-
-    Args:
-        mmTorsionParameters (dict): dict containing torsion parameters for each torsion
-
-    Returns:
-        mmTorsionEnergies (dict): dict containing MM energies for each torsion
-    """
+    """Construct CHARMM torsion energies from parameter dictionaries."""
 
     ## init angle 
     angle = np.radians(np.arange(0, 360, 10, dtype=float))

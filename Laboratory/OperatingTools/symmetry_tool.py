@@ -15,11 +15,7 @@ from typing import List, Tuple
 
 
 def symmetry_protocol(pdbFile: FilePath) -> List[List[str]]:
-    """
-    Main protocol for symmetry analysis
-    1. Convert PDB to graph
-    2. Find symmetrically equivalent atoms
-    """
+    """Run the symmetry protocol and return symmetric atom groups."""
 
     moleculeGraph = pdb2graph(pdbFile)
     _, symmetricIds = find_symmetric_atoms(moleculeGraph)
@@ -28,9 +24,7 @@ def symmetry_protocol(pdbFile: FilePath) -> List[List[str]]:
 
 
 def pdb2graph(pdbFile: FilePath) -> nx.Graph:
-    """
-    Convert a PDB file to a NetworkX graph.
-    """
+    """Convert a PDB file to a NetworkX graph."""
     # Manual construction from PDB file using DataFrame
     df = pdbUtils.pdb2df(pdbFile)
     graph = nx.Graph()
@@ -57,10 +51,7 @@ def pdb2graph(pdbFile: FilePath) -> nx.Graph:
     return graph
 
 def find_symmetric_atoms(graph: nx.Graph) -> tuple[List[List[str]], List[List[str]]]:
-    """
-    Identify symmetrically equivalent atoms in a molecular graph using NetworkX.
-    Returns a list of lists, where each sublist contains the ATOM_NAME of equivalent atoms.
-    """
+    """Identify symmetrically equivalent atoms in a molecular graph."""
     # Define a node match function to ensure atoms have the same element
     nodeMatch = lambda n1, n2: n1["element"] == n2["element"]
 
@@ -71,7 +62,9 @@ def find_symmetric_atoms(graph: nx.Graph) -> tuple[List[List[str]], List[List[st
     if not automorphisms:
         print("No symmetry found in the graph.")
         # Return all atom names as a single group if no symmetry
-        return [[graph.nodes[n]["atom_name"] for n in graph.nodes()]]
+        atomNames = [graph.nodes[n]["atom_name"] for n in graph.nodes()]
+        atomIds = [graph.nodes[n]["atom_index"] for n in graph.nodes()]
+        return [atomNames], [atomIds]
 
     # Group atoms by their equivalence under automorphisms
     symmetryGroups = {}

@@ -1,4 +1,5 @@
 from typing import Any
+import pandas as pd
 
 
 PERIODIC_TABLE: dict[str, int] = {
@@ -18,6 +19,7 @@ PERIODIC_TABLE: dict[str, int] = {
 
 
 def _normalize_element_symbol(raw_value: Any, atom_name: str) -> str:
+    """Normalise an atom's element symbol or infer it from the atom name."""
     if raw_value is None:
         text = ""
     else:
@@ -35,6 +37,7 @@ def _normalize_element_symbol(raw_value: Any, atom_name: str) -> str:
 
 
 def _validate_atom_element(element_symbol: str, atom_name: str, atom_id: Any) -> None:
+    """Reject atoms whose element symbol is not present in the periodic table map."""
     if element_symbol not in PERIODIC_TABLE:
         raise ValueError(
             f"Unknown element '{element_symbol}' for atom '{atom_name}' (ATOM_ID={atom_id}). "
@@ -42,7 +45,8 @@ def _validate_atom_element(element_symbol: str, atom_name: str, atom_id: Any) ->
         )
 
 
-def calculate_total_electrons(pdb_df, charge: int) -> int:
+def calculate_total_electrons(pdb_df: pd.DataFrame, charge: int) -> int:
+    """Count neutral electrons in a PDB and adjust the total by the formal charge."""
     neutral_electron_count = 0
     for _, row in pdb_df.iterrows():
         atom_name = row.get("ATOM_NAME", "?")
@@ -60,7 +64,8 @@ def calculate_total_electrons(pdb_df, charge: int) -> int:
     return total_electrons
 
 
-def validate_charge_multiplicity_from_pdb(pdb_df, charge: int, multiplicity: int) -> int:
+def validate_charge_multiplicity_from_pdb(pdb_df: pd.DataFrame, charge: int, multiplicity: int) -> int:
+    """Ensure the configured charge and multiplicity are physically consistent with the PDB."""
     if multiplicity < 1:
         raise ValueError(f"Multiplicity must be >= 1, got {multiplicity}.")
 

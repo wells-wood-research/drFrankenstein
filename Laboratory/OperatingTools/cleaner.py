@@ -97,7 +97,7 @@ def clean_wriggle(config: dict) -> None:
 
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def clean_up_opt_dir(optDir: DirectoryPath, config: dict):
+def clean_up_opt_dir(optDir: DirectoryPath, config: dict) -> None:
     """
     For an opt dir:
     vital = orca_opt.xyz (for use in forwards)
@@ -164,7 +164,7 @@ def clean_up_singlepoint_dir(spDir: DirectoryPath, config: dict, keepSuffix: lis
     elif cleanUpLevel in [2, 3]:
         rmtree(spDir)
 
-def  clean_up_solvator_dir(solvatorDir: DirectoryPath, config: dict) -> None:
+def clean_up_solvator_dir(solvatorDir: DirectoryPath, config: dict) -> None:
     """
     Cleans up an orca SOLVATOR calculation Dir
     """

@@ -12,6 +12,7 @@ from ..Protocol_5_Twisting import Twisted_Assistant
 
 
 def _flatten_all_dihedrals(config: dict) -> list[dict]:
+    """Flatten the twisted dihedral structure into a list of torsion records."""
     all_dihedrals = config["runtimeInfo"]["madeByTwisting"]["allDihedrals"]
     torsions = []
 
@@ -30,6 +31,7 @@ def _flatten_all_dihedrals(config: dict) -> list[dict]:
 
 
 def _measure_torsion_angles(conformer_xyz: str, torsions: list[dict]) -> dict:
+    """Measure every tracked torsion angle for a conformer."""
     atom_coords = Twisted_Assistant.xyz_to_np_array(conformer_xyz)
     conformer_name = p.splitext(p.basename(conformer_xyz))[0]
     measured_angles = {"conformer": conformer_name}
@@ -42,6 +44,7 @@ def _measure_torsion_angles(conformer_xyz: str, torsions: list[dict]) -> dict:
 
 
 def _lookup_conformer_energy(conformer_name: str, conformer_energies: dict) -> float:
+    """Resolve a conformer's energy from the energy lookup table."""
     if conformer_name in conformer_energies:
         return float(conformer_energies[conformer_name])
 
@@ -53,6 +56,7 @@ def _lookup_conformer_energy(conformer_name: str, conformer_energies: dict) -> f
 
 
 def _build_conformer_html_map(conformer_names: list[str], images_dir: str, reporter_dir: str) -> dict:
+    """Map conformer names to their generated HTML files."""
     conformer_images_dir = p.join(images_dir, "conformer_images")
     conformer_html_map = {}
     for conformer_name in conformer_names:
@@ -63,10 +67,12 @@ def _build_conformer_html_map(conformer_names: list[str], images_dir: str, repor
 
 
 def _conformer_names_from_xyzs(conformer_xyzs: list[str]) -> list[str]:
+    """Extract conformer names from XYZ file paths."""
     return [p.splitext(p.basename(conformer_xyz))[0] for conformer_xyz in conformer_xyzs]
 
 
 def _infer_torsion_scan_xyzs(config: dict, conformer_xyzs: list[str]) -> list[str]:
+    """Infer which conformers were used for torsion scans."""
     n_conformers_requested = config.get("torsionScanInfo", {}).get("nConformers", -1)
     if n_conformers_requested == -1 or n_conformers_requested >= len(conformer_xyzs):
         return conformer_xyzs
@@ -78,6 +84,7 @@ def _infer_torsion_scan_xyzs(config: dict, conformer_xyzs: list[str]) -> list[st
 
 
 def _run_pca(angle_df: pd.DataFrame) -> tuple[pd.DataFrame, list[float], bool]:
+    """Run PCA on torsion angle data and return the transformed coordinates."""
     feature_columns = [column for column in angle_df.columns if column != "conformer"]
     feature_matrix = angle_df[feature_columns].to_numpy()
 
@@ -118,6 +125,7 @@ def _build_pca_plot_html(
     selected_for_charges: set[str] | None = None,
     selected_for_scans: set[str] | None = None,
 ) -> str:
+    """Build the PCA scatter plot HTML."""
     energy_values = pca_df["energy"].astype(float).tolist()
     colorscale, cmin, cmax = _build_energy_colorscale(energy_values)
     selected_for_charges = selected_for_charges or set()
@@ -245,6 +253,7 @@ def _build_pca_plot_html(
 
 
 def _build_energy_colorscale(energy_values: list[float]) -> tuple[list[list[float | str]], float, float]:
+    """Build a Plotly colorscale for energy values."""
     vibrant_colors = Reporting_Assistant.make_vibrant_colors()
     green = vibrant_colors[1]
     magenta = vibrant_colors[4]
@@ -263,6 +272,7 @@ def _build_energy_colorscale(energy_values: list[float]) -> tuple[list[list[floa
 
 
 def _backbone_aliases_ready(backbone_aliases: dict | None) -> bool:
+    """Check whether the backbone aliases needed for Ramachandran plots are present."""
     if not isinstance(backbone_aliases, dict):
         return False
     required = ("C", "N", "O", "CA")
@@ -270,6 +280,7 @@ def _backbone_aliases_ready(backbone_aliases: dict | None) -> bool:
 
 
 def _classify_phi_psi_dihedrals(phi_psi_dihedrals: dict, backbone_aliases: dict) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
+    """Classify phi and psi dihedrals by CA index."""
     n_aliases = set(backbone_aliases.get("N", []))
     ca_aliases = set(backbone_aliases.get("CA", []))
     c_aliases = set(backbone_aliases.get("C", []))
@@ -297,6 +308,7 @@ def _classify_phi_psi_dihedrals(phi_psi_dihedrals: dict, backbone_aliases: dict)
 
 
 def _measure_ramachandran_angles(conformer_xyzs: list[str], phi_psi_pairs: list[tuple[int, list[int], list[int]]], conformer_energies: dict) -> list[dict]:
+    """Measure phi/psi angles for each conformer and residue pair."""
     ramachan_rows = []
     for conformer_xyz in conformer_xyzs:
         atom_coords = Twisted_Assistant.xyz_to_np_array(conformer_xyz)
@@ -322,6 +334,7 @@ def _build_ramachandran_plot_html(
     selected_for_charges: set[str] | None = None,
     selected_for_scans: set[str] | None = None,
 ) -> str:
+    """Build the Ramachandran plot HTML."""
     energy_values = rama_df["energy"].astype(float).tolist()
     colorscale, cmin, cmax = _build_energy_colorscale(energy_values)
     selected_for_charges = selected_for_charges or set()
@@ -460,6 +473,7 @@ def _build_ramachandran_plot_html(
 
 
 def process_conformer_pca_results(config: dict) -> dict:
+    """Generate PCA and Ramachandran report data for conformers."""
     images_dir = config["runtimeInfo"]["madeByReporting"]["imagesDir"]
     reporter_dir = config["runtimeInfo"]["madeByReporting"]["reporterDir"]
     conformer_dir = p.join(images_dir, "conformer_pca")

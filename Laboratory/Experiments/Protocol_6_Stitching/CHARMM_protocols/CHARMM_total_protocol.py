@@ -28,21 +28,11 @@ class DirectoryPath:
     pass
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_total_energies(config:dict,
-                           torsionTag: str, 
+def get_MM_total_energies(config: dict,
+                           torsionTag: str,
                            moleculePrm: FilePath,
-                             debug = True) -> np.ndarray:
-    """
-    Main protocol for calculating CHARMM energies for a torsion scan
-
-    Args:
-        config (dict): contains all info for run
-        torsionTag (str): identifier for torsion of interest
-        debug (bool): controls multiprocessing 
-    Returns:
-        smoothedEnergies (mp.ndarray): CHARMM energy
-    
-    """
+                           debug: bool = True) -> np.ndarray:
+    """Run the CHARMM MM total-energy protocol for a torsion scan."""
     drSplash.show_getting_mm_total(torsionTag)
 
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
@@ -81,7 +71,8 @@ def get_MM_total_energies(config:dict,
     return  smoothedEnergies
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, moleculePrm, config):
+def run_parallel(scanDirs: list, torsionTotalDir: DirectoryPath, moleculePrm: FilePath, config: dict):
+    """Run CHARMM total-energy single points in parallel."""
     argsList = [(scanIndex, scanDir, torsionTotalDir, moleculePrm, config) for scanIndex, scanDir in enumerate(scanDirs)]
 
     with multiprocessing.Pool(processes=config["miscInfo"]["availableCpus"]) as pool:
@@ -90,7 +81,8 @@ def run_parallel(scanDirs, torsionTotalDir, moleculePrm, config):
     return singlePointEnergyDfs
 
 
-def single_point_worker(args):
+def single_point_worker(args: tuple) -> pd.DataFrame:
+    """Execute one CHARMM total-energy worker job."""
     scanIndex, scanDir, torsionTotalDir, moleculePrm, config = args
     try:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, moleculePrm, config)
@@ -100,7 +92,8 @@ def single_point_worker(args):
         raise(e)    
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, moleculePrm, config):
+def run_serial(scanDirs: list, torsionTotalDir: DirectoryPath, moleculePrm: FilePath, config: dict):
+    """Run CHARMM total-energy single points serially."""
     argsList = [(scanIndex, scanDir, torsionTotalDir, moleculePrm, config) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
@@ -109,7 +102,8 @@ def run_serial(scanDirs, torsionTotalDir, moleculePrm, config):
     return singlePointEnergyDfs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, moleculePrm, config, debug = False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex: int, scanDir: str, torsionTotalDir: DirectoryPath, moleculePrm: FilePath, config: dict, debug: bool = False):
+    """Build per-scan CHARMM total energies for one torsion scan."""
     ## unpack config
     cappedPdb = config["runtimeInfo"]["madeByCapping"]["cappedPdb"]
 

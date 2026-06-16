@@ -13,20 +13,8 @@ class DirectoryPath:
     pass
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_MM_torsion_energies(config: dict, torsionTag: str, moleculeFrcmod) -> Tuple[dict, dict]:    
-    """
-    Gets MM[torsion] energy for each torsion we have scanned
-    This is done by extracting torsion parameters from FRCMOD file
-    Then reconstructing energy as a sum of the cosine functions described
-
-    Args:
-        config (dict): config containing all run information
-        torsionTag (str): tag for torsion we are interested in
-
-    Returns:
-        mmTorsionEnergies (dict): energies 
-        mmCosineComponents (dict): cosine components
-    """
+def get_MM_torsion_energies(config: dict, torsionTag: str, moleculeFrcmod) -> Tuple[dict, dict]:
+    """Compute MM torsion energies and cosine components for one torsion."""
 
     ## get torsion parameters from FRCMOD file
     mmTorsionParameters = extract_torsion_parameters_from_frcmod(moleculeFrcmod, torsionTag, config)
@@ -38,19 +26,7 @@ def get_MM_torsion_energies(config: dict, torsionTag: str, moleculeFrcmod) -> Tu
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dict:
-    """
-    Reads through a frcmod file 
-    Finds torsion parameters for each torsion that we have scanned
-    Returns a dict with the torsion tag as the key and the torsion parameters as the value
-
-    Args:
-        molFrcmod (FilePath): frcmod file
-        atomTypeMap (dict): dict mapping atom names to atom types
-        config (dict): config dict
-
-    Returns:
-        mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
-    """
+    """Extract torsion parameters from the PRMTOP structure."""
 
     molPrmtop = config["runtimeInfo"]["madeByStitching"]["moleculePrmtop"]
     parmedPrmtop  = parmed.load_file(molPrmtop, structure=True)
@@ -69,19 +45,7 @@ def extract_torsion_parameters_from_prmtop(config: dict, torsionTag: str) -> dic
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def extract_torsion_parameters_from_frcmod( moleculeFrcmod: FilePath,  torsionTag: str, config: dict,) -> dict:
-    """
-    Reads through a frcmod file 
-    Finds torsion parameters for each torsion that we have scanned
-    Returns a dict with the torsion tag as the key and the torsion parameters as the value
-
-    Args:
-        molFrcmod (FilePath): frcmod file
-        atomTypeMap (dict): dict mapping atom names to atom types
-        config (dict): config dict
-
-    Returns:
-        mmTorsionParameters (dict): dict with the torsion tag as the key and the torsion parameters as the value
-    """
+    """Extract torsion parameters from the FRCMOD file."""
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
 
     molParams = parmed.load_file(moleculeFrcmod)
@@ -98,6 +62,7 @@ def extract_torsion_parameters_from_frcmod( moleculeFrcmod: FilePath,  torsionTa
     return torsionParameters
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def parse_torsion_params(dihedralType: parmed.topologyobjects.Dihedral) -> dict:
+    """Convert a ParmEd dihedral object into a torsion parameter dict."""
     params = {
         "k": dihedralType.phi_k,
         "periodicity": dihedralType.per,

@@ -21,7 +21,8 @@ class DirectoryPath:
 
 from OperatingTools import file_parsers
 
-def construct_final_params(config: dict, paramFile: FilePath, param_extraction_function: object, torsionTags: list) -> dict:
+def construct_final_params(config: dict, paramFile: FilePath, param_extraction_function: object, torsionTags: list[str]) -> dict:
+    """Extract final torsion parameters for all torsion tags."""
     finalParameters = {}
     for torsionTag in torsionTags:
         torsionParameters = param_extraction_function(paramFile, torsionTag, config)
@@ -37,6 +38,7 @@ def score_flatline_status(
     windowSize: int = 3,
     diffTolerance: float = 0.1,
 ) -> tuple[bool, bool]:
+    """Return whether torsion and total scores have flatlined."""
     if "torsion_tag" in scoresDf.columns:
         scoresDf = scoresDf[scoresDf["torsion_tag"] == torsionTag]
     if scoresDf.empty:
@@ -54,7 +56,8 @@ def score_flatline_status(
     return torsionFlatLined and totalFlatLined
 
 
-def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], fittingScoresCsv: FilePath, windowSize = 3, diffTolerance = 0.1) -> bool:
+def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], fittingScoresCsv: FilePath, windowSize: int = 3, diffTolerance: float = 0.1) -> list[str]:
+    """Identify torsions whose scores have flatlined."""
     
     unconvergedTorsionTags = [tag for tag in torsionTags if tag not in convergedTags]
 
@@ -78,15 +81,12 @@ def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], 
 
 
 
-def rms_of_mae_dict(meanAverageErrors: dict[str, float]) -> float:
-    """
-    Calculates the root mean square of the mean average errors
-    used for both the total energy and torsion energy
-    
-    """
+def rms_of_mae_dict(meanAverageErrors: dict[str, list[float]]) -> float:
+    """Calculate the RMS of the MAE history."""
     rms = np.sqrt(sum(meanAverageErrors[torsion][-1] ** 2 for torsion in meanAverageErrors) / len(meanAverageErrors.keys()))
     return rms
 def init_tqdm_bar_options() -> dict:
+    """Return the shared tqdm configuration for stitching progress bars."""
     tqdmBarOptions = {
         "desc": f"\033[32mRunning Parameter Fitting\033[0m",
         "ascii": "-🗲→",    
@@ -100,14 +100,7 @@ def init_tqdm_bar_options() -> dict:
     return tqdmBarOptions
 
 def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int, seed: int) -> list[str]:
-    """
-    Re-orders the torsion tags in a random order
-    
-    Args:
-        torsionTags (list[str]): the torsion tags associated with our torsions
-    Returns:
-        shuffledTorsionTags: torsionTags re-ordered
-    """
+    """Return repeated shuffled torsion tag orders."""
     shuffledTorsionTags = []
     baseTorsionTags = list(torsionTags)
     for i in range(maxShuffles):
@@ -121,14 +114,7 @@ def shuffle_torsion_tags(torsionTags: list[str], maxShuffles: int, seed: int) ->
     return shuffledTorsionTags
 
 def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, converganceTolerance: float | None) -> bool:
-    """
-    Checks fit scores to see if they have converged.
-    
-    Args:
-        latestRmsMaeTorsion (float): torsion fit score
-        latestRmsMaeTotal (float): total fit score
-        converganceTolerance (float | None): fit score tolerance, None gets ignored
-    """
+    """Check whether MAE scores are below the convergence tolerance."""
     if converganceTolerance is None:
         return False
     else:
@@ -136,18 +122,14 @@ def check_mae_convergence(latestRmsMaeTorsion: float, latestRmsMaeTotal: float, 
 
 
 def check_torsion_convergence(latestTorsionScore: float, latestTotalScore: float, converganceTolerance: float | None) -> bool:
-    """
-    Checks whether a torsion fit score is within tolerance.
-    """
+    """Check whether torsion scores are below the convergence tolerance."""
     if converganceTolerance is None:
         return False
     return latestTorsionScore < converganceTolerance and latestTotalScore < converganceTolerance
 
 
 def _stationary_point_angles(signal: np.ndarray, sampleSpacingDegrees: int = 10) -> np.ndarray:
-    """
-    Find stationary-point angles by locating local maxima and minima.
-    """
+    """Return the angular positions of stationary points in a signal."""
     signal = np.asarray(signal, dtype=float)
     maxima, _ = find_peaks(signal)
     minima, _ = find_peaks(-signal)
@@ -156,6 +138,7 @@ def _stationary_point_angles(signal: np.ndarray, sampleSpacingDegrees: int = 10)
 
 
 def _circular_angle_distance(angleA: float, angleB: float) -> float:
+    """Return the shortest distance between two angles."""
     delta = abs(angleA - angleB) % 360.0
     return min(delta, 360.0 - delta)
 
@@ -165,11 +148,7 @@ def calculate_profile_fit_score(
     mmEnergy: np.ndarray,
     sampleSpacingDegrees: int = 10,
 ) -> float:
-    """
-    Composite score for how well an MM torsion profile matches a QM profile.
-
-    Lower is better.
-    """
+    """Return the composite score for a QM/MM profile comparison."""
     return calculate_profile_fit_metrics(qmEnergy, mmEnergy, sampleSpacingDegrees)["composite_score"]
 
 
@@ -178,9 +157,7 @@ def calculate_profile_fit_metrics(
     mmEnergy: np.ndarray,
     sampleSpacingDegrees: int = 10,
 ) -> dict:
-    """
-    Return the score breakdown for a QM/MM profile comparison.
-    """
+    """Return the detailed metric breakdown for a QM/MM profile comparison."""
     qmEnergy = np.asarray(qmEnergy, dtype=float)
     mmEnergy = np.asarray(mmEnergy, dtype=float)
     if qmEnergy.shape != mmEnergy.shape:
@@ -245,10 +222,8 @@ def calculate_profile_fit_metrics(
 
 
 
-def remove_exploded_torsions(config: dict) -> None:
-    """
-    TODO: write this
-    """
+def remove_exploded_torsions(config: dict) -> list[str]:
+    """Return torsion tags that remain after filtering exploded scans."""
 
     torsionTags = []
     torsionsToScan = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"]
@@ -382,7 +357,7 @@ def create_atom_type_map(inMol2: FilePath) -> dict:
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def sort_out_directories(config) -> dict:
+def sort_out_directories(config: dict) -> dict:
     """
     Makes directories for the parameter fitting stage
     Adds these paths to the "pathInfo" section of config
@@ -414,7 +389,7 @@ def sort_out_directories(config) -> dict:
     
     return config
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
+def get_completed_torsion_scan_dirs(config: dict, torsionTag: str) -> list[str]:
     """
     Looks through ORCA scan directories 
     Works out whether scan completed
@@ -452,7 +427,7 @@ def get_completed_torsion_scan_dirs(config: dict, torsionTag:str):
     return completedTorsionScanDirs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_scan_angles_from_orca_inp(scanDir: DirectoryPath):
+def get_scan_angles_from_orca_inp(scanDir: DirectoryPath) -> list[float]:
     """
     Read through an ORCA input file and find start and end angles of a dihedral scan
     Creates a range between these
@@ -556,7 +531,7 @@ def update_pdb_coords(inPdb: FilePath, xyzFile: FilePath, outPdb: FilePath) -> N
 
 
 
-def _remove_converged_torsion_tags(fittingScoresCsv, converganceTolerance, torsionTags, topN = 5):
+def _remove_converged_torsion_tags(fittingScoresCsv: FilePath, converganceTolerance: float | None, torsionTags: list[str], topN: int = 5) -> list[str]:
     """
     Reads through the MAE csv file to find torsions that have converged
     Removes these from the list of torsions to fit

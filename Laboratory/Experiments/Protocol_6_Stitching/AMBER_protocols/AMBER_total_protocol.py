@@ -42,7 +42,8 @@ GPU_DISABLE_ENV_VARS = (
 )
 
 
-def configure_openmm_gpu_access(gpuPlatform):
+def configure_openmm_gpu_access(gpuPlatform: str | None) -> str | None:
+    """Normalize the requested OpenMM platform name and handle CPU-only mode."""
     if isinstance(gpuPlatform, str) and gpuPlatform.upper() == "CPU":
         for envVar in GPU_DISABLE_ENV_VARS:
             os.environ[envVar] = "-1"
@@ -54,7 +55,8 @@ def configure_openmm_gpu_access(gpuPlatform):
     return gpuPlatform
 
 
-def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
+def get_MM_total_energies(config: dict, torsionTag: str, moleculeFrcmod: FilePath, debug: bool = False) -> np.ndarray:
+    """Run the AMBER MM total-energy protocol for a torsion scan."""
     drSplash.show_getting_mm_total(torsionTag)
 
     mmTotalDir: DirectoryPath = config["runtimeInfo"]["madeByStitching"]["mmTotalCalculationDir"]
@@ -107,7 +109,8 @@ def get_MM_total_energies(config:dict, torsionTag, moleculeFrcmod, debug=False):
     return  finalScanEnergiesDf["smoothedEnergy"].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_serial(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None):
+def run_serial(scanDirs: list, torsionTotalDir: DirectoryPath, cappedPdb: FilePath, moleculePrmtop: FilePath, torsionIndexes: list[int], gpuPlatform: str | None = None):
+    """Run AMBER total-energy single points serially."""
     argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, gpuPlatform) for  scanIndex, scanDir in enumerate(scanDirs)]
     singlePointEnergyDfs = []
     for args in argsList:
@@ -117,7 +120,8 @@ def run_serial(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionInde
 
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_parallel(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None):
+def run_parallel(scanDirs: list, torsionTotalDir: DirectoryPath, cappedPdb: FilePath, moleculePrmtop: FilePath, torsionIndexes: list[int], gpuPlatform: str | None = None):
+    """Run AMBER total-energy single points in parallel."""
     argsList = [(scanIndex, scanDir, torsionTotalDir, cappedPdb,  moleculePrmtop, gpuPlatform) for scanIndex, scanDir in enumerate(scanDirs)]
 
     # Use multiprocessing Pool without tqdm progress bar
@@ -127,7 +131,8 @@ def run_parallel(scanDirs, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIn
     return singlePointEnergyDfs
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def single_point_worker(args):
+def single_point_worker(args: tuple) -> pd.DataFrame:
+    """Execute one AMBER total-energy worker job."""
     (scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, gpuPlatform), torsionIndexes = args
     try:
         singlePointEnergyDf = get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform)
@@ -137,7 +142,8 @@ def single_point_worker(args):
         raise(e)
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDir, cappedPdb, moleculePrmtop, torsionIndexes, gpuPlatform=None, debug=False):
+def get_singlepoint_energies_for_torsion_scan(scanIndex: int, scanDir: str, torsionTotalDir: DirectoryPath, cappedPdb: FilePath, moleculePrmtop: FilePath, torsionIndexes: list[int], gpuPlatform: str | None = None, debug: bool = False) -> pd.DataFrame:
+    """Build per-scan AMBER total energies for one torsion scan."""
     fittingRoundDir = p.join(torsionTotalDir, f"fitting_round_{scanIndex+1}")
     os.makedirs(fittingRoundDir, exist_ok=True)
 
@@ -165,18 +171,8 @@ def get_singlepoint_energies_for_torsion_scan(scanIndex, scanDir, torsionTotalDi
     return singlePointEnergyDf
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> float:
-    """
-    Runs a singlepoint energy calculation at the MM level 
-    using OpenMM
-
-    Args:
-        prmtop (FilePath): topology file for AMBER
-        impcrd (FilePath): coordinate file for AMBER
-
-    Returns:
-        singlePointEnergy (float): energy of prmtop // xyz coords
-    """
+def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> list[tuple[str, float]]:
+    """Run MM single-point energy calculations for a list of PDB frames."""
     # Load Amber files and create system
     prmtop: app.Topology = app.AmberPrmtopFile(moleculePrmtop)
 
@@ -204,25 +200,7 @@ def run_mm_singlepoints(trajPdbs: list, moleculePrmtop: FilePath) -> float:
     return singlePointEnergies
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, torsionIndexes: List[int], gpuPlatform: str | None = None) -> List[Tuple[str, float]]:
-    """
-    Runs a constrained energy minimization for each provided structure
-    and returns the final potential energy.
-
-    The minimization is constrained by freezing the positions of atoms
-    whose indices are provided in torsionIndexes.
-
-    Args:
-        trajPdbs (List[FilePath]): A list of PDB file paths for the coordinate sets.
-        moleculePrmtop (FilePath): The topology file path (AMBER prmtop).
-        torsionIndexes (List[int]): A list of 0-based atom indices to constrain
-                                     during the minimization.
-        gpuPlatform (str|None): Preferred platform name ('CUDA','HIP','OpenCL','CPU') or None to use defaults.
-
-    Returns:
-        List[Tuple[str, float]]: A list of tuples, where each tuple contains the
-                                 trajectory index (as a string) and its corresponding
-                                 minimized potential energy in kcal/mol.
-    """
+    """Run constrained minimizations and return minimized MM energies."""
     # 1. Load Amber files to create the base system
     prmtop = app.AmberPrmtopFile(str(moleculePrmtop))
     system = prmtop.createSystem(nonbondedMethod=app.NoCutoff,

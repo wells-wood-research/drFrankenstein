@@ -183,11 +183,7 @@ def get_coordinates(df: pd.DataFrame, atomNames: list[str]) -> np.ndarray:
     return np.array(COORDS)
 
 def gen_internal_coords(inPdb: FilePath) -> str:
-    """Generate internal coordinate (IC) data from a PDB file and print it.
-
-    The output format is:
-    IC atom1 atom2 atom3 atom4 bond12 angle123 dihedral1234 angle234 bond34
-    """
+    """Generate CHARMM-style internal coordinate lines from a PDB file."""
     graph = pdb_to_graph(inPdb)
     dihedrals = find_dihedrals(graph)
     pdbDf = pdbUtils.pdb2df(inPdb)
@@ -217,4 +213,3 @@ def gen_internal_coords(inPdb: FilePath) -> str:
         icData.append(icLine)
     icBlock = "\n".join(icData)
     return icBlock
-

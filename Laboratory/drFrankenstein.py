@@ -28,16 +28,8 @@ class DirectoryPath:
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def main():
-    """
-    Main protocol for drFrankenstein
-
-    Args:
-        None
-    Returns:
-        None
-    
-    """
+def main() -> None:
+    """Run the full drFrankenstein parameterisation workflow."""
     logger = None
     try:
         drSplash.show_mad_man()
@@ -143,7 +135,8 @@ def main():
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
-def handle_exceptions(e, pdbName):
+def handle_exceptions(e: Exception, pdbName: str) -> dict:
+    """Build a structured error report from an exception traceback."""
     tb = traceback.extract_tb(e.__traceback__)
     if tb:
         tb.reverse()

@@ -49,8 +49,12 @@ moleculeInfo:
     N: [N]
     O: [O]
     H: [H]      
-  enforceBackboneAtomTypes: True  ## if True, will enforce backbone atom types to be the same as the ones defined in backboneAliases, if False, will assign backbone atom types "by analogy" like all other atoms
 
+conformerGenerationInfo:
+  goatMode: GOAT-ENTROPY
+  energyCutoff: 6.0
+  goatMethod: GFN-FF
+  conformerSelction: DIVERSE
 
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #
@@ -148,5 +152,7 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
-  assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC
   conformerSelectionMethods: DIVERSE
+  debug: false
+  gpuPlatform: CPU
+  assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

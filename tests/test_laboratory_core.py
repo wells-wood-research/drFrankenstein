@@ -62,8 +62,7 @@ from Laboratory.OperatingTools import file_parsers
 from Laboratory.OperatingTools import electron_checker
 from Laboratory.OperatingTools import make_internal_coords
 from Laboratory.OperatingTools import pdb_checker
-from Laboratory.OperatingTools import set_config_defaults
-from Laboratory.OperatingTools import validate_config
+from Laboratory.OperatingTools import config_handler
 
 
 PCY_ROOT = os.path.join(REPO_ROOT, "__PCY__")
@@ -145,12 +144,16 @@ class TestConfigDefaults(unittest.TestCase):
             "miscInfo": {},
         }
 
-        result = set_config_defaults.apply_defaults_and_validate(copy.deepcopy(config))
+        result = config_handler.apply_defaults_and_validate(copy.deepcopy(config))
         self.assertIn("pathInfo", result)
         self.assertIn("inputDir", result["pathInfo"])
         self.assertTrue(result["pathInfo"]["outputDir"].endswith("PCY_FrankenParams"))
         self.assertIn("runScansOn", result["torsionScanInfo"])
         self.assertIn("phiPsi", result["torsionScanInfo"]["runScansOn"])
+        self.assertEqual(result["conformerGenerationInfo"]["goatMode"], "GOAT")
+        self.assertEqual(result["conformerGenerationInfo"]["energyCutoff"], 6.0)
+        self.assertEqual(result["conformerGenerationInfo"]["goatMethod"], "XTB2")
+        self.assertEqual(result["conformerGenerationInfo"]["conformerSelction"], "ENERGY")
         self.assertEqual(result["miscInfo"]["seed"], 1818)
         self.assertFalse(result["chargeFittingInfo"]["enforceDefaultBackboneCharges"])
 
@@ -168,7 +171,7 @@ class TestConfigDefaults(unittest.TestCase):
             "miscInfo": {},
         }
 
-        result = set_config_defaults.apply_defaults_and_validate(copy.deepcopy(config))
+        result = config_handler.apply_defaults_and_validate(copy.deepcopy(config))
         self.assertIsNone(result["moleculeInfo"]["chargeGroups"])
 
     def test_validate_config_accepts_null_charge_groups(self):
@@ -191,6 +194,12 @@ class TestConfigDefaults(unittest.TestCase):
                 "nConformers": -1,
                 "scanMethod": "XTB2",
             },
+            "conformerGenerationInfo": {
+                "goatMode": "GOAT",
+                "energyCutoff": 6.0,
+                "goatMethod": "XTB2",
+                "conformerSelction": "ENERGY",
+            },
             "chargeFittingInfo": {
                 "chargeFittingProtocol": "RESP2",
                 "nConformers": -1,
@@ -212,7 +221,56 @@ class TestConfigDefaults(unittest.TestCase):
             },
         }
 
-        self.assertIsNotNone(validate_config.validate_config(config))
+        self.assertIsNotNone(config_handler.validate_config(config))
+
+    def test_validate_config_rejects_invalid_goat_settings(self):
+        config = {
+            "moleculeInfo": {
+                "charge": 0,
+                "multiplicity": 1,
+                "moleculeName": "PCY",
+                "chargeGroups": None,
+                "backboneAliases": {"N": ["N"], "C": ["C"]},
+            },
+            "pathInfo": {
+                "inputDir": "/tmp",
+                "outputDir": "/tmp",
+                "multiWfnDir": "/tmp",
+                "orcaExe": "/etc/hosts",
+            },
+            "torsionScanInfo": {
+                "runScansOn": {"phiPsi": True},
+                "nConformers": -1,
+                "scanMethod": "XTB2",
+            },
+            "conformerGenerationInfo": {
+                "goatMode": "GOAT-FAST",
+                "energyCutoff": -1.0,
+                "goatMethod": "MMFF",
+                "conformerSelction": "BAD_SELECTION",
+            },
+            "chargeFittingInfo": {
+                "chargeFittingProtocol": "RESP2",
+                "nConformers": -1,
+                "nCoresPerCalculation": 1,
+                "optMethod": "R2SCAN-3c",
+                "singlePointMethod": "wB97X-3c",
+            },
+            "parameterFittingInfo": {
+                "forceField": "AMBER",
+                "maxCosineFunctions": 4,
+                "maxShuffles": 50,
+                "minShuffles": 10,
+                "l2DampingFactor": 0.1,
+                "sagvolSmoothing": True,
+            },
+            "miscInfo": {
+                "availableCpus": 1,
+                "seed": 1818,
+            },
+        }
+
+        self.assertIsNone(config_handler.validate_config(config))
 
     def test_validate_config_requires_full_backbone_aliases_when_enforcing_default_backbone_charges(self):
         config = {
@@ -233,6 +291,12 @@ class TestConfigDefaults(unittest.TestCase):
                 "runScansOn": {"phiPsi": True},
                 "nConformers": -1,
                 "scanMethod": "XTB2",
+            },
+            "conformerGenerationInfo": {
+                "goatMode": "GOAT",
+                "energyCutoff": 6.0,
+                "goatMethod": "XTB2",
+                "conformerSelction": "ENERGY",
             },
             "chargeFittingInfo": {
                 "chargeFittingProtocol": "RESP2",
@@ -256,7 +320,7 @@ class TestConfigDefaults(unittest.TestCase):
             },
         }
 
-        self.assertIsNone(validate_config.validate_config(config))
+        self.assertIsNone(config_handler.validate_config(config))
 
 
 class TestPdbChecker(unittest.TestCase):

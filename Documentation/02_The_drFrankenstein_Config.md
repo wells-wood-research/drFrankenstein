@@ -1,351 +1,558 @@
-# Dr. Frankenstein Configuration File (`config.yaml`) Explained
+# drFrankenstein Configuration File (`config.yaml`)
 
-This document details the parameters within the `config.yaml` file used to control the Dr. Frankenstein molecular parameterization workflow. The configuration is written in YAML format and divided into logical sections.
+This guide matches the current config validator and defaulting logic in `Laboratory/OperatingTools/validate_config.py` and `Laboratory/OperatingTools/set_config_defaults.py`.
 
-## Overall Structure
-<img src="../Images/Grey_Frank_Basic.png" alt="The Mad Doctor Holds Your Molecule Aloft!" width="200" height="200" style="float: right; margin-right: 15px; margin-bottom: 5px;">
+The config is split into seven top-level sections:
 
-The configuration file is organized into the following main sections:
+1. `pathInfo`
+2. `moleculeInfo`
+3. `torsionScanInfo`
+4. `chargeFittingInfo`
+5. `parameterFittingInfo`
+6. `miscInfo`
+7. `conformerGenerationInfo`
 
-1.  `pathInfo`: Specifies essential file paths for input, output, and external software.
-2.  `moleculeInfo`: Defines the properties and topology of the molecule being parameterized.
-3.  `torsionScanInfo`: Configures the torsion scanning procedure.
-4.  `chargeFittingInfo`: Configures the charge fitting procedure.
-5.  `parameterFittingInfo`: Configures the fitting of torsion parameters to the results of your QM torsion scans.
-6.  `miscInfo`: Contains miscellaneous settings for the script execution.
-<div style="clear: both;"></div> 
+The defaults helper also creates a `conformerGenerationInfo` block for conformer-generation settings. This is part of the active config shape used by the workflow and is validated like the other top-level sections.
 
----
+## Config Helper Ownership
+
+The config logic is split across two helper layers:
+
+* `validate_config.py` checks required structure, types, and allowed values.
+* `set_config_defaults.py` injects defaults for missing values and environment-derived paths.
+
+In practice, this means some fields are required by validation, while others are optional but still get sensible defaults when the workflow is run through the defaulting helper first. `conformerGenerationInfo` is one of the sections that both helpers now understand.
+
+## Helper Map
+
+This is the quickest way to remember where each config family is handled:
+
+* `pathInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: all stages that read files, write output, or launch external tools
+* `moleculeInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: capping, charging, assembly, torsion generation
+* `conformerGenerationInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: `Laboratory/OperatingTools/drOrca.py`
+* `torsionScanInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: torsion scanning and stitching
+* `chargeFittingInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: charge-fitting protocols
+* `parameterFittingInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: torsion fitting and reporting
+* `miscInfo`
+  * Defaults: `set_config_defaults.py`
+  * Validation: `validate_config.py`
+  * Used by: conformer selection, logging, assembly choice, runtime controls
 
 ## `pathInfo`
 
-This section defines the necessary file system paths for the script to locate input files, external programs, and write output.
+Paths to input/output folders and external tools.
 
-*   `inputDir`:
-    *   **Description**: The full, absolute path to the directory containing input files (like the initial PDB).
-    *   **Type**: `String` (Path)
-    *   **Default**: `NONE` - absence will throw an error
+### `inputDir`
+The directory that contains the starting structure and any other input files.
 
-*   `outputDir`:
-    *   **Description**: The full, absolute path to the directory where all output files will be generated. This directory will be created if it does not exist.
-    *   **Type**: `String` (Path)
-    *   **Default**: `NONE` - absence will throw an error
+* Type: `string`
+* Required: yes
+* Default: none
 
-*   `multiWfnDir`:
-    *   **Description**: The full, absolute path to the installation directory of Multiwfn. The script needs this to find the Multiwfn executable.
-    *   **Type**: `String` (Path)
-    *   **Default**: `NONE` - absence will throw an error!
-*   `orcaExe`:
-    *   **Description**: The full, absolute path to the ORCA quantum chemistry software executable.
-    *   **Type**: `String` (Path)
-    *   **Default**: `NONE` - absence will throw an error!
+### `outputDir`
+The directory where the workflow writes results.
 
-*   `amberHome`:
-    *   **Description**: Optional path to your AMBER installation.
-    *   **Type**: `String` (Path) or `Null`
-    *   **Default**: `Null` (optional)
+* Type: `string`
+* Required: yes
+* Default: none if you validate strictly
+* Defaulting behavior: if omitted, `set_config_defaults.py` uses `<cwd>/<moleculeName>_FrankenParams`
 
-*   `cgenffExe`:
-    *   **Description**: Optional full, absolute path to the CHARMM `cgenff` executable.
-    *   **Type**: `String` (Path) or `Null`
-    *   **Default**: `Null` (optional; server workflow can be used instead)
+### `multiWfnDir`
+Path to the Multiwfn installation directory.
 
+* Type: `string`
+* Required: yes
+* Default: none
 
----
+### `orcaExe`
+Path to the ORCA executable.
+
+* Type: `string`
+* Required: yes
+* Default: none
+
+### `amberHome`
+Path to your AMBER installation.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+* Defaulting behavior: if omitted, the defaults script tries the `AMBERHOME` environment variable
+
+### `cgenffExe`
+Path to the local CGenFF executable.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+* Meaning of `null`: use the CGenFF server workflow instead of a local executable
+
+### Example
+```yaml
+pathInfo:
+  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
+  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_AIB
+  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
+  orcaExe: /home/esp/bin/orca_6_1_0/orca
+  amberHome: /home/esp/anaconda3/envs/Igor/
+  cgenffExe: null
+```
 
 ## `moleculeInfo`
 
-This section provides details about the specific molecule being parameterized.
+Describes the molecule being parameterised.
 
-*   `charge`:
-    *   **Description**: The total formal charge of the entire molecule.
-    *   **Type**: `Integer`
-    *   **Default**: `NONE` - absence will throw an error
+### `charge`
+Total formal charge of the molecule.
 
-*   `multiplicity`:
-    *   **Description**: The spin multiplicity of the molecule, calculated as `2S+1` where `S` is the total spin. For typical closed-shell organic molecules, this is `1` (singlet).
-    *   **Type**: `Integer` (Usually `1`)
-    *   **Default**: `NONE` - absence will throw an error
+* Type: `integer`
+* Required: yes
+* Default: none
 
-*   `moleculeName`:
-    *   **Description**: A three-letter code used to identify the molecule (residue) in output PDB files and potentially in parameter files. You should have a pdb file with the same name in your input directory.
-    *   **Type**: `String` (Typically 3 characters, e.g., `AIB`)
-    *   **Default**: `NONE` - absence will throw an error
+### `multiplicity`
+Spin multiplicity, usually `1` for closed-shell molecules.
 
-*   `chargeGroups`:
-    *   **Description**: Defines groups of heavy atoms (non-hydrogens) that should have a specific combined integer charge during charge fitting (e.g., RESP). This helps maintain integer charges on chemically relevant functional groups. Any heavy atoms *not* listed in any group will be placed in a "left-overs" group, which will be assigned the remaining charge needed to reach the `moleculeInfo.charge`.
-    *   **Type**: `Dictionary` or `Null`
-    *   **Default**: `Null` (fully optional)
-        *   **Keys**: User-defined names for the charge groups (e.g., `CO`, `CAN`).
-        *   **Values**: A dictionary for each group containing:
-            *   `atoms`: (`List` of `String`) The names of the heavy atoms belonging to this group.
-            *   `charge`: (`Integer`) The target integer charge for this group of atoms.
+* Type: `integer`
+* Required: yes
+* Default: none
 
-* `backboneAliases`:
-    *   **Description**: A dictionary containing alternative names for backbone atoms (e.g., the main chain nitrogen in an amino acid). Keys in this dictionary must be [`N`, `H` `CA`, `HA` `C`, `O`], corresponding to the main chain nitrogen, its hydrogen, the alpha carbon, its hydrogen, the carbonyl carbon, and the carbonyl oxygen, respectively. In cases where you have a non-canonical amino acid that does not have a standard backbone structure (the chromophore in GFP for example), simply provide aliases for `N` and `C` entries. This will be used for adding capping groups. 
-    *   **Type**: `Dictionary` or `Null`
-        *   **Keys**: `N`, `H`, `CA`, `HA`, `C`, `O`
-        *   **Values**: `List` of `String` corresponding to the names of the atoms in your molecule.
+### `moleculeName`
+Short molecule identifier used in output names and residue labels.
 
-*Example*
+* Type: `string`
+* Required: yes
+* Default: none
+
+### `chargeGroups`
+Optional charge-group definitions used during charge fitting.
+
+* Type: `dictionary` or `null`
+* Required: no
+* Default: `null`
+* Structure: each group must contain:
+  * `atoms`: list of atom names
+  * `charge`: integer target charge for the group
+* Notes:
+  * Any atoms not listed in a group are handled as leftovers by the charge-fitting workflow.
+  * The validator only checks that each group has the right shape.
+
+### `backboneAliases`
+Alternative atom names for the backbone atoms used by the capping and backbone-charge logic.
+
+* Type: `dictionary` or `null`
+* Required: no
+* Default: `null`
+* Expected keys: `N`, `H`, `CA`, `HA`, `C`, `O`
+* Values: lists of atom-name strings
+* Notes:
+  * For terminal capping, the most important entries are `N` and `C`.
+  * If `chargeFittingInfo.enforceDefaultBackboneCharges` is `true`, all six keys must be present and each value must be a non-empty list.
+
+### Example
 ```yaml
-## for reparameterising glycine
-moleculeInfo:       
-  charge: 0                 ## overall charge of 0        
-  multiplicity: 1           ## singlet (2S+1)
-  moleculeName: GLY         ## three-letter code, there will be a PDB file called GLY.pdb in my input directory
-  chargeGroups:             ## charge groups for RESP
-    cTerminus:
-      atoms: [C, O]         ## carbonyl carbon and carbonyl oxygen set to charge 0
-      charge: 0
-    nTerminus:
-      atoms: [CA, N]        ## alpha carbon and its proton (automatically found!) and main chain nitrogen set to charge 0
-      charge: 0
-  backboneAliases:          ## backbone aliases
-    CA: [CA]        
+moleculeInfo:
+  charge: 0
+  multiplicity: 1
+  moleculeName: AIB
+  chargeGroups: null
+  backboneAliases:
+    N: [N]
+    H: [HN]
+    CA: [CA]
     HA: [HA]
     C: [C]
-    N: [N]
     O: [O]
-    H: [HN1]                ## our PDB calls the hydrogen something non-standard!
 ```
 
-
-
----
-
 ## `torsionScanInfo`
-<img src="../Images/Grey_Frank_Twist.png" alt="The Mad Doctor Holds Your Molecule Aloft!" width="200" height="200" style="float: right; margin-right: 15px; margin-bottom: 5px;">
-This section controls the parameters for the conformational search performed via torsion scanning.
 
-*   `runScansOn`: 
-    *   **Description**: A dictionary specifying which types of torsions should be scanned.
-    *   **Type**: `Dictionary` - each option is a `Boolean` (True/False)
-    *   **Options**:
-        * `phiPsi` - setting this to `True` will instruct **drFrankenstein** re-parameterise torsion angles that correspond to the backbone phi (φ) and psi (ψ) dihedral angles. Setting this to `False` will instruct **deFrankenstein** to use the default parameters in for phi and psi angles present in either CHARMM or AMBER force fields (as applicable).
-        * `polarProtons` - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a polar proton. Setting this to `False` skip this step and default parameters will be used.
-        * `nonPolarProtons` - setting this to `True` will instruct **drFrankenstein** to re-parameterise torsion angles that end in a non-polar proton. Setting this to `False` skip this step and default parameters will be used.
+Controls relaxed torsion scanning and the conformer pool used to seed it.
 
-> NOTE: Setting `polarProtons` and `nonPolarProtons` to `True` will often greatly increase the number of torsions that need to scanned, resulting in a large increase in computational cost.  
-*   `nConformers`:
-    *   **Description**: The maximum number of low-energy conformers identified during the scan that will be kept for subsequent steps (like single point calculations or charge fitting). Set to `-1` to use all conformers found below a certain energy threshold (threshold not specified here, likely internal).
-    *   **Type**: `Integer` (`-1` or any integer >= `0`)
-    *   **Default**: `NONE` - absence will throw an error
+### `runScansOn`
+Boolean flags that determine which classes of torsions are scanned.
 
-*   `scanMethod`:
-    *   **Description**: The quantum mechanics (QM) method used for the geometry optimizations *during* the torsion scan. Typically a computationally cheaper method. Examples: `XTB2`, `PM6`, `revPBE def2-SVP D3BJ`.
-    *   **Type**: `String` (ORCA QM method specification)
-    *   **Default**: `NONE` - absence will throw an error
+* Type: `dictionary`
+* Required: yes
+* Default: none
+* Keys:
+  * `phiPsi`: scan backbone phi/psi torsions
+  * `polarProtons`: scan torsions ending in a polar proton
+  * `nonPolarProtons`: scan torsions ending in a non-polar proton
+  * `amides`: placeholder flag, should remain `false`
+  * `nonAromaticRings`: placeholder flag, should remain `false`
 
-*   `nCoresPerCalculation`:
-    *   **Description**: The number of CPU cores to allocate for each torsion scan or single-point ORCA calculation. This value controls both the ORCA core count per calculation and the size of the multiprocessing pool.
-    *   **Type**: `Integer`
-    *   **Default**: `1`
+### `nConformers`
+Maximum number of conformers to pass into torsion scanning.
 
-*   `scanSolvationMethod`:
-    *   **Description**: The implicit solvation model applied during the torsion scan optimizations. Use `Null` or `None` (check script implementation for exact keyword) for gas-phase calculations. Examples: `ALPB(water)`, `CPCM(water)`.
-    *   **Type**: `String` (ORCA solvation keyword) or `Null`
-    *   **Default**: `Null` - no solvation used!
+* Type: `integer`
+* Required: yes
+* Allowed values: `-1` or any integer `>= 0`
+* Meaning of `-1`: use all available conformers
 
-*   `singlePointMethod`:
-    *   **Description**: The QM method used for single point energy calculations on the selected conformers *after* the torsion scan is complete. This is typically a more accurate (and computationally expensive) method than `scanMethod`. Set to `Null` or `None` to skip this step. Examples: `revPBE def2-SVP D3BJ`, `B3LYP/6-31G*`.
-    *   **Type**: `String` (ORCA QM method specification) or `Null`
-    *   **Default**: `Null` (optional; if omitted/null, this step is skipped)
+### `scanMethod`
+ORCA method used for the torsion-scan geometry optimisations.
 
-*   `singlePointSolvationMethod`:
-    *   **Description**: The implicit solvation model used for the post-scan single point energy calculations. Use `Null` or `None` for gas-phase calculations.
-    *   **Type**: `String` (ORCA solvation keyword) or `Null`
-    *   **Default**: `Null` - no solvation used!
+* Type: `string`
+* Required: yes
+* Default: none
+* Options: any valid ORCA input method string accepted by your ORCA installation
 
-**Example**
+### `nCoresPerCalculation`
+CPU cores assigned to each torsion-scan calculation.
+
+* Type: `integer`
+* Required: no in the validator, but defaulted by the helper
+* Default: `1`
+* Constraint: must be a positive integer, and it cannot exceed `miscInfo.availableCpus`
+
+### `scanSolvationMethod`
+Implicit solvent model for the scan optimisations.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+* Meaning of `null`: gas-phase calculation
+
+### `singlePointMethod`
+Optional higher-level ORCA method for post-scan single-point recalculations.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+* Meaning of `null`: skip the single-point refinement step
+
+### `singlePointSolvationMethod`
+Implicit solvent model for post-scan single-point calculations.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+
+### Example
 ```yaml
 torsionScanInfo:
   runScansOn:
-    phiPsi: true                                ## Re-parameterise phi and psi
-    polarProtons: false                         ## Skip torsions ending in polar protons
-    nonPolarProtons: false                      ## Skip torsions ending in non-polar protons
-  nConformers: -1                               ## Use all conformers
-  scanMethod: XTB2                              ## Optimise geometries with XTB2 (cheap and fast!)
-  nCoresPerCalculation: 1                       ## One core per torsion scan calculation
-  scanSolvationMethod: ALPB(water)              ## XTB2 compatible water model
-  singlePointMethod: revPBE def2-SVP D3BJ       ## More accurate single point method
-  singlePointSolvationMethod: CPCM(water)       ## revPBE compatible water model
-
+    phiPsi: true
+    polarProtons: false
+    nonPolarProtons: false
+    amides: false
+    nonAromaticRings: false
+  nConformers: -1
+  scanMethod: XTB2
+  nCoresPerCalculation: 1
+  scanSolvationMethod: ALPB(water)
+  singlePointMethod: null
+  singlePointSolvationMethod: null
 ```
-
-<div style="clear: both;"></div> 
-
----
 
 ## `chargeFittingInfo`
-<img src="../Images/Grey_Frank_Charge.png" alt="The Mad Doctor Holds Your Molecule Aloft!" width="200" height="200" style="float: right; margin-right: 15px; margin-bottom: 5px;">
-This section defines the parameters for calculating partial atomic charges.
 
-*   `chargeFittingProtocol`:
-    *   **Description**: Specifies the protocol to be used for charge fitting.
-    *   **Type**: `String`
-    *   **Allowed Values**: `RESP`, `RESP2`, `SOLVATOR` (case-sensitive).
+Controls charge fitting and the QM levels used to generate the electrostatic data.
 
-*   `nConformers`:
-    *   **Description**: The maximum number of conformers (selected from the torsion scan results or provided separately) to be used in the charge fitting procedure. Using multiple conformers generally leads to more robust charges. Set to `-1` to use all available/selected conformers.
-    *   **Type**: `Integer` (`-1` or any integer >= `0`)
-    *   **Default**: `NONE` - absence will throw an error
+### `chargeFittingProtocol`
+Charge-fitting backend to run.
 
-*   `nCoresPerCalculation`:
-    *   **Description**: The number of CPU cores to allocate for each individual QM calculation performed during the charge fitting process (optimizations and single points).
-    *   **Type**: `Integer`
-    *   **Default**: `NONE` - absence will throw an error
+* Type: `string`
+* Required: yes
+* Allowed values: `RESP`, `RESP2`, `SOLVATOR`
 
-*   `optMethod`:
-    *   **Description**: The QM method used for geometry optimization of the selected conformers *before* the final single point calculations used for charge fitting.
-    *   **Type**: `String` (ORCA QM method specification)
-    *   **Default**: `NONE` - absence will throw an error
+### `nConformers`
+Maximum number of conformers used in charge fitting.
 
-*   `optSolvationMethod`:
-    *   **Description**: The implicit solvation model applied during the pre-fitting geometry optimizations. Use `Null` or `None` for gas-phase.
-    *   **Type**: `String` (ORCA solvation keyword) or `Null`
-    *   **Default**: `Null` - no solvation used!
+* Type: `integer`
+* Required: yes
+* Allowed values: `-1` or any integer `>= 0`
+* Meaning of `-1`: use all selected conformers
 
-*   `singlePointMethod`:
-    *   **Description**: The QM method used for the final single point calculations that generate the electrostatic potential (ESP) data required for charge fitting. This should generally be a reasonably accurate method.
-    *   **Type**: `String` (ORCA QM method specification)
-    *   **Default**: `NONE` - absence will throw an error
+### `nCoresPerCalculation`
+CPU cores assigned to each charge-fitting QM calculation.
 
-    > NOTE: You cannot use XTB2 for single point calculations! They don't make wavefunction output files, so can't be used for charge fitting.
+* Type: `integer`
+* Required: yes
+* Constraint: must be a positive integer and cannot exceed `miscInfo.availableCpus`
 
-*   `singlePointSolvationMethod`:
-    *   **Description**: The solvation model used for the final single point ESP calculations. This is crucial for obtaining charges appropriate for a specific environment (gas phase or solvent).
-    *   **Type**: `String` (ORCA solvation keyword) or `Null`
-    *   **Default**: `Null` - no solvation used!
+### `optMethod`
+ORCA method used for geometry optimisation before the charge-fit calculations.
 
- *   `waterDensity`: 
-    *   **Description**: Only used for the `SOLVATOR` charge fitting protocol. This is the number of water molecules to add per nm^2 of molecular surface area. More water molecules added may result in more accurate charges, but at the cost of longer calculation times.
-    *   **Type**: `Integer`, `Float`, or `Null`
-    *   **Default**: `Null` (optional)
+* Type: `string`
+* Required: yes
 
-**Examples**
+### `optSolvationMethod`
+Implicit solvent model for the optimisation step.
 
-For AMBER-style charge fitting:
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+
+### `singlePointMethod`
+ORCA method used for the final charge-fitting single-point calculation.
+
+* Type: `string`
+* Required: yes
+
+### `singlePointSolvationMethod`
+Implicit solvent model used for the final single-point calculation.
+
+* Type: `string` or `null`
+* Required: no
+* Default: `null`
+
+### `waterDensity`
+Used only when `chargeFittingProtocol` is `SOLVATOR`.
+
+* Type: `integer`, `float`, or `null`
+* Required: no
+* Default: `null`
+* Meaning: number of water molecules added per nm^2 of molecular surface area
+
+### `enforceDefaultBackboneCharges`
+Forces backbone charge handling to match the default backbone pattern.
+
+* Type: `boolean`
+* Required: no
+* Default: `false`
+* Notes:
+  * If `true`, `moleculeInfo.backboneAliases` must contain `N`, `H`, `CA`, `HA`, `C`, and `O`
+  * Each of those values must be a non-empty list of strings
+
+### Example
 ```yaml
 chargeFittingInfo:
-  chargeFittingProtocol: RESP2              ## will run weighted RESP2 protocol
-  nConformers: 10                           ## consider 10 conformers
-  nCoresPerCalculation: 1                   ## one core per calculation
-  optMethod: XTB2                           ## optimise geometries with cheap XTB2 method
-  optSolvationMethod: ALPB(water)           ## XTB2 compatible water model
-  singlePointMethod: revPBE def2-SVP D3BJ   ## more accurate single point method
-  singlePointSolvationMethod: CPCM(water)   ## revPBE compatible water model
-  waterDensity: null                        ## not using SOLVATOR protocol, so leave null
+  chargeFittingProtocol: RESP2
+  nConformers: 10
+  nCoresPerCalculation: 4
+  optMethod: XTB2
+  optSolvationMethod: ALPB(water)
+  singlePointMethod: revPBE def2-SVP D3BJ
+  singlePointSolvationMethod: CPCM(water)
+  waterDensity: null
+  enforceDefaultBackboneCharges: false
 ```
-
-For CHARMM-style charge fitting:
-```yaml
-chargeFittingInfo:
-  chargeFittingProtocol: SOLVATOR           ## will run explicit solvent protocol
-  nConformers: 10                           ## consider 10 conformers
-  nCoresPerCalculation: 1                   ## one core per calculation
-  optMethod: XTB2                           ## optimise geometries with cheap XTB2 method
-  optSolvationMethod: ALPB(water)           ## XTB2 compatible water model
-  singlePointMethod: revPBE def2-SVP D3BJ   ## more accurate single point method
-  singlePointSolvationMethod: Null          ## solvent is explicit, so no implicit water needed
-  waterDensity: 12                          ## 12 water molecules placed per nm^2 of molecular surface area
-```
-
----
 
 ## `parameterFittingInfo`
 
-This section controls the fitting of other bonded and non-bonded parameters, primarily dihedral terms, based on the QM energy profiles obtained from the torsion scan.
+Controls torsion-parameter fitting from the QM scan profiles.
 
-*   `forceField`:
-    *   **Description**: Specifies the target force field format for the output parameters.
-    *   **Type**: `String`
-    *   **Allowed Values**: `CHARMM`, `AMBER` (case-sensitive).
-    *   **Default**: `NONE` - absence will throw an error
+### `forceField`
+Target force-field family for the final parameter files.
 
-*   `maxCosineFunctions`:
-    *   **Description**: The maximum number of cosine terms (multiplicities) to use when fitting the potential energy profile for each scanned dihedral angle.
-    *   **Type**: `Integer` (Positive integer, e.g., `4`)
-    *   **Default**: `NONE` - absence will throw an error
+* Type: `string`
+* Required: yes
+* Allowed values: `CHARMM`, `AMBER`
 
-> NOTE:  A higher number allows for more complex energy profiles but increases the risk of over-fitting. 
-In our experience, too many terms can lead to unstable fits.
-    
-*   `maxShuffles`:
-    *   **Description**: The maximum number of rounds for the parameter fitting optimization algorithm. If the parameterisation procedure has not converged within this number of iterations, it will terminate.
-    *   **Type**: `Integer` (Positive integer, e.g., `10`)
-    *   **Default**: `NONE` - absence will throw an error
+### `maxCosineFunctions`
+Maximum number of cosine terms used when fitting each torsion.
 
-*   `minShuffles`: 
-    * **Description**: The minimum number of rounds for the parameter fitting optimization algorithm. Even if the parameterisation procedue has converged, it will not terminate before this number of iterations.
-    * **Type**: `Integer` (Positive integer, e.g., `5`)
-    * **Default**: `NONE` - absence will throw an error
+* Type: `integer`
+* Required: yes
+* Constraint: must be a positive integer
 
-*  `l2DampingFactor`: 
-    * **Description**: The L2 dampening factor for the parameter fitting optimization. This is a regularization term that prevents amplitudes from becoming too large.
-    * **Type**: `Float` (positive number) or `Null`
-    * **Default**: `Null` (optional)
+### `maxShuffles`
+Maximum number of fitting rounds before the parameterisation run stops.
 
-*  `sagvolSmoothing`: 
-    * **Description**: Whether to apply a SAGVOL smoothing term to the parameter fitting optimization. This can prevent the QM[torsion] term from becoming too choppy, which may lead to unstable fits.
-    * **Type**: `Boolean` (`True` or `False`)
-    * **Default**: `NONE` - absence will throw an error
+* Type: `integer`
+* Required: yes
+* Constraint: must be a positive integer
 
+### `minShuffles`
+Minimum number of fitting rounds before convergence is allowed to stop the run.
 
-**Example**
+* Type: `integer`
+* Required: yes
+* Constraint: must be a positive integer, and it must be less than or equal to `maxShuffles`
+
+### `l2DampingFactor`
+Regularisation term used to damp large Fourier amplitudes.
+
+* Type: `float` or `null`
+* Required: no
+* Default: `0.1`
+* Constraint: if provided as a number, it must be positive
+
+### `sagvolSmoothing`
+Whether to apply the SAGVOL smoothing step during torsion fitting.
+
+* Type: `boolean`
+* Required: yes
+* Default: `true`
+
+### `maeTolTotal`
+Legacy/default-only tolerance field retained by the defaults helper.
+
+* Type: `float` or `null`
+* Required: no
+* Default: `null`
+* Notes: present in the defaulting script, but not actively validated in the current schema
+
+### `maeTolTorsion`
+Legacy/default-only tolerance field retained by the defaults helper.
+
+* Type: `float` or `null`
+* Required: no
+* Default: `null`
+* Notes: present in the defaulting script, but not actively validated in the current schema
+
+### `converganceTolerance`
+Convergence threshold used by the stitching/fitting stage.
+
+* Type: `float` or `null`
+* Required: no
+* Default: typically `null` unless set by a specimen file
+* Notes: the fitting score documentation in `FITTING_SCORE.md` describes how this value is used
+
+### Example
 ```yaml
 parameterFittingInfo:
-  forceField: AMBER             ## make AMBER parameters
-  maxCosineFunctions: 3         ## use a maximum of 3 cosine terms 
-  maxShuffles: 100              ## run for a maximum of 100 iterations
-  minShuffles: 20               ## do not converge until at least 20 iterations
-  l2DampingFactor: 0.1          ## apply a L2 dampening factor of 0.1
-  sagvolSmoothing: true         ## apply a SAGVOL smoothing term to QM[torsion] term
+  forceField: AMBER
+  maxCosineFunctions: 3
+  maxShuffles: 50
+  minShuffles: 10
+  l2DampingFactor: 0.1
+  sagvolSmoothing: true
+  maeTolTotal: null
+  maeTolTorsion: null
+  converganceTolerance: 0.1
 ```
----
-
-
-
 
 ## `miscInfo`
-<img src="../Images/Grey_Frank_Broom.jpg" alt="The Mad Doctor Holds A Broom!" width="200" height="200" style="float: right; margin-right: 15px; margin-bottom: 5px;">
 
-This section contains miscellaneous settings affecting the overall script execution and resource management.
+General runtime settings, random seeds, and assembly-backend selection.
 
-*   `availableCpus`:
-    *   **Description**: The total number of CPU cores available on the machine that the Dr. Frankenstein script can utilize for parallel tasks (like running multiple QM calculations simultaneously). This should not exceed the actual number of cores available.
-    *   **Type**: `Integer`
-    *   **Default**: `NONE` - absence will throw an error
-*   `cleanUpLevel`:
-    *   **Description**: Controls the deletion of intermediate files generated during the workflow. The higher the value, the more files will be deleted.
-    *   **Type**: `int`
-    *   **Allowed Values**: `0`, `1`, `2`, `3`
-    *   **Default**: `1`
+### `availableCpus`
+Total CPU cores available for parallel tasks.
 
-*   `conformerSelectionMethods`:
-    *   **Description**: Strategy for selecting conformers before charge fitting. `ENERGY` uses Boltzmann-weighted random sampling; `DIVERSE` clusters conformers in PCA torsion space (same protocol as the reporter PCA) and selects the lowest-energy conformer from each cluster.
-    *   **Type**: `String`
-    *   **Allowed Values**: `ENERGY`, `DIVERSE`
-    *   **Default**: `ENERGY`
+* Type: `integer`
+* Required: yes
+* Constraint: must be a positive integer
 
-*   `assemblyProtocol`:
-    *   **Description**: Controls which assembly backend to use.
-    *   **Type**: `String`
-    *   **Allowed Values**: `ANTECHAMBER`, `CGENFF`, `AGNOSTIC`
-    *   **Default**: Optional
+### `cleanUpLevel`
+How aggressively the workflow removes intermediate files.
 
-    `seed`:
-    *   **Description**: Seed for random number generator.
-    *   **Type**: `Integer`
-    *   **Default**: 1818
+* Type: `integer`
+* Required: no
+* Default: `1`
+* Allowed values: `0`, `1`, `2`, `3`
 
-**Example**
+### `assemblyProtocol`
+Parameter-assembly backend to use.
+
+* Type: `string`
+* Required: no
+* Default: `ANTECHAMBER`
+* Allowed values: `ANTECHAMBER`, `CGENFF`, `AGNOSTIC`
+
+### `seed`
+Seed used for stochastic conformer selection and fitting order.
+
+* Type: `integer`
+* Required: no
+* Default: `1818`
+* Constraint: must be `0` or greater
+
+### `conformerSelectionMethods`
+How conformers are chosen when the workflow needs a subset.
+
+* Type: `string`
+* Required: no
+* Default: `ENERGY`
+* Allowed values: `ENERGY`, `DIVERSE`
+* Meaning:
+  * `ENERGY`: Boltzmann-weighted selection that prefers low-energy conformers
+  * `DIVERSE`: PCA-based clustering that prefers a diverse conformer set
+
+### `debug`
+Turns on extra debug behavior in some runtime paths.
+
+* Type: `boolean`
+* Required: no
+* Default: `false`
+
+### `gpuPlatform`
+Preferred OpenMM GPU platform.
+
+* Type: `string` or `null`
+* Required: no
+* Default: auto-detected by the defaults helper
+* Allowed values: `CUDA`, `HIP`, `OpenCL`, `CPU`
+
+### Example
 ```yaml
 miscInfo:
-  availableCpus: 8      ## use 8 cores
-  cleanUpLevel: 2       ## delete intermediate files
-  conformerSelectionMethods: DIVERSE  ## cluster conformers in PCA space
+  availableCpus: 8
+  cleanUpLevel: 1
+  assemblyProtocol: ANTECHAMBER
+  seed: 1818
+  conformerSelectionMethods: ENERGY
+  debug: false
+  gpuPlatform: CPU
 ```
-<div style="clear: both;"></div> 
 
----
+## `conformerGenerationInfo`
+
+Controls the GOAT-based conformer-generation step that seeds later protocols.
+
+### `goatMode`
+GOAT search mode.
+
+* Type: `string`
+* Required: yes
+* Default: `GOAT`
+* Common values:
+  * `GOAT`
+  * `GOAT-ENTROPY`
+
+### `energyCutoff`
+Maximum relative energy, in kcal/mol, for keeping a conformer.
+
+* Type: `integer` or `float`
+* Required: yes
+* Default: `6.0`
+
+### `goatMethod`
+Method used by the GOAT conformer search.
+
+* Type: `string`
+* Required: yes
+* Default: `XTB2`
+* Common values:
+  * `XTB2`
+  * `GFN-FF`
+
+### `conformerSelction`
+How a downstream conformer subset is selected from the GOAT output.
+
+* Type: `string`
+* Required: yes
+* Default: `ENERGY`
+* Allowed values: `ENERGY`, `DIVERSE`
+* Notes:
+  * The key is spelled `conformerSelction` in the current code.
+  * `ENERGY` favors low-energy conformers.
+  * `DIVERSE` favors conformational diversity.
+
+### Example
+```yaml
+conformerGenerationInfo:
+  goatMode: GOAT-ENTROPY
+  energyCutoff: 10.0
+  goatMethod: GFN-FF
+  conformerSelction: DIVERSE
+```

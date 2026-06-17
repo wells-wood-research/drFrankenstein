@@ -16,8 +16,7 @@ from OperatingTools import drYaml
 from OperatingTools import drSplash
 from OperatingTools import Timer
 from OperatingTools import drLogger
-from OperatingTools import set_config_defaults
-from OperatingTools import validate_config
+from OperatingTools import config_handler
 from OperatingTools import handle_CGenFF_dependancy
 from OperatingTools import pdb_checker
 ## CLEAN CODE ##
@@ -39,10 +38,10 @@ def main() -> None:
         ## load into dict, check for bad formatting
         config = drYaml.read_input_yaml(configYaml)
 
-        config = set_config_defaults.apply_defaults_and_validate(config)
+        config = config_handler.apply_defaults_and_validate(config)
 
         ## check config for errors#
-        config = validate_config.validate_config(config)
+        config = config_handler.validate_config(config)
 
         ## unpack config to find outputDir, make directory
         outputDir = config["pathInfo"]["outputDir"]

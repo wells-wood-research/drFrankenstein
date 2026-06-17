@@ -50,6 +50,12 @@ moleculeInfo:
       N: [N]
       O: [O]
       H: [NH1]      ## NONSTANDARD 
+
+conformerGenerationInfo:
+  goatMode: GOAT
+  energyCutoff: 6.0
+  goatMethod: XTB2
+  conformerSelction: ENERGY
         
   
 ##########################################################################################################################
@@ -126,8 +132,8 @@ parameterFittingInfo:
   l2DampingFactor: 0.1  ## DEFAULT = 0.1
   maxShuffles: 50
   minShuffles: 5
-  maeTolTotal:
-  maeTolTorsion:
+  maeTolTotal: null
+  maeTolTorsion: null
   sagvolSmoothing: true
 
 #####################################################
@@ -145,4 +151,7 @@ miscInfo:
   cleanUpLevel: 1   ## DEFAULT = 1
   ## random seed used for all stochastic selections
   seed: 1818
+  conformerSelectionMethods: ENERGY
+  debug: false
+  gpuPlatform: CPU
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

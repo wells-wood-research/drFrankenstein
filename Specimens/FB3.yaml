@@ -66,6 +66,12 @@ moleculeInfo:
       BBB: [NBA, CAB, CB, OB, CCB]
       CCC: [NAC, CAC, CC, OC, CCC]
 
+conformerGenerationInfo:
+  goatMode: GOAT
+  energyCutoff: 6.0
+  goatMethod: XTB2
+  conformerSelction: ENERGY
+
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #
 #  | |_    ___    _ __   ___  (_)   ___    _ __   / ___|    ___    __ _   _ __   |_ _|  _ __    / _|   ___               #
@@ -157,4 +163,7 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
+  conformerSelectionMethods: ENERGY
+  debug: false
+  gpuPlatform: CPU
   assemblyProtocol: AGNOSTIC ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

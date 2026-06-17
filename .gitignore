@@ -37,3 +37,5 @@ Inputs
 /_*
 .benchmarks
 .pytest_cache
+.*
+AGENTS.md

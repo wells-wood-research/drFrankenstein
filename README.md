@@ -32,3 +32,13 @@ Example input/config bundles are provided in [`Specimens/`](./Specimens).
 
 ## The **drFrankenstein** Config file
 For a detailed explanation of the `config.yaml` file and its parameters, please see the [Configuration File Guide](./Documentation/02_The_drFrankenstein_Config.md).
+
+The config is organized into these required sections:
+- `pathInfo`
+- `moleculeInfo`
+- `torsionScanInfo`
+- `chargeFittingInfo`
+- `parameterFittingInfo`
+- `miscInfo`
+
+The config guide also covers `conformerGenerationInfo`, which is part of the active conformer-generation flow and feeds the GOAT step used by the workflow.

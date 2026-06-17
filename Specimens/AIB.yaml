@@ -62,6 +62,12 @@ moleculeInfo:
     O: [O]
     H: [HN]      
 
+conformerGenerationInfo:
+  goatMode: GOAT
+  energyCutoff: 6.0
+  goatMethod: XTB2
+  conformerSelction: ENERGY
+
 
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #
@@ -155,4 +161,7 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
+  conformerSelectionMethods: ENERGY
+  debug: false
+  gpuPlatform: CPU
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

@@ -78,7 +78,7 @@ def get_MM_total_energies(config: dict, torsionTag: str, moleculeFrcmod: FilePat
     os.makedirs(torsionFittingDir, exist_ok=True)
     torsionIndexes = config["runtimeInfo"]["madeByTwisting"]["torsionsToScan"][torsionTag]["ATOM_INDEXES"]
 
-    # Thread gpuPlatform from config (set earlier in set_config_defaults)
+    # Thread gpuPlatform from config (set earlier in config handling)
     gpuPlatform = None
     if isinstance(config, dict):
         gpuPlatform = config.get("miscInfo", {}).get("gpuPlatform", None)

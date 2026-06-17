@@ -1,11 +1,222 @@
 import os
+import io
+import multiprocessing as mp
 from typing import Dict, Any, List, Union, Optional, Tuple
-from OperatingTools import drSplash
+
+from ruamel.yaml import YAML
+import openmm as _openmm
+
+try:
+    from OperatingTools import drSplash
+except ImportError:  # pragma: no cover - fallback for package-style imports
+    from Laboratory.OperatingTools import drSplash
+
+
+def _has_fatal_errors(d: object) -> bool:
+    """Recursively checks a dictionary for fatal error messages."""
+    if isinstance(d, dict):
+        return any(_has_fatal_errors(v) for v in d.values())
+    elif isinstance(d, str) and "default" not in d.lower():
+        return True
+    return False
+
+
+def _detect_gpu_platform() -> str:
+    """Detects available GPU platforms in order of preference: CUDA > HIP > OpenCL."""
+    for candidate in ["CUDA", "HIP", "OpenCL"]:
+        try:
+            _openmm.Platform.getPlatformByName(candidate)
+            return candidate
+        except Exception:
+            continue
+    return "CPU"
+
+
+def set_default(section: dict, key: str, default_value: object, error_dict: dict) -> None:
+    """Apply a default value and record it in the error dictionary when used."""
+    if key not in section:
+        error_dict[key] = f"Default Used: {default_value}"
+    section.setdefault(key, default_value)
+
+
+def apply_defaults_and_validate(config: dict) -> dict:
+    """Apply config defaults and run lightweight validation plus default reporting."""
+    errors = {}
+
+    # --- Section: moleculeInfo ---
+    errors["moleculeInfo"] = {}
+    moleculeInfo = config.get("moleculeInfo", {})
+    for key, expected_type in [("charge", int), ("multiplicity", int), ("moleculeName", str)]:
+        if key not in moleculeInfo:
+            errors["moleculeInfo"][key] = "Missing required key."
+        elif not isinstance(moleculeInfo[key], expected_type):
+            errors["moleculeInfo"][key] = f"Must be type {expected_type}, not {type(moleculeInfo[key])}."
+        else:
+            errors["moleculeInfo"][key] = None
+    for key, expected_type in [("chargeGroups", dict), ("backboneAliases", dict)]:
+        if key not in moleculeInfo:
+            errors["moleculeInfo"][key] = f"Default Used: {None}"
+        elif not isinstance(moleculeInfo[key], (expected_type, type(None))):
+            errors["moleculeInfo"][key] = f"Must be type {expected_type} or None."
+        else:
+            errors["moleculeInfo"][key] = None
+    moleculeInfo.setdefault("chargeGroups", None)
+    moleculeInfo.setdefault("backboneAliases", None)
+
+    # --- Section: conformerGenerationInfo ---
+    errors["conformerGenerationInfo"] = {}
+    conformerGenerationInfo = config.setdefault("conformerGenerationInfo", {})
+    if not isinstance(conformerGenerationInfo, dict):
+        errors["conformerGenerationInfo"]["section"] = "Must be a dictionary."
+        conformerGenerationInfo = {}
+        config["conformerGenerationInfo"] = conformerGenerationInfo
+    set_default(conformerGenerationInfo, "goatMode", "GOAT", errors["conformerGenerationInfo"])
+    set_default(conformerGenerationInfo, "energyCutoff", 6.0, errors["conformerGenerationInfo"])
+    set_default(conformerGenerationInfo, "goatMethod", "XTB2", errors["conformerGenerationInfo"])
+    set_default(conformerGenerationInfo, "conformerSelction", "ENERGY", errors["conformerGenerationInfo"])
+
+    # --- Section: pathInfo ---
+    errors["pathInfo"] = {}
+    pathInfo = config.setdefault("pathInfo", {})
+    if "inputDir" not in pathInfo:
+        errors["pathInfo"]["inputDir"] = f"Default Used: {os.getcwd()}"
+    pathInfo.setdefault("inputDir", os.getcwd())
+
+    if "outputDir" not in pathInfo:
+        if moleculeInfo.get("moleculeName") and errors["moleculeInfo"]["moleculeName"] is None:
+            default_path = os.path.join(os.getcwd(), f"{moleculeInfo['moleculeName']}_FrankenParams")
+            pathInfo["outputDir"] = default_path
+            errors["pathInfo"]["outputDir"] = f"Default Used: {default_path}"
+        else:
+            errors["pathInfo"]["outputDir"] = "Cannot set default, 'moleculeName' is missing or invalid."
+
+    if "amberHome" not in pathInfo:
+        amber_home = os.environ.get("AMBERHOME")
+        errors["pathInfo"]["amberHome"] = f"Default Used: {amber_home}"
+        if amber_home is not None:
+            pathInfo["amberHome"] = amber_home
+
+    if "cgenffExe" not in pathInfo:
+        errors["pathInfo"]["cgenffExe"] = f"Default Used: {None}"
+    pathInfo.setdefault("cgenffExe", None)
+
+    for key, expected_type in [("inputDir", str), ("outputDir", str), ("amberHome", str), ("cgenffExe", str)]:
+        if key not in errors["pathInfo"]:
+            errors["pathInfo"][key] = None
+        if key in pathInfo and not isinstance(pathInfo[key], (expected_type, type(None))):
+            errors["pathInfo"][key] = f"Must be type {expected_type} or None."
+
+    for key, is_dir in [("multiWfnDir", True), ("orcaExe", False)]:
+        path_val = pathInfo.get(key)
+        if not path_val:
+            errors["pathInfo"][key] = "Missing required key."
+        elif not isinstance(path_val, str):
+            errors["pathInfo"][key] = f"Must be type str, not {type(path_val)}."
+        elif is_dir and not os.path.isdir(path_val):
+            errors["pathInfo"][key] = f"Directory not found: {path_val}"
+        elif not is_dir and not os.path.isfile(path_val):
+            errors["pathInfo"][key] = f"File not found: {path_val}"
+        else:
+            if key not in errors["pathInfo"]:
+                errors["pathInfo"][key] = None
+
+    # --- Section: torsionScanInfo ---
+    errors["torsionScanInfo"] = {}
+    torsionScanInfo = config.setdefault("torsionScanInfo", {})
+    if not isinstance(torsionScanInfo, dict):
+        errors["torsionScanInfo"]["section"] = "Must be a dictionary."
+        torsionScanInfo = {}
+        config["torsionScanInfo"] = torsionScanInfo
+    runScansOn = torsionScanInfo.setdefault("runScansOn", {})
+    if not isinstance(runScansOn, dict):
+        errors["torsionScanInfo"]["runScansOn"] = "Must be type dict."
+        runScansOn = {}
+        torsionScanInfo["runScansOn"] = runScansOn
+    errors["torsionScanInfo"]["runScansOn"] = {}
+    for key in ["phiPsi", "polarProtons", "nonPolarProtons", "amides", "nonAromaticRings"]:
+        if key not in runScansOn:
+            default_val = key in ["phiPsi", "polarProtons"]
+            runScansOn[key] = default_val
+            errors["torsionScanInfo"]["runScansOn"][key] = f"Default Used: {default_val}"
+        elif not isinstance(runScansOn[key], bool):
+            errors["torsionScanInfo"]["runScansOn"][key] = "Must be type bool."
+        else:
+            errors["torsionScanInfo"]["runScansOn"][key] = None
+
+    if "scanMethod" not in torsionScanInfo:
+        errors["torsionScanInfo"]["scanMethod"] = "Required: use a SIMPLE INPUT line from the ORCA input library"
+    elif not isinstance(torsionScanInfo["scanMethod"], str):
+        errors["torsionScanInfo"]["scanMethod"] = "Must be type str."
+    else:
+        errors["torsionScanInfo"]["scanMethod"] = None
+
+    set_default(torsionScanInfo, "nConformers", -1, errors["torsionScanInfo"])
+    set_default(torsionScanInfo, "nCoresPerCalculation", 1, errors["torsionScanInfo"])
+    set_default(torsionScanInfo, "scanSolvationMethod", None, errors["torsionScanInfo"])
+    set_default(torsionScanInfo, "singlePointMethod", None, errors["torsionScanInfo"])
+    set_default(torsionScanInfo, "singlePointSolvationMethod", None, errors["torsionScanInfo"])
+
+    # --- Section: chargeFittingInfo ---
+    errors["chargeFittingInfo"] = {}
+    chargeFittingInfo = config.setdefault("chargeFittingInfo", {})
+    for key in ["chargeFittingProtocol", "optMethod", "singlePointMethod"]:
+        if key not in chargeFittingInfo:
+            errors["chargeFittingInfo"][key] = "Missing required key."
+        else:
+            errors["chargeFittingInfo"][key] = None
+
+    set_default(chargeFittingInfo, "nConformers", -1, errors["chargeFittingInfo"])
+    set_default(chargeFittingInfo, "nCoresPerCalculation", 1, errors["chargeFittingInfo"])
+    set_default(chargeFittingInfo, "enforceDefaultBackboneCharges", False, errors["chargeFittingInfo"])
+    if chargeFittingInfo.get("chargeFittingProtocol") == "SOLVATOR":
+        set_default(chargeFittingInfo, "waterDensity", 10, errors["chargeFittingInfo"])
+    else:
+        set_default(chargeFittingInfo, "waterDensity", None, errors["chargeFittingInfo"])
+
+    if not isinstance(chargeFittingInfo.get("enforceDefaultBackboneCharges"), bool):
+        errors["chargeFittingInfo"]["enforceDefaultBackboneCharges"] = "Must be type bool."
+
+    # --- Section: parameterFittingInfo ---
+    errors["parameterFittingInfo"] = {}
+    parameterFittingInfo = config.setdefault("parameterFittingInfo", {})
+    if "forceField" not in parameterFittingInfo:
+        errors["parameterFittingInfo"]["forceField"] = "Missing required key."
+    else:
+        errors["parameterFittingInfo"]["forceField"] = None
+
+    set_default(parameterFittingInfo, "maxCosineFunctions", 4, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "maxShuffles", 50, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "minShuffles", 10, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "maeTolTotal", None, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "maeTolTorsion", None, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "l2DampingFactor", 0.1, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "sagvolSmoothing", True, errors["parameterFittingInfo"])
+
+    # --- Section: miscInfo ---
+    errors["miscInfo"] = {}
+    miscInfo = config.setdefault("miscInfo", {})
+    set_default(miscInfo, "availableCpus", mp.cpu_count(), errors["miscInfo"])
+    set_default(miscInfo, "cleanUpLevel", 1, errors["miscInfo"])
+    set_default(miscInfo, "seed", 1818, errors["miscInfo"])
+    set_default(miscInfo, "debug", False, errors["miscInfo"])
+
+    if "gpuPlatform" not in miscInfo or miscInfo.get("gpuPlatform") is None:
+        detected = _detect_gpu_platform()
+        miscInfo["gpuPlatform"] = detected
+        errors["miscInfo"]["gpuPlatform"] = f"Default Used: {detected}"
+    else:
+        errors["miscInfo"]["gpuPlatform"] = None
+
+    if _has_fatal_errors(errors):
+        drSplash.print_config_error(errors)
+
+    return config
 
 
 def _add_error(errors: Dict[str, str], keyPath: str, message: str) -> None:
     """Record a validation error for a specific config path."""
     errors[keyPath] = message
+
 
 def _check_key_exists(data: Dict[str, Any], key: str, sectionPath: str, errors: Dict[str, str]) -> bool:
     """Check whether a required key exists and record an error if it does not."""
@@ -14,71 +225,52 @@ def _check_key_exists(data: Dict[str, Any], key: str, sectionPath: str, errors: 
         return False
     return True
 
+
 def _validate_type(value: Any, expectedType: Union[type, Tuple[type, ...]], keyPath: str, errors: Dict[str, str]) -> bool:
     """Check a value's type against the expected type or tuple of types."""
     if not isinstance(value, expectedType):
-        # Improved error message formatting for None/NoneType
         if isinstance(expectedType, type):
-            expectedTypeStr = 'None' if expectedType is type(None) else expectedType.__name__
-        else: # It's a tuple
+            expectedTypeStr = "None" if expectedType is type(None) else expectedType.__name__
+        else:
             typeNames = []
             for t in expectedType:
-                typeNames.append('None' if t is type(None) else t.__name__)
-            expectedTypeStr = ' or '.join(typeNames)
+                typeNames.append("None" if t is type(None) else t.__name__)
+            expectedTypeStr = " or ".join(typeNames)
 
         _add_error(errors, keyPath, f"Invalid type. Expected {expectedTypeStr}, but got {type(value).__name__}")
         return False
     return True
 
+
 def _validate_allowed_values(value: Any, allowedValues: List[Any], keyPath: str, errors: Dict[str, str]) -> bool:
     """Check whether a value is one of the allowed configuration values."""
-    # Skip check if value is None, as None might be allowed by type but not explicitly in allowedValues list
     if value is None:
-        return True # Assume type check already validated None if it was allowed
+        return True
     if value not in allowedValues:
-        # Filter out None from displayed allowed values if it's present, as it's handled by type check
         displayAllowed = [v for v in allowedValues if v is not None]
         _add_error(errors, keyPath, f"Invalid value '{value}'. Allowed values are: {displayAllowed}")
         return False
     return True
 
-# --- Section Validators (snake_case names) ---
 
 def _validate_path_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validate the `pathInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'pathInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Required keys
-    requiredKeys = {
-        "inputDir": str,
-        "outputDir": str,
-        "multiWfnDir": str,
-        "orcaExe": str,
-    }
-
-    # Optional keys
-    optionalKeys = {
-        "amberHome": (str, type(None)),
-        "cgenffExe": (str, type(None)),
-    }
-
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
+    requiredKeys = {"inputDir": str, "outputDir": str, "multiWfnDir": str, "orcaExe": str}
+    optionalKeys = {"amberHome": (str, type(None)), "cgenffExe": (str, type(None))}
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
-
+            _validate_type(sectionData[key], expectedType, keyPath, errors)
     for key, expectedType in optionalKeys.items():
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
-            value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
+            _validate_type(sectionData[key], expectedType, keyPath, errors)
 
 
 def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
@@ -86,54 +278,34 @@ def _validate_molecule_info(sectionData: Optional[Dict[str, Any]], sectionName: 
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'moleculeInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Required keys
-    requiredKeys = {
-        "charge": int,
-        "multiplicity": int,
-        "moleculeName": str,
-    }
-
-    # Optional keys
-    optionalKeys = {
-        "chargeGroups": (dict, type(None)),
-        "backboneAliases": (dict, type(None)),
-    }
-
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
+    requiredKeys = {"charge": int, "multiplicity": int, "moleculeName": str}
+    optionalKeys = {"chargeGroups": (dict, type(None)), "backboneAliases": (dict, type(None))}
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
-            value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
-
+            _validate_type(sectionData[key], expectedType, keyPath, errors)
     for key, expectedType in optionalKeys.items():
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                # Specific validations for chargeGroups
                 if key == "chargeGroups" and isinstance(value, dict):
                     for groupName, groupData in value.items():
                         groupKeyPath = f"{keyPath}.{groupName}"
                         if not isinstance(groupData, dict):
                             _add_error(errors, groupKeyPath, f"Charge group '{groupName}' must be a dictionary.")
                             continue
-
                         if _check_key_exists(groupData, "atoms", groupKeyPath, errors):
                             atomsValue = groupData["atoms"]
                             atomsKeyPath = f"{groupKeyPath}.atoms"
                             if _validate_type(atomsValue, list, atomsKeyPath, errors):
                                 if not all(isinstance(item, str) for item in atomsValue):
                                     _add_error(errors, atomsKeyPath, "All items in 'atoms' list must be strings.")
-
                         if _check_key_exists(groupData, "charge", groupKeyPath, errors):
-                            chargeValue = groupData["charge"]
-                            chargeKeyPath = f"{groupKeyPath}.charge"
-                            _validate_type(chargeValue, int, chargeKeyPath, errors)
+                            _validate_type(groupData["charge"], int, f"{groupKeyPath}.charge", errors)
 
 
 def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
@@ -141,26 +313,16 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'torsionScanInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Required keys
-    requiredKeys = {
-        "runScansOn": dict,
-        "nConformers": int,
-        "scanMethod": str,
-    }
-
-    # Optional keys
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
+    requiredKeys = {"runScansOn": dict, "nConformers": int, "scanMethod": str}
     optionalKeys = {
         "scanSolvationMethod": (str, type(None)),
         "singlePointMethod": (str, type(None)),
         "singlePointSolvationMethod": (str, type(None)),
         "nCoresPerCalculation": int,
     }
-
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
@@ -168,7 +330,6 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
             if _validate_type(value, expectedType, keyPath, errors):
                 if key == "nConformers" and isinstance(value, int) and value < -1:
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
-
     for key, expectedType in optionalKeys.items():
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
@@ -176,8 +337,6 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
             if _validate_type(value, expectedType, keyPath, errors):
                 if key == "nCoresPerCalculation" and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-
-    # Validate runScansOn structure
     if "runScansOn" in sectionData and isinstance(sectionData["runScansOn"], dict):
         runScansOn = sectionData["runScansOn"]
         runScansKeyPath = f"{sectionName}.runScansOn"
@@ -186,26 +345,19 @@ def _validate_torsion_scan_info(sectionData: Optional[Dict[str, Any]], sectionNa
             if not isinstance(enabled, bool):
                 _add_error(errors, keyPath, f"Scan type '{scanType}' must be a boolean, but got {type(enabled).__name__}")
 
+
 def _validate_conformer_generation_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validate the `conformerGenerationInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'conformerGenerationInfo'")
         return
-
     if not isinstance(sectionData, dict):
         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
         return
-
-    requiredKeys = {
-        "goatMode": str,
-        "energyCutoff": (int, float),
-        "goatMethod": str,
-        "conformerSelction": str,
-    }
+    requiredKeys = {"goatMode": str, "energyCutoff": (int, float), "goatMethod": str, "conformerSelction": str}
     allowedGoatModes = ["GOAT", "GOAT-ENTROPY"]
     allowedSelectionMethods = ["ENERGY", "DIVERSE"]
     allowedGoatMethods = ["XTB2", "GFN-FF"]
-
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
@@ -221,18 +373,14 @@ def _validate_conformer_generation_info(sectionData: Optional[Dict[str, Any]], s
                     _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
 
 
-
 def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validate the `chargeFittingInfo` section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'chargeFittingInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Required keys
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
     requiredKeys = {
         "chargeFittingProtocol": str,
         "nConformers": int,
@@ -240,17 +388,13 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
         "optMethod": str,
         "singlePointMethod": str,
     }
-
-    # Optional keys
     optionalKeys = {
         "optSolvationMethod": (str, type(None)),
         "singlePointSolvationMethod": (str, type(None)),
         "waterDensity": (int, float, type(None)),
         "enforceDefaultBackboneCharges": bool,
     }
-
     allowedProtocols = ["RESP", "RESP2", "SOLVATOR"]
-
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
@@ -262,52 +406,40 @@ def _validate_charge_fitting_info(sectionData: Optional[Dict[str, Any]], section
                     _add_error(errors, keyPath, f"Value for '{key}' must be -1 or greater, but got {value}.")
                 elif key == "nCoresPerCalculation" and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-
     for key, expectedType in optionalKeys.items():
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
-            value = sectionData[key]
-            _validate_type(value, expectedType, keyPath, errors)
+            _validate_type(sectionData[key], expectedType, keyPath, errors)
+
 
 def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validates the parameterFittingInfo section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'parameterFittingInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Keys here match the expected config structure
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
     expectedKeys = {
         "forceField": str,
         "maxCosineFunctions": int,
         "maxShuffles": int,
         "minShuffles": int,
         "l2DampingFactor": float | None,
-        "sagvolSmoothing": bool
+        "sagvolSmoothing": bool,
     }
     allowedForceFields = ["CHARMM", "AMBER"]
-
     for key, expectedType in expectedKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
             value = sectionData[key]
             if _validate_type(value, expectedType, keyPath, errors):
-                # Value range/specific value checks (only if type validation passed)
                 if key == "forceField" and isinstance(value, str):
                     _validate_allowed_values(value, allowedForceFields, keyPath, errors)
-                elif key == "maxCosineFunctions" and isinstance(value, int) and value <= 0:
-                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-                elif key == "maxShuffles" and isinstance(value, int) and value <= 0:
-                    _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-                elif key == "minShuffles" and isinstance(value, int) and value <= 0:
+                elif key in ("maxCosineFunctions", "maxShuffles", "minShuffles") and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
                 elif key == "l2DampingFactor" and isinstance(value, float) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive float, but got {value}.")
-                elif key == "sagvolSmoothing" and not isinstance(value, bool):
-                    _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
     if (
         "minShuffles" in sectionData
         and "maxShuffles" in sectionData
@@ -315,24 +447,18 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
         and isinstance(sectionData["maxShuffles"], int)
         and sectionData["minShuffles"] > sectionData["maxShuffles"]
     ):
-        _add_error(errors, f"{sectionName}.minShuffles", f"Value for 'minShuffles' must be less than or equal to 'maxShuffles'.")
+        _add_error(errors, f"{sectionName}.minShuffles", "Value for 'minShuffles' must be less than or equal to 'maxShuffles'.")
+
 
 def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str, errors: Dict[str, str]) -> None:
     """Validates the miscInfo section."""
     if sectionData is None:
         _add_error(errors, sectionName, "Missing required section 'miscInfo'")
         return
-
     if not isinstance(sectionData, dict):
-         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
-         return
-
-    # Required keys
-    requiredKeys = {
-        "availableCpus": int,
-    }
-
-    # Optional keys
+        _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
+        return
+    requiredKeys = {"availableCpus": int}
     optionalKeys = {
         "cleanUpLevel": int,
         "assemblyProtocol": str,
@@ -341,10 +467,8 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "debug": bool,
         "gpuPlatform": (str, type(None)),
     }
-
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
     allowedSelectionMethods = ["ENERGY", "DIVERSE"]
-
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
@@ -352,7 +476,6 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
             if _validate_type(value, expectedType, keyPath, errors):
                 if key == "availableCpus" and isinstance(value, int) and value <= 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be a positive integer, but got {value}.")
-
     for key, expectedType in optionalKeys.items():
         if key in sectionData:
             keyPath = f"{sectionName}.{key}"
@@ -368,12 +491,11 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     if value.upper() in allowedSelectionMethods:
                         continue
                     _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
-                elif key == "debug" and not isinstance(value, bool):
-                    _add_error(errors, keyPath, f"Value for '{key}' must be a boolean, but got {value}.")
                 elif key == "gpuPlatform" and isinstance(value, str):
                     allowedGpu = ["CUDA", "HIP", "OpenCL", "CPU"]
                     if value.upper() not in allowedGpu:
                         _add_error(errors, keyPath, f"Invalid value '{value}'. Allowed values are: {allowedGpu}")
+
 
 def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[str, str]) -> None:
     """Cross-section validation for `enforceDefaultBackboneCharges`."""
@@ -381,14 +503,11 @@ def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[s
     moleculeInfo = config.get("moleculeInfo")
     if not isinstance(chargeFittingInfo, dict) or not isinstance(moleculeInfo, dict):
         return
-
     if not chargeFittingInfo.get("enforceDefaultBackboneCharges", False):
         return
-
     backboneAliases = moleculeInfo.get("backboneAliases")
     requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
     keyPathPrefix = "moleculeInfo.backboneAliases"
-
     if not isinstance(backboneAliases, dict):
         _add_error(
             errors,
@@ -396,7 +515,6 @@ def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[s
             "When chargeFittingInfo.enforceDefaultBackboneCharges is True, moleculeInfo.backboneAliases must be a dictionary containing N, H, CA, HA, C, and O.",
         )
         return
-
     for backboneKey in requiredBackboneKeys:
         aliasKeyPath = f"{keyPathPrefix}.{backboneKey}"
         if backboneKey not in backboneAliases:
@@ -419,46 +537,21 @@ def _validate_torsion_scan_cores(config: Dict[str, Any], errors: Dict[str, str])
     miscInfo = config.get("miscInfo")
     if not isinstance(torsionScanInfo, dict) or not isinstance(miscInfo, dict):
         return
-
     nCoresPerCalculation = torsionScanInfo.get("nCoresPerCalculation")
     availableCpus = miscInfo.get("availableCpus")
-    if (
-        isinstance(nCoresPerCalculation, int)
-        and isinstance(availableCpus, int)
-        and nCoresPerCalculation > availableCpus
-    ):
-        _add_error(
-            errors,
-            "torsionScanInfo.nCoresPerCalculation",
-            "nCoresPerCalculation cannot exceed miscInfo.availableCpus.",
-        )
+    if isinstance(nCoresPerCalculation, int) and isinstance(availableCpus, int) and nCoresPerCalculation > availableCpus:
+        _add_error(errors, "torsionScanInfo.nCoresPerCalculation", "nCoresPerCalculation cannot exceed miscInfo.availableCpus.")
 
-
-
-
-# --- Main Validation Function (snake_case name) ---
 
 def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
-    """
-    Validates the structure, types, and allowed values of the configuration dictionary.
-
-    Args:
-        config: The configuration dictionary to validate.
-
-    Returns:
-        The original config dictionary if validation passes.
-        Returns None if validation fails (after calling drSplash.show_config_error).
-    """
+    """Validate the structure, types, and allowed values of the configuration dictionary."""
     errors: Dict[str, str] = {}
 
     if not isinstance(config, dict):
-        # Use a top-level key for this fundamental error
         _add_error(errors, "config", f"Configuration must be a dictionary, but got {type(config).__name__}")
-        # Cannot proceed if the top level isn't a dict, show error and exit
         drSplash.show_config_error(errors)
         return None
 
-    # Define expected top-level sections
     expectedSections = [
         "pathInfo",
         "moleculeInfo",
@@ -468,15 +561,10 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
         "parameterFittingInfo",
         "miscInfo",
     ]
-
-    # Check if all expected sections are present at the top level
     for sectionName in expectedSections:
         if sectionName not in config:
             _add_error(errors, sectionName, f"Missing required section '{sectionName}'")
-        # We'll still pass config.get(sectionName) to validators,
-        # they handle None case gracefully.
 
-    # Validate each section using helper functions
     _validate_path_info(config.get("pathInfo"), "pathInfo", errors)
     _validate_molecule_info(config.get("moleculeInfo"), "moleculeInfo", errors)
     _validate_conformer_generation_info(config.get("conformerGenerationInfo"), "conformerGenerationInfo", errors)
@@ -488,6 +576,6 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
     _validate_torsion_scan_cores(config, errors)
 
     if len(errors) == 0:
-        return config # Validation successful
-    else:
-        drSplash.show_config_error(errors)
+        return config
+    drSplash.show_config_error(errors)
+    return None

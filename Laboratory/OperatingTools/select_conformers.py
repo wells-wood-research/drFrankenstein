@@ -186,6 +186,6 @@ def _ensure_assembly_ready(config: dict) -> dict:
     if needs_assembly:
         from Experiments.Protocol_4_Assembly import Assembly_Doctor
 
-        config = Assembly_Doctor.parameter_assembly_protocol(config)
+        config = Assembly_Doctor.parameter_assembly_protocol(config, debug=False)
 
     return config

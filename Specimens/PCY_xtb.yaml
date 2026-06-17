@@ -10,18 +10,17 @@
 ##########################################################################################################################
 pathInfo:
   ## full path to input files
-  inputDir: /home/esp/scriptDevelopment/drFrankenstein/Specimens
+  inputDir: /home/eugene/drFrankenstein/Specimens
   ## full path to output files (will be created if it doesn't exist)
-  outputDir: /home/esp/scriptDevelopment/drFrankenstein/_FrankenParams_PCY_XTB
+  outputDir: /home/eugene/FrankenParams_PCY_xtb
   ## full path to Multiwfn install directory
-  multiWfnDir: /home/esp/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
+  multiWfnDir: /home/eugene/bin/Multiwfn_3.8_dev_bin_Linux_noGUI/
   ## full path to ORCA executable
-  orcaExe: /home/esp/bin/orca_6_1_0/orca                                                        ## NO DEFAULT, throw error if absent or not a dir
+  orcaExe: /home/eugene/bin/orca_6_0_1/orca                                                        ## NO DEFAULT, throw error if absent or not a dir
   ## full path to AMBER HOME (get by running "echo $AMBERHOME" in terminal!)
-  amberHome: /home/esp/anaconda3/envs/Igor/
+  amberHome: Null
   ## full path to CGenFF Exe (or Null if absent)
   cgenffExe: Null
-
 
 ##########################################################################################################################
 #                       _                         _          ___            __                                           #
@@ -52,7 +51,7 @@ moleculeInfo:
 
 conformerGenerationInfo:
   goatMode: GOAT-ENTROPY
-  energyCutoff: 6.0
+  energyCutoff: 12.0
   goatMethod: GFN-FF
   conformerSelction: DIVERSE
 
@@ -74,7 +73,7 @@ torsionScanInfo:
     amides: false   ## PLACEHOLDER, MUST BE FALSE
     nonAromaticRings: false  ## PLACEHOLDER, MUST BE FALSE
   ## maximum number of conformers that will be considered for torsion scanning, set to -1 for all
-  nConformers: -1
+  nConformers: 64
   ## QM method for torsion scanning (TIP, this should be cheaper than your single point method)
   scanMethod: XTB2
   ## Solvation method for torsion scanning, set to Null for no solvation
@@ -98,9 +97,9 @@ chargeFittingInfo:
   ## charge fitting protocol, accepts ["RESP", "RESP2", "SOLVATOR"]
   chargeFittingProtocol: RESP2
   ## maximum number of conformers that will be considered for charge fitting, set to -1 for all
-  nConformers: -1
+  nConformers: 64
   ## number of cores for charge fitting
-  nCoresPerCalculation: 4
+  nCoresPerCalculation: 1
   ## QM method for geometry optimisation before charge fitting (TIP, this should be cheaper than your single point method)
   optMethod: XTB2
   ## Solvation method for geometry optimisation before charge fitting, set to Null for no solvation
@@ -129,8 +128,8 @@ parameterFittingInfo:
   ## maximum cosine functions to be used to fit each torsion parameter (set > 1 for multi-term fits)
   maxCosineFunctions: 3
   ## global joint mode runs a single global round
-  maxShuffles: 5
-  minShuffles: 2
+  maxShuffles: 25
+  minShuffles: 5
   ## L2 dampening factor DEFAULT 0.1
   l2DampingFactor: 0.1
   sagvolSmoothing: true

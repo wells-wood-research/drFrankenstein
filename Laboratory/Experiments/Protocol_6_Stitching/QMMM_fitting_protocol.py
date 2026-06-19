@@ -104,6 +104,8 @@ def fit_torsion_parameters(config: dict,
     )
     mmFittedTotalEnergy = mmTotalEnergy - mmTorsionEnergy + reconstructedSignal
     mmFittedTotalEnergy = mmFittedTotalEnergy - mmFittedTotalEnergy.min()
+    mmFittedTotalEnergyRaw = mmTotalEnergyRaw - mmTorsionEnergy + reconstructedSignal
+    mmFittedTotalEnergyRaw = mmFittedTotalEnergyRaw - mmFittedTotalEnergyRaw.min()
     meanAverageErrorTotal = np.mean(np.abs(qmTotalEnergy - mmFittedTotalEnergy))
     totalMetrics = Stitching_Assistant.calculate_profile_fit_metrics(qmTotalEnergy, mmFittedTotalEnergy)
     torsionMetrics = Stitching_Assistant.calculate_profile_fit_metrics(qmTorsionEnergy, reconstructedSignal)
@@ -124,7 +126,7 @@ def fit_torsion_parameters(config: dict,
                                                       shuffleIndex,
                                                       tol=converganceTolerance,
                                                       qmTotalEnergyRaw=qmTotalEnergyRaw,
-                                                      mmTotalEnergyRaw=mmTotalEnergyRaw)
+                                                      mmTotalEnergyRaw=mmFittedTotalEnergyRaw)
 
     return torsionParametersDf, torsionMetrics, totalMetrics, meanAverageErrorTorsion, meanAverageErrorTotal, torsionConverged
 

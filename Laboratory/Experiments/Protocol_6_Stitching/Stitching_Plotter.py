@@ -11,6 +11,7 @@ from PIL import Image
 import tempfile
 from itertools import islice
 from matplotlib.ticker import MaxNLocator
+import matplotlib.patches as patches
 
 import matplotlib.gridspec as gridspec
 from . import Stitching_Assistant
@@ -120,6 +121,141 @@ def plot_run_mean_average_error(outDir: DirectoryPath, fittingScoresCsv: FilePat
         axis.set_xticks(np.sort(valid_ticks))
 
     plt.savefig(p.join(outDir, "run_mean_average_error.png"), bbox_inches='tight')
+    plt.close()
+
+
+def plot_run_fit_score_heatmap(
+    outDir: DirectoryPath,
+    fittingScoresCsv: FilePath,
+    converganceTolerance: float = 0.1,
+    maxTagsPerPanel: int = 12,
+) -> None:
+    """Plot final torsion/total fit scores per torsion as a wrapped heatmap."""
+    scoresDf = pd.read_csv(fittingScoresCsv)
+    if scoresDf.empty or "torsion_tag" not in scoresDf.columns:
+        return
+
+    perTorsionDf = scoresDf[scoresDf["torsion_tag"] != "All_Torsions"].copy()
+    if perTorsionDf.empty:
+        return
+
+    torsionCol = "fit_score_torsion" if "fit_score_torsion" in perTorsionDf.columns else "mae_torsion"
+    totalCol = "fit_score_total" if "fit_score_total" in perTorsionDf.columns else "mae_total"
+    if torsionCol not in perTorsionDf.columns or totalCol not in perTorsionDf.columns:
+        return
+
+    lastRows = perTorsionDf.groupby("torsion_tag", as_index=False).tail(1).copy()
+    lastRows["mean_score"] = (lastRows[torsionCol] + lastRows[totalCol]) / 2.0
+    # Bad to good (highest score first)
+    lastRows = lastRows.sort_values("mean_score", ascending=False).reset_index(drop=True)
+
+    nTags = len(lastRows)
+    if nTags == 0:
+        return
+
+    tagsPerPanel = max(1, int(maxTagsPerPanel))
+    panelCount = int(np.ceil(nTags / tagsPerPanel))
+
+    set_rc_params()
+    darkGrey: str = '#1a1a1a'
+    yellow: str = '#FFFF00'
+    # Match the torsion navigation tab colors.
+    brightGreen: str = '#2e7d32'
+    brightOrange: str = '#f57c00'
+    brightRed: str = '#c62828'
+
+    figHeight = max(4.0, 2.8 * panelCount)
+    fig, axes = plt.subplots(
+        nrows=panelCount,
+        ncols=1,
+        figsize=(max(12.0, 0.95 * tagsPerPanel + 4.0), figHeight),
+        squeeze=False,
+    )
+    fig.patch.set_facecolor(darkGrey)
+
+    for panelIdx in range(panelCount):
+        axis = axes[panelIdx, 0]
+        start = panelIdx * tagsPerPanel
+        stop = min((panelIdx + 1) * tagsPerPanel, nTags)
+        panelDf = lastRows.iloc[start:stop]
+        panelTags = panelDf["torsion_tag"].tolist()
+        panelData = np.vstack([panelDf[torsionCol].to_numpy(), panelDf[totalCol].to_numpy()])
+
+        axis.set_xlim(-0.5, len(panelTags) - 0.5)
+        axis.set_ylim(1.5, -0.5)
+        axis.set_xticks(np.arange(len(panelTags)))
+        axis.set_xticklabels(panelTags, rotation=0, ha='center', fontsize=16)
+        axis.set_yticks([0, 1])
+        axis.set_yticklabels(["Torsion Score", "Total Score"])
+        ytickLabels = axis.get_yticklabels()
+        if len(ytickLabels) >= 2:
+            ytickLabels[0].set_color(brightGreen)
+            ytickLabels[1].set_color(brightOrange)
+
+        for rowIdx in range(panelData.shape[0]):
+            for colIdx in range(panelData.shape[1]):
+                cellValue = float(panelData[rowIdx, colIdx])
+                if cellValue < converganceTolerance:
+                    boxColor = brightGreen
+                elif cellValue < (2.0 * converganceTolerance):
+                    boxColor = brightOrange
+                else:
+                    boxColor = brightRed
+
+                axis.add_patch(
+                    patches.Rectangle(
+                        (colIdx - 0.5, rowIdx - 0.5),
+                        1.0,
+                        1.0,
+                        facecolor=boxColor,
+                        edgecolor='none',
+                        zorder=1,
+                    )
+                )
+                axis.text(
+                    colIdx,
+                    rowIdx,
+                    f"{cellValue:.2f}",
+                    ha='center',
+                    va='center',
+                    color=yellow,
+                    fontsize=16,
+                    fontweight='bold',
+                    bbox=dict(
+                        boxstyle="round,pad=0.18",
+                        facecolor='black',
+                        edgecolor='black',
+                        linewidth=0.8,
+                        alpha=0.95,
+                    ),
+                    zorder=2,
+                )
+
+        # Draw thin separators so wrapped panels remain readable.
+        axis.set_xticks(np.arange(-.5, len(panelTags), 1), minor=True)
+        axis.set_yticks(np.arange(-.5, 2, 1), minor=True)
+        axis.grid(which='minor', color=yellow, linestyle='-', linewidth=0.3, alpha=0.35)
+        axis.tick_params(which='minor', bottom=False, left=False)
+
+    # Always show the full threshold legend, even when some colors are unused.
+    legendHandles = [
+        patches.Patch(facecolor=brightGreen, edgecolor='none', label=f"< {converganceTolerance:.2f}"),
+        patches.Patch(facecolor=brightOrange, edgecolor='none', label=f"< {2.0 * converganceTolerance:.2f}"),
+        patches.Patch(facecolor=brightRed, edgecolor='none', label=f">= {2.0 * converganceTolerance:.2f}"),
+    ]
+    fig.legend(
+        handles=legendHandles,
+        loc='upper center',
+        bbox_to_anchor=(0.5, 0.8),
+        ncol=3,
+        frameon=True,
+        edgecolor=yellow,
+        facecolor=darkGrey,
+    )
+
+    fig.suptitle(f"Fit Scores (Tol = {converganceTolerance})", y=0.95)
+    plt.tight_layout(rect=(0, 0, 0.98, 0.84))
+    plt.savefig(p.join(outDir, "run_fit_score_heatmap.png"), bbox_inches='tight')
     plt.close()
 
 
@@ -327,7 +463,7 @@ def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
             linestyle=':',
             linewidth=1.0,
             color=magenta,
-            alpha=0.3,
+            alpha=0.65,
             label='QM raw (unsmoothed)',
         )
     if mmTotalEnergyRaw is not None:
@@ -337,8 +473,8 @@ def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
             linestyle=':',
             linewidth=1.0,
             color=brightCyan,
-            alpha=0.3,
-            label='MM raw (unsmoothed)',
+            alpha=0.65,
+            label='MM fit raw (unsmoothed)',
         )
     ax0.set_title("Total Energies", fontsize=14)
     ax0.set_xlabel('Torsion Angle')

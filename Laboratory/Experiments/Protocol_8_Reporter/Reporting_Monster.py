@@ -17,6 +17,17 @@ def _fit_plot_sort_key(filename: str) -> tuple[int, int]:
         return shuffle_index, n_cosines
     return (-1, -1)
 
+
+def _score_border_color(meanScore: float | None, tolerance: float) -> str:
+    """Map a mean fit score to an alert border color."""
+    if meanScore is None:
+        return "#343434"
+    if meanScore < tolerance:
+        return "#2e7d32"
+    if meanScore < (2.0 * tolerance):
+        return "#f57c00"
+    return "#c62828"
+
 def process_fitting_results(config: dict) -> dict:
     """Collect fitting result assets and metadata for the report."""
     ## unpack config
@@ -39,6 +50,27 @@ def process_fitting_results(config: dict) -> dict:
         "l2DampingFactor": config["parameterFittingInfo"]["l2DampingFactor"],
     }
 
+    tolerance = float(config["runtimeInfo"]["madeByStitching"].get("fitScoreTolerance", 0.1))
+    finalFitScores = config["runtimeInfo"]["madeByStitching"].get("finalFitScores", {})
+    fittingData["fitScoreTolerance"] = tolerance
+    fittingData["finalFitScores"] = finalFitScores
+
+    torsionTags = list(fittingData["torsionsToScan"].keys())
+    scoredTags = []
+    for torsionTag in torsionTags:
+        scoreData = finalFitScores.get(torsionTag, {})
+        meanScore = scoreData.get("mean_score")
+        scoredTags.append((torsionTag, float(meanScore) if meanScore is not None else None))
+    scoredTags.sort(key=lambda item: (item[1] is None, -(item[1] if item[1] is not None else 0.0)))
+    fittingData["torsionTabOrder"] = [tag for tag, _ in scoredTags]
+    fittingData["torsionTabStyles"] = {
+        tag: {
+            "meanScore": meanScore,
+            "borderColor": _score_border_color(meanScore, tolerance),
+        }
+        for tag, meanScore in scoredTags
+    }
+
     ## collect all torsions mae png
     allTorsionMaePng = p.join(qmmmParameterFittingDir, "run_mean_average_error.png")
     destAllMaePng = p.join(fittingImagesDir, "all_torsions_mae.png")
@@ -48,6 +80,15 @@ def process_fitting_results(config: dict) -> dict:
         fittingData["allTorsionMaePng"] = relativeAllMaePng
     else:
         fittingData["allTorsionMaePng"] = None
+
+    allTorsionHeatmapPng = p.join(qmmmParameterFittingDir, "run_fit_score_heatmap.png")
+    destAllHeatmapPng = p.join(fittingImagesDir, "all_torsions_fit_score_heatmap.png")
+    if p.exists(allTorsionHeatmapPng):
+        copy(allTorsionHeatmapPng, destAllHeatmapPng)
+        relativeAllHeatmapPng = p.relpath(destAllHeatmapPng, reporterDir)
+        fittingData["allTorsionScoreHeatmapPng"] = relativeAllHeatmapPng
+    else:
+        fittingData["allTorsionScoreHeatmapPng"] = None
 
     ## collect pngs and gifs
     fittingImages = {}

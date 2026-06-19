@@ -85,6 +85,37 @@ def rms_of_mae_dict(meanAverageErrors: dict[str, list[float]]) -> float:
     """Calculate the RMS of the MAE history."""
     rms = np.sqrt(sum(meanAverageErrors[torsion][-1] ** 2 for torsion in meanAverageErrors) / len(meanAverageErrors.keys()))
     return rms
+
+
+def collect_final_fit_scores(fittingScoresCsv: FilePath, torsionTags: list[str]) -> dict[str, dict[str, float | int]]:
+    """Extract the last available fit-score row for each torsion tag."""
+    if not p.exists(fittingScoresCsv):
+        return {}
+
+    scoresDf = pd.read_csv(fittingScoresCsv)
+    if scoresDf.empty or "torsion_tag" not in scoresDf.columns:
+        return {}
+
+    validTags = set(torsionTags)
+    scoresDf = scoresDf[scoresDf["torsion_tag"].isin(validTags)]
+    if scoresDf.empty:
+        return {}
+
+    # Keep the latest row encountered for each torsion tag.
+    lastRows = scoresDf.groupby("torsion_tag", as_index=False).tail(1)
+    finalScores = {}
+    for _, row in lastRows.iterrows():
+        torsionScore = float(row["fit_score_torsion"])
+        totalScore = float(row["fit_score_total"])
+        finalScores[row["torsion_tag"]] = {
+            "fit_score_torsion": torsionScore,
+            "fit_score_total": totalScore,
+            "mean_score": (torsionScore + totalScore) / 2.0,
+            "shuffle": int(row["shuffle"]),
+            "n_cosines": int(row["n_cosines"]),
+        }
+
+    return finalScores
 def init_tqdm_bar_options() -> dict:
     """Return the shared tqdm configuration for stitching progress bars."""
     tqdmBarOptions = {

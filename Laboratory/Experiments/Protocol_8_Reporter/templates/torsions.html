@@ -33,10 +33,16 @@
 
     .summary-image-container img {
         max-width: 100%;
-        max-height: 300px;
+        max-height: 460px;
         border: 1px solid #333;
         border-radius: 3px;
         background-color: #2a2a2a;
+    }
+
+    .summary-image-caption {
+        margin: 0 0 8px 0;
+        color: #ffffff;
+        font-weight: bold;
     }
 
     .torsion-sub-tab-nav {
@@ -69,7 +75,8 @@
     .torsion-sub-tab-nav button.active {
         background-color: #333333;
         color: #ffffff;
-        border-color: #00ff00;
+        border-color: var(--score-border-color, #00ff00);
+        box-shadow: 0 0 0 1px var(--score-border-color, #00ff00);
         font-weight: bold;
     }
 
@@ -96,6 +103,13 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         line-height: 1.2;
+    }
+
+    .torsion-sub-tab-tile .tile-score {
+        width: 100%;
+        line-height: 1.2;
+        font-size: 0.74em;
+        color: #b8b8b8;
     }
 
     .torsion-sub-tab-tile .tile-placeholder {
@@ -308,6 +322,7 @@
         .torsions-summary-grid {
             grid-template-columns: 1fr;
         }
+
     }
 
     @media (max-width: 768px) {
@@ -360,9 +375,14 @@
                 <p><strong>Maximum Cosine Functions:</strong> {{ fitting_data.maxCosineFunctions | default('N/A') }}</p>
                 <p><strong>L2 Damping on MM Torsion Energies:</strong> {{ fitting_data.l2DampingFactor | default('N/A') }}</p>
                 <p><strong>Savitzky-Golay filter on QM Total Energies:</strong> {{ fitting_data.sagvolSmoothing | default('N/A') }}</p>
-                {% if fitting_data.allTorsionMaePng %}
+                {% if fitting_data.allTorsionScoreHeatmapPng %}
                     <div class="summary-image-container">
-                        <p><strong>Overall Mean Average Error (PNG)</strong></p>
+                        <p class="summary-image-caption">Score Heatmap</p>
+                        <img src="{{ fitting_data.allTorsionScoreHeatmapPng }}" alt="Heatmap of final torsion and total fit scores, sorted worst to best">
+                    </div>
+                {% elif fitting_data.allTorsionMaePng %}
+                    <div class="summary-image-container">
+                        <p class="summary-image-caption">Overall MAE</p>
                         <img src="{{ fitting_data.allTorsionMaePng }}" alt="Mean average error for torsion and total energies">
                     </div>
                 {% endif %}
@@ -374,11 +394,16 @@
 
     {% if has_torsion_data or has_fitting_data %}
         {% set torsions_for_tabs = torsion_data.torsionsToScan if has_torsion_data else fitting_data.torsionsToScan %}
+        {% set torsion_tab_order = fitting_data.torsionTabOrder if fitting_data and fitting_data.torsionTabOrder else torsions_for_tabs.keys() %}
         <h2>Data for Individual Dihedrals</h2>
 
         <div class="torsion-sub-tab-nav">
-            {% for dihedral_name, details in torsions_for_tabs.items() %}
+            {% for dihedral_name in torsion_tab_order %}
+                {% set details = torsions_for_tabs.get(dihedral_name) %}
+                {% set tab_style = fitting_data.torsionTabStyles.get(dihedral_name) if fitting_data and fitting_data.torsionTabStyles else none %}
+                {% set tab_border_color = tab_style.borderColor if tab_style and tab_style.borderColor else '#343434' %}
                 <button class="torsion-sub-tab-button {% if loop.first %}active{% endif %}"
+                        style="--score-border-color: {{ tab_border_color }}; border-color: {{ tab_border_color }};"
                         onclick="openTorsionsSubTab(event, 'torsions_sub_tab_{{ loop.index }}')">
                     {% set fit_preview = fitting_data.fittingImages.get(dihedral_name).fittingPng if fitting_data and fitting_data.fittingImages and fitting_data.fittingImages.get(dihedral_name) and fitting_data.fittingImages.get(dihedral_name).fittingPng else none %}
                     {% set single_point_preview = details.spPng if details and details.spPng else none %}
@@ -394,15 +419,22 @@
                             <span class="tile-placeholder">No preview</span>
                         {% endif %}
                         <span class="tile-label">{{ dihedral_name }}</span>
+                        {% if tab_style and tab_style.meanScore is not none %}
+                            <span class="tile-score">Mean score: {{ "%.3f"|format(tab_style.meanScore) }}</span>
+                        {% else %}
+                            <span class="tile-score">Mean score: N/A</span>
+                        {% endif %}
                     </span>
                 </button>
             {% endfor %}
         </div>
 
-        {% for dihedral_name, details in torsions_for_tabs.items() %}
+        {% for dihedral_name in torsion_tab_order %}
+            {% set details = torsions_for_tabs.get(dihedral_name) %}
             {% set fitting_images = fitting_data.fittingImages.get(dihedral_name) if fitting_data and fitting_data.fittingImages else none %}
             {% set final_params = fitting_data.finalParameters.get(dihedral_name) if fitting_data and fitting_data.finalParameters else none %}
             {% set torsion_viz = torsion_data.torsionHtmls.get(dihedral_name) if torsion_data and torsion_data.torsionHtmls else none %}
+            {% set final_scores = fitting_data.finalFitScores.get(dihedral_name) if fitting_data and fitting_data.finalFitScores else none %}
 
             <div id="torsions_sub_tab_{{ loop.index }}" class="torsion-sub-tab-content {% if loop.first %}active{% endif %}">
                 <div class="dihedral-top-section">
@@ -412,6 +444,11 @@
                         <p><strong>Types:</strong> {{ details.ATOM_TYPES | join('-') if details and details.ATOM_TYPES else 'N/A' }}</p>
                         <p><strong>Global Minima Angle:</strong> {{ details.globalMinimaAngle | default('N/A') }}°</p>
                         <p><strong>Barrier Height:</strong> {{ "%.3f kcal/mol" | format(details.barrierHeight) if details and details.barrierHeight is not none else 'N/A' }}</p>
+                        {% if final_scores %}
+                            <p><strong>Final Torsion Score:</strong> {{ "%.3f" | format(final_scores.fit_score_torsion) }}</p>
+                            <p><strong>Final Total Score:</strong> {{ "%.3f" | format(final_scores.fit_score_total) }}</p>
+                            <p><strong>Mean Score:</strong> {{ "%.3f" | format(final_scores.mean_score) }} (tol {{ "%.3f" | format(fitting_data.fitScoreTolerance) }})</p>
+                        {% endif %}
                         {% if final_params and final_params|length > 0 %}
                             <h5>Final Parameters</h5>
                             <table>

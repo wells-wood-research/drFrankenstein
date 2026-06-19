@@ -346,6 +346,22 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
     ## If the protocol does not converge, update the config with max shuffles
     if not converged:
         config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = maxShuffles
+    if "shufflesCompleted" not in config["runtimeInfo"]["madeByStitching"]:
+        if p.exists(fittingScoresCsv):
+            scoresDf = pd.read_csv(fittingScoresCsv)
+            if not scoresDf.empty and "shuffle" in scoresDf.columns:
+                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = int(scoresDf["shuffle"].max())
+            else:
+                config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = 0
+        else:
+            config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"] = 0
+
+    # Persist final per-torsion fit scores so reporting can rank and style confidence.
+    config["runtimeInfo"]["madeByStitching"]["fitScoreTolerance"] = statusTableTolerance
+    config["runtimeInfo"]["madeByStitching"]["finalFitScores"] = Stitching_Assistant.collect_final_fit_scores(
+        fittingScoresCsv,
+        allTorsionTags,
+    )
 
     if statusTableRows:
         drSplash.close_torsion_status_table(statusTableRows)
@@ -373,7 +389,13 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
 
     ## Load MAE data from CSV for final run-wide analysis and plotting
     if os.path.exists(fittingScoresCsv):
-        Stitching_Plotter.plot_run_mean_average_error(config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"], fittingScoresCsv )
+        runPlotDir = config["runtimeInfo"]["madeByStitching"]["qmmmParameterFittingDir"]
+        Stitching_Plotter.plot_run_mean_average_error(runPlotDir, fittingScoresCsv)
+        Stitching_Plotter.plot_run_fit_score_heatmap(
+            runPlotDir,
+            fittingScoresCsv,
+            converganceTolerance=statusTableTolerance,
+        )
     ## Clean up temporary files
     cleaner.clean_up_stitching(config)
     ## Update config checkpoint flag

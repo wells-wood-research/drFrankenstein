@@ -51,6 +51,7 @@ def _run_fitting_loop(
 
 
     ## init empties for storing data, counters, and flags
+    statusTableTolerance = 0.1 if converganceTolerance is None else converganceTolerance
     meanAverageErrorTorsion = defaultdict(list)
     meanAverageErrorTotal = defaultdict(list)
     fitScoreTorsion = defaultdict(list)
@@ -140,6 +141,7 @@ def _run_fitting_loop(
                 scores=displayScores,
                 columns=statusTableColumns,
                 ncols=statusTableNcols,
+                tol=statusTableTolerance,
             )
 
         ##################### END OF SHUFFLE ####################
@@ -247,6 +249,7 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
     seed = config["miscInfo"]["seed"]
     # Standardize on maeTol keys, assuming this is the consistent naming in the config
     converganceTolerance = config["parameterFittingInfo"].get("converganceTolerance", None)
+    statusTableTolerance = 0.1 if converganceTolerance is None else converganceTolerance
 
     ## duplicate maxTorsions to runtimeInfo for easy access
     config["runtimeInfo"]["madeByStitching"]["maxTorsions"] = config["parameterFittingInfo"]["maxCosineFunctions"]
@@ -301,7 +304,7 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
             columns=statusTableColumns,
             ncols=statusTableNcols,
             position=tableStartPosition,
-            tol = config["parameterFittingInfo"].get("converganceTolerance", 0.1)
+            tol=statusTableTolerance,
         )
 
     ## Set up Mean Average Error CSV for memory-efficient logging

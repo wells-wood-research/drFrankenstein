@@ -165,6 +165,41 @@
             color: #888;
             font-style: italic;
         }
+        img.report-clickable-png {
+            cursor: zoom-in;
+        }
+        .png-popout-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.92);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .png-popout-modal.open {
+            display: flex;
+        }
+        .png-popout-modal .png-popout-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            border: 1px solid #ffff00;
+            background: #111;
+            color: #ffff00;
+            padding: 8px 12px;
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
+            cursor: pointer;
+        }
+        .png-popout-modal img {
+            max-width: min(96vw, 1800px);
+            max-height: 92vh;
+            object-fit: contain;
+            border: 1px solid #444;
+            background: #111;
+        }
 
         /* FOR TESTING: Ensure one of your tabs has enough content to scroll */
         /* For example:
@@ -214,8 +249,57 @@
             </div> <!-- End of tab-container -->
         </div> <!-- End of page-content-wrapper -->
     </div> <!-- End of parallax-viewport -->
+    <div id="pngPopoutModal" class="png-popout-modal" aria-hidden="true">
+        <button type="button" class="png-popout-close" id="pngPopoutClose">Close (Esc)</button>
+        <img id="pngPopoutImage" alt="Expanded report plot">
+    </div>
 
     <script>
+        function isPngSource(src) {
+            return typeof src === 'string' && /\.png(?:$|[?#])/i.test(src.trim());
+        }
+
+        function markClickablePngs(scopeElement) {
+            if (!scopeElement) return;
+            const images = scopeElement.querySelectorAll('img');
+            images.forEach((img) => {
+                if (img.dataset.popoutReady === 'true') return;
+                const src = img.getAttribute('src') || '';
+                if (!isPngSource(src)) return;
+                img.dataset.popoutReady = 'true';
+                img.classList.add('report-clickable-png');
+                if (!img.title) {
+                    img.title = 'Click to open enlarged image';
+                }
+            });
+        }
+
+        function openModalFallback(src, alt) {
+            const modal = document.getElementById('pngPopoutModal');
+            const modalImg = document.getElementById('pngPopoutImage');
+            if (!modal || !modalImg) return;
+            modalImg.src = src;
+            modalImg.alt = alt || 'Expanded report plot';
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModalFallback() {
+            const modal = document.getElementById('pngPopoutModal');
+            const modalImg = document.getElementById('pngPopoutImage');
+            if (!modal || !modalImg) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            modalImg.removeAttribute('src');
+        }
+
+        function openPngPopout(imgElement) {
+            const src = imgElement.getAttribute('src');
+            if (!isPngSource(src)) return;
+            const alt = imgElement.getAttribute('alt') || 'Expanded report plot';
+            openModalFallback(src, alt);
+        }
+
         function attachIframeLoadHandler(iframe) {
             if (!iframe || iframe.dataset.loaderBound === 'true') return;
             iframe.dataset.loaderBound = 'true';
@@ -251,6 +335,7 @@
             activeTab.style.display = "block";
             activeTab.classList.add("active");
             loadDeferredIframes(activeTab);
+            markClickablePngs(activeTab);
             evt.currentTarget.classList.add("active");
         }
 
@@ -259,6 +344,30 @@
             allDeferredIframes.forEach((iframe) => attachIframeLoadHandler(iframe));
             const activeTab = document.querySelector('.tab-content.active');
             loadDeferredIframes(activeTab);
+            markClickablePngs(document);
+
+            document.addEventListener('click', function(event) {
+                const targetImg = event.target.closest('img.report-clickable-png');
+                if (targetImg) {
+                    event.preventDefault();
+                    openPngPopout(targetImg);
+                    return;
+                }
+
+                const modal = document.getElementById('pngPopoutModal');
+                const closeButton = document.getElementById('pngPopoutClose');
+                if (!modal) return;
+
+                if (event.target === modal || event.target === closeButton) {
+                    closeModalFallback();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeModalFallback();
+                }
+            });
         });
     </script>
 

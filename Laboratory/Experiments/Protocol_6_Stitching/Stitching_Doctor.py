@@ -315,43 +315,30 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
         )
 
 
-    cosineScheme = range(2, config["parameterFittingInfo"]["maxCosineFunctions"]+1)
-    cosineScheme = [config["parameterFittingInfo"]["maxCosineFunctions"]]
-    for nCosines in cosineScheme:
-        config["runtimeInfo"]["madeByStitching"]["maxTorsions"] = nCosines
-        paramFile, converged = _run_fitting_loop(
-            config=config,
-            forcefield=forcefield,
-            helper_functions=helper_functions,
-            total_protocol=total_protocol,
-            torsion_protocol=torsion_protocol,
-            update_param_func=update_param_func,
-            paramFile=paramFile,
-            torsionTags=torsionTags,
-            shuffledTorsionTags=shuffledTorsionTags,
-            tqdmBarOptions=tqdmBarOptions,
-            minShuffles=minShuffles,
-            converganceTolerance=converganceTolerance,
-            fittingScoresCsv=fittingScoresCsv,
-            debug=debug,
-            statusTableRows=statusTableRows,
-            statusTableTags=statusTableTags,
-            statusTableColumns=statusTableColumns,
-            statusTableNcols=statusTableNcols,
-            displayConvergedTags=displayConvergedTags,
-            displayScores=displayScores,
-        )
-
-        convergedTags = set(config["runtimeInfo"]["madeByStitching"].get("convergedTags", []))
-        torsionTags = [tag for tag in torsionTags if tag not in convergedTags]
-        # torsionTags = Stitching_Assistant._remove_converged_torsion_tags(fittingScoresCsv, converganceTolerance, torsionTags, topN = 2)
-        shuffledTorsionTags = Stitching_Assistant.shuffle_torsion_tags(torsionTags, maxShuffles, seed) if torsionTags else []
-
-        print("Remaining torsions after convergence check:", torsionTags)
-        ## run again with the remaining torsions to try to get more to converge, but only if some have not converged and we have not exceeded max shuffles
-
-        if not torsionTags:
-            break
+    # Run one fitting pass and let drFourier choose compact cosine sets with a complexity penalty.
+    config["runtimeInfo"]["madeByStitching"]["maxTorsions"] = config["parameterFittingInfo"]["maxCosineFunctions"]
+    paramFile, converged = _run_fitting_loop(
+        config=config,
+        forcefield=forcefield,
+        helper_functions=helper_functions,
+        total_protocol=total_protocol,
+        torsion_protocol=torsion_protocol,
+        update_param_func=update_param_func,
+        paramFile=paramFile,
+        torsionTags=torsionTags,
+        shuffledTorsionTags=shuffledTorsionTags,
+        tqdmBarOptions=tqdmBarOptions,
+        minShuffles=minShuffles,
+        converganceTolerance=converganceTolerance,
+        fittingScoresCsv=fittingScoresCsv,
+        debug=debug,
+        statusTableRows=statusTableRows,
+        statusTableTags=statusTableTags,
+        statusTableColumns=statusTableColumns,
+        statusTableNcols=statusTableNcols,
+        displayConvergedTags=displayConvergedTags,
+        displayScores=displayScores,
+    )
 
     ## If the protocol does not converge, update the config with max shuffles
     if not converged:
@@ -379,7 +366,7 @@ def torsion_fitting_protocol(config: dict, debug: bool = False) -> dict:
         ## Create a GIF for each torsion being fitted
         Stitching_Plotter.make_gif(torsionFittingDir, fittingGif)
         ## Plot mean average errors from the CSV data
-        # Stitching_Plotter.plot_mean_average_error(torsionFittingDir, fittingScoresCsv, torsionTag)
+        Stitching_Plotter.plot_mean_average_error(torsionFittingDir, fittingScoresCsv, torsionTag)
 
     ## Load MAE data from CSV for final run-wide analysis and plotting
     if os.path.exists(fittingScoresCsv):

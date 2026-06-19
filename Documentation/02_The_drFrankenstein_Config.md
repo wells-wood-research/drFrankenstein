@@ -388,11 +388,18 @@ Regularisation term used to damp large Fourier amplitudes.
 * Constraint: if provided as a number, it must be positive
 
 ### `sagvolSmoothing`
-Whether to apply the SAGVOL smoothing step during torsion fitting.
+Whether to apply Savitzky-Golay smoothing to `QM_Total` before deriving `QM_Torsion`.
 
-* Type: `boolean`
+* Type: `boolean`, `object`, or `null`
 * Required: yes
 * Default: `true`
+* Notes:
+  * `true` uses defaults (`windowLength: 9`, `polyorder: 2`, `mode: interp`)
+  * `false`/`null` disables smoothing
+  * object form allows explicit controls:
+    * `windowLength` (odd integer, auto-adjusted to signal length)
+    * `polyorder` (integer, must be less than window length)
+    * `mode` (SciPy `savgol_filter` mode; default `interp`)
 
 ### `maeTolTotal`
 Legacy/default-only tolerance field retained by the defaults helper.
@@ -428,6 +435,13 @@ parameterFittingInfo:
   l2DampingFactor: 0.1
   sagvolSmoothing: true
   maeTolTotal: null
+
+# Optional parameterized form:
+parameterFittingInfo:
+  sagvolSmoothing:
+    windowLength: 9
+    polyorder: 2
+    mode: interp
   maeTolTorsion: null
   converganceTolerance: 0.1
 ```

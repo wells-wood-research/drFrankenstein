@@ -106,7 +106,8 @@ def get_MM_total_energies(config: dict, torsionTag: str, moleculeFrcmod: FilePat
     finalScanEnergiesDf["smoothedEnergy"] = savgol_filter(finalScanEnergiesDf[torsionTag], window_length=5, polyorder=2)
     finalScanEnergiesDf.to_csv(p.join(torsionFittingDir, "final_scan_energies.csv"), index=False)
 
-    return  finalScanEnergiesDf["smoothedEnergy"].to_numpy()
+    # Return raw normalized MM totals; smoothing is handled in QMMM fitting.
+    return finalScanEnergiesDf[torsionTag].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_serial(scanDirs: list, torsionTotalDir: DirectoryPath, cappedPdb: FilePath, moleculePrmtop: FilePath, torsionIndexes: list[int], gpuPlatform: str | None = None):
@@ -230,7 +231,7 @@ def run_mm_constrained_em(trajPdbs: List[FilePath], moleculePrmtop: FilePath, to
         simulation.context.setPositions(pdbFile.positions)
         
         # 5. Run the energy minimization
-        simulation.minimizeEnergy()
+        simulation.minimizeEnergy(maxIterations=100)
 
         # 6. Get the potential energy after minimization
         final_state = simulation.context.getState(getEnergy=True)

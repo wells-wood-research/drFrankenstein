@@ -284,7 +284,9 @@ def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
                         converged: bool,
                         outDir: DirectoryPath,
                         shuffleIndex: int,
-                        tol: float) -> None:
+                        tol: float,
+                        qmTotalEnergyRaw: np.ndarray | None = None,
+                        mmTotalEnergyRaw: np.ndarray | None = None) -> None:
     """Plot QM, MM, and fitted torsion energies for one shuffle."""
     
     set_rc_params()
@@ -295,6 +297,10 @@ def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
 
     if not (len(qmTotalEnergy) == len(qmTorsionEnergy) == len(mmTotalEnergy) == len(mmFittedTorsionEnergy)):
         raise ValueError("QM/MM arrays must have matching lengths.")
+    if qmTotalEnergyRaw is not None and len(qmTotalEnergyRaw) != len(qmTotalEnergy):
+        raise ValueError("qmTotalEnergyRaw must match qmTotalEnergy length.")
+    if mmTotalEnergyRaw is not None and len(mmTotalEnergyRaw) != len(mmTotalEnergy):
+        raise ValueError("mmTotalEnergyRaw must match mmTotalEnergy length.")
 
     angleStepDegrees = 10
     angles = np.arange(len(qmTotalEnergy), dtype=float) * angleStepDegrees
@@ -314,6 +320,26 @@ def plot_qmmm_energies(qmTotalEnergy: np.ndarray,
         ax0.plot(angles, mmTotalEnergy, color=brightCyan, linewidth=1+n, alpha=0.1)
     ax0.plot(angles, qmTotalEnergy, label='QM target', linewidth=2, color=magenta)
     ax0.plot(angles, mmTotalEnergy, label='MM fit', linewidth=2, color=brightCyan)
+    if qmTotalEnergyRaw is not None:
+        ax0.plot(
+            angles,
+            qmTotalEnergyRaw,
+            linestyle=':',
+            linewidth=1.0,
+            color=magenta,
+            alpha=0.3,
+            label='QM raw (unsmoothed)',
+        )
+    if mmTotalEnergyRaw is not None:
+        ax0.plot(
+            angles,
+            mmTotalEnergyRaw,
+            linestyle=':',
+            linewidth=1.0,
+            color=brightCyan,
+            alpha=0.3,
+            label='MM raw (unsmoothed)',
+        )
     ax0.set_title("Total Energies", fontsize=14)
     ax0.set_xlabel('Torsion Angle')
     ax0.set_ylabel('Energy (Kcal / mol)')

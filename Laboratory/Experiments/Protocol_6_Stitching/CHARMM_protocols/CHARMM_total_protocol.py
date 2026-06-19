@@ -66,9 +66,8 @@ def get_MM_total_energies(config: dict,
     finalScanEnergiesDf["smoothedEnergy"] = savgol_filter(finalScanEnergiesDf[torsionTag], window_length=5, polyorder=2)
     finalScanEnergiesDf.to_csv(p.join(torsionFittingDir, "final_scan_energies.csv"), index=False)
 
-    smoothedEnergies = finalScanEnergiesDf["smoothedEnergy"].to_numpy()
-
-    return  smoothedEnergies
+    # Return raw normalized MM totals; smoothing is handled in QMMM fitting.
+    return finalScanEnergiesDf[torsionTag].to_numpy()
 
 # 🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_parallel(scanDirs: list, torsionTotalDir: DirectoryPath, moleculePrm: FilePath, config: dict):

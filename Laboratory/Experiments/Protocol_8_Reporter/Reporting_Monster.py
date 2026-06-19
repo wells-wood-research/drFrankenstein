@@ -42,9 +42,12 @@ def process_fitting_results(config: dict) -> dict:
     ## collect all torsions mae png
     allTorsionMaePng = p.join(qmmmParameterFittingDir, "run_mean_average_error.png")
     destAllMaePng = p.join(fittingImagesDir, "all_torsions_mae.png")
-    copy(allTorsionMaePng, destAllMaePng)
-    relativeAllMaePng = p.relpath(destAllMaePng, reporterDir)
-    fittingData["allTorsionMaePng"] = relativeAllMaePng
+    if p.exists(allTorsionMaePng):
+        copy(allTorsionMaePng, destAllMaePng)
+        relativeAllMaePng = p.relpath(destAllMaePng, reporterDir)
+        fittingData["allTorsionMaePng"] = relativeAllMaePng
+    else:
+        fittingData["allTorsionMaePng"] = None
 
     ## collect pngs and gifs
     fittingImages = {}
@@ -67,8 +70,11 @@ def process_fitting_results(config: dict) -> dict:
             copy(fittingPng, destPng)
         if p.exists(fittingGif):
             copy(fittingGif, destGif)
-        copy(maePng, destMaePng)
-        relativeMaePng = p.relpath(destMaePng, reporterDir)
+        if p.exists(maePng):
+            copy(maePng, destMaePng)
+            relativeMaePng = p.relpath(destMaePng, reporterDir)
+        else:
+            relativeMaePng = None
         fittingImages[torsionTag] = {
             "fittingPng": p.relpath(destPng, reporterDir) if fittingPng else None,
             "fittingGif": p.relpath(destGif, reporterDir) if p.exists(fittingGif) else None,

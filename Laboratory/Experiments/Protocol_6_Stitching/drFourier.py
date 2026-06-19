@@ -18,7 +18,26 @@ class DirPath:
 from . import Stitching_Assistant
 
 
-def fourier_transform_protocol(qmTorsionEnergy: np.array, torsionTag: str, torsionFittingDir: DirPath, config: dict):
+def _coerce_positive_float(value: object, default: float) -> float:
+    """Parse a positive float with fallback."""
+    try:
+        parsed = float(value)
+        if parsed <= 0:
+            return default
+        return parsed
+    except Exception:
+        return default
+
+
+def fourier_transform_protocol(
+    qmTorsionEnergy: np.array,
+    torsionTag: str,
+    torsionFittingDir: DirPath,
+    config: dict,
+    qmTotalEnergy: np.ndarray | None = None,
+    mmTotalEnergy: np.ndarray | None = None,
+    mmTorsionEnergy: np.ndarray | None = None,
+):
                             #    sampleSpacing=10, maxFunctions=3, forceField = "AMBER", l2Damping = 0.1):
     """Fit Fourier torsion parameters and return the selected components."""
 
@@ -26,6 +45,29 @@ def fourier_transform_protocol(qmTorsionEnergy: np.array, torsionTag: str, torsi
     maxCosineFunctions = config["runtimeInfo"]["madeByStitching"]["maxTorsions"]
     l2Damping = config["parameterFittingInfo"]["l2DampingFactor"]
     forceField = config["parameterFittingInfo"]["forceField"]
+    acceptableFitScore = config["parameterFittingInfo"].get("converganceTolerance", None)
+    cosineComplexityPenalty = _coerce_positive_float(
+        config["parameterFittingInfo"].get("cosineComplexityPenalty", 0.03), 0.03
+    )
+    minScoreImprovement = _coerce_positive_float(
+        config["parameterFittingInfo"].get("cosineMinScoreImprovement", 1e-4), 1e-4
+    )
+    hasTotalObjective = (
+        qmTotalEnergy is not None
+        and mmTotalEnergy is not None
+        and mmTorsionEnergy is not None
+        and len(qmTotalEnergy) == len(qmTorsionEnergy) == len(mmTotalEnergy) == len(mmTorsionEnergy)
+    )
+    if hasTotalObjective:
+        torsionObjectiveWeight = _coerce_positive_float(
+            config["parameterFittingInfo"].get("torsionObjectiveWeight", 0.5), 0.5
+        )
+        totalObjectiveWeight = _coerce_positive_float(
+            config["parameterFittingInfo"].get("totalObjectiveWeight", 0.5), 0.5
+        )
+    else:
+        torsionObjectiveWeight = 1.0
+        totalObjectiveWeight = 0.0
     sampleSpacing = 10
     energyDataPadded: np.array = pad_energy_data(qmTorsionEnergy, paddingFactor=3)
     ## calculate signal length
@@ -46,12 +88,34 @@ def fourier_transform_protocol(qmTorsionEnergy: np.array, torsionTag: str, torsi
     if forceField == "AMBER":
         ## construct cosine components from parameters
         selectedParamDf, cosineComponents, nFunctionsUsed = construct_cosine_components_AMBER(
-            paramDf, angle, maxCosineFunctions, qmTorsionEnergy
+            paramDf,
+            angle,
+            maxCosineFunctions,
+            qmTorsionEnergy,
+            qmTotalEnergy=qmTotalEnergy,
+            mmTotalEnergy=mmTotalEnergy,
+            mmTorsionEnergy=mmTorsionEnergy,
+            torsionObjectiveWeight=torsionObjectiveWeight,
+            totalObjectiveWeight=totalObjectiveWeight,
+            acceptableFitScore=acceptableFitScore,
+            complexityPenalty=cosineComplexityPenalty,
+            minScoreImprovement=minScoreImprovement,
         )
 
     elif forceField == "CHARMM":
         selectedParamDf, cosineComponents, nFunctionsUsed = construct_cosine_components_CHARMM(
-            paramDf, angle, maxCosineFunctions, qmTorsionEnergy
+            paramDf,
+            angle,
+            maxCosineFunctions,
+            qmTorsionEnergy,
+            qmTotalEnergy=qmTotalEnergy,
+            mmTotalEnergy=mmTotalEnergy,
+            mmTorsionEnergy=mmTorsionEnergy,
+            torsionObjectiveWeight=torsionObjectiveWeight,
+            totalObjectiveWeight=totalObjectiveWeight,
+            acceptableFitScore=acceptableFitScore,
+            complexityPenalty=cosineComplexityPenalty,
+            minScoreImprovement=minScoreImprovement,
         )
 
     ## write data to csv file
@@ -132,46 +196,162 @@ def construct_cosine_components_CHARMM(
     angle: np.array,
     maxFunctions: int,
     qmTorsionEnergy: np.array,
+    qmTotalEnergy: np.ndarray | None = None,
+    mmTotalEnergy: np.ndarray | None = None,
+    mmTorsionEnergy: np.ndarray | None = None,
+    torsionObjectiveWeight: float = 1.0,
+    totalObjectiveWeight: float = 0.0,
+    acceptableFitScore: float | None = None,
+    complexityPenalty: float = 0.03,
+    minScoreImprovement: float = 1e-4,
     tolerance: float = 0.2,
 ) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     """Construct cosine components for CHARMM torsions."""
-    return _construct_cosine_components(charmmParamDf, maxFunctions, qmTorsionEnergy)
+    return _construct_cosine_components(
+        charmmParamDf,
+        maxFunctions,
+        qmTorsionEnergy,
+        qmTotalEnergy=qmTotalEnergy,
+        mmTotalEnergy=mmTotalEnergy,
+        mmTorsionEnergy=mmTorsionEnergy,
+        torsionObjectiveWeight=torsionObjectiveWeight,
+        totalObjectiveWeight=totalObjectiveWeight,
+        acceptableFitScore=acceptableFitScore,
+        complexityPenalty=complexityPenalty,
+        minScoreImprovement=minScoreImprovement,
+    )
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def construct_cosine_components_AMBER(
     amberParamDf: pd.DataFrame,
     angle: np.array,
     maxFunctions: int,
     qmTorsionEnergy: np.array,
+    qmTotalEnergy: np.ndarray | None = None,
+    mmTotalEnergy: np.ndarray | None = None,
+    mmTorsionEnergy: np.ndarray | None = None,
+    torsionObjectiveWeight: float = 1.0,
+    totalObjectiveWeight: float = 0.0,
+    acceptableFitScore: float | None = None,
+    complexityPenalty: float = 0.03,
+    minScoreImprovement: float = 1e-4,
     tolerance: float = 0.05,
 ) -> Tuple[np.array, List[Tuple[float, np.array]], int]:
     """Construct cosine components for AMBER torsions."""
-    return _construct_cosine_components(amberParamDf, maxFunctions, qmTorsionEnergy)
+    return _construct_cosine_components(
+        amberParamDf,
+        maxFunctions,
+        qmTorsionEnergy,
+        qmTotalEnergy=qmTotalEnergy,
+        mmTotalEnergy=mmTotalEnergy,
+        mmTorsionEnergy=mmTorsionEnergy,
+        torsionObjectiveWeight=torsionObjectiveWeight,
+        totalObjectiveWeight=totalObjectiveWeight,
+        acceptableFitScore=acceptableFitScore,
+        complexityPenalty=complexityPenalty,
+        minScoreImprovement=minScoreImprovement,
+    )
+
+
+def _score_candidate(
+    candidateTorsionSignal: np.ndarray,
+    qmTorsionEnergy: np.ndarray,
+    qmTotalEnergy: np.ndarray | None = None,
+    mmTotalEnergy: np.ndarray | None = None,
+    mmTorsionEnergy: np.ndarray | None = None,
+    torsionObjectiveWeight: float = 1.0,
+    totalObjectiveWeight: float = 0.0,
+) -> tuple[float, float | None, float]:
+    """Return (torsion score, total score or None, blended score)."""
+    torsionScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, candidateTorsionSignal)
+    hasTotalObjective = (
+        qmTotalEnergy is not None
+        and mmTotalEnergy is not None
+        and mmTorsionEnergy is not None
+        and len(qmTotalEnergy) == len(candidateTorsionSignal) == len(mmTotalEnergy) == len(mmTorsionEnergy)
+    )
+
+    if not hasTotalObjective:
+        return torsionScore, None, torsionScore
+
+    candidateTotalSignal = mmTotalEnergy - mmTorsionEnergy + candidateTorsionSignal
+    totalScore = Stitching_Assistant.calculate_profile_fit_score(qmTotalEnergy, candidateTotalSignal)
+    weightSum = torsionObjectiveWeight + totalObjectiveWeight
+    if weightSum <= 0:
+        weightSum = 1.0
+        torsionObjectiveWeight = 1.0
+        totalObjectiveWeight = 0.0
+    blendedScore = (
+        torsionObjectiveWeight * torsionScore + totalObjectiveWeight * totalScore
+    ) / weightSum
+    return torsionScore, totalScore, blendedScore
 
 
 def _construct_cosine_components(
     paramDf: pd.DataFrame,
     maxFunctions: int,
     qmTorsionEnergy: np.array,
+    qmTotalEnergy: np.ndarray | None = None,
+    mmTotalEnergy: np.ndarray | None = None,
+    mmTorsionEnergy: np.ndarray | None = None,
+    torsionObjectiveWeight: float = 1.0,
+    totalObjectiveWeight: float = 0.0,
+    acceptableFitScore: float | None = None,
+    complexityPenalty: float = 0.03,
+    minScoreImprovement: float = 1e-4,
 ) -> Tuple[pd.DataFrame, List[Tuple[float, np.array]], int]:
-    """Select cosine components that improve the torsion fit."""
+    """Select a compact cosine set that reaches acceptable fit when possible."""
     sampleSpacing = 10
     signalLength = len(qmTorsionEnergy)
     angle = np.arange(signalLength) * sampleSpacing
 
     reconstructedSignal = np.zeros(signalLength)
-    bestScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, reconstructedSignal)
+    bestTorsionScore, bestTotalScore, bestBlendedScore = _score_candidate(
+        reconstructedSignal,
+        qmTorsionEnergy,
+        qmTotalEnergy=qmTotalEnergy,
+        mmTotalEnergy=mmTotalEnergy,
+        mmTorsionEnergy=mmTorsionEnergy,
+        torsionObjectiveWeight=torsionObjectiveWeight,
+        totalObjectiveWeight=totalObjectiveWeight,
+    )
+    bestObjective = bestBlendedScore
     cosineComponents = []
     selectedRowIndexes = []
 
     for _, row in paramDf.iloc[:maxFunctions].iterrows():
         candidateComponent = row["Amplitude"] * (1 + np.cos(np.radians(row["Period"] * angle - row["Phase"])))
         candidateSignal = reconstructedSignal + candidateComponent
-        candidateScore = Stitching_Assistant.calculate_profile_fit_score(qmTorsionEnergy, candidateSignal)
-        if candidateScore < bestScore:
+        candidateTorsionScore, candidateTotalScore, candidateBlendedScore = _score_candidate(
+            candidateSignal,
+            qmTorsionEnergy,
+            qmTotalEnergy=qmTotalEnergy,
+            mmTotalEnergy=mmTotalEnergy,
+            mmTorsionEnergy=mmTorsionEnergy,
+            torsionObjectiveWeight=torsionObjectiveWeight,
+            totalObjectiveWeight=totalObjectiveWeight,
+        )
+        scoreImprovement = bestBlendedScore - candidateBlendedScore
+        if scoreImprovement < minScoreImprovement:
+            continue
+
+        candidateNTerms = len(cosineComponents) + 1
+        candidateObjective = candidateBlendedScore + (complexityPenalty * (candidateNTerms / max(maxFunctions, 1)))
+        if candidateObjective < bestObjective:
             reconstructedSignal = candidateSignal
-            bestScore = candidateScore
+            bestTorsionScore = candidateTorsionScore
+            bestTotalScore = candidateTotalScore
+            bestBlendedScore = candidateBlendedScore
+            bestObjective = candidateObjective
             selectedRowIndexes.append(row.name)
             cosineComponents.append((len(cosineComponents) + 1, candidateComponent))
+            if acceptableFitScore is not None:
+                hasTotalScore = bestTotalScore is not None
+                reachedTarget = (
+                    bestTorsionScore <= acceptableFitScore and (not hasTotalScore or bestTotalScore <= acceptableFitScore)
+                )
+                if reachedTarget:
+                    # stop at the first acceptable model to keep cosine count minimal
+                    break
 
     selectedParamDf = paramDf.loc[selectedRowIndexes]
     return selectedParamDf, cosineComponents, len(cosineComponents)

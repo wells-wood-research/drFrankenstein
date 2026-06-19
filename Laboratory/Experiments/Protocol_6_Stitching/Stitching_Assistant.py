@@ -53,7 +53,7 @@ def score_flatline_status(
     torsionFlatLined = len(diffTorsion) >= windowSize and np.all(diffTorsion.tail(windowSize) < diffTolerance)
     totalFlatLined = len(diffTotal) >= windowSize and np.all(diffTotal.tail(windowSize) < diffTolerance)
 
-    return torsionFlatLined and totalFlatLined
+    return torsionFlatLined, totalFlatLined
 
 
 def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], fittingScoresCsv: FilePath, windowSize: int = 3, diffTolerance: float = 0.1) -> list[str]:
@@ -65,13 +65,13 @@ def check_scores_for_flatline(torsionTags: list[str], convergedTags: list[str], 
 
     flatlinedTorsions = []
     for torsionTag in unconvergedTorsionTags:
-        isFlatlined = score_flatline_status(
+        torsionFlatLined, totalFlatLined = score_flatline_status(
             scoresDf,
             torsionTag=torsionTag,
             windowSize=windowSize,
             diffTolerance=diffTolerance,
         )
-        if isFlatlined:
+        if torsionFlatLined and totalFlatLined:
             flatlinedTorsions.append(torsionTag)
     
     return flatlinedTorsions

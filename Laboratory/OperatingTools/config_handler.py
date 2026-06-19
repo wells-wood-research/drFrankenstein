@@ -426,7 +426,7 @@ def _validate_parameter_fitting_info(sectionData: Optional[Dict[str, Any]], sect
         "maxShuffles": int,
         "minShuffles": int,
         "l2DampingFactor": float | None,
-        "sagvolSmoothing": bool,
+        "sagvolSmoothing": (bool, dict, type(None)),
     }
     allowedForceFields = ["CHARMM", "AMBER"]
     for key, expectedType in expectedKeys.items():

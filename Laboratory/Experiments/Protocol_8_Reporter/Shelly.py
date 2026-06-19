@@ -76,10 +76,11 @@ def write_conformer_method(config: dict) -> str:
         isCapped = True
 
     
+    conformerLabel = f"capped {moleculeName}" if isCapped else moleculeName
     conformerMethod = dedent(f"""
-A library of {nConformersGenerated} low-energy conformers of {"capped" if isCapped else ""} {moleculeName} was generated using ORCA's GOAT protocol. \
-These calculations were performed using the GFN2-XTB semi-empirical method. \
-The conformers generated in this step were used as inputs for the subsequent torsion-scanning and charge calculation protocols.
+A library of {nConformersGenerated} low-energy conformers of {conformerLabel} was generated using ORCA's GOAT protocol. \
+GOAT conformer generation was run with the GFN2-XTB method. \
+These conformers were then used as starting structures for torsion scanning and charge fitting.
                             """)
     
     return conformerMethod
@@ -104,21 +105,21 @@ def write_torsion_scanning_method(config: dict) -> str:
         nConformersUsed = nConformers
 
     torsionMethod = dedent(f"""
-Torsion scans were performed on all rotatable bonds in {moleculeName}. \
-For each rotatable dihedral full 360 degree relaxed scan was performed in the forwards and backwards directions. Each scan was conducted using 10 degree increments. \
-Scans were performed at the {scanMethod} level{" with the " + scanSolvationMethod + " solvation method" if scanSolvationMethod is not None else ""}. \
+Torsion scans were performed on the set of rotatable dihedrals selected by the torsion-scan settings for {moleculeName}. \
+Each selected torsion was scanned over 360 degrees in both forward and backward directions using 10 degree increments (37 points per direction). \
+Relaxed scans were run at the {scanMethod} level{" with the " + scanSolvationMethod + " solvation model" if scanSolvationMethod is not None else ""}. \
                             """)
     
     if singlePointMethod:
         singlePointText = dedent(f"""
-The energy profiles of each torsion scan were refined using single-point calculations at the {singlePointMethod} level \
-{"with the " + singlePointSolvationMethod + " solvation method" if singlePointSolvationMethod is not None else ""}. \
+The resulting scan geometries were refined with single-point calculations at the {singlePointMethod} level \
+{"with the " + singlePointSolvationMethod + " solvation model" if singlePointSolvationMethod is not None else ""}. \
                                  """)
         torsionMethod = torsionMethod + singlePointText
     
     averagingText = dedent(f"""
-The torsion scanning process was performed {nConformersUsed} times, each with a different conformer geometry as a starting point. \
-After discarding scans with unphysically high energy barriers, the final energy profile of each torsion was calculated by averaging each scan. \
+The torsion-scanning workflow was repeated for {nConformersUsed} starting conformers. \
+Only successfully completed forward/backward scan pairs were retained, and the final profile for each torsion was taken as the average over those retained scans. \
                             """)
 
     torsionMethod = torsionMethod + averagingText
@@ -152,51 +153,41 @@ def write_charge_calculation_method(config: dict) -> str:
 
     ## write charge method
     chargesMethod = dedent(f"""
-The partial charges of {moleculeName} were calculated using the {chargeFittingProtocol} charge fitting protocol. \
+Partial charges for {moleculeName} were generated using the {chargeFittingProtocol} charge-fitting protocol. \
                              """)
     
     if chargeFittingProtocol == "SOLVATOR":
         chargesMethod = chargesMethod + dedent(f"""
-This protocol used ORCA's SOLVATOR method to place {nWaters} water molecules around the {moleculeName} molecule. \
-The SOLVATOR protocol was performed at the GFN2-XTB level and using the stochastic solvation procedure. \
-The stochastic procedure is extremely fast, but produces sub-optimal water interaction networks. \
-To obtain better placements of the solvating water molecules, a QM/MM geometry optimisation was performed, \
-where the {moleculeName} molecule was treated at the {optMethod} level and the solvating water molecules were treated at the \
-MM level as TIP3P waters. \
-Single-point energy calculations were then performed using QM/MM calculations were the {moleculeName} molecule was treated at the \
-{singlePointMethod} level and the solvating water molecules were treated at the MM level as TIP3P waters. \
+ORCA SOLVATOR was used to place {nWaters} explicit water molecules around each conformer, using the stochastic solvation workflow. \
+The solvated systems were then evaluated with QM/MM: the solute was treated at the {optMethod} level for geometry optimization and at the {singlePointMethod} level for single-point energies, while solvent waters were modeled as TIP3P at the MM level. \
                                                    """)
 
     elif chargeFittingProtocol == "RESP":
         chargesMethod = chargesMethod + dedent(f"""
-Initially a geometry optimisation was performed at the {optMethod} level \
-{"with the " + optSolvationMethod + " solvation method" if optSolvationMethod is not None else ""}. \
-Single-point energy calculations were then performed using single-point calculations at the {singlePointMethod} level \
-{"with the " + singlePointSolvationMethod + " solvation method" if singlePointSolvationMethod is not None else ""}. \
+Each conformer was geometry-optimized at the {optMethod} level \
+{"with the " + optSolvationMethod + " solvation model" if optSolvationMethod is not None else ""}, \
+followed by a single-point calculation at the {singlePointMethod} level \
+{"with the " + singlePointSolvationMethod + " solvation model" if singlePointSolvationMethod is not None else ""}. \
                                                    """)
 
     elif chargeFittingProtocol == "RESP2":
         chargesMethod = chargesMethod + dedent(f"""
-Initially a geometry optimisation was performed at the {optMethod} level \
-{"with the " + optSolvationMethod + " solvation method" if optSolvationMethod is not None else ""}. 
-A pair of single-point energy calculations were then performed using single-point calculations at the {singlePointMethod} level. \
-One single-point was performed using the {singlePointSolvationMethod} solvation method and the other in the gas-phase. \
+Each conformer was geometry-optimized at the {optMethod} level \
+{"with the " + optSolvationMethod + " solvation model" if optSolvationMethod is not None else ""}. \
+Two {singlePointMethod} evaluations were then run: one with the {singlePointSolvationMethod} solvation model and one in the gas phase. \
                                                    """)
 
     chargesMethod = chargesMethod + dedent(f"""
-The above process was performed on {nConformersUsed} conformers of {moleculeName}, generated previously using ORCA's GOAT protocol. \
+This workflow was applied to {nConformersUsed} GOAT-generated conformers of {moleculeName}. \
                                                """)
 
     chargesMethod = chargesMethod + dedent(f"""
-MultiWFN was then used to assign partial charges to each atom in {moleculeName} \
-using the restrained electrostatic potential (RESP) method. \
-The relative energies of each conformer were used to weight their contributions to the final partial charges. \
+MultiWFN was used for RESP charge fitting, and conformer contributions were Boltzmann-weighted using their relative electronic energies. \
                                                    """)
         
     if chargeFittingProtocol == "RESP2":
         chargesMethod = chargesMethod + dedent(f"""
-This charge fitting process was performed once for the solvated systems and once for the gas-phase systems.
-The final partial charges were then calculated using a 60:40weighted average between the solvated and gas-phase partial charges. \
+For RESP2, fitting was performed separately for solvated and gas-phase data, then combined as a 60:40 weighted average (solvated:gas-phase). \
                                                """)
 
 
@@ -209,19 +200,12 @@ def write_fitting_methods(config: dict) -> str:
     maxCosineFunctions = config["parameterFittingInfo"]["maxCosineFunctions"]
     shufflesCompleted = config["runtimeInfo"]["madeByStitching"]["shufflesCompleted"]
     fittingMethods = dedent(f"""
-To obtain MM force field parameters that accurately represent the energies obtained in the previous torsion-scanning step, \
-an iterative fitting procedure was performed. \
-For each rotatable dihedral the QM(torsion) energy is calculated as:\n\
+MM torsion parameters were optimized iteratively to reproduce the QM torsion profiles from the scanning step. \
+For each torsion, the fitted target was defined as:\n\
 QM(torsion) = QM(total) - MM(total) + MM(torsion)\n\
-QM(total) is the scan energies obtained in the previous torsion-scanning step. \
-MM(total) is obtained by performing single-point energy calculations at the MM level on the geometries from the torsion-scanning step, \
-these calculations were performed in OpenMM using the Langevin integrator. \
-MM(torsion) is obtained directly as a sum of cosine components described in the current parameter file for the torsion of interest. \
-Once the QM(torsion) energies have been calculated, a maximum of {maxCosineFunctions} cosine functions were fit to the energy profile \
-using the Fast Fourier transform method implemented in the numpy library. 
-The amplitudes, phases and periodicities of the cosine functions were then used to update the parameters for the torsion of interest. \
-As this iterative fitting process proceeds, the evaluation of QM(torsion) for each torsion is calculated using the updated parameters. \
-This process was repeated {shufflesCompleted} times, each time the order of the torsions was shuffled to remove any artifacts from the arbitrary order of the torsions. \
+where QM(total) comes from the scan data, MM(total) is computed in OpenMM on scan geometries, and MM(torsion) is reconstructed from the current torsion terms. \
+Up to {maxCosineFunctions} cosine terms were selected from a Fourier representation of QM(torsion), and the resulting amplitudes, phases, and periodicities were written back to the parameter file. \
+This update cycle was repeated for {shufflesCompleted} shuffles of torsion order to reduce order-dependent bias. \
                             """)
 
     return fittingMethods

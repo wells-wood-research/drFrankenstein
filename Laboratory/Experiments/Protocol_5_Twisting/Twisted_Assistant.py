@@ -484,6 +484,8 @@ def read_scan_energy_data(conformerTorsionScanDir):
 def find_final_xyz(conformerTorsionScanDir):
     allXyzFiles = glob.glob(p.join(conformerTorsionScanDir, "*.xyz"))
     scanXyzFiles = sorted([f for f in allXyzFiles if re.match(r'orca_scan\.\d+\.xyz$', os.path.basename(f))])
+    if not scanXyzFiles:
+        raise FileNotFoundError(f"No scan xyz files found in {conformerTorsionScanDir}")
 
     finalXyzFile = scanXyzFiles[-1]
     return finalXyzFile

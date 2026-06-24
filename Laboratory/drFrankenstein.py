@@ -76,7 +76,6 @@ def main() -> None:
         cappedPdb = pdb_checker.get_capped_pdb_path(config)
         pdb_checker.validate_charge_multiplicity(config, cappedPdb)
 
-        
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:
             drSplash.show_wriggle_splash()
@@ -93,7 +92,6 @@ def main() -> None:
             ## TODO: drSplash?
             config = Assembly_Doctor.parameter_assembly_protocol(config=config, debug=debug)
             drYaml.write_config_to_yaml(config, outputDir)
-
 
         ## run torsion scanning
         if not checkpointInfo["scanningComplete"]:

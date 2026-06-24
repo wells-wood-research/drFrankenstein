@@ -28,12 +28,16 @@ def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
                                                    qmMethod=config["torsionScanInfo"]["scanMethod"],
                                                     solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
                                                     nCpus=nCoresPerCalculation)
-    flags = [p.join(optOrcaInput, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+    finishedFlag = p.join(optDir, "ORCA_FINISHED_NORMALLY")
+    crashedFlag = p.join(optDir, "ORCA_CRASHED")
+    flags = [finishedFlag, crashedFlag]
                         
     if not any ([p.isfile(flag) for flag in flags]):
         optOrcaOutput: FilePath = p.join(optDir, "orca_opt.out")
         drOrca.run_orca(optOrcaInput, optOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(optDir, optOrcaOutput)
+    if p.isfile(crashedFlag):
+        raise FileNotFoundError(f"ORCA crashed during optimisation for {conformerId}: {optDir}")
 
     optXyz = p.join(optDir, "orca_opt.xyz")
 
@@ -60,13 +64,20 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
                                                         nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1))
 
     
-    flags = [p.join(forwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+    finishedFlag = p.join(forwardsDir, "ORCA_FINISHED_NORMALLY")
+    crashedFlag = p.join(forwardsDir, "ORCA_CRASHED")
+    flags = [finishedFlag, crashedFlag]
+
+    if p.isfile(crashedFlag):
+        raise FileNotFoundError(f"ORCA crashed during forwards scan for {conformerId}: {forwardsDir}")
 
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(forwardsDir)
         forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca_scan.out")
         drOrca.run_orca(forwardsOrcaInput, forwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(forwardsDir, forwardsOrcaOutput)
+    if p.isfile(crashedFlag):
+        raise FileNotFoundError(f"ORCA crashed during forwards scan for {conformerId}: {forwardsDir}")
     
     forwardsXyz = Twisted_Assistant.find_final_xyz(forwardsDir)
     forwardsScanDf = Twisted_Assistant.read_scan_energy_data(forwardsDir)
@@ -99,13 +110,20 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
                                                         nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1))
 
 
-    flags = [p.join(backwardsDir, flag) for flag in ["ORCA_FINISHED_NORMALLY", "ORCA_CRASHED"]]
+    finishedFlag = p.join(backwardsDir, "ORCA_FINISHED_NORMALLY")
+    crashedFlag = p.join(backwardsDir, "ORCA_CRASHED")
+    flags = [finishedFlag, crashedFlag]
+
+    if p.isfile(crashedFlag):
+        raise FileNotFoundError(f"ORCA crashed during backwards scan for {conformerId}: {backwardsDir}")
 
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(backwardsDir)
         backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca_scan.out")
         drOrca.run_orca(backwardsOrcaInput, backwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(backwardsDir, backwardsOrcaOutput)
+    if p.isfile(crashedFlag):
+        raise FileNotFoundError(f"ORCA crashed during backwards scan for {conformerId}: {backwardsDir}")
 
     backwardsScanDf = Twisted_Assistant.read_scan_energy_data(backwardsDir)
     backwardsScanDf.columns = ["Angle", "Energy"]

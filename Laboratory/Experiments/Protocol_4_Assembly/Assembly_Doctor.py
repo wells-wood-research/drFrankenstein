@@ -30,7 +30,7 @@ def parameter_assembly_protocol(config:dict, debug:bool) -> dict:
         config = amber_assembly_protocol(config)
     elif assemblyProtocol.upper() == "CGENFF":
         config = CGenFF_assembly_protocol(config)
-
+    exit(0)
     config.setdefault("checkpointInfo", {})["assemblyComplete"] = True
     return config
     
@@ -146,7 +146,7 @@ def agnostic_assembly_protocol(config:dict) -> dict:
     atomFeaturesDf, atomTypesDict = Agnostic_Assembly_Monster.construct_atom_features(kbValues, r0values, kThetaValues, theta0values, config=config)
 
 
-    atomTypesDf = Agnostic_Assembly_Monster.assign_atom_types_by_clustering(atomFeaturesDf)
+    atomTypesDf = Agnostic_Assembly_Monster.assign_atom_types_by_clustering(atomFeaturesDf, plotDir=assemblyDir)
 
     atomTypesDf = Agnostic_Assembly_Monster.reassign_capping_types(atomTypesDf, config=config)
 

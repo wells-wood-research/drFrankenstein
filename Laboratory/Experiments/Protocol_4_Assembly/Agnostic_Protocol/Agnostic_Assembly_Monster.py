@@ -9,8 +9,10 @@ from collections import defaultdict
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import pandas as pd
 import networkx as nx
+import matplotlib.pyplot as plt
 from subprocess import call , PIPE
 from pdbUtils import pdbUtils
 
@@ -26,6 +28,12 @@ from .Agnostic_Assembly_Assistant import (
     _find_optimal_clusters,
     find_non_bonded_lookup
 )
+
+
+def _text_color_for_rgba(rgba):
+    r, g, b = rgba[:3]
+    luminance = (0.299 * r) + (0.587 * g) + (0.114 * b)
+    return "black" if luminance > 0.63 else "white"
 
 ## CLEAN CODE ##
 class DirectoryPath:
@@ -519,10 +527,12 @@ def reassign_backbone_types(atomTypesDf, config) -> tuple[dict, pd.DataFrame]:
 
 
 
-def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
+def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10, plotDir=None):
     """
     Main function. Groups DataFrame by ELEMENT, determines the optimal
-    number of clusters for each element, and assigns a cluster label.
+    number of clusters for each element, assigns a cluster label, and
+    writes an adaptive multi-subplot PCA (PC1 vs PC2) plot with one
+    subplot per element.
     """
     # Work on a copy to avoid SettingWithCopyWarning
     atomTypesDf = atomFeaturesDf.copy()
@@ -534,6 +544,37 @@ def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
     colsToDrop =['ATOM_ID', 'ATOM_NAME', 'ELEMENT', 'CLUSTER_LABEL', 'ATOM_TYPE']
     
     atomTypeSuffixes = pd.Series([f"{letter}" for letter in "zyxwvutsrqponmlkjihgfedcba"])
+
+    if plotDir is None:
+        plotDir = os.getcwd()
+
+    os.makedirs(plotDir, exist_ok=True)
+    plot_payload_by_element = {}
+
+    paper_style = {
+        "text.color": "#ffff66",
+        "axes.labelcolor": "#ffff66",
+        "xtick.color": "#ffff66",
+        "ytick.color": "#ffff66",
+        "axes.edgecolor": "#ffff66",
+        "axes.facecolor": "#1a1a1a",
+        "figure.facecolor": "#1a1a1a",
+        "savefig.facecolor": "#1a1a1a",
+        "savefig.edgecolor": "#1a1a1a",
+        "axes.grid": True,
+        "grid.color": "#666666",
+        "grid.alpha": 0.45,
+        "grid.linewidth": 1.0,
+        "legend.facecolor": "#1a1a1a",
+        "legend.edgecolor": "#d9d9d9",
+        "legend.labelcolor": "#ffff66",
+        "font.size": 18,
+        "axes.titlesize": 22,
+        "axes.labelsize": 18,
+        "xtick.labelsize": 18,
+        "ytick.labelsize": 18,
+        "legend.fontsize": 10,
+    }
 
     for element, elementDf in atomTypesDf.groupby("ELEMENT"):
             
@@ -555,6 +596,136 @@ def assign_atom_types_by_clustering(atomFeaturesDf, maxClusters=10):
             
             # Concatenate the Element name and the mapped suffix
             atomTypesDf.loc[elementDf.index, 'ATOM_TYPE'] = element.lower() + mapped_suffixes
+
+            # PCA projection for visualization of clustered atoms
+            n_components = min(2, featuresScaled.shape[0], featuresScaled.shape[1])
+            if n_components == 0:
+                continue
+
+            pca_model = PCA(n_components=n_components)
+            projected = pca_model.fit_transform(featuresScaled)
+            pc1 = projected[:, 0]
+            pc2 = projected[:, 1] if n_components > 1 else np.zeros_like(pc1)
+
+            explained_variance = pca_model.explained_variance_ratio_
+            pc1_var = explained_variance[0] * 100
+            pc2_var = explained_variance[1] * 100 if n_components > 1 else 0.0
+
+            atom_names = elementDf["ATOM_NAME"].to_numpy()
+            element_payload = []
+            for x, y, atom_name, cluster_label in zip(pc1, pc2, atom_names, labels):
+                if int(cluster_label) < len(atomTypeSuffixes):
+                    suffix = atomTypeSuffixes.iloc[int(cluster_label)]
+                else:
+                    suffix = f"c{int(cluster_label)}"
+                atom_type_label = f"{element.lower()}{suffix}"
+                element_payload.append({
+                    "pc1": x,
+                    "pc2": y,
+                    "atom_name": str(atom_name),
+                    "atom_type": atom_type_label,
+                })
+
+            plot_payload_by_element[element] = {
+                "points": element_payload,
+                "pc1_var": pc1_var,
+                "pc2_var": pc2_var,
+            }
+
+    if len(plot_payload_by_element) > 0:
+        elements = sorted(plot_payload_by_element.keys())
+        n_elements = len(elements)
+        n_cols = int(np.ceil(np.sqrt(n_elements)))
+        n_rows = int(np.ceil(n_elements / n_cols))
+
+        with plt.rc_context(paper_style):
+            fig, axes = plt.subplots(n_rows, n_cols, figsize=(7 * n_cols, 6 * n_rows), dpi=300)
+            axes = np.atleast_1d(axes).ravel()
+
+            for ax in axes[n_elements:]:
+                ax.set_visible(False)
+
+            for i, element in enumerate(elements):
+                ax = axes[i]
+                element_plot = plot_payload_by_element[element]
+                element_points = element_plot["points"]
+                pc1_var = element_plot["pc1_var"]
+                pc2_var = element_plot["pc2_var"]
+
+                max_name_len = max((len(d["atom_name"]) for d in element_points), default=1)
+                marker_size = max(700, 220 * max_name_len)
+
+                unique_atom_types = sorted({d["atom_type"] for d in element_points})
+                color_map = plt.get_cmap("tab20", len(unique_atom_types))
+                atom_type_colors = {atom_type: color_map(j) for j, atom_type in enumerate(unique_atom_types)}
+
+                for atom_type in unique_atom_types:
+                    sub_data = [d for d in element_points if d["atom_type"] == atom_type]
+                    cluster_color = atom_type_colors[atom_type]
+                    x_vals = [d["pc1"] for d in sub_data]
+                    y_vals = [d["pc2"] for d in sub_data]
+
+                    ax.scatter(
+                        x_vals,
+                        y_vals,
+                        s=marker_size,
+                        color=cluster_color,
+                        alpha=0.9,
+                        edgecolors="none",
+                        zorder=3,
+                        label=atom_type,
+                    )
+
+                    text_color = _text_color_for_rgba(cluster_color)
+                    for point in sub_data:
+                        ax.text(
+                            point["pc1"],
+                            point["pc2"],
+                            point["atom_name"],
+                            ha="center",
+                            va="center",
+                            fontsize=6,
+                            color=text_color,
+                            fontweight="bold",
+                            zorder=4,
+                        )
+
+                ax.set_xlabel(f"PC1 ({pc1_var:.1f}% var)")
+                ax.set_ylabel(f"PC2 ({pc2_var:.1f}% var)")
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_title(f"ELEMENT: {element}")
+
+                # Adapt legend columns so wrapped rows keep legend width within subplot width.
+                fig.canvas.draw()
+                renderer = fig.canvas.get_renderer()
+                axis_width_px = ax.get_window_extent(renderer=renderer).width
+                legend_font_size = 12
+                max_label_len = max((len(label) for label in unique_atom_types), default=1)
+                char_width_px = (legend_font_size * fig.dpi / 72.0) * 0.6
+                estimated_col_width_px = 32 + (max_label_len * char_width_px)
+                max_cols_fit = max(1, int(axis_width_px // max(estimated_col_width_px, 1)))
+                legend_ncol = min(len(unique_atom_types), max_cols_fit)
+
+                ax.legend(
+                    title="ATOM_TYPES",
+                    frameon=True,
+                    fontsize=12,
+                    title_fontsize=12,
+                    markerscale=0.6,
+                    handletextpad=0.3,
+                    borderpad=0.4,
+                    labelspacing=0.2,
+                    loc="upper center",
+                    bbox_to_anchor=(0.5, -0.10),
+                    ncol=max(1, legend_ncol),
+                )
+
+            fig.tight_layout()
+
+            figure_name = "element_cluster_pca_subplots.png"
+            fig.savefig(p.join(plotDir, figure_name), bbox_inches="tight")
+            plt.close(fig)
 
     
     return  atomTypesDf

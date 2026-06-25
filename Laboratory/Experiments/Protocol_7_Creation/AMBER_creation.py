@@ -202,7 +202,7 @@ def copy_final_frcmod(config: dict) -> dict:
 def get_capping_atom_ids(config: dict) -> list[int]:
     """Return the atom IDs that belong to the capping groups."""
 
-    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
     creationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     tmpPdb = p.join(creationDir, "tmp.pdb")
     obabelCommand = ["obabel", "-i", "mol2", cappedMol2, "-O", tmpPdb]
@@ -221,7 +221,7 @@ def get_capping_atom_ids(config: dict) -> list[int]:
 
 def create_final_lib_and_mol2(cappingAtomIds: list[int], config: dict) -> None:
     """Create the final AMBER lib and mol2 files."""
-    cappedMol2 = config["runtimeInfo"]["madeByAssembly"]["cappedMol2"]
+    cappedMol2 = config["runtimeInfo"]["madeByStitching"]["moleculeMol2"]
     finalCreationDir = config["runtimeInfo"]["madeByCreator"]["finalCreationDir"]
     moleculeName = config["moleculeInfo"]["moleculeName"]
     finalMol2 = p.join(finalCreationDir, f"{moleculeName}.mol2")

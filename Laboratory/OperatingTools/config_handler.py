@@ -191,6 +191,7 @@ def apply_defaults_and_validate(config: dict) -> dict:
     set_default(parameterFittingInfo, "maeTolTorsion", None, errors["parameterFittingInfo"])
     set_default(parameterFittingInfo, "l2DampingFactor", 0.1, errors["parameterFittingInfo"])
     set_default(parameterFittingInfo, "sagvolSmoothing", True, errors["parameterFittingInfo"])
+    set_default(parameterFittingInfo, "cosineMinScoreImprovement", 1e-4, errors["parameterFittingInfo"])
 
     # --- Section: miscInfo ---
     errors["miscInfo"] = {}

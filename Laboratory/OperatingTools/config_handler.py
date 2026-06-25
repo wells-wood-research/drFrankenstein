@@ -507,15 +507,18 @@ def _validate_backbone_charge_enforcement(config: Dict[str, Any], errors: Dict[s
     if not chargeFittingInfo.get("enforceDefaultBackboneCharges", False):
         return
     backboneAliases = moleculeInfo.get("backboneAliases")
-    requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
     keyPathPrefix = "moleculeInfo.backboneAliases"
     if not isinstance(backboneAliases, dict):
         _add_error(
             errors,
             keyPathPrefix,
-            "When chargeFittingInfo.enforceDefaultBackboneCharges is True, moleculeInfo.backboneAliases must be a dictionary containing N, H, CA, HA, C, and O.",
+            "When chargeFittingInfo.enforceDefaultBackboneCharges is True, moleculeInfo.backboneAliases must be a dictionary containing N, CA, HA, C, O (and H for non-proline residues).",
         )
         return
+    ## Proline-type residues have a ring nitrogen with no backbone amide H, so an
+    ## "H" alias may be absent or empty; only require it for non-proline residues.
+    isProline = not backboneAliases.get("H")
+    requiredBackboneKeys = ["N", "CA", "HA", "C", "O"] if isProline else ["N", "H", "CA", "HA", "C", "O"]
     for backboneKey in requiredBackboneKeys:
         aliasKeyPath = f"{keyPathPrefix}.{backboneKey}"
         if backboneKey not in backboneAliases:

@@ -105,5 +105,35 @@ class TestProlineBackboneCharges(unittest.TestCase):
             self.assertAlmostEqual(out["Charge"].sum(), 0.0, places=3)
 
 
+class TestProlineEnforceValidation(unittest.TestCase):
+    """The enforce cross-validation must accept proline configs (no backbone H alias).
+
+    Imports config_handler, which pulls the full runtime deps (ruamel/openmm/tqdm);
+    runs in the project's normal test environment (as the other suites already require).
+    """
+
+    def _validator(self):
+        from Laboratory.OperatingTools import config_handler
+        return config_handler._validate_backbone_charge_enforcement
+
+    def test_proline_config_passes_enforce_validation(self):
+        v = self._validator()
+        cfg = {"chargeFittingInfo": {"enforceDefaultBackboneCharges": True},
+               "moleculeInfo": {"backboneAliases":
+                   {"N": ["N"], "CA": ["CA"], "HA": ["HA"], "C": ["C"], "O": ["O"], "H": []}}}
+        errors = {}
+        v(cfg, errors)
+        self.assertEqual(errors, {})  # empty/absent H on a proline residue is valid
+
+    def test_proline_config_missing_CA_still_flagged(self):
+        v = self._validator()
+        cfg = {"chargeFittingInfo": {"enforceDefaultBackboneCharges": True},
+               "moleculeInfo": {"backboneAliases":
+                   {"N": ["N"], "HA": ["HA"], "C": ["C"], "O": ["O"], "H": []}}}  # CA missing
+        errors = {}
+        v(cfg, errors)
+        self.assertIn("moleculeInfo.backboneAliases.CA", errors)  # real gaps still caught
+
+
 if __name__ == "__main__":
     unittest.main()

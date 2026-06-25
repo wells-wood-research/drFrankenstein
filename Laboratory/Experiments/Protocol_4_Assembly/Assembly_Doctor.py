@@ -30,7 +30,6 @@ def parameter_assembly_protocol(config:dict, debug:bool) -> dict:
         config = amber_assembly_protocol(config)
     elif assemblyProtocol.upper() == "CGENFF":
         config = CGenFF_assembly_protocol(config)
-    exit(0)
     config.setdefault("checkpointInfo", {})["assemblyComplete"] = True
     return config
     

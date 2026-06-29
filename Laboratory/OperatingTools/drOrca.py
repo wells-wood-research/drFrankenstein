@@ -1,4 +1,5 @@
 import os
+import shutil
 from os import path as p
 from subprocess import call
 ## CLEAN CODE ##
@@ -170,6 +171,16 @@ def write_goat_input(conformerDir: DirectoryPath, cappedXyz: FilePath, config: d
     goatOrcaInput = p.join(conformerDir, f"GOAT_orca.inp")
 
     useCpus = min(availableCpus, 16) ## limit to 16 cpus for GOAT to avoid overloading the system
+    ## ORCA only parallelises GOAT through MPI. If no MPI runtime is on PATH,
+    ## requesting NPROCS > 1 makes ORCA shell out to "mpirun" and abort with
+    ## "mpirun: not found": no *.finalensemble.xyz is written and the next step
+    ## (split_conformers) then fails with a misleading FileNotFoundError.
+    ## Fall back to serial so GOAT still runs on hosts without an MPI runtime.
+    if useCpus > 1 and shutil.which("mpirun") is None:
+        print("[drFrankenstein] WARNING: 'mpirun' not found on PATH; running GOAT "
+              "in serial (%PAL NPROCS 1). Install an MPI runtime matching your ORCA "
+              "build to parallelise GOAT.")
+        useCpus = 1
     with open(goatOrcaInput, "w") as f:
         f.write(" # --------------------------------- #\n")
         f.write(" #  GOAT conformation generation     #\n")

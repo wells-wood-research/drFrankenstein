@@ -25,12 +25,24 @@ AMBER19_DEFAULT_BACKBONE_CHARGES = {
     "O": -0.5679,
 }
 
+## Proline-type residues (PRO and 3-/4-hydroxyproline etc.) have a ring nitrogen
+## with no backbone amide hydrogen, so there is no "H" key. ff14SB/ff99SB PRO
+## backbone charges (same FF as AMBER19_DEFAULT_BACKBONE_CHARGES above).
+AMBER19_DEFAULT_BACKBONE_CHARGES_PROLINE = {
+    "N": -0.2548,
+    "CA": -0.0266,
+    "HA": 0.0641,
+    "C": 0.5896,
+    "O": -0.5748,
+}
+
 def _get_backbone_alias_atom_names(config: dict) -> list[str]:
     backboneAliases = config["moleculeInfo"]["backboneAliases"]
     requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
     backboneAtoms = []
     for backboneKey in requiredBackboneKeys:
-        backboneAtoms.extend(backboneAliases[backboneKey])
+        ## .get() so proline-type residues (no backbone "H" alias) don't KeyError
+        backboneAtoms.extend(backboneAliases.get(backboneKey, []))
     return list(dict.fromkeys(backboneAtoms))
 
 def _rebalance_non_backbone_charges(
@@ -188,11 +200,21 @@ def enforce_default_backbone_charges(config: dict) -> dict:
 
     chargeDf = pd.read_csv(chargeCsv, index_col="Unnamed: 0")
 
-    requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+    ## Proline-type residues have a ring nitrogen with no backbone amide H.
+    ## Detect by the absence of an "H" backbone alias and use proline backbone
+    ## charges (still ff14SB) -- otherwise we either crash looking for a
+    ## non-existent H atom, or apply the standard-amine N charge to a ring N.
+    if backboneAliases.get("H"):
+        requiredBackboneKeys = ["N", "H", "CA", "HA", "C", "O"]
+        defaultBackboneCharges = AMBER19_DEFAULT_BACKBONE_CHARGES
+    else:
+        requiredBackboneKeys = ["N", "CA", "HA", "C", "O"]
+        defaultBackboneCharges = AMBER19_DEFAULT_BACKBONE_CHARGES_PROLINE
+
     aliasToCharge = {}
     for backboneKey in requiredBackboneKeys:
-        for alias in backboneAliases[backboneKey]:
-            aliasToCharge[alias] = AMBER19_DEFAULT_BACKBONE_CHARGES[backboneKey]
+        for alias in backboneAliases.get(backboneKey, []):
+            aliasToCharge[alias] = defaultBackboneCharges[backboneKey]
 
     for atomName, defaultCharge in aliasToCharge.items():
         atomMask = chargeDf["ATOM_NAME"] == atomName

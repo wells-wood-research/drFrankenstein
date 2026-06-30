@@ -1,0 +1,1426 @@
+methods_to_references:
+  ACPF:
+    reference_ids:
+    - 362
+    references:
+    - id: 362
+      citation: Gdanitz, R. J.; Ahlrichs, R. Chem. Phys. Lett., 0143, 1988, 413.
+  ACPF/2:
+    reference_ids:
+    - 362
+    references:
+    - id: 362
+      citation: Gdanitz, R. J.; Ahlrichs, R. Chem. Phys. Lett., 0143, 1988, 413.
+  ADFTXAlpha:
+    reference_ids:
+    - 36
+    references:
+    - id: 36
+      citation: 'LaJohn, L. A.; Christiansen, P. A.; Ross, R. B.; Atashroo, T.; Ermler, W. C. Ab initio relativistic effective potentials with spin-orbit operators. III. Rb through Xe. J. Chem. Phys., 1987, 87 (5), 2812–2824. DOI: 10.1063/1.453069.'
+  ALPB:
+    reference_ids:
+    - 322
+    references:
+    - id: 322
+      citation: 'Ehlert, Sebastian; Stahn, Marcel; Spicher, Sebastian; Grimme, Stefan. Robust and Efficient Implicit Solvation Model for Fast Semiempirical Methods. J. Chem. Theory Comput., 2021, 17 (7), 4250–4261. DOI: 10.1021/acs.jctc.1c00471.'
+  AM1:
+    reference_ids:
+    - 293
+    references:
+    - id: 293
+      citation: Dewar, M. J. S.; Zoebisch, E. G.; Healy, E. F.; Stewart, J. P. J. Am. Chem. Soc., 1985, 107, 3902.
+  AQCC:
+    reference_ids:
+    - 363
+    references:
+    - id: 363
+      citation: Szalay, P. G.; Bartlett, R. J. Chem. Phys. Lett., 1993, 214, 481.
+  AutoCABS:
+    reference_ids:
+    - 383
+    references:
+    - id: 383
+      citation: 'Semidalas, Emmanouil; Martin, Jan M. L. Automatic generation of complementary auxiliary basis sets for explicitly correlated methods. J. Comput. Chem., 2022, 43 (25), 1690–1700. DOI: 10.1002/jcc.26970.'
+  B1LYP:
+    reference_ids:
+    - 232
+    references:
+    - id: 232
+      citation: 'Adamo, C.; Barone, V. Toward reliable adiabatic connection models free from adjustable parameters. Chem. Phys. Lett, 1997, 274 (1), 242–250. DOI: 10.1016/S0009-2614(97)00651-9.'
+  B1P86:
+    reference_ids:
+    - 199
+    references:
+    - id: 199
+      citation: Perdew, J. P. Phys. Rev. B, 1986, 33, 8822.
+  B2GP-PLYP:
+    reference_ids:
+    - 261
+    - 266
+    - 270
+    references:
+    - id: 261
+      citation: 'Karton, A.; Tarnopolsky, A; Lamère, J.-F.; Schatz, G. C.; Martin, J. M. L. Highly Accurate First-Principles Benchmark Data Sets for the Parametrization and Validation of Density Functional and Other Approximate Methods. Derivation of a Robust, Generally Applicable, Double-Hybrid Functional for Thermochemistry and Thermochemical Kinetics. J. Phys. Chem. A, 2008, 112, 12868. DOI: 10.1021/jp801805p.'
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+    - id: 270
+      citation: 'Casanova-Páez, Marcos; Dardis, Michael B.; Goerigk, Lars. ωB2PLYP & ωB2GPPLYP: The First Two Double-Hybrid Density Functionals with Long-Range Correction Optimized for Excitation Energies. J. Chem. Theory Comput., 2019, 15, 4735. DOI: 10.1021/acs.jctc.9b00013.'
+  B2K-PLYP:
+    reference_ids:
+    - 262
+    references:
+    - id: 262
+      citation: 'Tarnopolsky, Alex; Karton, Amir; Sertchook, Rotem; Vuzman, Dana; Martin, Jan M L. Double-Hybrid Functionals for Thermochemical Kinetics. J. Phys. Chem. A, 2008, 112 (1), 3–8. DOI: 10.1021/jp710179r.'
+  B2NC-PLYP:
+    reference_ids:
+    - 263
+    references:
+    - id: 263
+      citation: 'Yu, Feng. Double-Hybrid Density Functionals Free of Dispersion and Counterpoise Corrections for Non-Covalent Interactions. J. Phys. Chem. A, 2014, 118 (17), 3175–3182. DOI: 10.1021/jp5005506.'
+  B2PLYP:
+    reference_ids:
+    - 249
+    - 266
+    - 270
+    references:
+    - id: 249
+      citation: Grimme, S. J. Chem. Phys., 2006, 124, 034108.
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+    - id: 270
+      citation: 'Casanova-Páez, Marcos; Dardis, Michael B.; Goerigk, Lars. ωB2PLYP & ωB2GPPLYP: The First Two Double-Hybrid Density Functionals with Long-Range Correction Optimized for Excitation Energies. J. Chem. Theory Comput., 2019, 15, 4735. DOI: 10.1021/acs.jctc.9b00013.'
+  B2T-PLYP:
+    reference_ids:
+    - 262
+    references:
+    - id: 262
+      citation: 'Tarnopolsky, Alex; Karton, Amir; Sertchook, Rotem; Vuzman, Dana; Martin, Jan M L. Double-Hybrid Functionals for Thermochemical Kinetics. J. Phys. Chem. A, 2008, 112 (1), 3–8. DOI: 10.1021/jp710179r.'
+  B3LYP:
+    reference_ids:
+    - 230
+    references:
+    - id: 230
+      citation: 'Stephens, P. J.; Devlin, F. J.; Chabalowski, C. F.; Frisch, M. J. Ab Initio Calculation of Vibrational Absorption and Circular Dichroism Spectra Using Density Functional Force Fields. J. Phys. Chem., 1994, 98, 11623. DOI: 10.1021/j100096a001.'
+  B3LYP-3c:
+    reference_ids:
+    - 240
+    references:
+    - id: 240
+      citation: 'Pracht, Philipp; Grant, David F.; Grimme, Stefan. Comprehensive Assessment of GFN Tight-Binding and Composite Density Functional Theory Methods for Calculating Gas-Phase Infrared Spectra. J. Chem. Theory Comput., 2020, 16 (11), 7044–7060. DOI: 10.1021/acs.jctc.0c00877.'
+  B3LYP/G:
+    reference_ids:
+    - 230
+    references:
+    - id: 230
+      citation: 'Stephens, P. J.; Devlin, F. J.; Chabalowski, C. F.; Frisch, M. J. Ab Initio Calculation of Vibrational Absorption and Circular Dichroism Spectra Using Density Functional Force Fields. J. Phys. Chem., 1994, 98, 11623. DOI: 10.1021/j100096a001.'
+  B3P86:
+    reference_ids:
+    - 227
+    references:
+    - id: 227
+      citation: 'Becke, A. D. A new mixing of Hartree-Fock and local density-functional theories. J. Chem. Phys., 1993, 98, 1372. DOI: 10.1063/1.464304.'
+  B3PW91:
+    reference_ids:
+    - 227
+    references:
+    - id: 227
+      citation: 'Becke, A. D. A new mixing of Hartree-Fock and local density-functional theories. J. Chem. Phys., 1993, 98, 1372. DOI: 10.1063/1.464304.'
+  B88PP86:
+    reference_ids:
+    - 266
+    - 270
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+    - id: 270
+      citation: 'Casanova-Páez, Marcos; Dardis, Michael B.; Goerigk, Lars. ωB2PLYP & ωB2GPPLYP: The First Two Double-Hybrid Density Functionals with Long-Range Correction Optimized for Excitation Energies. J. Chem. Theory Comput., 2019, 15, 4735. DOI: 10.1021/acs.jctc.9b00013.'
+  B97:
+    reference_ids:
+    - 243
+    references:
+    - id: 243
+      citation: Chai, J.-D.; Head-Gordon, M. J. Chem. Phys., 2008, 128, 084106.
+  B97-3c:
+    reference_ids:
+    - 210
+    - 326
+    references:
+    - id: 210
+      citation: 'Brandenburg, Jan Gerit; Bannwarth, Christoph; Hansen, Andreas; Grimme, Stefan. B97-3c: A Revised Low-Cost Variant of the B97-D Density Functional Method. J. Chem. Phys., 2018, 148 (6), 064104. DOI: 10.1063/1.5012601.'
+    - id: 326
+      citation: 'Brandenburg, J. G.; Bannwarth, C.; Hansen, A.; Grimme, S. B97-3c: A Revised Low-Cost Variant of the B97-D Density Functional Method. J. Chem. Phys., 2018, 148 (6), 064104.'
+  B97M(2):
+    reference_ids:
+    - 6
+    - 256
+    references:
+    - id: 6
+      citation: 'Kollmar, Christian. The role of energy denominators in self‐consistent field (SCF) calculations for open shell systems. J. Chem. Phys., 1996, 105 (18), 8204–8212. DOI: 10.1063/1.472674.'
+    - id: 256
+      citation: 'Mardirossian, Narbe; Head-Gordon, Martin. Survival of the most transferable at the top of Jacob''s ladder: Defining and testing the ωB97M(2) double hybrid density functional. J. Chem. Phys., 2018, 148 (24), 241736. DOI: 10.1063/1.5025226.'
+  B97M-D3(BJ):
+    reference_ids:
+    - 212
+    references:
+    - id: 212
+      citation: Najibi, A.; Goerigk, L. J. Chem. Theory Comput., 2018, 14, 5725.
+  B97M-D4:
+    reference_ids:
+    - 213
+    references:
+    - id: 213
+      citation: 'Najibi, A.; Goerigk, L. DFT-D4 Counterparts of Leading Meta-Generalized-Gradient Approximation and Hybrid Density Functionals for Energetics and Geometries. J. Comput. Chem., 2020, 41, 2562–2572. DOI: 10.1002/jcc.26411.'
+  B97M-D4rev:
+    reference_ids:
+    - 49
+    references:
+    - id: 49
+      citation: 'Müller, Marcel; Hansen, Andreas; Grimme, Stefan. ωB97X-3c: A composite range-separated hybrid DFT method with a molecule-optimized polarized valence double-ζ basis set. J. Chem. Phys., 2023, 158 (1), 014103. DOI: 10.1063/5.0133026.'
+  B97M-V:
+    reference_ids:
+    - 211
+    - 247
+    references:
+    - id: 211
+      citation: 'Mardirossian, Narbe; Head-Gordon, Martin. Mapping the genome of meta-generalized gradient approximation density functionals: The search for B97M-V. J. Chem. Phys., 2015, 142, 074111. DOI: 10.1063/1.4907719.'
+    - id: 247
+      citation: 'Mardirossian, Narbe; Head-Gordon, Martin. ωB97M-V: A combinatorially optimized, range-separated hybrid, meta-GGA density functional with VV10 nonlocal correlation. J. Chem. Phys., 2016, 144, 214110. DOI: 10.1063/1.4952647.'
+  B97X:
+    reference_ids:
+    - 243
+    references:
+    - id: 243
+      citation: Chai, J.-D.; Head-Gordon, M. J. Chem. Phys., 2008, 128, 084106.
+  B97X-2(TQZ):
+    reference_ids:
+    - 267
+    references:
+    - id: 267
+      citation: 'Chai, Jeng-Da; Head-Gordon, Martin. Long-Range Corrected Double-Hybrid Density Functionals. J. Chem. Phys., 2009, 131 (17), 174105. DOI: 10.1063/1.3244209.'
+  B97X-3c:
+    reference_ids:
+    - 49
+    references:
+    - id: 49
+      citation: 'Müller, Marcel; Hansen, Andreas; Grimme, Stefan. ωB97X-3c: A composite range-separated hybrid DFT method with a molecule-optimized polarized valence double-ζ basis set. J. Chem. Phys., 2023, 158 (1), 014103. DOI: 10.1063/5.0133026.'
+  B97X-D3:
+    reference_ids:
+    - 245
+    references:
+    - id: 245
+      citation: 'Lin, Y.-S.; Li, G.-D.; Mao, S.-P.; Chai, J.-D. Long-Range Corrected Hybrid Density Functionals with Improved Dispersion Corrections. J. Chem. Theory Comput., 2013, 9, 263–272. DOI: 10.1021/ct300715s.'
+  B97X-D3(BJ):
+    reference_ids:
+    - 212
+    references:
+    - id: 212
+      citation: Najibi, A.; Goerigk, L. J. Chem. Theory Comput., 2018, 14, 5725.
+  B97X-D4:
+    reference_ids:
+    - 213
+    references:
+    - id: 213
+      citation: 'Najibi, A.; Goerigk, L. DFT-D4 Counterparts of Leading Meta-Generalized-Gradient Approximation and Hybrid Density Functionals for Energetics and Geometries. J. Comput. Chem., 2020, 41, 2562–2572. DOI: 10.1002/jcc.26411.'
+  B97X-D4rev:
+    reference_ids:
+    - 49
+    references:
+    - id: 49
+      citation: 'Müller, Marcel; Hansen, Andreas; Grimme, Stefan. ωB97X-3c: A composite range-separated hybrid DFT method with a molecule-optimized polarized valence double-ζ basis set. J. Chem. Phys., 2023, 158 (1), 014103. DOI: 10.1063/5.0133026.'
+  B97X-V:
+    reference_ids:
+    - 244
+    references:
+    - id: 244
+      citation: 'Mardirossian, Narbe; Head-Gordon, Martin. ωB97X-V: A 10-parameter, range-separated hybrid, generalized gradient approximation density functional with nonlocal correlation, designed by a survival-of-the-fittest strategy. Phys. Chem. Chem. Phys., 2014, 16 (21), 9904–9924. DOI: 10.1039/C3CP54374A.'
+  BHandHLYP:
+    reference_ids:
+    - 227
+    references:
+    - id: 227
+      citation: 'Becke, A. D. A new mixing of Hartree-Fock and local density-functional theories. J. Chem. Phys., 1993, 98, 1372. DOI: 10.1063/1.464304.'
+  BLYP:
+    reference_ids:
+    - 200
+    references:
+    - id: 200
+      citation: 'Miehlich, Burkhard; Savin, Andreas; Stoll, Hermann; Preuss, Heinzwerner. Results obtained with the correlation energy density functionals of becke and Lee, Yang and Parr. Chem. Phys. Lett, 1989, 157 (3), 200–206. DOI: 10.1016/0009-2614(89)87234-3.'
+  BP86:
+    reference_ids:
+    - 198
+    - 199
+    references:
+    - id: 198
+      citation: 'Becke, A. D. Density-functional exchange-energy approximation with correct asymptotic behavior. Phys. Rev. A, 1988, 38, 3098. DOI: 10.1103/PhysRevA.38.3098.'
+    - id: 199
+      citation: Perdew, J. P. Phys. Rev. B, 1986, 33, 8822.
+  CAM-B3LYP:
+    reference_ids:
+    - 242
+    references:
+    - id: 242
+      citation: Yanai, T.; Tew, D. P.; Handy, N. C. Chem. Phys. Lett., 2004, 393, 51–57.
+  CNDO/1:
+    reference_ids:
+    - 298
+    - 299
+    - 300
+    - 301
+    - 302
+    - 303
+    - 304
+    - 305
+    - 306
+    references:
+    - id: 298
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1965, 43, 136.
+    - id: 299
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1966, 44, 3289.
+    - id: 300
+      citation: Santry, D. P. J. Am. Chem. Soc., 1968, 90, 3309.
+    - id: 301
+      citation: Santry, D. P.; Segal, G. A. J. Chem. Phys., 1967, 47, 158.
+    - id: 302
+      citation: Pople, J. A.; Beveridge, D. L.; Dobosh, P. A. J. Chem. Phys., 1967, 47, 2026.
+    - id: 303
+      citation: 'Clack, D. W.; Hush, N. S.; Yandle, J. R. All–Valence Electron CNDO Calculations on Transition Metal Complexes. J. Chem. Phys., 1972, 57, 3503. DOI: 10.1063/1.1678785.'
+    - id: 304
+      citation: 'Clack, D. W. INDO MO calculations for first row transition metal complexes. Mol. Phys., 1974, 27, 1513–1519. DOI: 10.1080/00268977400101281.'
+    - id: 305
+      citation: 'Clack, D. W.; Smith, W. Clack, D.W., Smith, W. Molecular orbital calculations on transition metal complexes. Theor. Chim. Acta, 1974, 36, 87–92. DOI: 10.1007/BF00554339.'
+    - id: 306
+      citation: 'Böhm, M. C.; Gleiter, R. A CNDO/INDO molecular orbital formalism for the elements H to Br. theory. Theor. Chim. Acta, 1981, 59, 127 & 153. DOI: 10.1007/BF00552536.'
+  CNDO/2:
+    reference_ids:
+    - 298
+    - 299
+    - 300
+    - 301
+    - 302
+    - 303
+    - 304
+    - 305
+    - 306
+    references:
+    - id: 298
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1965, 43, 136.
+    - id: 299
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1966, 44, 3289.
+    - id: 300
+      citation: Santry, D. P. J. Am. Chem. Soc., 1968, 90, 3309.
+    - id: 301
+      citation: Santry, D. P.; Segal, G. A. J. Chem. Phys., 1967, 47, 158.
+    - id: 302
+      citation: Pople, J. A.; Beveridge, D. L.; Dobosh, P. A. J. Chem. Phys., 1967, 47, 2026.
+    - id: 303
+      citation: 'Clack, D. W.; Hush, N. S.; Yandle, J. R. All–Valence Electron CNDO Calculations on Transition Metal Complexes. J. Chem. Phys., 1972, 57, 3503. DOI: 10.1063/1.1678785.'
+    - id: 304
+      citation: 'Clack, D. W. INDO MO calculations for first row transition metal complexes. Mol. Phys., 1974, 27, 1513–1519. DOI: 10.1080/00268977400101281.'
+    - id: 305
+      citation: 'Clack, D. W.; Smith, W. Clack, D.W., Smith, W. Molecular orbital calculations on transition metal complexes. Theor. Chim. Acta, 1974, 36, 87–92. DOI: 10.1007/BF00554339.'
+    - id: 306
+      citation: 'Böhm, M. C.; Gleiter, R. A CNDO/INDO molecular orbital formalism for the elements H to Br. theory. Theor. Chim. Acta, 1981, 59, 127 & 153. DOI: 10.1007/BF00552536.'
+  co-workers:
+    reference_ids:
+    - 257
+    - 376
+    references:
+    - id: 257
+      citation: 'Neugebauer, Hagen; Pinski, Peter; Grimme, Stefan; Neese, Frank; Bursch, Markus. Assessment of DLPNO-MP2 Approximations in Double-Hybrid DFT. J. Chem. Theory Comput., 2023, 19 (21), 7695–7703. DOI: 10.1021/acs.jctc.3c00896.'
+    - id: 376
+      citation: Hampel, C.; Peterson, K. A.; Werner, H. J. Chem. Phys. Lett., 1992, 190, 1.
+  CPCM-X:
+    reference_ids:
+    - 149
+    references:
+    - id: 149
+      citation: 'Stahn, M.; Ehlert, S.; Grimme, S. Extended Conductor-like Polarizable Continuum Solvation Model (CPCM-X) for Semiempirical Methods. J. Phys. Chem. A, 2023, 127, 7036–7043. DOI: 10.1021/acs.jpca.3c04382.'
+  D3:
+    reference_ids:
+    - 272
+    - 273
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+  D3(BJ):
+    reference_ids:
+    - 272
+    - 273
+    - 277
+    - 278
+    - 279
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+    - id: 277
+      citation: 'Becke, A. D.; Johnson, E. R. A density-functional model of the dispersion interaction. J. Chem. Phys., 2005, 123, 154101. DOI: 10.1063/1.2065267.'
+    - id: 278
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions. J. Chem. Phys., 2005, 123, 024101. DOI: 10.1063/1.1949201.'
+    - id: 279
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions: Inclusion of Higher-Order Corrections. J. Chem. Phys., 2006, 124, 174104. DOI: 10.1063/1.2190220.'
+  D3BJ:
+    reference_ids:
+    - 272
+    - 273
+    - 277
+    - 278
+    - 279
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+    - id: 277
+      citation: 'Becke, A. D.; Johnson, E. R. A density-functional model of the dispersion interaction. J. Chem. Phys., 2005, 123, 154101. DOI: 10.1063/1.2065267.'
+    - id: 278
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions. J. Chem. Phys., 2005, 123, 024101. DOI: 10.1063/1.1949201.'
+    - id: 279
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions: Inclusion of Higher-Order Corrections. J. Chem. Phys., 2006, 124, 174104. DOI: 10.1063/1.2190220.'
+  D3TZ:
+    reference_ids:
+    - 272
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+  D3ZERO:
+    reference_ids:
+    - 272
+    - 273
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+  D4:
+    reference_ids:
+    - 159
+    - 274
+    references:
+    - id: 159
+      citation: 'Caldeweyher, Eike; Ehlert, Sebastian; Hansen, Andreas; Neugebauer, Hagen; Spicher, Sebastian; Bannwarth, Christoph; Grimme, Stefan. A Generally Applicable Atomic-Charge Dependent London Dispersion Correction. J. Chem. Phys., 2019, 150 (15), 154122. DOI: 10.1063/1.5090222.'
+    - id: 274
+      citation: 'Caldeweyher, Eike; Bannwarth, Christoph; Grimme, Stefan. Extension of the D3 Dispersion Coefficient Model. J. Chem. Phys., 2017, 147 (3), 034112. DOI: 10.1063/1.4993215.'
+  ddCOSMO:
+    reference_ids:
+    - 323
+    references:
+    - id: 323
+      citation: 'Cancès, E.; Maday, Y.; Stamm, B. Domain decomposition for implicit solvation models. J. Chem. Phys, 2013, 139, 054111. DOI: 10.1063/1.4816767.'
+  DFT:
+    reference_ids:
+    - 350
+    references:
+    - id: 350
+      citation: 'Stoychev, Georgi L.; Auer, Alexander A.; Gauss, Jürgen; Neese, Frank. DLPNO-MP2 Second Derivatives for the Computation of Polarizabilities and NMR Shieldings. J. Chem. Phys., 2021, 154 (16), 164110. DOI: 10.1063/5.0047125.'
+  DFT-D3(BJ):
+    reference_ids:
+    - 272
+    - 273
+    - 277
+    - 278
+    - 279
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+    - id: 277
+      citation: 'Becke, A. D.; Johnson, E. R. A density-functional model of the dispersion interaction. J. Chem. Phys., 2005, 123, 154101. DOI: 10.1063/1.2065267.'
+    - id: 278
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions. J. Chem. Phys., 2005, 123, 024101. DOI: 10.1063/1.1949201.'
+    - id: 279
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions: Inclusion of Higher-Order Corrections. J. Chem. Phys., 2006, 124, 174104. DOI: 10.1063/1.2190220.'
+  DFT-D4:
+    reference_ids:
+    - 159
+    - 274
+    references:
+    - id: 159
+      citation: 'Caldeweyher, Eike; Ehlert, Sebastian; Hansen, Andreas; Neugebauer, Hagen; Spicher, Sebastian; Bannwarth, Christoph; Grimme, Stefan. A Generally Applicable Atomic-Charge Dependent London Dispersion Correction. J. Chem. Phys., 2019, 150 (15), 154122. DOI: 10.1063/1.5090222.'
+    - id: 274
+      citation: 'Caldeweyher, Eike; Bannwarth, Christoph; Grimme, Stefan. Extension of the D3 Dispersion Coefficient Model. J. Chem. Phys., 2017, 147 (3), 034112. DOI: 10.1063/1.4993215.'
+  DFT-NL:
+    reference_ids:
+    - 275
+    - 276
+    references:
+    - id: 275
+      citation: Vydrov, O. A.; Van Voorhis, T. J. Chem. Phys., 2010, 133, 244103.
+    - id: 276
+      citation: 'Hujo, Waldemar; Grimme, Stefan. Performance of Dispersion-Corrected Density Functional Theory for Thermochemistry and Noncovalent Interactions. J. Chem. Theory Comput., 2011, 7 (12), 3866–3871. DOI: 10.1021/ct200644w.'
+  DLPNO-CCSD(T):
+    reference_ids:
+    - 400
+    references:
+    - id: 400
+      citation: 'Guo, Yang; Riplinger, Christoph; Becker, Ute; Liakos, Dimitrios G.; Minenkov, Yury; Cavallo, Luigi; Neese, Frank. Communication: An Improved Linear Scaling Perturbative Triples Correction for the Domain Based Local Pair-Natural Orbital Based Singles and Doubles Coupled Cluster Method [DLPNO-CCSD(T)]. J. Chem. Phys., 2018, 148 (1), 011101. DOI: 10.1063/1.5011798.'
+  DLPNO-CCSD(T1):
+    reference_ids:
+    - 400
+    references:
+    - id: 400
+      citation: 'Guo, Yang; Riplinger, Christoph; Becker, Ute; Liakos, Dimitrios G.; Minenkov, Yury; Cavallo, Luigi; Neese, Frank. Communication: An Improved Linear Scaling Perturbative Triples Correction for the Domain Based Local Pair-Natural Orbital Based Singles and Doubles Coupled Cluster Method [DLPNO-CCSD(T)]. J. Chem. Phys., 2018, 148 (1), 011101. DOI: 10.1063/1.5011798.'
+  DLPNO-HFC1:
+    reference_ids:
+    - 1
+    references:
+    - id: 1
+      citation: Zerner, M. C.; Hehenberger, M. Chem. Phys. Lett., 1979, 62, 550.
+  DSD-BLYP:
+    reference_ids:
+    - 251
+    references:
+    - id: 251
+      citation: 'Kozuch, Sebastian; Gruzman, David; Martin, Jan M. L. DSD-BLYP: A General Purpose Double Hybrid Density Functional Including Spin Component Scaling and Dispersion Correction. J. Phys. Chem. C, 2010, 114 (48), 20801–20808. DOI: 10.1021/jp1070852.'
+  DSD-BLYP-D3(BJ)(2013):
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  DSD-BLYP-NoDisp(2013):
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  DSD-PBEB95-D3(BJ):
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  DSD-PBEB95-NoDisp:
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  DSD-PBEP86:
+    reference_ids:
+    - 252
+    references:
+    - id: 252
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. DSD-PBEP86: In Search of the Best Double-Hybrid DFT with Spin-Component Scaled MP2 and Dispersion Corrections. Phys. Chem. Chem. Phys., 2011, 13 (45), 20104–20107. DOI: 10.1039/C1CP22592H.'
+  DSD-PBEP86-D3(BJ)(2013):
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  DSD-PBEP86-NoDisp(2013):
+    reference_ids:
+    - 253
+    references:
+    - id: 253
+      citation: 'Kozuch, Sebastian; Martin, Jan M. L. Spin-component-scaled Double Hybrids: An Extensive Search for the Best Fifth-rung Functionals Blending DFT and Perturbation Theory. J. Comput. Chem., 2013, 34 (27), 2327–2344. DOI: 10.1002/jcc.23391.'
+  Gdanitz:
+    reference_ids:
+    - 361
+    references:
+    - id: 361
+      citation: Gdanitz, R. J. Int. J. Quant. Chem., 2001, 85, 281.
+  GFN-xTB:
+    reference_ids:
+    - 161
+    - 320
+    - 321
+    references:
+    - id: 161
+      citation: 'Bannwarth, Christoph; Ehlert, Sebastian; Grimme, Stefan. GFN2-xTB—An Accurate and Broadly Parametrized Self-Consistent Tight-Binding Quantum Chemical Method with Multipole Electrostatics and Density-Dependent Dispersion Contributions. J. Chem. Theory Comput., 2019, 15 (3), 1652–1671. DOI: 10.1021/acs.jctc.8b01176.'
+    - id: 320
+      citation: 'Grimme, Stefan; Bannwarth, Christoph; Shushkov, Philip. A Robust and Accurate Tight-Binding Quantum Chemical Method for Structures, Vibrational Frequencies, and Noncovalent Interactions of Large Molecular Systems Parametrized for All Spd-Block Elements (z = 1-86). J. Chem. Theory Comput., 2017, 13 (5), 1989–2009. DOI: 10.1021/acs.jctc.7b00118.'
+    - id: 321
+      citation: 'Pracht, Philipp; Caldeweyher, Eike; Ehlert, Sebastian; Grimme, Stefan. A Robust Non-Self-Consistent Tight-Binding Quantum Chemistry Method for Large Molecules. ChemRxiv, 2019. DOI: 10.26434/chemrxiv.8326202.v1.'
+  GFN0-xTB:
+    reference_ids:
+    - 161
+    - 320
+    - 321
+    references:
+    - id: 161
+      citation: 'Bannwarth, Christoph; Ehlert, Sebastian; Grimme, Stefan. GFN2-xTB—An Accurate and Broadly Parametrized Self-Consistent Tight-Binding Quantum Chemical Method with Multipole Electrostatics and Density-Dependent Dispersion Contributions. J. Chem. Theory Comput., 2019, 15 (3), 1652–1671. DOI: 10.1021/acs.jctc.8b01176.'
+    - id: 320
+      citation: 'Grimme, Stefan; Bannwarth, Christoph; Shushkov, Philip. A Robust and Accurate Tight-Binding Quantum Chemical Method for Structures, Vibrational Frequencies, and Noncovalent Interactions of Large Molecular Systems Parametrized for All Spd-Block Elements (z = 1-86). J. Chem. Theory Comput., 2017, 13 (5), 1989–2009. DOI: 10.1021/acs.jctc.7b00118.'
+    - id: 321
+      citation: 'Pracht, Philipp; Caldeweyher, Eike; Ehlert, Sebastian; Grimme, Stefan. A Robust Non-Self-Consistent Tight-Binding Quantum Chemistry Method for Large Molecules. ChemRxiv, 2019. DOI: 10.26434/chemrxiv.8326202.v1.'
+  GFN2-xTB:
+    reference_ids:
+    - 161
+    - 320
+    - 321
+    references:
+    - id: 161
+      citation: 'Bannwarth, Christoph; Ehlert, Sebastian; Grimme, Stefan. GFN2-xTB—An Accurate and Broadly Parametrized Self-Consistent Tight-Binding Quantum Chemical Method with Multipole Electrostatics and Density-Dependent Dispersion Contributions. J. Chem. Theory Comput., 2019, 15 (3), 1652–1671. DOI: 10.1021/acs.jctc.8b01176.'
+    - id: 320
+      citation: 'Grimme, Stefan; Bannwarth, Christoph; Shushkov, Philip. A Robust and Accurate Tight-Binding Quantum Chemical Method for Structures, Vibrational Frequencies, and Noncovalent Interactions of Large Molecular Systems Parametrized for All Spd-Block Elements (z = 1-86). J. Chem. Theory Comput., 2017, 13 (5), 1989–2009. DOI: 10.1021/acs.jctc.7b00118.'
+    - id: 321
+      citation: 'Pracht, Philipp; Caldeweyher, Eike; Ehlert, Sebastian; Grimme, Stefan. A Robust Non-Self-Consistent Tight-Binding Quantum Chemistry Method for Large Molecules. ChemRxiv, 2019. DOI: 10.26434/chemrxiv.8326202.v1.'
+  GLYP:
+    reference_ids:
+    - 202
+    references:
+    - id: 202
+      citation: 'Gill, P. M. W. Mol. Phys., 1996, 89, 433. DOI: 10.1080/002689796173813.'
+  GMTKN30:
+    reference_ids:
+    - 250
+    - 283
+    - 284
+    references:
+    - id: 250
+      citation: Goerigk, L.; Grimme, S. J. Chem. Theory Comput., 2011, 7, 291–309.
+    - id: 283
+      citation: Goerigk, L.; Grimme, S. J. Chem. Theory Comput., 2010, 6, 107.
+    - id: 284
+      citation: Goerigk, L.; Grimme, S. Phys. Chem. Chem. Phys., 2011, 13, 6670.
+  Head-Gordon:
+    reference_ids:
+    - 355
+    references:
+    - id: 355
+      citation: 'Shee, James; Loipersberger, Matthias; Rettig, Adam; Lee, Joonho; Head-Gordon, Martin. Regularized Second-Order Møller–Plesset Theory: A More Accurate Alternative to Conventional MP2 for Noncovalent Interactions and Transition Metal Thermochemistry for the Same Computational Cost. J. Phys. Chem. Lett., 2021, 12 (50), 12084–12097. DOI: 10.1021/acs.jpclett.1c03468.'
+  INDO/1:
+    reference_ids:
+    - 298
+    - 299
+    - 300
+    - 301
+    - 302
+    - 303
+    - 304
+    - 305
+    - 306
+    - 307
+    - 308
+    - 309
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    references:
+    - id: 298
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1965, 43, 136.
+    - id: 299
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1966, 44, 3289.
+    - id: 300
+      citation: Santry, D. P. J. Am. Chem. Soc., 1968, 90, 3309.
+    - id: 301
+      citation: Santry, D. P.; Segal, G. A. J. Chem. Phys., 1967, 47, 158.
+    - id: 302
+      citation: Pople, J. A.; Beveridge, D. L.; Dobosh, P. A. J. Chem. Phys., 1967, 47, 2026.
+    - id: 303
+      citation: 'Clack, D. W.; Hush, N. S.; Yandle, J. R. All–Valence Electron CNDO Calculations on Transition Metal Complexes. J. Chem. Phys., 1972, 57, 3503. DOI: 10.1063/1.1678785.'
+    - id: 304
+      citation: 'Clack, D. W. INDO MO calculations for first row transition metal complexes. Mol. Phys., 1974, 27, 1513–1519. DOI: 10.1080/00268977400101281.'
+    - id: 305
+      citation: 'Clack, D. W.; Smith, W. Clack, D.W., Smith, W. Molecular orbital calculations on transition metal complexes. Theor. Chim. Acta, 1974, 36, 87–92. DOI: 10.1007/BF00554339.'
+    - id: 306
+      citation: 'Böhm, M. C.; Gleiter, R. A CNDO/INDO molecular orbital formalism for the elements H to Br. theory. Theor. Chim. Acta, 1981, 59, 127 & 153. DOI: 10.1007/BF00552536.'
+    - id: 307
+      citation: Ridley, J.; Zerner, M. C. Theor. Chim. Acta, 1973, 32, 111.
+    - id: 308
+      citation: 'Bacon, A. D.; Zerner, M. C. An intermediate neglect of differential overlap theory for transition metal complexes: Fe, Co and Cu chlorides. Theor. Chim. Acta, 1979, 53, 21. DOI: 10.1007/BF00547605.'
+    - id: 309
+      citation: Zerner, M. C.; Loew, G. H.; Kirchner, R. F.; Mueller-Westerhoff, U. T. J. Am. Chem. Soc., 1980, 102, 589.
+    - id: 310
+      citation: 'Anderson, W. P.; Edwards, W. D.; Zerner, M. C. Calculated spectra of hydrated ions of the first transition-metal series. Inorg. Chem., 1986, 25, 2728. DOI: 10.1021/ic00236a015.'
+    - id: 311
+      citation: 'Anderson, W. P.; Cundari, T. R.; Drago, R. S.; Zerner, M. C. Utility of the semiempirical INDO/1 method for the calculation of the geometries of second-row transition-metal species. Inorg. Chem., 1990, 29, 3. DOI: 10.1021/ic00326a001.'
+    - id: 312
+      citation: 'Anderson, W. P.; Cundari, T. R.; Zerner, M. C. An intermediate neglect of differential overlap model for second-row transition metal species. Int. J. Quant. Chem., 1991, 39, 31. DOI: 10.1002/qua.560390106.'
+    - id: 313
+      citation: Zerner, M. C. In Lipkowitz, K. B.; Boyd, D. B., editors, Reviews in Computational Chemistry, volume 2, pages 313. Wiley-VCH, 1990.
+    - id: 314
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: From Atoms to Clusters to Surfaces, pages 101. Kluwer Academic Publishers, 1992.'
+    - id: 315
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: Structure and Reactivity, pages 493. Kluwer Academic Publishers, 1992.'
+    - id: 316
+      citation: 'Cory, M. G.; Zerner, M. C. Metal-ligand exchange coupling in transition-metal complexes. Chem. Rev., 1991, 91, 813. DOI: 10.1021/cr00005a009.'
+    - id: 317
+      citation: 'Kotzian, M.; Rösch, N.; Zerner, M. C. Intermediate neglect of differential overlap spectroscopic studies on lanthanide complexes. I. Spectroscopic parametrization and application to diatomic lanthanide oxides LnO (Ln=La, Ce, Gd, and Lu). Theor. Chim. Acta, 1992, 81 (3-4), 201–222. DOI: 10.1007/BF01118562.'
+  INDO/2:
+    reference_ids:
+    - 298
+    - 299
+    - 300
+    - 301
+    - 302
+    - 303
+    - 304
+    - 305
+    - 306
+    - 307
+    - 308
+    - 309
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    references:
+    - id: 298
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1965, 43, 136.
+    - id: 299
+      citation: Pople, J. A.; Segal, G. A. J. Chem. Phys., 1966, 44, 3289.
+    - id: 300
+      citation: Santry, D. P. J. Am. Chem. Soc., 1968, 90, 3309.
+    - id: 301
+      citation: Santry, D. P.; Segal, G. A. J. Chem. Phys., 1967, 47, 158.
+    - id: 302
+      citation: Pople, J. A.; Beveridge, D. L.; Dobosh, P. A. J. Chem. Phys., 1967, 47, 2026.
+    - id: 303
+      citation: 'Clack, D. W.; Hush, N. S.; Yandle, J. R. All–Valence Electron CNDO Calculations on Transition Metal Complexes. J. Chem. Phys., 1972, 57, 3503. DOI: 10.1063/1.1678785.'
+    - id: 304
+      citation: 'Clack, D. W. INDO MO calculations for first row transition metal complexes. Mol. Phys., 1974, 27, 1513–1519. DOI: 10.1080/00268977400101281.'
+    - id: 305
+      citation: 'Clack, D. W.; Smith, W. Clack, D.W., Smith, W. Molecular orbital calculations on transition metal complexes. Theor. Chim. Acta, 1974, 36, 87–92. DOI: 10.1007/BF00554339.'
+    - id: 306
+      citation: 'Böhm, M. C.; Gleiter, R. A CNDO/INDO molecular orbital formalism for the elements H to Br. theory. Theor. Chim. Acta, 1981, 59, 127 & 153. DOI: 10.1007/BF00552536.'
+    - id: 307
+      citation: Ridley, J.; Zerner, M. C. Theor. Chim. Acta, 1973, 32, 111.
+    - id: 308
+      citation: 'Bacon, A. D.; Zerner, M. C. An intermediate neglect of differential overlap theory for transition metal complexes: Fe, Co and Cu chlorides. Theor. Chim. Acta, 1979, 53, 21. DOI: 10.1007/BF00547605.'
+    - id: 309
+      citation: Zerner, M. C.; Loew, G. H.; Kirchner, R. F.; Mueller-Westerhoff, U. T. J. Am. Chem. Soc., 1980, 102, 589.
+    - id: 310
+      citation: 'Anderson, W. P.; Edwards, W. D.; Zerner, M. C. Calculated spectra of hydrated ions of the first transition-metal series. Inorg. Chem., 1986, 25, 2728. DOI: 10.1021/ic00236a015.'
+    - id: 311
+      citation: 'Anderson, W. P.; Cundari, T. R.; Drago, R. S.; Zerner, M. C. Utility of the semiempirical INDO/1 method for the calculation of the geometries of second-row transition-metal species. Inorg. Chem., 1990, 29, 3. DOI: 10.1021/ic00326a001.'
+    - id: 312
+      citation: 'Anderson, W. P.; Cundari, T. R.; Zerner, M. C. An intermediate neglect of differential overlap model for second-row transition metal species. Int. J. Quant. Chem., 1991, 39, 31. DOI: 10.1002/qua.560390106.'
+    - id: 313
+      citation: Zerner, M. C. In Lipkowitz, K. B.; Boyd, D. B., editors, Reviews in Computational Chemistry, volume 2, pages 313. Wiley-VCH, 1990.
+    - id: 314
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: From Atoms to Clusters to Surfaces, pages 101. Kluwer Academic Publishers, 1992.'
+    - id: 315
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: Structure and Reactivity, pages 493. Kluwer Academic Publishers, 1992.'
+    - id: 316
+      citation: 'Cory, M. G.; Zerner, M. C. Metal-ligand exchange coupling in transition-metal complexes. Chem. Rev., 1991, 91, 813. DOI: 10.1021/cr00005a009.'
+    - id: 317
+      citation: 'Kotzian, M.; Rösch, N.; Zerner, M. C. Intermediate neglect of differential overlap spectroscopic studies on lanthanide complexes. I. Spectroscopic parametrization and application to diatomic lanthanide oxides LnO (Ln=La, Ce, Gd, and Lu). Theor. Chim. Acta, 1992, 81 (3-4), 201–222. DOI: 10.1007/BF01118562.'
+  Johnson:
+    reference_ids:
+    - 277
+    - 278
+    - 279
+    references:
+    - id: 277
+      citation: 'Becke, A. D.; Johnson, E. R. A density-functional model of the dispersion interaction. J. Chem. Phys., 2005, 123, 154101. DOI: 10.1063/1.2065267.'
+    - id: 278
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions. J. Chem. Phys., 2005, 123, 024101. DOI: 10.1063/1.1949201.'
+    - id: 279
+      citation: 'Johnson, Erin R.; Becke, Axel D. A Post-Hartree–Fock Model of Intermolecular Interactions: Inclusion of Higher-Order Corrections. J. Chem. Phys., 2006, 124, 174104. DOI: 10.1063/1.2190220.'
+  LC-BLYP:
+    reference_ids:
+    - 246
+    references:
+    - id: 246
+      citation: Tawada, Y.; Tsuneda, T.; Yanagisawa, S.; Yanai, T.; Hirao, K. J. Chem. Phys., 2004, 120, 8425–8433.
+  LC-PBE:
+    reference_ids:
+    - 241
+    references:
+    - id: 241
+      citation: 'Iikura, H.; Tsuneda, T.; Yanai, T.; Hirao, K. A long-range correction scheme for generalized-gradient-approximation exchange functionals. J. Chem. Phys., 2001, 115, 3540–3544. DOI: 10.1063/1.1383587.'
+  LPNO:
+    reference_ids:
+    - 379
+    - 380
+    - 381
+    - 394
+    references:
+    - id: 379
+      citation: Neese, F.; Hansen, A.; Liakos, D. G. J. Chem. Phys., 2009, 131, 064103.
+    - id: 380
+      citation: Hansen, A.; Liakos, D. G.; Neese, F. J. Chem. Phys., 2011, 135, 214102.
+    - id: 381
+      citation: Neese, F.; Hansen, A.; Wennmohs, F.; Grimme, S. Acc. Chem. Res., 2009, 42, 641.
+    - id: 394
+      citation: Neese, F.; Wennmohs, F.; Hansen, A. J. Chem. Phys., 2009, 130, 114108.
+  Lundquist:
+    reference_ids:
+    - 282
+    references:
+    - id: 282
+      citation: 'Lee, K.; Murray, É. D.; Kong, L.; Lundqvist, B. I.; Langreth, D. C. Higher-accuracy van der Waals density functional. Phys. Rev. B, 2010, 82 (8), 081101. DOI: 10.1103/PhysRevB.82.081101.'
+  M06:
+    reference_ids:
+    - 235
+    references:
+    - id: 235
+      citation: 'Zhao, Yan; Truhlar, Donald G. The M06 suite of density functionals for main group thermochemistry, thermochemical kinetics, noncovalent interactions, excited states, and transition elements: two new functionals and systematic testing of four M06-class functionals and 12 other functionals. Theor. Chem. Acc., 2008, 120 (1-3), 215–241. DOI: 10.1007/s00214-007-0310-x.'
+  M06-2X:
+    reference_ids:
+    - 235
+    references:
+    - id: 235
+      citation: 'Zhao, Yan; Truhlar, Donald G. The M06 suite of density functionals for main group thermochemistry, thermochemical kinetics, noncovalent interactions, excited states, and transition elements: two new functionals and systematic testing of four M06-class functionals and 12 other functionals. Theor. Chem. Acc., 2008, 120 (1-3), 215–241. DOI: 10.1007/s00214-007-0310-x.'
+  M06-L:
+    reference_ids:
+    - 217
+    references:
+    - id: 217
+      citation: 'Zhao, Yan; Truhlar, Donald G. A new local density functional for main-group thermochemistry, transition metal bonding, thermochemical kinetics, and noncovalent interactions. J. Chem. Phys., 2006, 125 (19), 194101. DOI: 10.1063/1.2370993.'
+  MNDO:
+    reference_ids:
+    - 295
+    - 296
+    - 297
+    references:
+    - id: 295
+      citation: Dewar, M. J. S.; Thiel, W. Theor. Chim. Acta, 1977, 46, 89.
+    - id: 296
+      citation: Thiel, W.; Voityuk, A. A. Theor. Chim. Acta, 1992, 81, 391.
+    - id: 297
+      citation: Dewar, M. J. S.; Thiel, W. J. Am. Chem. Soc., 1977, 99, 4899.
+  Models:
+    reference_ids:
+    - 381
+    references:
+    - id: 381
+      citation: Neese, F.; Hansen, A.; Wennmohs, F.; Grimme, S. Acc. Chem. Res., 2009, 42, 641.
+  MP2:
+    reference_ids:
+    - 338
+    - 339
+    - 340
+    - 341
+    - 342
+    - 384
+    references:
+    - id: 338
+      citation: Weigend, F.; Häser, M.; Patzelt, H.; Ahlrichs, R. Chem. Phys. Lett., 1998, 294, 143.
+    - id: 339
+      citation: Weigend, F.; Häser, M. Theor. Chem. Acc., 1997, 97, 331.
+    - id: 340
+      citation: Feyereisen, M.; Fitzerald, G.; Komornicki, A. Chem. Phys. Lett., 1993, 208, 359.
+    - id: 341
+      citation: 'Bernholdt, D. E.; Harrison, R. J. Large-scale correlated electronic structure calculations: the RI-MP2 method on parallel computers. Chem. Phys. Lett., 1996, 250, 477. DOI: 10.1016/0009-2614(96)00054-1.'
+    - id: 342
+      citation: Grimme, S. J. Chem. Phys., 2003, 118, 9095–9102.
+    - id: 384
+      citation: 'Liakos, Dimitrios G.; Izsák, Róbert; Valeev, Edward F.; Neese, Frank. What is the most efficient way to reach the canonical MP2 basis set limit? Mol. Phys., 2013, 111 (19-20), 2653–2662. DOI: 10.1080/00268976.2013.811812.'
+  mPW1LYP:
+    reference_ids:
+    - 205
+    references:
+    - id: 205
+      citation: 'Adamo, C.; Barone, V. Exchange functionals with improved long-range behavior and adiabatic connection methods without adjustable parameters: The mPW and mPW1PW models. J. Chem. Phys., 1998, 108, 664. DOI: 10.1063/1.475428.'
+  mPW1PW:
+    reference_ids:
+    - 205
+    references:
+    - id: 205
+      citation: 'Adamo, C.; Barone, V. Exchange functionals with improved long-range behavior and adiabatic connection methods without adjustable parameters: The mPW and mPW1PW models. J. Chem. Phys., 1998, 108, 664. DOI: 10.1063/1.475428.'
+  mPW2PLYP:
+    reference_ids:
+    - 260
+    references:
+    - id: 260
+      citation: Schwabe, T.; Grimme, S. Phys. Chem. Chem. Phys., 2006, 8, 4398.
+  mPWLYP:
+    reference_ids:
+    - 205
+    references:
+    - id: 205
+      citation: 'Adamo, C.; Barone, V. Exchange functionals with improved long-range behavior and adiabatic connection methods without adjustable parameters: The mPW and mPW1PW models. J. Chem. Phys., 1998, 108, 664. DOI: 10.1063/1.475428.'
+  mPWPW:
+    reference_ids:
+    - 205
+    references:
+    - id: 205
+      citation: 'Adamo, C.; Barone, V. Exchange functionals with improved long-range behavior and adiabatic connection methods without adjustable parameters: The mPW and mPW1PW models. J. Chem. Phys., 1998, 108, 664. DOI: 10.1063/1.475428.'
+  NCPF/1:
+    reference_ids:
+    - 7
+    references:
+    - id: 7
+      citation: 'Kollmar, Christian. Convergence optimization of restricted open‐shell self‐consistent field calculations. Int. J. Quant. Chem., 1997, 62 (6), 617–637. DOI: 10.1002/(SICI)1097-461X(1997)62:6<617::AID-QUA2>3.0.CO;2-K.'
+  NL:
+    reference_ids:
+    - 275
+    - 276
+    references:
+    - id: 275
+      citation: Vydrov, O. A.; Van Voorhis, T. J. Chem. Phys., 2010, 133, 244103.
+    - id: 276
+      citation: 'Hujo, Waldemar; Grimme, Stefan. Performance of Dispersion-Corrected Density Functional Theory for Thermochemistry and Noncovalent Interactions. J. Chem. Theory Comput., 2011, 7 (12), 3866–3871. DOI: 10.1021/ct200644w.'
+  Nooijen:
+    reference_ids:
+    - 373
+    references:
+    - id: 373
+      citation: Huntington, L. M. J.; Nooijen, M. J. Chem. Phys., 2010, 133, 184109.
+  Nusair:
+    reference_ids:
+    - 196
+    references:
+    - id: 196
+      citation: Vosko, S. H.; Wilk, L.; Nusair, M. Can. J. Phys., 1980, 58, 1200.
+  O3LYP:
+    reference_ids:
+    - 233
+    references:
+    - id: 233
+      citation: 'aron J. Cohen; Handy, Nicholas C. Dynamic correlation. Mol. Phys., 2001, 99 (7), 607–615. DOI: 10.1080/00268970010023435.'
+  OLYP:
+    reference_ids:
+    - 201
+    references:
+    - id: 201
+      citation: 'Handy, Nicholas C.; Cohen, Aron J. Left-right correlation energy. Mol. Phys., 2001, 99 (5), 403–412. DOI: 10.1080/00268970010018431.'
+  PBE:
+    reference_ids:
+    - 206
+    references:
+    - id: 206
+      citation: Perdew, J. P.; Burke, K.; Ernzerhof, M. Phys. Rev. Lett., 1996, 77, 3865.
+  PBE-QIDH:
+    reference_ids:
+    - 264
+    references:
+    - id: 264
+      citation: Brémond, Éric; Sancho-García, Juan Carlos; Pérez-Jiménez, Ángel José; Adamo, Carlo. J. Chem. Phys., 2014, 141, 031101.
+  PBE0:
+    reference_ids:
+    - 229
+    references:
+    - id: 229
+      citation: 'Adamo, C.; Barone, V. Toward Reliable Density Functional Methods without Adjustable Parameters: The PBE0 Model. J. Chem. Phys., 1999, 110, 6158. DOI: 10.1063/1.478522.'
+  PBE0-DH:
+    reference_ids:
+    - 265
+    references:
+    - id: 265
+      citation: 'Brémond, Éric; Adamo, Carlo. Seeking for Parameter-Free Double-Hybrid Functionals: The PBE0-DH Model. J. Chem. Phys., 2011, 135 (2), 024106.'
+  PBEh-3c:
+    reference_ids:
+    - 239
+    references:
+    - id: 239
+      citation: 'Grimme, S.; Brandenburg, J. G.; Bannwarth, C.; Hansen, A. Consistent structures and interactions by density functional theory with small atomic orbital basis sets. J. Chem. Phys., 2015, 143, 054107. DOI: 10.1063/1.4927476.'
+  PBEPP86:
+    reference_ids:
+    - 266
+    - 270
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+    - id: 270
+      citation: 'Casanova-Páez, Marcos; Dardis, Michael B.; Goerigk, Lars. ωB2PLYP & ωB2GPPLYP: The First Two Double-Hybrid Density Functionals with Long-Range Correction Optimized for Excitation Energies. J. Chem. Theory Comput., 2019, 15, 4735. DOI: 10.1021/acs.jctc.9b00013.'
+  Perdew:
+    reference_ids:
+    - 195
+    references:
+    - id: 195
+      citation: 'Perdew, John P.; Schmidt, Karla. Jacob’s ladder of density functional approximations for the exchange-correlation energy. AIP Conf. Proc., 2001, 577 (1), 1–20. DOI: 10.1063/1.1390175.'
+  PM3:
+    reference_ids:
+    - 294
+    references:
+    - id: 294
+      citation: Stewart, J. P. J. Comput. Chem., 1989, 10, 209 & 221.
+  PNOs:
+    reference_ids:
+    - 405
+    - 406
+    - 407
+    - 408
+    references:
+    - id: 405
+      citation: Meyer, Wilfried. Ionization energies of water from PNO-CI calculations. Int. J. Quantum Chem., 1971, 5 (S5), 341–348.
+    - id: 406
+      citation: Ahlrichs, R; Lischka, H; Staemmler, V; Kutzelnigg, W. PNO–CI (pair natural orbital configuration interaction) and CEPA–PNO (coupled electron pair approximation with pair natural orbitals) calculations of molecular systems. I. Outline of the method for closed-shell states. J. Chem. Phys., 1975, 62 (4), 1225–1234.
+    - id: 407
+      citation: Meyer, Wilfried. PNO–CI Studies of electron correlation effects. I. Configuration expansion by means of nonorthogonal orbitals, and application to the ground state and ionized states of methane. J. Chem. Phys., 1973, 58 (3), 1017–1035.
+    - id: 408
+      citation: 'Werner, Hans-Joachim; Meyer, Wilfried. PNO-CI and PNO-CEPA studies of electron correlation effects: V. Static dipole polarizabilities of small molecules. Mol. Phys., 1976, 31 (3), 855–872.'
+  poise-correction:
+    reference_ids:
+    - 124
+    references:
+    - id: 124
+      citation: 'Kruse, Holger; Grimme, Stefan. A geometrical correction for the inter- and intra-molecular basis set superposition error in Hartree-Fock and density functional theory calculations for large systems. J. Chem. Phys., 2012, 136 (15), 154101. DOI: 10.1063/1.3700154.'
+  Pr2SCAN50:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  Pr²SCAN50:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  Pr²SCAN69:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  PW-LDA:
+    reference_ids:
+    - 197
+    references:
+    - id: 197
+      citation: Perdew, J. P.; Wang, Y. Phys. Rev. B, 1992, 45, 13244.
+  PW1PW:
+    reference_ids:
+    - 229
+    references:
+    - id: 229
+      citation: 'Adamo, C.; Barone, V. Toward Reliable Density Functional Methods without Adjustable Parameters: The PBE0 Model. J. Chem. Phys., 1999, 110, 6158. DOI: 10.1063/1.478522.'
+  PW6B95:
+    reference_ids:
+    - 236
+    references:
+    - id: 236
+      citation: Zhao, Y.; Truhlar, D. G. J. Phys. Chem. A, 2005, 109, 5656–5667.
+  PW91:
+    reference_ids:
+    - 204
+    references:
+    - id: 204
+      citation: 'Germany), W. E. Heraeus Seminar (75th 1991 Gaussig. Electronic structure of solids ''91: proceedings of the 75. WE-Heraeus-Seminar and 21st Annual International Symposium on Electronic Structure of Solids held in Gaussig (Germany), March 11-15, 1991. Akademie Verlag, Berlin, 1st ed. edition, 1991. ISBN 978-3-05-501504-5. Open Library ID: OL1778449M.'
+  PWLDA:
+    reference_ids:
+    - 197
+    references:
+    - id: 197
+      citation: Perdew, J. P.; Wang, Y. Phys. Rev. B, 1992, 45, 13244.
+  PWP:
+    reference_ids:
+    - 204
+    references:
+    - id: 204
+      citation: 'Germany), W. E. Heraeus Seminar (75th 1991 Gaussig. Electronic structure of solids ''91: proceedings of the 75. WE-Heraeus-Seminar and 21st Annual International Symposium on Electronic Structure of Solids held in Gaussig (Germany), March 11-15, 1991. Akademie Verlag, Berlin, 1st ed. edition, 1991. ISBN 978-3-05-501504-5. Open Library ID: OL1778449M.'
+  PWPB95:
+    reference_ids:
+    - 250
+    references:
+    - id: 250
+      citation: Goerigk, L.; Grimme, S. J. Chem. Theory Comput., 2011, 7, 291–309.
+  QROs:
+    reference_ids:
+    - 356
+    references:
+    - id: 356
+      citation: 'Neese, F. Importance of Direct Spin-Spin Coupling and Spin-Flip Excitations for the Zero-Field Splittings of Transition Metal Complexes: A Case Study. J. Am. Chem. Soc., 2006, 128, 10213.'
+  Ref:
+    reference_ids:
+    - 272
+    - 273
+    - 276
+    - 286
+    - 385
+    references:
+    - id: 272
+      citation: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104.
+    - id: 273
+      citation: Grimme, S.; Ehrlich, S.; Goerigk, L. J. Comput. Chem., 2011, 32, 1456.
+    - id: 276
+      citation: 'Hujo, Waldemar; Grimme, Stefan. Performance of Dispersion-Corrected Density Functional Theory for Thermochemistry and Noncovalent Interactions. J. Chem. Theory Comput., 2011, 7 (12), 3866–3871. DOI: 10.1021/ct200644w.'
+    - id: 286
+      citation: Hujo, W.; Grimme, S. Phys. Chem. Chem. Phys., 2011, 13, 13942.
+    - id: 385
+      citation: 'Liakos, D. G.; Neese, F. Improved correlation energy extrapolation schemes based on local pair natural orbital methods. J. Phys. Chem. A, 2012, 116 (19), 4801–4816. DOI: 10.1021/jp302096v.'
+  revDOD-PBEP86(2021):
+    reference_ids:
+    - 254
+    references:
+    - id: 254
+      citation: 'Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A, 2021, 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294.'
+  revDOD-PBEP86-D4(2021):
+    reference_ids:
+    - 254
+    references:
+    - id: 254
+      citation: 'Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A, 2021, 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294.'
+  revDSD-PBEP86(2021):
+    reference_ids:
+    - 254
+    references:
+    - id: 254
+      citation: 'Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A, 2021, 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294.'
+  revDSD-PBEP86-D4:
+    reference_ids:
+    - 254
+    references:
+    - id: 254
+      citation: 'Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A, 2021, 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294.'
+  revDSD-PBEP86-D4(2021):
+    reference_ids:
+    - 254
+    references:
+    - id: 254
+      citation: 'Santra, Golokesh; Cho, Minsik; Martin, Jan M. L. Exploring Avenues beyond Revised DSD Functionals: I. Range Separation, with xDSD as a Special Case. J. Phys. Chem. A, 2021, 125 (21), 4614–4627. DOI: 10.1021/acs.jpca.1c01294.'
+  revPBE:
+    reference_ids:
+    - 208
+    references:
+    - id: 208
+      citation: Zhang, Y.; Yang, W. Phys. Rev. Lett., 1998, 80, 890.
+  revPBE0:
+    reference_ids:
+    - 234
+    references:
+    - id: 234
+      citation: 'Goerigk, Lars; Grimme, Stefan. A thorough benchmark of density functional methods for general main group thermochemistry, kinetics, and noncovalent interactions. Phys. Chem. Chem. Phys., 2011, 13, 6670–6688. DOI: 10.1039/C0CP02984J.'
+  revPBE38:
+    reference_ids:
+    - 234
+    references:
+    - id: 234
+      citation: 'Goerigk, Lars; Grimme, Stefan. A thorough benchmark of density functional methods for general main group thermochemistry, kinetics, and noncovalent interactions. Phys. Chem. Chem. Phys., 2011, 13, 6670–6688. DOI: 10.1039/C0CP02984J.'
+  revTPSS:
+    reference_ids:
+    - 219
+    - 220
+    references:
+    - id: 219
+      citation: 'Perdew, John P.; Ruzsinszky, Adrienn; Csonka, Gábor I.; Constantin, Lucian A.; Sun, Jianwei. Workhorse Semilocal Density Functional for Condensed Matter Physics and Quantum Chemistry. Phys. Rev. Lett., 2009, 103, 026403. DOI: 10.1103/PhysRevLett.103.026403.'
+    - id: 220
+      citation: 'Perdew, John P.; Ruzsinszky, Adrienn; Csonka, Gábor I.; Constantin, Lucian A.; Sun, Jianwei. Erratum: Workhorse Semilocal Density Functional for Condensed Matter Physics and Quantum Chemistry [Phys. Rev. Lett. 103, 026403 (2009)]. Phys. Rev. Lett., 2011, 106, 179902. DOI: 10.1103/PhysRevLett.106.179902.'
+  RPBE:
+    reference_ids:
+    - 207
+    references:
+    - id: 207
+      citation: Hammer, B.; Hansen, L. B.; Nørskov, J. K. Phys. Rev. B, 1999, 59, 7413.
+  RPW86PBE:
+    reference_ids:
+    - 209
+    references:
+    - id: 209
+      citation: 'Murray, Éamonn D.; Lee, Kyuho; Langreth, David C. Investigation of Exchange Energy Density Functional Accuracy for Interacting Molecules. J. Chem. Theory Comput., 2009, 5 (10), 2754–2762. DOI: 10.1021/ct900365q.'
+  rSCAN:
+    reference_ids:
+    - 215
+    references:
+    - id: 215
+      citation: 'Bartók, Albert P; Yates, Jonathan R. Regularized SCAN Functional. J. Chem. Phys., 2019, 150 (16), 161101. DOI: 10.1063/1.5094646.'
+  RSX-0DH:
+    reference_ids:
+    - 269
+    references:
+    - id: 269
+      citation: Brémond, Éric; Pérez-Jiménez, Ángel José; Sancho-García, Juan Carlos; Adamo, Carlo. J. Chem. Phys., 2019, 150, 201102.
+  RSX-QIDH:
+    reference_ids:
+    - 268
+    references:
+    - id: 268
+      citation: Brémond, Éric; Savarese, Marika; Pérez-Jiménez, Ángel José; Sancho-García, Juan Carlos; Adamo, Carlo. J. Chem. Theory Comput., 2018, 14, 4052–4062.
+  r²SCAN:
+    reference_ids:
+    - 216
+    - 248
+    references:
+    - id: 216
+      citation: 'Furness, James W; Kaplan, Aaron D; Ning, Jinliang; Perdew, John P; Sun, Jianwei. Accurate and Numerically Efficient r²SCAN Meta-Generalized Gradient Approximation. J. Phys. Chem. Lett., 2020, 11 (19), 8208–8215. DOI: 10.1021/acs.jpclett.0c02405.'
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  r²SCAN-3c:
+    reference_ids:
+    - 221
+    references:
+    - id: 221
+      citation: 'Grimme, Stefan; Hansen, Andreas; Ehlert, Sebastian; Mewes, Jan-Michael. r2SCAN-3c: A “Swiss Army Knife” Composite Electronic-Structure Method. J. Chem. Phys., 2021, 154 (6), 064103. DOI: 10.1063/5.0040021.'
+  r²SCAN0:
+    reference_ids:
+    - 238
+    references:
+    - id: 238
+      citation: 'Bursch, Markus; Neugebauer, Hagen; Ehlert, Sebastian; Grimme, Stefan. Dispersion corrected r²SCAN based global hybrid functionals: r²SCANh, r²SCAN0, and r²SCAN50. J. Chem. Phys., 2022, 156 (13), 134105. DOI: 10.1063/5.0086040.'
+  r²SCAN50:
+    reference_ids:
+    - 238
+    references:
+    - id: 238
+      citation: 'Bursch, Markus; Neugebauer, Hagen; Ehlert, Sebastian; Grimme, Stefan. Dispersion corrected r²SCAN based global hybrid functionals: r²SCANh, r²SCAN0, and r²SCAN50. J. Chem. Phys., 2022, 156 (13), 134105. DOI: 10.1063/5.0086040.'
+  r²SCANh:
+    reference_ids:
+    - 238
+    references:
+    - id: 238
+      citation: 'Bursch, Markus; Neugebauer, Hagen; Ehlert, Sebastian; Grimme, Stefan. Dispersion corrected r²SCAN based global hybrid functionals: r²SCANh, r²SCAN0, and r²SCAN50. J. Chem. Phys., 2022, 156 (13), 134105. DOI: 10.1063/5.0086040.'
+  SCAN:
+    reference_ids:
+    - 214
+    - 216
+    references:
+    - id: 214
+      citation: 'Sun, Jianwei; Ruzsinszky, Adrienn; Perdew, John P. Strongly Constrained and Appropriately Normed Semilocal Density Functional. Phys. Rev. Lett., 2015, 115 (3), 036402. DOI: 10.1103/PhysRevLett.115.036402.'
+    - id: 216
+      citation: 'Furness, James W; Kaplan, Aaron D; Ning, Jinliang; Perdew, John P; Sun, Jianwei. Accurate and Numerically Efficient r²SCAN Meta-Generalized Gradient Approximation. J. Phys. Chem. Lett., 2020, 11 (19), 8208–8215. DOI: 10.1021/acs.jpclett.0c02405.'
+  SCNL:
+    reference_ids:
+    - 275
+    - 276
+    references:
+    - id: 275
+      citation: Vydrov, O. A.; Van Voorhis, T. J. Chem. Phys., 2010, 133, 244103.
+    - id: 276
+      citation: 'Hujo, Waldemar; Grimme, Stefan. Performance of Dispersion-Corrected Density Functional Theory for Thermochemistry and Noncovalent Interactions. J. Chem. Theory Comput., 2011, 7 (12), 3866–3871. DOI: 10.1021/ct200644w.'
+  SCS-B2GP-PLYP21:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SCS-PBE-QIDH:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SCS-RSX-QIDH:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SCS/SOS-B2PLYP21:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SOS-B2GP-PLYP21:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SOS-PBE-QIDH:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SOS-RSX-QIDH:
+    reference_ids:
+    - 266
+    references:
+    - id: 266
+      citation: 'Casanova-Páez, Marcos; Goerigk, Lars. Time-Dependent Long-Range-Corrected Double-Hybrid Density Functionals with Spin-Component and Spin-Opposite Scaling: A Comprehensive Analysis of Singlet-Singlet and Singlet-Triplet Excitation Energies. J. Chem. Theory Comput., 2021, 17 (8), 5165–5186. DOI: 10.1021/acs.jctc.1c00535.'
+  SOS1-r²SCAN-CIDH:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  SOS1-r²SCAN-QIDH:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  SOS1-r²SCAN0-2:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  SOS1-r²SCAN0-DH:
+    reference_ids:
+    - 248
+    references:
+    - id: 248
+      citation: 'Wittmann, Lukas; Neugebauer, Hagen; Grimme, Stefan; Bursch, Markus. Dispersion-corrected r²SCAN based double-hybrid functionals. J. Chem. Phys., 2023, 159 (22), 224103. DOI: 10.1063/5.0174988.'
+  TPSS:
+    reference_ids:
+    - 218
+    references:
+    - id: 218
+      citation: Staroverov, V. N.; Scuseria, G. E.; Tao, J.; Perdew, J. P. J. Chem. Phys., 2003, 119, 12129.
+  TPSS0:
+    reference_ids:
+    - 237
+    references:
+    - id: 237
+      citation: 'Grimme, Stefan. Accurate Calculation of the Heats of Formation for Large Main Group Compounds with Spin-Component Scaled MP2 Methods. J. Phys. Chem. A, 2005, 109 (13), 3067–3077. DOI: 10.1021/jp050036j.'
+  TPSSh:
+    reference_ids:
+    - 218
+    references:
+    - id: 218
+      citation: Staroverov, V. N.; Scuseria, G. E.; Tao, J.; Perdew, J. P. J. Chem. Phys., 2003, 119, 12129.
+  Voorhis:
+    reference_ids:
+    - 275
+    references:
+    - id: 275
+      citation: Vydrov, O. A.; Van Voorhis, T. J. Chem. Phys., 2010, 133, 244103.
+  VV10:
+    reference_ids:
+    - 275
+    - 276
+    references:
+    - id: 275
+      citation: Vydrov, O. A.; Van Voorhis, T. J. Chem. Phys., 2010, 133, 244103.
+    - id: 276
+      citation: 'Hujo, Waldemar; Grimme, Stefan. Performance of Dispersion-Corrected Density Functional Theory for Thermochemistry and Noncovalent Interactions. J. Chem. Theory Comput., 2011, 7 (12), 3866–3871. DOI: 10.1021/ct200644w.'
+  VWN-III:
+    reference_ids:
+    - 196
+    references:
+    - id: 196
+      citation: Vosko, S. H.; Wilk, L.; Nusair, M. Can. J. Phys., 1980, 58, 1200.
+  VWN-V:
+    reference_ids:
+    - 196
+    references:
+    - id: 196
+      citation: Vosko, S. H.; Wilk, L.; Nusair, M. Can. J. Phys., 1980, 58, 1200.
+  X3LYP:
+    reference_ids:
+    - 203
+    references:
+    - id: 203
+      citation: Xu, Xin; Goddard, III, William A. Proc. Nat. Acad. Sci., 2004, 101, 2673.
+  XLYP:
+    reference_ids:
+    - 203
+    references:
+    - id: 203
+      citation: Xu, Xin; Goddard, III, William A. Proc. Nat. Acad. Sci., 2004, 101, 2673.
+  ZINDO/1:
+    reference_ids:
+    - 307
+    - 308
+    - 309
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    references:
+    - id: 307
+      citation: Ridley, J.; Zerner, M. C. Theor. Chim. Acta, 1973, 32, 111.
+    - id: 308
+      citation: 'Bacon, A. D.; Zerner, M. C. An intermediate neglect of differential overlap theory for transition metal complexes: Fe, Co and Cu chlorides. Theor. Chim. Acta, 1979, 53, 21. DOI: 10.1007/BF00547605.'
+    - id: 309
+      citation: Zerner, M. C.; Loew, G. H.; Kirchner, R. F.; Mueller-Westerhoff, U. T. J. Am. Chem. Soc., 1980, 102, 589.
+    - id: 310
+      citation: 'Anderson, W. P.; Edwards, W. D.; Zerner, M. C. Calculated spectra of hydrated ions of the first transition-metal series. Inorg. Chem., 1986, 25, 2728. DOI: 10.1021/ic00236a015.'
+    - id: 311
+      citation: 'Anderson, W. P.; Cundari, T. R.; Drago, R. S.; Zerner, M. C. Utility of the semiempirical INDO/1 method for the calculation of the geometries of second-row transition-metal species. Inorg. Chem., 1990, 29, 3. DOI: 10.1021/ic00326a001.'
+    - id: 312
+      citation: 'Anderson, W. P.; Cundari, T. R.; Zerner, M. C. An intermediate neglect of differential overlap model for second-row transition metal species. Int. J. Quant. Chem., 1991, 39, 31. DOI: 10.1002/qua.560390106.'
+    - id: 313
+      citation: Zerner, M. C. In Lipkowitz, K. B.; Boyd, D. B., editors, Reviews in Computational Chemistry, volume 2, pages 313. Wiley-VCH, 1990.
+    - id: 314
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: From Atoms to Clusters to Surfaces, pages 101. Kluwer Academic Publishers, 1992.'
+    - id: 315
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: Structure and Reactivity, pages 493. Kluwer Academic Publishers, 1992.'
+    - id: 316
+      citation: 'Cory, M. G.; Zerner, M. C. Metal-ligand exchange coupling in transition-metal complexes. Chem. Rev., 1991, 91, 813. DOI: 10.1021/cr00005a009.'
+    - id: 317
+      citation: 'Kotzian, M.; Rösch, N.; Zerner, M. C. Intermediate neglect of differential overlap spectroscopic studies on lanthanide complexes. I. Spectroscopic parametrization and application to diatomic lanthanide oxides LnO (Ln=La, Ce, Gd, and Lu). Theor. Chim. Acta, 1992, 81 (3-4), 201–222. DOI: 10.1007/BF01118562.'
+  ZINDO/2:
+    reference_ids:
+    - 307
+    - 308
+    - 309
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    references:
+    - id: 307
+      citation: Ridley, J.; Zerner, M. C. Theor. Chim. Acta, 1973, 32, 111.
+    - id: 308
+      citation: 'Bacon, A. D.; Zerner, M. C. An intermediate neglect of differential overlap theory for transition metal complexes: Fe, Co and Cu chlorides. Theor. Chim. Acta, 1979, 53, 21. DOI: 10.1007/BF00547605.'
+    - id: 309
+      citation: Zerner, M. C.; Loew, G. H.; Kirchner, R. F.; Mueller-Westerhoff, U. T. J. Am. Chem. Soc., 1980, 102, 589.
+    - id: 310
+      citation: 'Anderson, W. P.; Edwards, W. D.; Zerner, M. C. Calculated spectra of hydrated ions of the first transition-metal series. Inorg. Chem., 1986, 25, 2728. DOI: 10.1021/ic00236a015.'
+    - id: 311
+      citation: 'Anderson, W. P.; Cundari, T. R.; Drago, R. S.; Zerner, M. C. Utility of the semiempirical INDO/1 method for the calculation of the geometries of second-row transition-metal species. Inorg. Chem., 1990, 29, 3. DOI: 10.1021/ic00326a001.'
+    - id: 312
+      citation: 'Anderson, W. P.; Cundari, T. R.; Zerner, M. C. An intermediate neglect of differential overlap model for second-row transition metal species. Int. J. Quant. Chem., 1991, 39, 31. DOI: 10.1002/qua.560390106.'
+    - id: 313
+      citation: Zerner, M. C. In Lipkowitz, K. B.; Boyd, D. B., editors, Reviews in Computational Chemistry, volume 2, pages 313. Wiley-VCH, 1990.
+    - id: 314
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: From Atoms to Clusters to Surfaces, pages 101. Kluwer Academic Publishers, 1992.'
+    - id: 315
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: Structure and Reactivity, pages 493. Kluwer Academic Publishers, 1992.'
+    - id: 316
+      citation: 'Cory, M. G.; Zerner, M. C. Metal-ligand exchange coupling in transition-metal complexes. Chem. Rev., 1991, 91, 813. DOI: 10.1021/cr00005a009.'
+    - id: 317
+      citation: 'Kotzian, M.; Rösch, N.; Zerner, M. C. Intermediate neglect of differential overlap spectroscopic studies on lanthanide complexes. I. Spectroscopic parametrization and application to diatomic lanthanide oxides LnO (Ln=La, Ce, Gd, and Lu). Theor. Chim. Acta, 1992, 81 (3-4), 201–222. DOI: 10.1007/BF01118562.'
+  ZINDO/S:
+    reference_ids:
+    - 307
+    - 308
+    - 309
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    references:
+    - id: 307
+      citation: Ridley, J.; Zerner, M. C. Theor. Chim. Acta, 1973, 32, 111.
+    - id: 308
+      citation: 'Bacon, A. D.; Zerner, M. C. An intermediate neglect of differential overlap theory for transition metal complexes: Fe, Co and Cu chlorides. Theor. Chim. Acta, 1979, 53, 21. DOI: 10.1007/BF00547605.'
+    - id: 309
+      citation: Zerner, M. C.; Loew, G. H.; Kirchner, R. F.; Mueller-Westerhoff, U. T. J. Am. Chem. Soc., 1980, 102, 589.
+    - id: 310
+      citation: 'Anderson, W. P.; Edwards, W. D.; Zerner, M. C. Calculated spectra of hydrated ions of the first transition-metal series. Inorg. Chem., 1986, 25, 2728. DOI: 10.1021/ic00236a015.'
+    - id: 311
+      citation: 'Anderson, W. P.; Cundari, T. R.; Drago, R. S.; Zerner, M. C. Utility of the semiempirical INDO/1 method for the calculation of the geometries of second-row transition-metal species. Inorg. Chem., 1990, 29, 3. DOI: 10.1021/ic00326a001.'
+    - id: 312
+      citation: 'Anderson, W. P.; Cundari, T. R.; Zerner, M. C. An intermediate neglect of differential overlap model for second-row transition metal species. Int. J. Quant. Chem., 1991, 39, 31. DOI: 10.1002/qua.560390106.'
+    - id: 313
+      citation: Zerner, M. C. In Lipkowitz, K. B.; Boyd, D. B., editors, Reviews in Computational Chemistry, volume 2, pages 313. Wiley-VCH, 1990.
+    - id: 314
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: From Atoms to Clusters to Surfaces, pages 101. Kluwer Academic Publishers, 1992.'
+    - id: 315
+      citation: 'Zerner, M. C. In Salahub, D. R.; Russo, N., editors, Metal-Ligand Interactions: Structure and Reactivity, pages 493. Kluwer Academic Publishers, 1992.'
+    - id: 316
+      citation: 'Cory, M. G.; Zerner, M. C. Metal-ligand exchange coupling in transition-metal complexes. Chem. Rev., 1991, 91, 813. DOI: 10.1021/cr00005a009.'
+    - id: 317
+      citation: 'Kotzian, M.; Rösch, N.; Zerner, M. C. Intermediate neglect of differential overlap spectroscopic studies on lanthanide complexes. I. Spectroscopic parametrization and application to diatomic lanthanide oxides LnO (Ln=La, Ce, Gd, and Lu). Theor. Chim. Acta, 1992, 81 (3-4), 201–222. DOI: 10.1007/BF01118562.'
+  ZNDDO/1:
+    reference_ids:
+    - 318
+    - 319
+    references:
+    - id: 318
+      citation: Nieke, C.; Reinhold, J. Theor. Chim. Acta, 1984, 65, 99.
+    - id: 319
+      citation: Köhler, H. J.; Birnstock, F. Title not provided. Z. Chem., 1972, 12 (5), 196.
+  ZNDDO/2:
+    reference_ids:
+    - 318
+    - 319
+    references:
+    - id: 318
+      citation: Nieke, C.; Reinhold, J. Theor. Chim. Acta, 1984, 65, 99.
+    - id: 319
+      citation: Köhler, H. J.; Birnstock, F. Title not provided. Z. Chem., 1972, 12 (5), 196.

@@ -153,7 +153,7 @@ class TestConfigDefaults(unittest.TestCase):
         self.assertEqual(result["conformerGenerationInfo"]["goatMode"], "GOAT")
         self.assertEqual(result["conformerGenerationInfo"]["energyCutoff"], 6.0)
         self.assertEqual(result["conformerGenerationInfo"]["goatMethod"], "XTB2")
-        self.assertEqual(result["conformerGenerationInfo"]["conformerSelction"], "ENERGY")
+        self.assertEqual(result["conformerGenerationInfo"]["conformerSelection"], "ENERGY")
         self.assertEqual(result["miscInfo"]["seed"], 1818)
         self.assertFalse(result["chargeFittingInfo"]["enforceDefaultBackboneCharges"])
 
@@ -198,7 +198,7 @@ class TestConfigDefaults(unittest.TestCase):
                 "goatMode": "GOAT",
                 "energyCutoff": 6.0,
                 "goatMethod": "XTB2",
-                "conformerSelction": "ENERGY",
+                "conformerSelection": "ENERGY",
             },
             "chargeFittingInfo": {
                 "chargeFittingProtocol": "RESP2",
@@ -247,7 +247,7 @@ class TestConfigDefaults(unittest.TestCase):
                 "goatMode": "GOAT-FAST",
                 "energyCutoff": -1.0,
                 "goatMethod": "MMFF",
-                "conformerSelction": "BAD_SELECTION",
+                "conformerSelection": "BAD_SELECTION",
             },
             "chargeFittingInfo": {
                 "chargeFittingProtocol": "RESP2",
@@ -296,7 +296,7 @@ class TestConfigDefaults(unittest.TestCase):
                 "goatMode": "GOAT",
                 "energyCutoff": 6.0,
                 "goatMethod": "XTB2",
-                "conformerSelction": "ENERGY",
+                "conformerSelection": "ENERGY",
             },
             "chargeFittingInfo": {
                 "chargeFittingProtocol": "RESP2",

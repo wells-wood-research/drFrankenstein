@@ -70,7 +70,7 @@ conformerGenerationInfo:
   goatMode: GOAT
   energyCutoff: 6.0
   goatMethod: XTB2
-  conformerSelction: ENERGY
+  conformerSelection: ENERGY
 
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #

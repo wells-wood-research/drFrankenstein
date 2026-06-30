@@ -1,4 +1,4 @@
-![drFrankenstein Splash](./Images/Green_Frank_Basic.png)
+![drFrankenstein Splash](./Images/Green_Frank_New.png)
 # **drFrankenstein**  - *Lightning-Fast MD Parameters for Monstrous Molecules!*
 
 **drFrankenstein** is a *fully-automated* pipeline for generating forcefield parameters for:
@@ -7,10 +7,6 @@
 - Small-molecule ligands
 
 **drFrankenstein** is capable of creating parameter files compatible with **CHARMM** and **AMBER** force fields.
-
-
-
-
 
 
 ## Installation

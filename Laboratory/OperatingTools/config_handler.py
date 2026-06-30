@@ -73,7 +73,7 @@ def apply_defaults_and_validate(config: dict) -> dict:
     set_default(conformerGenerationInfo, "goatMode", "GOAT", errors["conformerGenerationInfo"])
     set_default(conformerGenerationInfo, "energyCutoff", 6.0, errors["conformerGenerationInfo"])
     set_default(conformerGenerationInfo, "goatMethod", "XTB2", errors["conformerGenerationInfo"])
-    set_default(conformerGenerationInfo, "conformerSelction", "ENERGY", errors["conformerGenerationInfo"])
+    set_default(conformerGenerationInfo, "conformerSelection", "ENERGY", errors["conformerGenerationInfo"])
 
     # --- Section: pathInfo ---
     errors["pathInfo"] = {}
@@ -355,7 +355,7 @@ def _validate_conformer_generation_info(sectionData: Optional[Dict[str, Any]], s
     if not isinstance(sectionData, dict):
         _add_error(errors, sectionName, f"Section '{sectionName}' should be a dictionary, but got {type(sectionData).__name__}")
         return
-    requiredKeys = {"goatMode": str, "energyCutoff": (int, float), "goatMethod": str, "conformerSelction": str}
+    requiredKeys = {"goatMode": str, "energyCutoff": (int, float), "goatMethod": str, "conformerSelection": str}
     allowedGoatModes = ["GOAT", "GOAT-ENTROPY"]
     allowedSelectionMethods = ["ENERGY", "DIVERSE"]
     allowedGoatMethods = ["XTB2", "GFN-FF"]
@@ -368,7 +368,7 @@ def _validate_conformer_generation_info(sectionData: Optional[Dict[str, Any]], s
                     _validate_allowed_values(value, allowedGoatModes, keyPath, errors)
                 elif key == "goatMethod":
                     _validate_allowed_values(value, allowedGoatMethods, keyPath, errors)
-                elif key == "conformerSelction":
+                elif key == "conformerSelection":
                     _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
                 elif key == "energyCutoff" and isinstance(value, (int, float)) and value < 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")

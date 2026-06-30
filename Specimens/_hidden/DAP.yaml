@@ -42,7 +42,7 @@ conformerGenerationInfo:
   goatMode: GOAT-ENTROPY
   energyCutoff: 10.0
   goatMethod: GFN-FF
-  conformerSelction: DIVERSE
+  conformerSelection: DIVERSE
 
 torsionScanInfo:
   runScansOn:

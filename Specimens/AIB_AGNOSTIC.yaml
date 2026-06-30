@@ -55,7 +55,7 @@ conformerGenerationInfo:
   goatMode: GOAT-ENTROPY
   energyCutoff: 6.0
   goatMethod: XTB2
-  conformerSelction: DIVERSE
+  conformerSelection: DIVERSE
 
 
 ##########################################################################################################################

@@ -23,6 +23,21 @@
     .methods-citations .protocol-content-text a {
         color: yellow;
     }
+
+    .qm-method-citations {
+        margin-top: 12px;
+        border-top: 1px dashed #3a3a3a;
+        padding-top: 10px;
+    }
+
+    .qm-method-citations .protocol-content-text strong {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    .qm-method-citations .protocol-content-text a {
+        color: yellow;
+    }
 </style>
 
 {% macro render_citations(citation_block) -%}
@@ -31,32 +46,49 @@
             {% if citation_block.essential_papers %}
                 <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
                 {% for paper in citation_block.essential_papers %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">{{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
             {% if citation_block.high_priority_papers %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
                 {% for paper in citation_block.high_priority_papers %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">{{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
             {% if citation_block.suggested_additional_citations %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
                 {% for paper in citation_block.suggested_additional_citations %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">{{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
 
             {% if citation_block.optional_additional_citations %}
                 <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
                 {% for paper in citation_block.optional_additional_citations %}
-                    <div class="protocol-content-text">Last Author: {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                    <div class="protocol-content-text">{{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
                 {% endfor %}
             {% endif %}
         </div>
     {% endif %}
+{%- endmacro %}
+
+{% macro render_qm_method_citations(entries) -%}
+    <div class="qm-method-citations">
+        <div class="protocol-content-text"><strong>QM Methods Citations:</strong></div>
+        {% if entries and entries|length > 0 %}
+            {% for paper in entries %}
+                {% if paper.doi %}
+                    <div class="protocol-content-text">Method: {{ paper.method }} | {{ paper.last_author }}, DOI: <a href="https://{{ paper.doi }}" target="_blank">{{ paper.doi }}</a></div>
+                {% else %}
+                    <div class="protocol-content-text">Method: {{ paper.method }} | {{ paper.last_author }}, Title: {{ paper.title }}</div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="protocol-content-text">None found.</div>
+        {% endif %}
+    </div>
 {%- endmacro %}
 
 <h2>Methods</h2>
@@ -66,6 +98,7 @@
         <div class="methods-section">
             <h3>Conformer Generation</h3>
             <div class="protocol-content-text">{{ methods_data.conformerMethods }}</div>
+            {{ render_qm_method_citations(methods_data.qmMethodsCitations.conformer if methods_data.qmMethodsCitations else none) }}
             {{ render_citations(citation_data.forConformers if citation_data else none) }}
         </div>
     {% endif %}
@@ -74,6 +107,7 @@
         <div class="methods-section">
             <h3>Torsion Scanning</h3>
             <div class="protocol-content-text">{{ methods_data.scanningMethods }}</div>
+            {{ render_qm_method_citations(methods_data.qmMethodsCitations.scanning if methods_data.qmMethodsCitations else none) }}
             {{ render_citations(citation_data.forStitching if citation_data else none) }}
         </div>
     {% endif %}
@@ -82,6 +116,7 @@
         <div class="methods-section">
             <h3>Charge Calculations</h3>
             <div class="protocol-content-text">{{ methods_data.chargeMethods }}</div>
+            {{ render_qm_method_citations(methods_data.qmMethodsCitations.charge if methods_data.qmMethodsCitations else none) }}
             {{ render_citations(citation_data.forCharges if citation_data else none) }}
         </div>
     {% endif %}
@@ -90,6 +125,7 @@
         <div class="methods-section">
             <h3>Parameter Fitting</h3>
             <div class="protocol-content-text">{{ methods_data.fittingMethods }}</div>
+            {{ render_qm_method_citations(methods_data.qmMethodsCitations.fitting if methods_data.qmMethodsCitations else none) }}
             {{ render_citations(citation_data.forStitching if citation_data else none) }}
         </div>
     {% endif %}

@@ -2,11 +2,15 @@ import os
 from os import path as p
 import re
 import textwrap
+from functools import lru_cache
 from textwrap import dedent
 import ruamel.yaml as ruamel
 from ruamel.yaml.comments import CommentedMap
 class FilePath(str):
     pass
+
+
+METHOD_REFERENCE_FILE = p.join(p.dirname(__file__), "methods_to_references.yaml")
 
 
 def read_input_yaml(configFile: FilePath) -> dict:
@@ -41,6 +45,229 @@ def read_input_yaml(configFile: FilePath) -> dict:
         print(f"\n{teal}TIP:{reset} Large language models (LLMs) like GPT-4 can be helpful for debugging YAML files.")
         print(f"{' '*5}If you get stuck with the formatting, ask a LLM for help!")
         exit(1)
+
+
+@lru_cache(maxsize=1)
+def load_method_reference_map() -> dict:
+    """Load method-to-reference mappings for report citation augmentation."""
+    if not p.isfile(METHOD_REFERENCE_FILE):
+        return {}
+
+    yaml_parser = ruamel.YAML(typ="safe")
+    with open(METHOD_REFERENCE_FILE, "r") as yaml_file:
+        data = yaml_parser.load(yaml_file) or {}
+    return data.get("methods_to_references", {})
+
+
+def normalize_method_string(method_text: str) -> str:
+    """Normalize a method string to improve fuzzy key matching."""
+    if not method_text:
+        return ""
+    normalized = str(method_text).strip().lower().replace("²", "2").replace("ω", "w")
+    # Preserve internal method punctuation and only normalize wrapper punctuation.
+    normalized = normalized.strip("!%#.,;:()[]{}<>")
+    return normalized
+
+
+def tokenize_method_input(method_text: str) -> list[str]:
+    """Split a method input line and return normalized tokens for exact matching."""
+    if not method_text:
+        return []
+    raw_tokens = str(method_text).split()
+    token_candidates = set()
+
+    def _add_candidate(candidate: str) -> None:
+        normalized = normalize_method_string(candidate)
+        if normalized:
+            token_candidates.add(normalized)
+
+    split_separators = ["=", ",", "/", "(", ")"]
+    for token in raw_tokens:
+        # Recursively split tokens on common ORCA delimiters.
+        queue = [token]
+        visited = set()
+        while queue:
+            current = queue.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            _add_candidate(current)
+
+            for separator in split_separators:
+                if separator in current:
+                    for part in current.split(separator):
+                        if part and part not in visited:
+                            queue.append(part)
+
+            # Handle composite dispersion forms, e.g. PBE0-D3BJ, B97-D4
+            if "-" in current and re.search(r"(d2|d3|d4|d5|vv10|nl)", current, re.IGNORECASE):
+                for part in current.split("-"):
+                    if part and part not in visited:
+                        queue.append(part)
+
+    return sorted(token_candidates)
+
+
+def find_method_reference_hits(method_text: str, reference_map: dict) -> list[tuple[str, dict]]:
+    """Return matched (method_key, method_data) pairs found in method_text.
+
+    Uses regex-style full-line searching and keeps the most specific overlaps.
+    """
+    if not method_text:
+        return []
+
+    searchable_text = normalize_method_string(method_text)
+    token_set = set(tokenize_method_input(method_text))
+    if not searchable_text:
+        return []
+
+    # Expand common aliases/synonyms to canonical method keys.
+    alias_map = {
+        "xtb0": "gfn0-xtb",
+        "xtb1": "gfn-xTB".lower(),
+        "xtb2": "gfn2-xtb",
+        "xtbff": "gfn-ff",
+        "cpcm": "cpcm-x",
+        "cpcmx": "cpcm-x",
+        "ddcosmo": "ddcosmo",
+    }
+    expanded_tokens = set(token_set)
+    for token in token_set:
+        if token in alias_map:
+            expanded_tokens.add(alias_map[token])
+
+    # Make alias-expanded forms searchable in regex matching.
+    if expanded_tokens:
+        searchable_text = searchable_text + " " + " ".join(sorted(expanded_tokens))
+
+    candidates: list[tuple[int, int, int, str, dict]] = []
+    for method_key, method_data in reference_map.items():
+        norm_key = normalize_method_string(method_key)
+        if not norm_key:
+            continue
+
+        # Regex-style full-line search.
+        match = re.search(re.escape(norm_key), searchable_text)
+        if not match:
+            continue
+        start, end = match.span()
+        candidates.append((-(end - start), start, end, method_key, method_data))
+
+    # Choose the option that matches the most (longest), suppressing shorter overlaps.
+    candidates.sort(key=lambda item: (item[0], item[1], item[3].lower()))
+    selected: list[tuple[int, int, str, dict]] = []
+    selected_spans: list[tuple[int, int]] = []
+    for neg_len, start, end, method_key, method_data in candidates:
+        overlaps = any(not (end <= span_start or start >= span_end) for span_start, span_end in selected_spans)
+        if overlaps:
+            continue
+        selected.append((start, end, method_key, method_data))
+        selected_spans.append((start, end))
+
+    selected.sort(key=lambda item: (item[0], item[2].lower()))
+    return [(method_key, method_data) for _, _, method_key, method_data in selected]
+
+
+def extract_doi_from_citation(citation_text: str) -> str | None:
+    """Extract DOI string and normalize to doi.org/<doi> when possible."""
+    if not citation_text:
+        return None
+
+    url_match = re.search(r"(doi\.org/10\.\d{4,9}/\S+)", citation_text, flags=re.IGNORECASE)
+    if url_match:
+        doi = url_match.group(1).strip().rstrip(".,;")
+        doi = re.sub(r"^https?://", "", doi, flags=re.IGNORECASE)
+        return doi
+
+    doi_match = re.search(r"(10\.\d{4,9}/\S+)", citation_text, flags=re.IGNORECASE)
+    if doi_match:
+        raw = doi_match.group(1).strip().rstrip(".,;")
+        return f"doi.org/{raw}"
+
+    return None
+
+
+def extract_authors_from_citation(citation_text: str) -> str:
+    """Best-effort extraction of the author block from a compact citation string."""
+    if not citation_text:
+        return ""
+
+    # Remove DOI suffix for cleaner author extraction.
+    citation_no_doi = re.sub(r"(DOI:\\s*\\S+|doi\\.org/\\S+)", "", citation_text, flags=re.IGNORECASE).strip()
+
+    # Usually authors occupy the first sentence before the title.
+    head = citation_no_doi.split(". ", 1)[0].strip()
+    return head
+
+
+def extract_title_from_citation(citation_text: str) -> str:
+    """Best-effort extraction of paper title from compact citation text."""
+    if not citation_text:
+        return ""
+
+    cleaned = re.sub(r"(DOI:\s*\S+|doi\.org/\S+)", "", citation_text, flags=re.IGNORECASE).strip()
+    parts = [p.strip() for p in cleaned.split(". ") if p.strip()]
+    if len(parts) >= 2:
+        # Typically: Authors. Title. Journal...
+        candidate = parts[1].rstrip(".")
+        # If this looks like a journal fragment (no explicit title), use full citation text.
+        if len(candidate.split()) <= 3 or re.search(r"\b(Phys|Chem|Rev|J\.|Comput|Lett)\b", candidate):
+            return cleaned.rstrip(".")
+        return candidate
+    # Fallback to full citation text if title cannot be cleanly isolated.
+    return cleaned.rstrip(".")
+
+
+def build_qm_methods_citation_entries(method_fields: list[tuple[str, str]]) -> list[dict]:
+    """Build structured QM citation entries for report rendering."""
+    reference_map = load_method_reference_map()
+    if not reference_map:
+        return []
+
+    entries: list[dict] = []
+    seen_method_keys = set()
+
+    for _, field_value in method_fields:
+        for method_key, method_data in find_method_reference_hits(field_value, reference_map):
+            if method_key in seen_method_keys:
+                continue
+            seen_method_keys.add(method_key)
+            refs = method_data.get("references", [])
+            if not refs:
+                continue
+
+            best_citation = ""
+            best_doi = None
+            for ref in refs:
+                citation = (ref.get("citation") or "").strip()
+                if not citation:
+                    continue
+                # Use first available reference as primary citation to keep
+                # citation ordering stable with reference_ids ordering.
+                if not best_citation:
+                    best_citation = citation
+                    best_doi = extract_doi_from_citation(citation)
+
+            if not best_citation:
+                continue
+
+            authors = extract_authors_from_citation(best_citation)
+            title = extract_title_from_citation(best_citation)
+            # Reuse same style as get_last_authors: split on ';' and take the final author.
+            authors_list = authors.split(";") if authors else []
+            last_author = authors_list[-1].strip() if authors_list else ""
+
+            entry = {
+                "method": method_key,
+                "authors": authors,
+                "title": title,
+                "last_author": last_author,
+                "doi": best_doi,
+                "citation": best_citation
+            }
+            entries.append(entry)
+
+    return entries
 ############################################################################
 def methods_writer_protocol(config: dict) -> dict:
     """Build the report methods text sections."""
@@ -58,7 +285,21 @@ def methods_writer_protocol(config: dict) -> dict:
         "conformerMethods": conformerMethods,
         "scanningMethods": scanningMethods,
         "chargeMethods": chargeMethods,
-        "fittingMethods": fittingMethods
+        "fittingMethods": fittingMethods,
+        "qmMethodsCitations": {
+            "conformer": build_qm_methods_citation_entries([
+                ("conformerMethod", "GFN2-XTB"),
+            ]),
+            "scanning": build_qm_methods_citation_entries([
+                ("scanMethod", config["torsionScanInfo"]["scanMethod"]),
+                ("singlePointMethod (scanning)", config["torsionScanInfo"]["singlePointMethod"]),
+            ]),
+            "charge": build_qm_methods_citation_entries([
+                ("optMethod (charge calculations)", config["chargeFittingInfo"]["optMethod"]),
+                ("singlePointMethod (charge calculations)", config["chargeFittingInfo"]["singlePointMethod"]),
+            ]),
+            "fitting": build_qm_methods_citation_entries([]),
+        }
     }
 
     return methods
@@ -123,7 +364,7 @@ Only successfully completed forward/backward scan pairs were retained, and the f
                             """)
 
     torsionMethod = torsionMethod + averagingText
-    
+
     return torsionMethod
 ############################################################################
 def write_charge_calculation_method(config: dict) -> str:
@@ -189,7 +430,6 @@ MultiWFN was used for RESP charge fitting, and conformer contributions were Bolt
         chargesMethod = chargesMethod + dedent(f"""
 For RESP2, fitting was performed separately for solvated and gas-phase data, then combined as a 60:40 weighted average (solvated:gas-phase). \
                                                """)
-
 
     return chargesMethod
 

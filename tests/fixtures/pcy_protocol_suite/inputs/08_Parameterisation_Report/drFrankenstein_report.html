@@ -1,0 +1,3159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculation Summary</title>
+    <style>
+        /* Updated and New Styles */
+        body {
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
+            margin: 0; /* Changed: Let parallax container handle full viewport */
+            background-color: #1a1a1a; /* Fallback for area outside parallax, if any */
+            color: #f0f0f0; /* A general text color for elements outside tab-container */
+        }
+        .parallax-viewport {
+            width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            perspective: 300px; /* Keep the perspective for parallax effect */
+            position: relative;
+            min-height: 100vh; /* Ensure at least full viewport height, but allow expansion */
+        }
+
+        .parallax-background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            min-height: 100%; /* Ensure background covers at least the viewport height */
+            z-index: -1;
+            background-image: url('Images/Lightning.jpg');
+            background-repeat: no-repeat;
+            background-position: center top; /* Center the background image */
+            background-size: cover; /* Cover the entire area */
+            background-attachment: fixed; /* Overridden by transform, kept for compatibility */
+            transform: translateZ(-600px) scale(4); /* Maintain parallax effect */
+        }
+
+        .page-content-wrapper {
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+            min-height: 110vh; /* For testing parallax */
+        }
+        .tab-container {
+            width: 80%;
+            margin: 0 auto;
+            background-image: url('Images/Gothic_Cobble.jpg');
+            background-repeat: repeat;
+            background-color: #333; /* Fallback for the image itself */
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative; /* Crucial for positioning the pseudo-element */
+            z-index: 0; /* Establishes a stacking context */
+        }
+
+        .tab-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8); /* Adjust 0.5 for darkness */
+            border-radius: inherit; /* Inherit border-radius from parent */
+            z-index: -1; /* Place it behind the container's content but on top of its actual background */
+                        /* OR z-index: 1; and content inside .tab-container z-index: 2; */
+                        /* A simpler approach might be to remove z-index here and ensure content
+                            within .tab-container has position:relative and z-index:1 if needed */
+        }
+        .tab-nav {
+            display: flex;
+            background-color: #00FF00;
+        }
+        .tab-nav button {
+            background-color: #333;
+            color: #ffffff;
+            border: none;
+            padding: 15px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex-grow: 1;
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
+            border-right: 1px solid #444;
+        }
+        .tab-nav button:last-child {
+            border-right: none;
+        }
+        .tab-nav button:hover {
+            background-color: #555;
+        }
+        .tab-nav button.active {
+            background-color: #00FF00;
+            color: rgb(0, 0, 0);
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            color: white;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        h1 {
+            text-align: center;
+            color: yellow;
+            margin-bottom: 20px; /* This will now be margin from top of page-content-wrapper or previous element */
+            text-shadow: 6px 6px 12px #000;
+        }
+        h2 {
+            color: white;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        h3 {
+            color: #e0e0e0;
+            margin-top: 0;
+            font-size: 1.2em;
+            font-weight: 400;
+        }
+        h3 strong {
+            font-weight: 700;
+            color: #00FF00;
+        }
+        h4 {
+            color: yellow;
+        }
+        h5 {
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            color: #ccc;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #444;
+            color: #00FF00;
+        }
+        td {
+            background-color: #383838;
+        }
+        .info {
+            background-color: #2c2c2c;
+            border-left: 6px solid #00FF00;
+            padding: 10px;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        .protocol-content-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #888;
+            font-style: italic;
+        }
+        img.report-clickable-png {
+            cursor: zoom-in;
+        }
+        .png-popout-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.92);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .png-popout-modal.open {
+            display: flex;
+        }
+        .png-popout-modal .png-popout-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            border: 1px solid #ffff00;
+            background: #111;
+            color: #ffff00;
+            padding: 8px 12px;
+            font-family: Consolas, "Courier New", Monaco, Menlo, monospace;
+            cursor: pointer;
+        }
+        .png-popout-modal img {
+            max-width: min(96vw, 1800px);
+            max-height: 92vh;
+            object-fit: contain;
+            border: 1px solid #444;
+            background: #111;
+        }
+
+        /* FOR TESTING: Ensure one of your tabs has enough content to scroll */
+        /* For example:
+        #conformerGen.tab-content.active {
+            min-height: 150vh;
+        }
+        */
+
+    </style>
+</head>
+<body>
+
+    <div class="parallax-viewport">
+        <div class="parallax-background-layer"></div>
+
+        <div class="page-content-wrapper">
+            <h1>drFrankenstein Report for Molecule: PCY</h1>
+
+            <div class="tab-container">
+                <div class="tab-nav">
+                    <button class="tab-button active" onclick="openTab(event, 'conformerGen')">Conformer PCA</button>
+                    <button class="tab-button" onclick="openTab(event, 'chargeCalc')">Charge Calculations</button>
+                    <button class="tab-button" onclick="openTab(event, 'torsions')">Torsions</button>
+                    <button class="tab-button" onclick="openTab(event, 'methodsTab')">Methods</button>
+                    <button class="tab-button" onclick="openTab(event, 'timeReport')">Time Report</button>
+                </div>
+
+                <div id="conformerGen" class="tab-content active">
+                    <style>
+    .pca-summary {
+        display: grid;
+        grid-template-columns: minmax(360px, 1.2fr) minmax(320px, 1fr);
+        gap: 20px;
+        align-items: start;
+        margin-top: 15px;
+    }
+
+    .pca-plot {
+        width: 100%;
+        border: 1px solid #555;
+        background: #111;
+    }
+
+    .plot-toggle {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .plot-toggle-btn {
+        padding: 6px 12px;
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #555;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+
+    .plot-toggle-btn.active {
+        background-color: #00FF00;
+        color: #000;
+        border-color: #00FF00;
+    }
+
+    .plot-panel {
+        display: none;
+    }
+
+    .plot-panel.active {
+        display: block;
+    }
+
+    .pca-side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .conformer-viewer {
+        border: 1px solid #555;
+        background: #111;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        min-height: 420px;
+    }
+
+    .conformer-viewer-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .conformer-viewer-label {
+        color: #FFFF00;
+        font-weight: bold;
+        font-size: 0.95em;
+    }
+
+    .conformer-viewer iframe {
+        width: 100%;
+        height: 100%;
+        flex: 1 1 auto;
+        border: 1px solid #333;
+        background: #000;
+    }
+
+    .conformer-viewer-note {
+        margin-top: 8px;
+        font-size: 0.9em;
+        color: #aaa;
+    }
+
+    @media (max-width: 1100px) {
+        .pca-summary {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<h2>Conformer PCA</h2>
+
+
+    <div class="info">
+        <h3><strong>Conformers:</strong> 107</h3>
+    </div>
+
+    <div class="pca-summary">
+        <div>
+            
+                <div class="plot-toggle" id="conformerPlotToggle">
+                    <button class="plot-toggle-btn active" data-target="pcaPlotPanel">PCA</button>
+                    <button class="plot-toggle-btn" data-target="ramachandranPlotPanel">Phi/Psi</button>
+                </div>
+            
+
+            <div id="pcaPlotPanel" class="plot-panel active">
+                <div id="conformerPcaPlot" class="pca-plot">
+                    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>                <div id="577dd74d-1df4-43a8-8abd-23969236eef0" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("577dd74d-1df4-43a8-8abd-23969236eef0")) {                    Plotly.newPlot(                        "577dd74d-1df4-43a8-8abd-23969236eef0",                        [{"customdata":[["PCY_conformer_81",5.546],["PCY_conformer_9",3.066],["PCY_conformer_91",5.692],["PCY_conformer_14",3.33],["PCY_conformer_8",2.719],["PCY_conformer_100",5.808],["PCY_conformer_64",5.169],["PCY_conformer_98",5.779],["PCY_conformer_66",5.205],["PCY_conformer_88",5.664],["PCY_conformer_85",5.598],["PCY_conformer_82",5.548],["PCY_conformer_20",3.624],["PCY_conformer_44",4.54],["PCY_conformer_33",4.081],["PCY_conformer_27",3.808],["PCY_conformer_75",5.386],["PCY_conformer_107",5.973],["PCY_conformer_78",5.461],["PCY_conformer_71",5.24],["PCY_conformer_69",5.216],["PCY_conformer_10",3.112],["PCY_conformer_23",3.674],["PCY_conformer_103",5.858],["PCY_conformer_106",5.928],["PCY_conformer_41",4.372],["PCY_conformer_18",3.584],["PCY_conformer_6",2.257],["PCY_conformer_30",3.838],["PCY_conformer_53",4.773],["PCY_conformer_34",4.24],["PCY_conformer_68",5.214],["PCY_conformer_83",5.576],["PCY_conformer_32",4.036],["PCY_conformer_16",3.463],["PCY_conformer_92",5.701],["PCY_conformer_86",5.614],["PCY_conformer_15",3.443],["PCY_conformer_45",4.587],["PCY_conformer_89",5.667],["PCY_conformer_93",5.711],["PCY_conformer_74",5.354],["PCY_conformer_77",5.438],["PCY_conformer_79",5.469],["PCY_conformer_51",4.746],["PCY_conformer_65",5.173],["PCY_conformer_87",5.654],["PCY_conformer_56",4.833],["PCY_conformer_1",0.0],["PCY_conformer_31",3.871],["PCY_conformer_17",3.475],["PCY_conformer_40",4.351],["PCY_conformer_104",5.874],["PCY_conformer_22",3.637],["PCY_conformer_67",5.206],["PCY_conformer_12",3.156],["PCY_conformer_60",5.012],["PCY_conformer_43",4.47],["PCY_conformer_11",3.132],["PCY_conformer_13",3.265],["PCY_conformer_47",4.7],["PCY_conformer_2",0.365],["PCY_conformer_94",5.75],["PCY_conformer_4",1.005],["PCY_conformer_62",5.047],["PCY_conformer_76",5.387],["PCY_conformer_49",4.703],["PCY_conformer_46",4.637],["PCY_conformer_29",3.833],["PCY_conformer_90",5.687],["PCY_conformer_72",5.316],["PCY_conformer_63",5.157],["PCY_conformer_102",5.826],["PCY_conformer_36",4.31],["PCY_conformer_54",4.787],["PCY_conformer_99",5.807],["PCY_conformer_58",4.9],["PCY_conformer_37",4.334],["PCY_conformer_96",5.765],["PCY_conformer_39",4.349],["PCY_conformer_50",4.715],["PCY_conformer_70",5.236],["PCY_conformer_38",4.348],["PCY_conformer_52",4.769],["PCY_conformer_84",5.597],["PCY_conformer_105",5.912],["PCY_conformer_55",4.818],["PCY_conformer_42",4.428],["PCY_conformer_57",4.852],["PCY_conformer_25",3.73],["PCY_conformer_59",4.936],["PCY_conformer_28",3.828],["PCY_conformer_5",1.984],["PCY_conformer_26",3.751],["PCY_conformer_21",3.63],["PCY_conformer_73",5.347],["PCY_conformer_7",2.599],["PCY_conformer_3",0.456],["PCY_conformer_80",5.52],["PCY_conformer_19",3.612],["PCY_conformer_35",4.299],["PCY_conformer_95",5.759],["PCY_conformer_24",3.69],["PCY_conformer_97",5.767],["PCY_conformer_61",5.034],["PCY_conformer_48",4.7],["PCY_conformer_101",5.822]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003ePC1: %{x:.4f}\u003cbr\u003ePC2: %{y:.4f}\u003cbr\u003eEnergy: %{customdata[1]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"cmax":5.973,"cmin":0.0,"color":{"dtype":"f8","bdata":"yXa+nxovFkC6SQwCK4cIQPhT46WbxBZApHA9CtejCkCNl24Sg8AFQAisHFpkOxdAkxgEVg6tFEAEVg4tsh0XQFK4HoXr0RRADi2yne+nFkAxCKwcWmQWQP7UeOkmMRZAy6FFtvP9DEApXI\u002fC9SgSQG3n+6nxUhBAEFg5tMh2DkAlBoGVQ4sVQDEIrBxa5BdA8tJNYhDYFUD2KFyPwvUUQHe+nxov3RRATDeJQWDlCEAxCKwcWmQNQDvfT42XbhdAg8DKoUW2F0CwcmiR7XwRQHnpJjEIrAxAdZMYBFYOAkBOYhBYObQOQGQ730+NFxNA9ihcj8L1EEBCYOXQItsUQOf7qfHSTRZAvp8aL90kEEBOYhBYObQLQOf7qfHSzRZA2\u002fl+arx0FkAlBoGVQ4sLQAwCK4cWWRJAXrpJDAKrFkDy0k1iENgWQNEi2\u002fl+ahVAjZduEoPAFUDHSzeJQeAVQJZDi2zn+xJA\u002ftR46SaxFEAEVg4tsp0WQKJFtvP9VBNAAAAAAAAAAAArhxbZzvcOQM3MzMzMzAtAgZVDi2xnEUDl0CLb+X4XQH9qvHSTGA1Abef7qfHSFEBzaJHtfD8JQD81XrpJDBRA4XoUrkfhEUB1kxgEVg4JQB+F61G4HgpAzczMzMzMEkBcj8L1KFzXPwAAAAAAABdAFK5H4XoU8D\u002fjpZvEIDAUQD81XrpJjBVAHVpkO9\u002fPEkA\u002fNV66SYwSQESLbOf7qQ5Ac2iR7Xy\u002fFkDdJAaBlUMVQFTjpZvEoBRA5\u002fup8dJNF0A9CtejcD0RQNnO91PjJRNA7nw\u002fNV46F0CamZmZmZkTQLx0kxgEVhFAj8L1KFwPF0BMN4lBYGURQFyPwvUo3BJAi2zn+6nxFEAxCKwcWmQRQPp+arx0ExNAF9nO91NjFkDZzvdT46UXQBKDwMqhRRNAg8DKoUW2EUCcxCCwcmgTQNejcD0K1w1AWDm0yHa+E0A5tMh2vp8OQFg5tMh2vv8\u002fNV66SQwCDkAK16NwPQoNQBfZzvdTYxVAmG4Sg8DKBEDJdr6fGi\u002fdPxSuR+F6FBZATDeJQWDlDEAZBFYOLTIRQPCnxks3CRdAhetRuB6FDUDFILByaBEXQIlBYOXQIhRAzczMzMzMEkB9PzVeukkXQA=="},"colorbar":{"len":0.8,"outlinecolor":"yellow","thickness":16,"tickfont":{"color":"yellow"},"title":{"font":{"color":"yellow"},"text":"Relative Energy\n(kcal\u002fmol)"},"x":1.05,"y":0.4},"colorscale":[[0.0,"#00FF00"],[0.5,"#FFFFFF"],[1.0,"#FF00FF"]],"line":{"color":"black","width":1},"size":14},"mode":"markers","showlegend":false,"x":{"dtype":"f8","bdata":"b0nxaWDiAMBPqyL\u002fGO8LwBcOVfWZH\u002f+\u002foHhLlyiL97\u002fkurgBNhsJwHE7ZJsHK+0\u002f6KNw5XMNEkBxx+4OHDIHwBpyJLnGNA9AMa8OA8Uo8T+5EinnK54HwKoFmNHBshBA+9ENuBdvD8DQaGMfOaMRQBpVuKjy3w\u002fA+wqtQl4XB0A+PpI97hvVP9BEBSIlKwbAIc6V+Ft3D8D0KgInAKT7Py1Il+zaDA5AzjweJNIKBsDtQaqo7TsCwEy8R0H+dghA8sgINjg4EkDZa2RDxXkRQJl7SbiVwvu\u002fUDEDG\u002fpIBMDcVpmNrYcNQGAArVRuPOs\u002f9nUOScKhAcA0Ri85GG4TQAD8c3NDWgrAhRdxYoKRAkBNzut7u18JwLW5rNm93g7Aw9rEcgaNC8BUJrLXBU\u002fnP3+DuOcld\u002fS\u002f\u002fbI\u002fcd1B078BMGSjL8fvP9ErXxEZZwLAUKYD1IJI7r8K3mgo8TnVv0XRD8xQKwpA1L\u002fAKfYfEkA2S37cfgYAQCm19lr2JwtAfCdVFUQ6A8CEzxgvKSAIwIYMfOuZeALAlgxpepmxB8DTLVQxDhYRQGQgbd3\u002fRgDA\u002fPwVXxMLEEA8w9h79CuKPwvdemYE77k\u002fp3jWyVn8BMCLIcZN0PAQQNzVTlUksQDAe2W0nc6n7D+m+wp5XlgIwFYPoGTsWBJABZn3I0+7AsCaDcGFsz4NwIK5uQuvZto\u002f+hy9ApeWCUBxsLunxzUQQFvAzDB3ZP2\u002fLL2EytnH57+DiBFMk3gOQMM19Zs8uAbAwOekkNFnEUDdJ7Veh+EBwINDe48cmvq\u002fKk\u002fa4\u002fpLAsDdhxvwwM8EwG9aOFBGrBNAlnnd6al\u002f5j8vaxNrq3gJwH56MTp+IApALkF4LZPlEEDLje5dT80BwCrLh2YNPg\u002fAxt26zIemDUCGSQezOpDjP4LwbEGRHgTAtxaB313zBsBm3eOmpV0FQHQGprfaAPO\u002fp6D\u002fJqlsEUBvo6Ksk439v+avjrpC2AvAkrjmXO6dAcBJy4bGRYQCwPfs1IeEagPAOO30EEnvD0A150+VsZoIwAAxywew4w1AXgx1fRIfBMDA2Nc2cHIUQLQfBmwYIAHAA7NAqcW5C8B\u002fA1Hmkdn+v2DHilL7NRFAtLO0NQnT3r9smTMktVINQA=="},"y":{"dtype":"f8","bdata":"gKeuyHISAUD4A1RU698FwICFY4MPaApAup02jOzJBsAaDVQI8ur2v45VPgWZcgbA61JMieNEBUDooZgqSzzxv3XBUGYCXAXA85ARcaZTAUCUgT2F8QUMQJzu6jp4EgNAdFJLVROmBcCaZr0X72gDQKlyfXfpdwjA4zq\u002fkfzsC8ANaJyGAPUCwBAuvbUdg\u002fu\u002fBRdMlpt4+b\u002f8bWQAL0ULQN\u002f3GL+bbwJARIE6X1CKAMDX+qKhVCYEQF8WbYrzxwTAHiQJYLSs4L\u002fX3G3ji0P+P9USpDuIeApAexXFoZlHAUB7rlhJJaIPwCwjtpX5wOU\u002fnrrZ8\u002f\u002fXDUBGmNdcPS\u002fxP65F1FX5eAHAxtq4M614CMDxrrI6X+QCwPwBgpNdFwDAuMytDFQW+L9\u002fyTzluEoBQDEVijn48gbADHcx17QxCsApFJ8Wdsn7PxZB3GFR9us\u002fGnStNItH8D9rA7+6GO\u002f9v5Fqjlxl+QjA\u002fU2sZamexT+qE7njb3QOQIKCCw6en\u002fy\u002fJBJ13\u002fKUBkAr572BOAEIwCYVC6IP2RBAGK7dJDGu\u002f78V3euwSNvyPxfSZdY5yg1AhlGbzUgD\u002fj91twRY2DH9P+vRmse4cwPACgtUd1r\u002f5b9aedshqBIHwG\u002fJEM+sJQpAAvhuBeqEB8BoQO5ETkPrvzhEAob5J+U\u002f8nJI6+HeBkB7UX0McGz6v6LIofTHGgjAd5HOBhZhCsBeJwl4D2IIwDKt0s0YeQFAO69vFwHiB8Ag8CPXaD31P4qXK+XyRwVAt0gek6MU\u002fr+CmrEj26ACQKiCxjzaqAPAEQQ2N4g\u002fC8Cm+LwyZacOQJYCOD9yS\u002fE\u002fEi0b1qr99j8Ca6E21f0AwGHRtj5i4AnALASjnQefAECsk8swpCD6P6wPInVxwPu\u002fALJx\u002fot0\u002fz\u002fEALNmIi0EQAE6JYoeWgxAcmtbDsOq3r\u002fLQo55CWEIwPIJL9rhbQTADLcEq\u002f9FAUCtwTG126AHQN8imFzo\u002fgPAY9Xxr1YzCkBTP8l14QwQQEYjnAS8sPg\u002f6TECVH9KAsCSI3En6bj5v61cZvarLf8\u002fAWUFtJFWBkDN9ej351PSPxJDo9WAQwhAh1ys6AQVA8BlYVkNwuH7PyiLt79iVOY\u002f4rYfbHFXB8COgjx+\u002fV\u002fJPw=="},"type":"scatter"},{"customdata":[["PCY_conformer_1",0.0],["PCY_conformer_2",0.365],["PCY_conformer_3",0.456]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003ePC1: %{x:.4f}\u003cbr\u003ePC2: %{y:.4f}\u003cbr\u003eEnergy: %{customdata[1]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#00FFFF","line":{"color":"#00FFFF","width":2},"size":18,"symbol":"square-open"},"mode":"markers","name":"Torsion scan","x":{"dtype":"f8","bdata":"fCdVFUQ6A8Cm+wp5XlgIwDXnT5WxmgjA"},"y":{"dtype":"f8","bdata":"JBJ13\u002fKUBkBoQO5ETkPrv5IjcSfpuPm\u002f"},"type":"scatter"},{"customdata":[["PCY_conformer_1",0.0],["PCY_conformer_2",0.365],["PCY_conformer_5",1.984],["PCY_conformer_3",0.456]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003ePC1: %{x:.4f}\u003cbr\u003ePC2: %{y:.4f}\u003cbr\u003eEnergy: %{customdata[1]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#FFA500","line":{"color":"#FFA500","width":2},"size":18,"symbol":"diamond-open"},"mode":"markers","name":"Charge fitting","x":{"dtype":"f8","bdata":"fCdVFUQ6A8Cm+wp5XlgIwOavjrpC2AvANedPlbGaCMA="},"y":{"dtype":"f8","bdata":"JBJ13\u002fKUBkBoQO5ETkPrv98imFzo\u002fgPAkiNxJ+m4+b8="},"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#f2f5fa"},"error_y":{"color":"#f2f5fa"},"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"baxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"line":{"color":"#283442"}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"marker":{"line":{"color":"#283442"}},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#506784"},"line":{"color":"rgb(17,17,17)"}},"header":{"fill":{"color":"#2a3f5f"},"line":{"color":"rgb(17,17,17)"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#f2f5fa","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#f2f5fa"},"geo":{"bgcolor":"rgb(17,17,17)","lakecolor":"rgb(17,17,17)","landcolor":"rgb(17,17,17)","showlakes":true,"showland":true,"subunitcolor":"#506784"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"dark"},"paper_bgcolor":"rgb(17,17,17)","plot_bgcolor":"rgb(17,17,17)","polar":{"angularaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","radialaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"yaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"zaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"}},"shapedefaults":{"line":{"color":"#f2f5fa"}},"sliderdefaults":{"bgcolor":"#C8D4E3","bordercolor":"rgb(17,17,17)","borderwidth":1,"tickwidth":0},"ternary":{"aaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"baxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","caxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"title":{"x":0.05},"updatemenudefaults":{"bgcolor":"#506784","borderwidth":0},"xaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2}}},"title":{"font":{"color":"yellow"},"text":"Conformer PCA of torsional space"},"font":{"color":"yellow","family":"Consolas, Courier New, monospace"},"margin":{"l":70,"r":150,"t":60,"b":60},"legend":{"font":{"color":"yellow"},"x":1.05,"y":0.98,"xanchor":"left","yanchor":"top","bgcolor":"rgba(0, 0, 0, 0.6)","bordercolor":"yellow","borderwidth":1},"paper_bgcolor":"#111111","plot_bgcolor":"#111111","xaxis":{"title":{"font":{"color":"yellow"},"text":"PC1 (20.9% variance)"},"tickfont":{"color":"yellow"},"color":"yellow","gridcolor":"#444444","zerolinecolor":"#888888","linecolor":"yellow"},"yaxis":{"title":{"font":{"color":"yellow"},"text":"PC2 (14.3% variance)"},"tickfont":{"color":"yellow"},"color":"yellow","gridcolor":"#444444","zerolinecolor":"#888888","linecolor":"yellow"}},                        {"displayModeBar": false, "responsive": true}                    )                };            </script>        </div>
+                </div>
+            </div>
+
+            
+                <div id="ramachandranPlotPanel" class="plot-panel">
+                    <div id="ramachandranPlot" class="pca-plot">
+                        <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>                <div id="495004e9-d028-4eb1-a65c-7efa70ba61ef" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("495004e9-d028-4eb1-a65c-7efa70ba61ef")) {                    Plotly.newPlot(                        "495004e9-d028-4eb1-a65c-7efa70ba61ef",                        [{"customdata":[["PCY_conformer_81","CA 1",5.546],["PCY_conformer_9","CA 1",3.066],["PCY_conformer_91","CA 1",5.692],["PCY_conformer_14","CA 1",3.33],["PCY_conformer_8","CA 1",2.719],["PCY_conformer_100","CA 1",5.808],["PCY_conformer_64","CA 1",5.169],["PCY_conformer_98","CA 1",5.779],["PCY_conformer_66","CA 1",5.205],["PCY_conformer_88","CA 1",5.664],["PCY_conformer_85","CA 1",5.598],["PCY_conformer_82","CA 1",5.548],["PCY_conformer_20","CA 1",3.624],["PCY_conformer_44","CA 1",4.54],["PCY_conformer_33","CA 1",4.081],["PCY_conformer_27","CA 1",3.808],["PCY_conformer_75","CA 1",5.386],["PCY_conformer_107","CA 1",5.973],["PCY_conformer_78","CA 1",5.461],["PCY_conformer_71","CA 1",5.24],["PCY_conformer_69","CA 1",5.216],["PCY_conformer_10","CA 1",3.112],["PCY_conformer_23","CA 1",3.674],["PCY_conformer_103","CA 1",5.858],["PCY_conformer_106","CA 1",5.928],["PCY_conformer_41","CA 1",4.372],["PCY_conformer_18","CA 1",3.584],["PCY_conformer_6","CA 1",2.257],["PCY_conformer_30","CA 1",3.838],["PCY_conformer_53","CA 1",4.773],["PCY_conformer_34","CA 1",4.24],["PCY_conformer_68","CA 1",5.214],["PCY_conformer_83","CA 1",5.576],["PCY_conformer_32","CA 1",4.036],["PCY_conformer_16","CA 1",3.463],["PCY_conformer_92","CA 1",5.701],["PCY_conformer_86","CA 1",5.614],["PCY_conformer_15","CA 1",3.443],["PCY_conformer_45","CA 1",4.587],["PCY_conformer_89","CA 1",5.667],["PCY_conformer_93","CA 1",5.711],["PCY_conformer_74","CA 1",5.354],["PCY_conformer_77","CA 1",5.438],["PCY_conformer_79","CA 1",5.469],["PCY_conformer_51","CA 1",4.746],["PCY_conformer_65","CA 1",5.173],["PCY_conformer_87","CA 1",5.654],["PCY_conformer_56","CA 1",4.833],["PCY_conformer_1","CA 1",0.0],["PCY_conformer_31","CA 1",3.871],["PCY_conformer_17","CA 1",3.475],["PCY_conformer_40","CA 1",4.351],["PCY_conformer_104","CA 1",5.874],["PCY_conformer_22","CA 1",3.637],["PCY_conformer_67","CA 1",5.206],["PCY_conformer_12","CA 1",3.156],["PCY_conformer_60","CA 1",5.012],["PCY_conformer_43","CA 1",4.47],["PCY_conformer_11","CA 1",3.132],["PCY_conformer_13","CA 1",3.265],["PCY_conformer_47","CA 1",4.7],["PCY_conformer_2","CA 1",0.365],["PCY_conformer_94","CA 1",5.75],["PCY_conformer_4","CA 1",1.005],["PCY_conformer_62","CA 1",5.047],["PCY_conformer_76","CA 1",5.387],["PCY_conformer_49","CA 1",4.703],["PCY_conformer_46","CA 1",4.637],["PCY_conformer_29","CA 1",3.833],["PCY_conformer_90","CA 1",5.687],["PCY_conformer_72","CA 1",5.316],["PCY_conformer_63","CA 1",5.157],["PCY_conformer_102","CA 1",5.826],["PCY_conformer_36","CA 1",4.31],["PCY_conformer_54","CA 1",4.787],["PCY_conformer_99","CA 1",5.807],["PCY_conformer_58","CA 1",4.9],["PCY_conformer_37","CA 1",4.334],["PCY_conformer_96","CA 1",5.765],["PCY_conformer_39","CA 1",4.349],["PCY_conformer_50","CA 1",4.715],["PCY_conformer_70","CA 1",5.236],["PCY_conformer_38","CA 1",4.348],["PCY_conformer_52","CA 1",4.769],["PCY_conformer_84","CA 1",5.597],["PCY_conformer_105","CA 1",5.912],["PCY_conformer_55","CA 1",4.818],["PCY_conformer_42","CA 1",4.428],["PCY_conformer_57","CA 1",4.852],["PCY_conformer_25","CA 1",3.73],["PCY_conformer_59","CA 1",4.936],["PCY_conformer_28","CA 1",3.828],["PCY_conformer_5","CA 1",1.984],["PCY_conformer_26","CA 1",3.751],["PCY_conformer_21","CA 1",3.63],["PCY_conformer_73","CA 1",5.347],["PCY_conformer_7","CA 1",2.599],["PCY_conformer_3","CA 1",0.456],["PCY_conformer_80","CA 1",5.52],["PCY_conformer_19","CA 1",3.612],["PCY_conformer_35","CA 1",4.299],["PCY_conformer_95","CA 1",5.759],["PCY_conformer_24","CA 1",3.69],["PCY_conformer_97","CA 1",5.767],["PCY_conformer_61","CA 1",5.034],["PCY_conformer_48","CA 1",4.7],["PCY_conformer_101","CA 1",5.822]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003e%{customdata[1]}\u003cbr\u003ePhi: %{x:.1f}°\u003cbr\u003ePsi: %{y:.1f}°\u003cbr\u003eEnergy: %{customdata[2]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"cmax":5.973,"cmin":0.0,"color":{"dtype":"f8","bdata":"yXa+nxovFkC6SQwCK4cIQPhT46WbxBZApHA9CtejCkCNl24Sg8AFQAisHFpkOxdAkxgEVg6tFEAEVg4tsh0XQFK4HoXr0RRADi2yne+nFkAxCKwcWmQWQP7UeOkmMRZAy6FFtvP9DEApXI\u002fC9SgSQG3n+6nxUhBAEFg5tMh2DkAlBoGVQ4sVQDEIrBxa5BdA8tJNYhDYFUD2KFyPwvUUQHe+nxov3RRATDeJQWDlCEAxCKwcWmQNQDvfT42XbhdAg8DKoUW2F0CwcmiR7XwRQHnpJjEIrAxAdZMYBFYOAkBOYhBYObQOQGQ730+NFxNA9ihcj8L1EEBCYOXQItsUQOf7qfHSTRZAvp8aL90kEEBOYhBYObQLQOf7qfHSzRZA2\u002fl+arx0FkAlBoGVQ4sLQAwCK4cWWRJAXrpJDAKrFkDy0k1iENgWQNEi2\u002fl+ahVAjZduEoPAFUDHSzeJQeAVQJZDi2zn+xJA\u002ftR46SaxFEAEVg4tsp0WQKJFtvP9VBNAAAAAAAAAAAArhxbZzvcOQM3MzMzMzAtAgZVDi2xnEUDl0CLb+X4XQH9qvHSTGA1Abef7qfHSFEBzaJHtfD8JQD81XrpJDBRA4XoUrkfhEUB1kxgEVg4JQB+F61G4HgpAzczMzMzMEkBcj8L1KFzXPwAAAAAAABdAFK5H4XoU8D\u002fjpZvEIDAUQD81XrpJjBVAHVpkO9\u002fPEkA\u002fNV66SYwSQESLbOf7qQ5Ac2iR7Xy\u002fFkDdJAaBlUMVQFTjpZvEoBRA5\u002fup8dJNF0A9CtejcD0RQNnO91PjJRNA7nw\u002fNV46F0CamZmZmZkTQLx0kxgEVhFAj8L1KFwPF0BMN4lBYGURQFyPwvUo3BJAi2zn+6nxFEAxCKwcWmQRQPp+arx0ExNAF9nO91NjFkDZzvdT46UXQBKDwMqhRRNAg8DKoUW2EUCcxCCwcmgTQNejcD0K1w1AWDm0yHa+E0A5tMh2vp8OQFg5tMh2vv8\u002fNV66SQwCDkAK16NwPQoNQBfZzvdTYxVAmG4Sg8DKBEDJdr6fGi\u002fdPxSuR+F6FBZATDeJQWDlDEAZBFYOLTIRQPCnxks3CRdAhetRuB6FDUDFILByaBEXQIlBYOXQIhRAzczMzMzMEkB9PzVeukkXQA=="},"colorbar":{"len":0.8,"outlinecolor":"yellow","thickness":16,"tickfont":{"color":"yellow"},"title":{"font":{"color":"yellow"},"text":"Energy (kcal\u002fmol)"},"x":1.05,"y":0.4},"colorscale":[[0.0,"#00FF00"],[0.5,"#FFFFFF"],[1.0,"#FF00FF"]],"line":{"color":"black","width":1},"size":14},"mode":"markers","showlegend":false,"x":{"dtype":"f8","bdata":"mQhdPDgrNMA2n2xDtIY1wL2qRYH7uVNA1wb2KCZWR8DDz9bYYRQfwCCgsthCNUXAZRLPMIxdV8DAH381ziEcwEyKR+zPilbASf2Gdeq5UsAEnm0\u002f64UhwJmtOP4mbFfABdkyh1MoNMAaKx\u002fnYB5XwGpZOEhf3zPAvbvUcwaJU8D5lMHEolZOwDVlGbTMW1ZAkpK6uv4AIcAelFqYIzBAwLuHWga+mFfAf9fOvSthC8B9UlxaB3E0wA48JR\u002fK+lPA\u002fGPsYiitVsCC\u002fcP6TcVXwC7hp44xCDvAAFe43D2jQMAhKAS3629WwEi\u002f267kh07AeSOXsaRMM8ALb0YN7yhWwBJgf28zGzTA1mhfaFQ9U8DmuB3ZYl40wNWh3i+lDiLAYDo3MfEeNMBoSZFIfF5RwOvYxvZwtEjA6gH4d15gUsC2TN1dj21SwO4a3XlJzCTAmsUCvvtUQMC+ZRtGkeJNwDzI4ElCSVfAkx31WtZ3VsA8mPEAZStCwEneRtMZXVbAANC79gCDPcAK9APY2HgswFFEsN6CdDPAcqxS2NvcV0AB+M4XLEJUwO3t\u002f0PuqFhA4SA124ogVMBcH07cfXtMwMe\u002f5Vajy1HA6BO7lSugNMBLayFPboVVwLXSWwvGQDjAdR7+MJdVUMDDfmYuhzdAwMxVY8Ffk1bAc\u002fW4kJiFPMDGCCUZabIAwF4\u002fKS+WgDfAjopYfTwlWcDDBF3e3nNWwA7hZRUYojXAHz3imKXCSMCsC\u002frneWpYwBPhRiKA5SHALbIHo1aIVsDAw6Z5\u002fZc0wOtZW5CBVEHA3fdVGNBQKcBeTnqfYz03wGn3qX2Q+1XAbFuBnsUnTsATSxYIwLYzwCmwRvaE\u002fFfA541mIPryV8BmgaRMNm82wPZzQvnAYiLAAjRFYW+QVsDUxapebhlRwB2jK\u002fQaqCbAZBC8zj62NMDfYojkA\u002f9RwCuCjREceEfA5yfyeyV6V8AY5dlJ0Q41wNGt4XuAtjXAKn5ar6QiV0AcCi\u002fSZpEzwGbfQSds+CHARQfhGziIVcBLbmRsWY89wK3a7Y9CMlLA5BtWqtJkPcBlPddRZL9WwJuz2x8hRTTAA4uwNzAgNMBZ0uWSJsE0wE5s0b86flbAtbz1GucnTsAaOevzlgNUwA=="},"y":{"dtype":"f8","bdata":"ZSUGbTnZWEC2WdHRpjJbQKzXaq3TqGVAnvJoBcGWYUCtnN2qj5VWQGOpFw0qJFLAW8MMm3SxUsAIQqLJijZYQL1Xqp7LuVXAbhOWig8aZEDlA9\u002foQoZTQA7Q+nXkd1LApuSoXMy6WEDcTtuxU\u002fxSwO8M5EmMyFhA4MHQtoFKVcBlLr8UO3xiQDtVb9+5O2VAi9RI8wnvVEBMB+wPppZSwFb2b1gQhVLAffdyPCACWkBhJuxcm2lZQK6zpjpSsVXAyz9fg+tYVcCQU8UAokxSwKOyyR95KFhA1UlZB+cnWUAmE3fYvBRWwIuhwihNh2JA76IVZWLVWUC5LTN5LRFXwNagk6pIx1hAEV85VQm2VcBopxfc4NhYQLTkiR2D4lNAYyizYn9HUUDOmCjZUqthQDQ5Zx8EcWFA2iaCqInUY0BER6+7Q8ZkQArRRPMkPllAPnjOgNMVX0B3FBspKEpiQOAbpAz\u002fmVLA2HruyfXgVcDXjMELrU9SwDeDsc7fc1bA3XkdzWEvWkC10t9i1vZZQGGNavUQsFlAL0w0kgTLZEAlAnlYmLhVwAhruzNhzmRASCxfxGpCVcBaEH3B1Q9iQFT1Nl5GiWNAq0xKWd1AWUCyVIpUXv5XwHQ3dNuekFhA7aFMZjjsYcAiuxEyKGBaQCSqzR+rqlXA03g8XDTjWUCG2sOru29WQAesCB5BaljAtpRt3MggUcCZDRxC9ZZWwEXprvPamllAI8QYyqiBYkCAyqTANZhSwPYQXyuKqVRAw2PWs8ipVcDMBVzEaxtZQCyQhbOxfGBAjTP2yFZ5VkDMm47bibdbQNs1J2\u002fRi1fA6bDjO4OsYkDHkM0B+YJYQKc1VAXtLlLA9ufXpSaGUsAvgRPger9YQDwTfdSAJFRA7azJzmW8VcCIVQM9NldjQIm5h+Z9gFNAFn4VUaQ4WUAYaT5aqK1VwOVPJgcUIGFA6F8Pb+E0U8BNka9skWdZQCOAeFliRVlAnOZNdScOZUAUXLvW0pFZQN6arhbI91hAxLW+YvyiWMD9urq0dc1aQES1loaWd1XANDEh6W7\u002fWEDL8IlY0b5VwPSUOPdS5VhA7FuelQB0WUALM\u002fpJgjFZQG0\u002fJifgpFXApyoGXe53YkBisC9x9dNVwA=="},"type":"scatter"},{"customdata":[["PCY_conformer_1","CA 1",0.0],["PCY_conformer_2","CA 1",0.365],["PCY_conformer_3","CA 1",0.456]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003e%{customdata[1]}\u003cbr\u003ePhi: %{x:.1f}°\u003cbr\u003ePsi: %{y:.1f}°\u003cbr\u003eEnergy: %{customdata[2]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#00FFFF","line":{"color":"#00FFFF","width":2},"size":16,"symbol":"square-open"},"mode":"markers","name":"Torsion scan","x":{"dtype":"f8","bdata":"ANC79gCDPcDDfmYuhzdAwEtuZGxZjz3A"},"y":{"dtype":"f8","bdata":"3XkdzWEvWkAiuxEyKGBaQP26urR1zVpA"},"type":"scatter"},{"customdata":[["PCY_conformer_1","CA 1",0.0],["PCY_conformer_2","CA 1",0.365],["PCY_conformer_5","CA 1",1.984],["PCY_conformer_3","CA 1",0.456]],"hovertemplate":"\u003cb\u003e%{customdata[0]}\u003c\u002fb\u003e\u003cbr\u003e%{customdata[1]}\u003cbr\u003ePhi: %{x:.1f}°\u003cbr\u003ePsi: %{y:.1f}°\u003cbr\u003eEnergy: %{customdata[2]:.4f} kcal\u002fmol\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"#FFA500","line":{"color":"#FFA500","width":2},"size":16,"symbol":"diamond-open"},"mode":"markers","name":"Charge fitting","x":{"dtype":"f8","bdata":"ANC79gCDPcDDfmYuhzdAwNGt4XuAtjXAS25kbFmPPcA="},"y":{"dtype":"f8","bdata":"3XkdzWEvWkAiuxEyKGBaQCOAeFliRVlA\u002fbq6tHXNWkA="},"type":"scatter"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#f2f5fa"},"error_y":{"color":"#f2f5fa"},"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"baxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"line":{"color":"#283442"}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"marker":{"line":{"color":"#283442"}},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#506784"},"line":{"color":"rgb(17,17,17)"}},"header":{"fill":{"color":"#2a3f5f"},"line":{"color":"rgb(17,17,17)"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#f2f5fa","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#f2f5fa"},"geo":{"bgcolor":"rgb(17,17,17)","lakecolor":"rgb(17,17,17)","landcolor":"rgb(17,17,17)","showlakes":true,"showland":true,"subunitcolor":"#506784"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"dark"},"paper_bgcolor":"rgb(17,17,17)","plot_bgcolor":"rgb(17,17,17)","polar":{"angularaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","radialaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"yaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"zaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"}},"shapedefaults":{"line":{"color":"#f2f5fa"}},"sliderdefaults":{"bgcolor":"#C8D4E3","bordercolor":"rgb(17,17,17)","borderwidth":1,"tickwidth":0},"ternary":{"aaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"baxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","caxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"title":{"x":0.05},"updatemenudefaults":{"bgcolor":"#506784","borderwidth":0},"xaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2}}},"title":{"font":{"color":"yellow"},"text":"Ramachandran plot (Phi vs Psi)"},"font":{"color":"yellow","family":"Consolas, Courier New, monospace"},"margin":{"l":70,"r":150,"t":60,"b":60},"legend":{"font":{"color":"yellow"},"x":1.05,"y":0.98,"xanchor":"left","yanchor":"top","bgcolor":"rgba(0, 0, 0, 0.6)","bordercolor":"yellow","borderwidth":1},"paper_bgcolor":"#111111","plot_bgcolor":"#111111","xaxis":{"title":{"font":{"color":"yellow"},"text":"Phi (°)"},"tickfont":{"color":"yellow"},"color":"yellow","gridcolor":"#444444","zerolinecolor":"#888888","linecolor":"yellow","range":[-180,180],"dtick":60},"yaxis":{"title":{"font":{"color":"yellow"},"text":"Psi (°)"},"tickfont":{"color":"yellow"},"color":"yellow","gridcolor":"#444444","zerolinecolor":"#888888","linecolor":"yellow","range":[-180,180],"dtick":60}},                        {"displayModeBar": false, "responsive": true}                    )                };            </script>        </div>
+                    </div>
+                </div>
+            
+        </div>
+
+        <div class="pca-side-panel">
+            <div id="conformerViewerContainer" class="conformer-viewer">
+                <div class="conformer-viewer-header">
+                    <h3>Conformer Viewer</h3>
+                    <span id="conformerViewerLabel" class="conformer-viewer-label">None selected</span>
+                </div>
+                <iframe
+                    id="conformerViewerFrame"
+                    title="Conformer 3D Viewer"
+                    sandbox="allow-scripts allow-same-origin">
+                    Your browser does not support iframes.
+                </iframe>
+                <div class="conformer-viewer-note">Hover to preview, click to lock, double-click to unlock.</div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const conformerHtmlMap = {"PCY_conformer_1": "Images/conformer_images/PCY_conformer_1.html", "PCY_conformer_10": "Images/conformer_images/PCY_conformer_10.html", "PCY_conformer_100": "Images/conformer_images/PCY_conformer_100.html", "PCY_conformer_101": "Images/conformer_images/PCY_conformer_101.html", "PCY_conformer_102": "Images/conformer_images/PCY_conformer_102.html", "PCY_conformer_103": "Images/conformer_images/PCY_conformer_103.html", "PCY_conformer_104": "Images/conformer_images/PCY_conformer_104.html", "PCY_conformer_105": "Images/conformer_images/PCY_conformer_105.html", "PCY_conformer_106": "Images/conformer_images/PCY_conformer_106.html", "PCY_conformer_107": "Images/conformer_images/PCY_conformer_107.html", "PCY_conformer_11": "Images/conformer_images/PCY_conformer_11.html", "PCY_conformer_12": "Images/conformer_images/PCY_conformer_12.html", "PCY_conformer_13": "Images/conformer_images/PCY_conformer_13.html", "PCY_conformer_14": "Images/conformer_images/PCY_conformer_14.html", "PCY_conformer_15": "Images/conformer_images/PCY_conformer_15.html", "PCY_conformer_16": "Images/conformer_images/PCY_conformer_16.html", "PCY_conformer_17": "Images/conformer_images/PCY_conformer_17.html", "PCY_conformer_18": "Images/conformer_images/PCY_conformer_18.html", "PCY_conformer_19": "Images/conformer_images/PCY_conformer_19.html", "PCY_conformer_2": "Images/conformer_images/PCY_conformer_2.html", "PCY_conformer_20": "Images/conformer_images/PCY_conformer_20.html", "PCY_conformer_21": "Images/conformer_images/PCY_conformer_21.html", "PCY_conformer_22": "Images/conformer_images/PCY_conformer_22.html", "PCY_conformer_23": "Images/conformer_images/PCY_conformer_23.html", "PCY_conformer_24": "Images/conformer_images/PCY_conformer_24.html", "PCY_conformer_25": "Images/conformer_images/PCY_conformer_25.html", "PCY_conformer_26": "Images/conformer_images/PCY_conformer_26.html", "PCY_conformer_27": "Images/conformer_images/PCY_conformer_27.html", "PCY_conformer_28": "Images/conformer_images/PCY_conformer_28.html", "PCY_conformer_29": "Images/conformer_images/PCY_conformer_29.html", "PCY_conformer_3": "Images/conformer_images/PCY_conformer_3.html", "PCY_conformer_30": "Images/conformer_images/PCY_conformer_30.html", "PCY_conformer_31": "Images/conformer_images/PCY_conformer_31.html", "PCY_conformer_32": "Images/conformer_images/PCY_conformer_32.html", "PCY_conformer_33": "Images/conformer_images/PCY_conformer_33.html", "PCY_conformer_34": "Images/conformer_images/PCY_conformer_34.html", "PCY_conformer_35": "Images/conformer_images/PCY_conformer_35.html", "PCY_conformer_36": "Images/conformer_images/PCY_conformer_36.html", "PCY_conformer_37": "Images/conformer_images/PCY_conformer_37.html", "PCY_conformer_38": "Images/conformer_images/PCY_conformer_38.html", "PCY_conformer_39": "Images/conformer_images/PCY_conformer_39.html", "PCY_conformer_4": "Images/conformer_images/PCY_conformer_4.html", "PCY_conformer_40": "Images/conformer_images/PCY_conformer_40.html", "PCY_conformer_41": "Images/conformer_images/PCY_conformer_41.html", "PCY_conformer_42": "Images/conformer_images/PCY_conformer_42.html", "PCY_conformer_43": "Images/conformer_images/PCY_conformer_43.html", "PCY_conformer_44": "Images/conformer_images/PCY_conformer_44.html", "PCY_conformer_45": "Images/conformer_images/PCY_conformer_45.html", "PCY_conformer_46": "Images/conformer_images/PCY_conformer_46.html", "PCY_conformer_47": "Images/conformer_images/PCY_conformer_47.html", "PCY_conformer_48": "Images/conformer_images/PCY_conformer_48.html", "PCY_conformer_49": "Images/conformer_images/PCY_conformer_49.html", "PCY_conformer_5": "Images/conformer_images/PCY_conformer_5.html", "PCY_conformer_50": "Images/conformer_images/PCY_conformer_50.html", "PCY_conformer_51": "Images/conformer_images/PCY_conformer_51.html", "PCY_conformer_52": "Images/conformer_images/PCY_conformer_52.html", "PCY_conformer_53": "Images/conformer_images/PCY_conformer_53.html", "PCY_conformer_54": "Images/conformer_images/PCY_conformer_54.html", "PCY_conformer_55": "Images/conformer_images/PCY_conformer_55.html", "PCY_conformer_56": "Images/conformer_images/PCY_conformer_56.html", "PCY_conformer_57": "Images/conformer_images/PCY_conformer_57.html", "PCY_conformer_58": "Images/conformer_images/PCY_conformer_58.html", "PCY_conformer_59": "Images/conformer_images/PCY_conformer_59.html", "PCY_conformer_6": "Images/conformer_images/PCY_conformer_6.html", "PCY_conformer_60": "Images/conformer_images/PCY_conformer_60.html", "PCY_conformer_61": "Images/conformer_images/PCY_conformer_61.html", "PCY_conformer_62": "Images/conformer_images/PCY_conformer_62.html", "PCY_conformer_63": "Images/conformer_images/PCY_conformer_63.html", "PCY_conformer_64": "Images/conformer_images/PCY_conformer_64.html", "PCY_conformer_65": "Images/conformer_images/PCY_conformer_65.html", "PCY_conformer_66": "Images/conformer_images/PCY_conformer_66.html", "PCY_conformer_67": "Images/conformer_images/PCY_conformer_67.html", "PCY_conformer_68": "Images/conformer_images/PCY_conformer_68.html", "PCY_conformer_69": "Images/conformer_images/PCY_conformer_69.html", "PCY_conformer_7": "Images/conformer_images/PCY_conformer_7.html", "PCY_conformer_70": "Images/conformer_images/PCY_conformer_70.html", "PCY_conformer_71": "Images/conformer_images/PCY_conformer_71.html", "PCY_conformer_72": "Images/conformer_images/PCY_conformer_72.html", "PCY_conformer_73": "Images/conformer_images/PCY_conformer_73.html", "PCY_conformer_74": "Images/conformer_images/PCY_conformer_74.html", "PCY_conformer_75": "Images/conformer_images/PCY_conformer_75.html", "PCY_conformer_76": "Images/conformer_images/PCY_conformer_76.html", "PCY_conformer_77": "Images/conformer_images/PCY_conformer_77.html", "PCY_conformer_78": "Images/conformer_images/PCY_conformer_78.html", "PCY_conformer_79": "Images/conformer_images/PCY_conformer_79.html", "PCY_conformer_8": "Images/conformer_images/PCY_conformer_8.html", "PCY_conformer_80": "Images/conformer_images/PCY_conformer_80.html", "PCY_conformer_81": "Images/conformer_images/PCY_conformer_81.html", "PCY_conformer_82": "Images/conformer_images/PCY_conformer_82.html", "PCY_conformer_83": "Images/conformer_images/PCY_conformer_83.html", "PCY_conformer_84": "Images/conformer_images/PCY_conformer_84.html", "PCY_conformer_85": "Images/conformer_images/PCY_conformer_85.html", "PCY_conformer_86": "Images/conformer_images/PCY_conformer_86.html", "PCY_conformer_87": "Images/conformer_images/PCY_conformer_87.html", "PCY_conformer_88": "Images/conformer_images/PCY_conformer_88.html", "PCY_conformer_89": "Images/conformer_images/PCY_conformer_89.html", "PCY_conformer_9": "Images/conformer_images/PCY_conformer_9.html", "PCY_conformer_90": "Images/conformer_images/PCY_conformer_90.html", "PCY_conformer_91": "Images/conformer_images/PCY_conformer_91.html", "PCY_conformer_92": "Images/conformer_images/PCY_conformer_92.html", "PCY_conformer_93": "Images/conformer_images/PCY_conformer_93.html", "PCY_conformer_94": "Images/conformer_images/PCY_conformer_94.html", "PCY_conformer_95": "Images/conformer_images/PCY_conformer_95.html", "PCY_conformer_96": "Images/conformer_images/PCY_conformer_96.html", "PCY_conformer_97": "Images/conformer_images/PCY_conformer_97.html", "PCY_conformer_98": "Images/conformer_images/PCY_conformer_98.html", "PCY_conformer_99": "Images/conformer_images/PCY_conformer_99.html"};
+            const plotContainer = document.querySelector('#conformerPcaPlot .plotly-graph-div');
+            const ramachandranContainer = document.querySelector('#ramachandranPlot .plotly-graph-div');
+            const viewerFrame = document.getElementById('conformerViewerFrame');
+            const viewerLabel = document.getElementById('conformerViewerLabel');
+            const viewerContainer = document.getElementById('conformerViewerContainer');
+            if (!plotContainer || !viewerFrame || !viewerLabel || !viewerContainer) return;
+
+            let locked = false;
+            let currentConformer = null;
+            function setViewer(conformerName) {
+                const viewerPath = conformerHtmlMap[conformerName];
+                if (!viewerPath) return;
+                viewerFrame.setAttribute('src', viewerPath);
+                viewerLabel.textContent = conformerName + (locked ? ' (locked)' : '');
+                currentConformer = conformerName;
+            }
+
+            const defaultConformer = Object.keys(conformerHtmlMap)[0];
+            if (defaultConformer) {
+                setViewer(defaultConformer);
+            }
+
+            function handleEvent(eventData, shouldLock) {
+                const point = eventData && eventData.points ? eventData.points[0] : null;
+                const conformerName = point && point.customdata ? point.customdata[0] : null;
+                if (!conformerName) return;
+                locked = shouldLock;
+                setViewer(conformerName);
+            }
+
+            function syncViewerHeight() {
+                const activePlot = document.querySelector('.plot-panel.active .pca-plot');
+                if (!activePlot) return;
+                const plotHeight = activePlot.getBoundingClientRect().height;
+                if (plotHeight > 0) {
+                    viewerContainer.style.height = `${plotHeight}px`;
+                }
+            }
+
+            function attachPlotHandlers(container) {
+                if (!container) return;
+                container.on('plotly_hover', function(eventData) {
+                    if (locked) return;
+                    handleEvent(eventData, false);
+                });
+                container.on('plotly_click', function(eventData) {
+                    handleEvent(eventData, true);
+                });
+                container.on('plotly_doubleclick', function() {
+                    locked = false;
+                    if (currentConformer) {
+                        setViewer(currentConformer);
+                    }
+                });
+                container.on('plotly_afterplot', syncViewerHeight);
+            }
+
+            attachPlotHandlers(plotContainer);
+            attachPlotHandlers(ramachandranContainer);
+            window.addEventListener('resize', syncViewerHeight);
+            setTimeout(syncViewerHeight, 0);
+
+            const toggleButtons = document.querySelectorAll('.plot-toggle-btn');
+            const plotPanels = document.querySelectorAll('.plot-panel');
+
+            function resizePlot(panel) {
+                const plotDiv = panel.querySelector('.plotly-graph-div');
+                if (plotDiv && window.Plotly && window.Plotly.Plots) {
+                    window.Plotly.Plots.resize(plotDiv);
+                }
+            }
+
+            if (toggleButtons.length > 0) {
+                toggleButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (button.classList.contains('active')) return;
+                        toggleButtons.forEach((btn) => btn.classList.remove('active'));
+                        plotPanels.forEach((panel) => panel.classList.remove('active'));
+                        const targetPanel = document.getElementById(button.dataset.target);
+                        if (targetPanel) {
+                            targetPanel.classList.add('active');
+                            resizePlot(targetPanel);
+                            syncViewerHeight();
+                        }
+                        button.classList.add('active');
+                    });
+                });
+            }
+        });
+    </script>
+
+                </div>
+
+                <div id="chargeCalc" class="tab-content">
+                    <!-- templates/charge_calculations.html -->
+<style>
+    /* Wrapper for both visualization and color bar to ensure tight stacking */
+    .viz-and-colorbar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 630px; /* Match the width of both elements */
+        margin: 0 auto; /* Center the entire container */
+    }
+
+    /* Visualization iframe container */
+    .charge-viz-wrapper {
+        position: relative;
+        width: 630px; /* Match plot-container width */
+        max-width: 100%; /* Ensure responsiveness */
+        height: 630px; /* Adjust height as needed */
+        margin: 0; /* Remove all margins to eliminate gaps */
+        border: none;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .charge-viz-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .iframe-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20, 20, 20, 0.9);
+        color: #cfcfcf;
+        font-size: 0.95em;
+        letter-spacing: 0.02em;
+        z-index: 2;
+    }
+
+    [data-iframe-loader].iframe-loaded .iframe-loading-overlay {
+        display: none;
+    }
+
+    /* Plot container for color bar */
+    .plot-container {
+        width: 600px; /* Consistent width */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0; /* Remove margins to eliminate gaps */
+        padding-bottom: 25px; /* Add some space at the bottom to prevent cropping */
+    }
+
+    .plot-container img {
+        width: 600px;
+        height: auto;
+        display: block;
+    }
+
+    /* Responsive adjustments for the visualization iframe */
+    @media (max-width: 650px) {
+        .viz-and-colorbar-container {
+            width: 100%; /* Full width on smaller screens */
+        }
+
+        .charge-viz-wrapper {
+            height: 50vw; /* Adjust height based on viewport width */
+            max-height: 450px;
+        }
+
+        .plot-container {
+            width: 100%; /* Match container width */
+        }
+
+        .plot-container img {
+            width: 100%; /* Responsive image width */
+        }
+    }
+
+    .charges-table-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem; /* Adds spacing between the two tables */
+        padding: 1rem;
+        background-color: #1a1a1a; /* Light background for contrast */
+        border-radius: 8px; /* Rounded corners for a modern look */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        max-width: 100%; /* Ensures container fits within parent */
+        overflow-x: auto; /* Allows horizontal scrolling on small screens */
+    }
+
+    .charges-table-container > div {
+        width: 48%; /* Maintains equal width for each table */
+        min-width: 250px; /* Ensures tables don't collapse too much on small screens */
+    }
+
+    .charges-table-container table {
+        width: 100%; /* Full width within each container */
+        border-collapse: collapse; /* Removes gaps between cells */
+        background-color: #1a1a1a; /* White background for tables */
+    }
+
+    .charges-table-container th,
+    .charges-table-container td {
+        padding: 0.75rem; /* Comfortable padding for cells */
+        text-align: left; /* Left-align text for readability */
+        border-bottom: 1px solid gray; /* Subtle row separator */
+    }
+
+    .charges-table-container th {
+        background-color: #8b8b8b; /* Slightly darker header background */
+        font-weight: bold; /* Emphasize headers */
+    }
+
+    .charges-table-container tr:nth-child(even) {
+        background-color: rgb(59, 59, 59); /* Zebra striping for rows */
+    }
+
+    .charges-table-container tr:hover {
+        background-color: rgb(93, 93, 93); /* Highlight row on hover */
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .charges-table-container {
+            flex-direction: column; /* Stack tables vertically on small screens */
+            align-items: center; /* Center tables */
+        }
+
+        .charges-table-container > div {
+            width: 100%; /* Full width for each table */
+            margin-bottom: 1rem; /* Space between stacked tables */
+        }
+    }
+
+</style>
+
+<!-- Main heading for this tab, styled by h2 from index.html -->
+<h2>Charge Calculation Summary</h2>
+
+
+    <!-- Parameter summary using the .info class and table structure -->
+    <!-- The .info class and table, th, td elements will be styled by index.html -->
+    <div class="info">
+        <p><h3><strong>Charge Fitting Protocol: </strong>RESP2</h3></p>
+        <h3><strong>Optimisation Method:</strong> XTB2
+        (ALPB(water))</h3>
+         <h3><strong>Single-Point Method:</strong> revPBE def2-SVP D3BJ
+        (CPCM(water))</h3>       
+        <p><h3><strong>Number of Conformers Used: </strong>4</h3></p>
+    </div>
+
+    <!-- Interactive Molecular Graph -->
+    
+        <h2>Interactive Molecular Graph with Charges</h2>
+        <div class="viz-and-colorbar-container">
+            <div class="charge-viz-wrapper" data-iframe-loader>
+                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                <iframe
+                    data-src="Images/charges_images/molecular_graph.html"
+                    title="Interactive Molecular Graph with Bonds">
+                    Your browser does not support iframes. Please open <a href="Images/charges_images/molecular_graph.html">this link</a> directly.
+                </iframe>
+            </div>
+            
+                <div class="plot-container">
+                    <img src="Images/charges_images/charge_color_bar.png" alt="Color Bar for Charges">
+                </div>
+            
+        </div>
+        <div class="info">
+            <p><h4>The interactive graph shows the molecular structure as a network where:</h4></p>
+            <ul>
+                <li><h4>Nodes represent atoms (colored by partial charge)</h4></li>
+                <li><h4>Edges represent bonds (with calculated bond lengths)</h4></li>
+                <li><h4>Hover over atoms to see detailed information</h4></li>
+                <li><h4>Click and drag to rotate the 3D view</h4></li>
+            </ul>
+        </div>
+    
+
+    <!-- Partial Charges Table -->
+    
+        <h2>Calculated Partial Charges</h2>
+        <div class="charges-table-container" style="display: flex; justify-content: space-between;">
+            <!-- First Table (Left Half) -->
+            <div style="width: 48%;">
+                <table>
+                    <thead>
+                        <tr>
+                            
+                                <th><h3>Atom Name</h3></th>
+                            
+                                <th><h3>Partial Charge</h3></th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.416</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CA</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.034</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.597</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>O</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.568</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CB</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.395</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CG</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.206</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CD1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.237</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CD2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.281</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CE1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.143</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CE2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.079</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CZ</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.144</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>OH</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.270</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CI</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.021</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CK1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.064</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CK2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.053</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CY1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.125</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CY2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.136</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CM</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.052</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>ON1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.395</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>ON2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.400</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>CT</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.059</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>NO</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.755</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.272</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HA</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.082</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+            <!-- Second Table (Right Half) -->
+            <div style="width: 48%;">
+                <table>
+                    <thead>
+                        <tr>
+                            
+                                <th><h3>Atom Name</h3></th>
+                            
+                                <th><h3>Partial Charge</h3></th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HB1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.130</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HB2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.130</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HD1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.157</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HD2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.170</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HE1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.150</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HE2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.120</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HK</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.121</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HL1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.126</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HL2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.143</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HM</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.121</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HT1</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.118</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>HT2</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.118</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>C_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.004</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>N_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.414</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.252</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H1_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.053</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H2_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.053</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H3_N</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.053</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>C_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.675</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>O_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.592</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>C2_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>-0.467</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H1_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.128</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H2_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.128</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                            <tr>
+                                
+                                    
+                                        <td><h4>H3_C</h4></td>
+                                    
+                                
+                                     
+                                        <td><h4>0.128</h4></td> 
+                                    
+                                
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+
+
+                </div>
+
+                <div id="torsions" class="tab-content">
+                    <style>
+    .torsions-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .torsions-summary-card {
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .torsions-summary-card h3 {
+        margin-top: 0;
+        color: #00ff00;
+    }
+
+    .torsions-summary-card p {
+        margin: 8px 0;
+    }
+
+    .torsions-summary-card strong {
+        color: #ffffff;
+    }
+
+    .summary-image-container {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .summary-image-container img {
+        max-width: 100%;
+        max-height: 460px;
+        border: 1px solid #333;
+        border-radius: 3px;
+        background-color: #2a2a2a;
+    }
+
+    .summary-image-caption {
+        margin: 0 0 8px 0;
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    .torsion-sub-tab-nav {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+        background-color: #1a1a1a;
+        margin-top: 15px;
+    }
+
+    .torsion-sub-tab-nav button {
+        background-color: #202020;
+        color: #b0b0b0;
+        border: 1px solid #343434;
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+        padding: 6px;
+        transition: 0.3s;
+        font-size: 0.8em;
+        min-height: 112px;
+        text-align: center;
+    }
+
+    .torsion-sub-tab-nav button:hover {
+        background-color: #2c2c2c;
+        color: #ffffff;
+    }
+
+    .torsion-sub-tab-nav button.active {
+        background-color: #333333;
+        color: #ffffff;
+        border-color: var(--score-border-color, #00ff00);
+        box-shadow: 0 0 0 1px var(--score-border-color, #00ff00);
+        font-weight: bold;
+    }
+
+    .torsion-sub-tab-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .torsion-sub-tab-tile img {
+        width: 100%;
+        height: 72px;
+        object-fit: contain;
+        object-position: center;
+        border-radius: 3px;
+        border: 1px solid #454545;
+        background-color: #111111;
+    }
+
+    .torsion-sub-tab-tile .tile-label {
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .torsion-sub-tab-tile .tile-score {
+        width: 100%;
+        line-height: 1.2;
+        font-size: 0.74em;
+        color: #b8b8b8;
+    }
+
+    .torsion-sub-tab-tile .tile-placeholder {
+        width: 100%;
+        height: 72px;
+        border-radius: 3px;
+        border: 1px dashed #454545;
+        background-color: #151515;
+        color: #8c8c8c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75em;
+    }
+
+    .torsion-sub-tab-content {
+        display: none;
+        padding: 15px;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+    }
+
+    .torsion-sub-tab-content.active {
+        display: block;
+    }
+
+    .torsion-sub-tab-content h3,
+    .torsion-sub-tab-content h4,
+    .torsion-sub-tab-content h5,
+    .torsion-sub-tab-content p {
+        color: #e0e0e0;
+    }
+
+    .torsion-sub-tab-content p strong {
+        color: #ffffff;
+    }
+
+    .dihedral-top-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        margin-bottom: 25px;
+        align-items: flex-start;
+    }
+
+    .dihedral-info-panel {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .dihedral-viz-panel {
+        flex: 1;
+        min-width: 350px;
+    }
+
+    .dihedral-viz-panel h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    .viz-iframe-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 630px;
+        height: 330px;
+        margin: 0 auto 10px auto;
+        border: none;
+        overflow: hidden;
+    }
+
+    .viz-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .iframe-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20, 20, 20, 0.9);
+        color: #cfcfcf;
+        font-size: 0.95em;
+        letter-spacing: 0.02em;
+        z-index: 2;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-loading-overlay {
+        display: none;
+    }
+
+    .iframe-error-overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 12px;
+        background-color: rgba(20, 20, 20, 0.95);
+        color: #d9d9d9;
+        font-size: 0.9em;
+        z-index: 3;
+    }
+
+    .iframe-error-overlay a {
+        color: #6cb6ff;
+    }
+
+    [data-iframe-loader].iframe-error .iframe-error-overlay {
+        display: flex;
+    }
+
+    [data-iframe-loader].iframe-loaded .iframe-loading-overlay {
+        display: none;
+    }
+
+    .dihedral-plots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: space-around;
+        margin-top: 15px;
+    }
+
+    .dihedral-plots .plot-container {
+        display: block;
+        text-align: center;
+        flex: 1 1 450px;
+        max-width: 800px;
+        background-color: #252525;
+        border: 1px solid #383838;
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .dihedral-plots .plot-container p {
+        display: block;
+        color: #e0e0e0;
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    .dihedral-plots .plot-container p strong {
+        color: #ffffff;
+        font-size: 1.1em;
+    }
+
+    .dihedral-plots .plot-container p.plot-not-available-message {
+        color: #aaaaaa;
+        font-style: italic;
+    }
+
+    .dihedral-plots img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        max-height: 400px;
+        border-radius: 3px;
+        margin: 0 auto;
+    }
+
+    .dihedral-plots .plot-container > *:last-child {
+        margin-bottom: 0;
+    }
+
+    .fitting-block {
+        margin-top: 20px;
+    }
+
+    .fitting-images-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        align-content: center;
+    }
+
+    .image-holder {
+        text-align: center;
+        flex: 1 1 30%;
+        max-width: 500px;
+        padding: 10px;
+        background-color: #232323;
+        border-radius: 4px;
+    }
+
+    .image-holder p strong {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .image-holder img {
+        max-width: 100%;
+        max-height: 300px;
+        border: 1px solid #333333;
+        background-color: #2a2a2a;
+        border-radius: 3px;
+    }
+
+    @media (max-width: 1200px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .torsions-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+    @media (max-width: 768px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .dihedral-top-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .dihedral-info-panel,
+        .dihedral-viz-panel {
+            min-width: 0;
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .torsion-sub-tab-nav {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+</style>
+
+<h2>Torsions Summary</h2>
+
+
+
+
+
+    <div class="torsions-summary-grid">
+        <div class="torsions-summary-card">
+            <h3>Scanning</h3>
+            
+                <p><strong>Scan Method:</strong> XTB2 (ALPB(water))</p>
+                <p><strong>Single-Point Method:</strong> None </p>
+                <p><strong>Number of Conformers Scanned:</strong> 3</p>
+                <p><strong>Number of Rotatable Bonds Considered:</strong> 7</p>
+            
+        </div>
+
+        <div class="torsions-summary-card">
+            <h3>Fitting</h3>
+            
+                <p><strong>Number of Shuffles:</strong> 12</p>
+                <p><strong>Maximum Cosine Functions:</strong> 4</p>
+                <p><strong>L2 Damping on MM Torsion Energies:</strong> 0.1</p>
+                <p><strong>Savitzky-Golay filter on QM Total Energies:</strong> {'windowLength': 12, 'polyorder': 4, 'mode': 'interp'}</p>
+                
+                    <div class="summary-image-container">
+                        <p class="summary-image-caption">Score Heatmap</p>
+                        <img src="Images/fitting_images/all_torsions_fit_score_heatmap.png" alt="Heatmap of final torsion and total fit scores, sorted worst to best">
+                    </div>
+                
+            
+        </div>
+    </div>
+
+    
+        
+        
+        <h2>Data for Individual Dihedrals</h2>
+
+        <div class="torsion-sub-tab-nav">
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button active"
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_1')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/CT-c3-ca-ca_final.png" alt="Final fitting preview for CT-c3-ca-ca">
+                        
+                        <span class="tile-label">CT-c3-ca-ca</span>
+                        
+                            <span class="tile-score">Mean score: 0.399</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_2')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/ca-os-c3-ca_final.png" alt="Final fitting preview for ca-os-c3-ca">
+                        
+                        <span class="tile-label">ca-os-c3-ca</span>
+                        
+                            <span class="tile-score">Mean score: 0.334</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_3')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/C-CT-c3-ca_final.png" alt="Final fitting preview for C-CT-c3-ca">
+                        
+                        <span class="tile-label">C-CT-c3-ca</span>
+                        
+                            <span class="tile-score">Mean score: 0.298</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_4')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/os-c3-ca-ca_final.png" alt="Final fitting preview for os-c3-ca-ca">
+                        
+                        <span class="tile-label">os-c3-ca-ca</span>
+                        
+                            <span class="tile-score">Mean score: 0.266</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_5')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/ca-ca-no-o_final.png" alt="Final fitting preview for ca-ca-no-o">
+                        
+                        <span class="tile-label">ca-ca-no-o</span>
+                        
+                            <span class="tile-score">Mean score: 0.243</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_6')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/N-CT-c3-ca_final.png" alt="Final fitting preview for N-CT-c3-ca">
+                        
+                        <span class="tile-label">N-CT-c3-ca</span>
+                        
+                            <span class="tile-score">Mean score: 0.237</span>
+                        
+                    </span>
+                </button>
+            
+                
+                
+                
+                <button class="torsion-sub-tab-button "
+                        style="--score-border-color: #2e7d32; border-color: #2e7d32;"
+                        onclick="openTorsionsSubTab(event, 'torsions_sub_tab_7')">
+                    
+                    
+                    
+                    <span class="torsion-sub-tab-tile">
+                        
+                            <img src="Images/fitting_images/ca-ca-os-c3_final.png" alt="Final fitting preview for ca-ca-os-c3">
+                        
+                        <span class="tile-label">ca-ca-os-c3</span>
+                        
+                            <span class="tile-score">Mean score: 0.088</span>
+                        
+                    </span>
+                </button>
+            
+        </div>
+
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_1" class="torsion-sub-tab-content active">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> CA-CB-CG-CD1</p>
+                        <p><strong>Types:</strong> CT-c3-ca-ca</p>
+                        <p><strong>Global Minima Angle:</strong> 260°</p>
+                        <p><strong>Barrier Height:</strong> 3.185 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.378</p>
+                            <p><strong>Final Total Score:</strong> 0.420</p>
+                            <p><strong>Mean Score:</strong> 0.399 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>1.4342</td>
+                                            <td>2</td>
+                                            <td>-93.46</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_CT-c3-ca-ca_c87220cc.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_CT-c3-ca-ca_c87220cc.html"
+                                    title="Molecule 3D Viewer for CT-c3-ca-ca"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_CT-c3-ca-ca_c87220cc.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/CT-c3-ca-ca_scanPng.png" alt="Scan energies for CT-c3-ca-ca">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/CT-c3-ca-ca_fitting.gif" alt="Fitting process for CT-c3-ca-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/CT-c3-ca-ca_final.png" alt="Final fit for CT-c3-ca-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/CT-c3-ca-ca_mae.png" alt="Mean average error during fitting for CT-c3-ca-ca">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_2" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> CZ-OH-CT-CI</p>
+                        <p><strong>Types:</strong> ca-os-c3-ca</p>
+                        <p><strong>Global Minima Angle:</strong> 70°</p>
+                        <p><strong>Barrier Height:</strong> 5.295 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.362</p>
+                            <p><strong>Final Total Score:</strong> 0.305</p>
+                            <p><strong>Mean Score:</strong> 0.334 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>3.9122</td>
+                                            <td>1</td>
+                                            <td>-150.27</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_ca-os-c3-ca_e65247e1.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_ca-os-c3-ca_e65247e1.html"
+                                    title="Molecule 3D Viewer for ca-os-c3-ca"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_ca-os-c3-ca_e65247e1.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/ca-os-c3-ca_scanPng.png" alt="Scan energies for ca-os-c3-ca">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/ca-os-c3-ca_fitting.gif" alt="Fitting process for ca-os-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-os-c3-ca_final.png" alt="Final fit for ca-os-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-os-c3-ca_mae.png" alt="Mean average error during fitting for ca-os-c3-ca">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_3" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> C-CA-CB-CG</p>
+                        <p><strong>Types:</strong> C-CT-c3-ca</p>
+                        <p><strong>Global Minima Angle:</strong> 70°</p>
+                        <p><strong>Barrier Height:</strong> 3.609 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.516</p>
+                            <p><strong>Final Total Score:</strong> 0.080</p>
+                            <p><strong>Mean Score:</strong> 0.298 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>0.4025</td>
+                                            <td>3</td>
+                                            <td>135.02</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_C-CT-c3-ca_858d69fb.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_C-CT-c3-ca_858d69fb.html"
+                                    title="Molecule 3D Viewer for C-CT-c3-ca"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_C-CT-c3-ca_858d69fb.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/C-CT-c3-ca_scanPng.png" alt="Scan energies for C-CT-c3-ca">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/C-CT-c3-ca_fitting.gif" alt="Fitting process for C-CT-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/C-CT-c3-ca_final.png" alt="Final fit for C-CT-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/C-CT-c3-ca_mae.png" alt="Mean average error during fitting for C-CT-c3-ca">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_4" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> OH-CT-CI-CK1</p>
+                        <p><strong>Types:</strong> os-c3-ca-ca</p>
+                        <p><strong>Global Minima Angle:</strong> 270°</p>
+                        <p><strong>Barrier Height:</strong> 4.398 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.375</p>
+                            <p><strong>Final Total Score:</strong> 0.156</p>
+                            <p><strong>Mean Score:</strong> 0.266 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>0.741</td>
+                                            <td>3</td>
+                                            <td>14.46</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_os-c3-ca-ca_4a0b18a5.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_os-c3-ca-ca_4a0b18a5.html"
+                                    title="Molecule 3D Viewer for os-c3-ca-ca"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_os-c3-ca-ca_4a0b18a5.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/os-c3-ca-ca_scanPng.png" alt="Scan energies for os-c3-ca-ca">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/os-c3-ca-ca_fitting.gif" alt="Fitting process for os-c3-ca-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/os-c3-ca-ca_final.png" alt="Final fit for os-c3-ca-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/os-c3-ca-ca_mae.png" alt="Mean average error during fitting for os-c3-ca-ca">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_5" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> CI-CK2-NO-ON1</p>
+                        <p><strong>Types:</strong> ca-ca-no-o</p>
+                        <p><strong>Global Minima Angle:</strong> 40°</p>
+                        <p><strong>Barrier Height:</strong> 3.601 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.146</p>
+                            <p><strong>Final Total Score:</strong> 0.339</p>
+                            <p><strong>Mean Score:</strong> 0.243 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>4.5644</td>
+                                            <td>2</td>
+                                            <td>172.96</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_ca-ca-no-o_b50b4847.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_ca-ca-no-o_b50b4847.html"
+                                    title="Molecule 3D Viewer for ca-ca-no-o"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_ca-ca-no-o_b50b4847.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/ca-ca-no-o_scanPng.png" alt="Scan energies for ca-ca-no-o">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-no-o_fitting.gif" alt="Fitting process for ca-ca-no-o">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-no-o_final.png" alt="Final fit for ca-ca-no-o">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-no-o_mae.png" alt="Mean average error during fitting for ca-ca-no-o">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_6" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> N-CA-CB-CG</p>
+                        <p><strong>Types:</strong> N-CT-c3-ca</p>
+                        <p><strong>Global Minima Angle:</strong> 0°</p>
+                        <p><strong>Barrier Height:</strong> 3.592 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.341</p>
+                            <p><strong>Final Total Score:</strong> 0.133</p>
+                            <p><strong>Mean Score:</strong> 0.237 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>1.0226</td>
+                                            <td>2</td>
+                                            <td>117.55</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_N-CT-c3-ca_3cd6eaea.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_N-CT-c3-ca_3cd6eaea.html"
+                                    title="Molecule 3D Viewer for N-CT-c3-ca"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_N-CT-c3-ca_3cd6eaea.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/N-CT-c3-ca_scanPng.png" alt="Scan energies for N-CT-c3-ca">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/N-CT-c3-ca_fitting.gif" alt="Fitting process for N-CT-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/N-CT-c3-ca_final.png" alt="Final fit for N-CT-c3-ca">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/N-CT-c3-ca_mae.png" alt="Mean average error during fitting for N-CT-c3-ca">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+            
+            
+            
+            
+            
+
+            <div id="torsions_sub_tab_7" class="torsion-sub-tab-content ">
+                <div class="dihedral-top-section">
+                    <div class="dihedral-info-panel">
+                        <h3>Torsion Information</h3>
+                        <p><strong>Atoms:</strong> CE1-CZ-OH-CT</p>
+                        <p><strong>Types:</strong> ca-ca-os-c3</p>
+                        <p><strong>Global Minima Angle:</strong> 110°</p>
+                        <p><strong>Barrier Height:</strong> 3.509 kcal/mol</p>
+                        
+                            <p><strong>Final Torsion Score:</strong> 0.083</p>
+                            <p><strong>Final Total Score:</strong> 0.092</p>
+                            <p><strong>Mean Score:</strong> 0.088 (tol 1.000)</p>
+                        
+                        
+                            <h5>Final Parameters</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Amplitude (kcal/mol)</th>
+                                        <th>Period</th>
+                                        <th>Phase (degrees)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                        <tr>
+                                            <td>2.8602</td>
+                                            <td>2</td>
+                                            <td>175.48</td>
+                                        </tr>
+                                    
+                                </tbody>
+                            </table>
+                        
+                    </div>
+
+                    <div class="dihedral-viz-panel">
+                        
+                            <h3>Torsion 3D Visualization</h3>
+                            <div class="viz-iframe-wrapper" data-iframe-loader>
+                                <div class="iframe-loading-overlay" aria-live="polite">Loading visualization...</div>
+                                <div class="iframe-error-overlay" aria-live="polite">
+                                    Unable to load embedded visualization.
+                                    <a href="Images/torsion_images/torsion_ca-ca-os-c3_e19005c3.html" target="_blank" rel="noopener noreferrer">Open in a new tab</a>.
+                                </div>
+                                <iframe
+                                    class="viz-iframe"
+                                    data-src="Images/torsion_images/torsion_ca-ca-os-c3_e19005c3.html"
+                                    title="Molecule 3D Viewer for ca-ca-os-c3"
+                                    sandbox="allow-scripts allow-same-origin">
+                                    Your browser does not support iframes. Please open <a href="Images/torsion_images/torsion_ca-ca-os-c3_e19005c3.html">this link</a> directly.
+                                </iframe>
+                            </div>
+                        
+                    </div>
+                </div>
+
+                <div class="dihedral-plots">
+                    <div class="plot-container">
+                        <p><strong>Scan Energies</strong></p>
+                        
+                            <img src="Images/torsion_images/ca-ca-os-c3_scanPng.png" alt="Scan energies for ca-ca-os-c3">
+                        
+                    </div>
+
+                    <div class="plot-container">
+                        <p><strong>Single-Point Energies</strong></p>
+                        
+                            <p class="plot-not-available-message">Plot not available.</p>
+                        
+                    </div>
+                </div>
+
+                <div class="fitting-block">
+                    <h4>Parameter Fitting</h4>
+                    <div class="fitting-images-container">
+                        
+                            <div class="image-holder">
+                                <p><strong>Fitting Process (GIF)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-os-c3_fitting.gif" alt="Fitting process for ca-ca-os-c3">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Final Fit (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-os-c3_final.png" alt="Final fit for ca-ca-os-c3">
+                            </div>
+                        
+
+                        
+                            <div class="image-holder">
+                                <p><strong>Mean Average Error (PNG)</strong></p>
+                                <img src="Images/fitting_images/ca-ca-os-c3_mae.png" alt="Mean average error during fitting for ca-ca-os-c3">
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        
+    
+
+
+<script>
+    function bindMergedTorsionIframeErrorHandling(scopeElement) {
+        if (!scopeElement) return;
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            if (iframe.dataset.torsionErrorBound === 'true') return;
+            iframe.dataset.torsionErrorBound = 'true';
+
+            iframe.addEventListener('error', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-loaded');
+                    loaderContainer.classList.add('iframe-error');
+                }
+            });
+
+            iframe.addEventListener('load', function() {
+                const loaderContainer = iframe.closest('[data-iframe-loader]');
+                if (loaderContainer) {
+                    loaderContainer.classList.remove('iframe-error');
+                    loaderContainer.classList.add('iframe-loaded');
+                }
+            });
+        });
+    }
+
+    function loadMergedTorsionIframesWithFallback(scopeElement) {
+        if (!scopeElement) return;
+        bindMergedTorsionIframeErrorHandling(scopeElement);
+
+        if (typeof loadDeferredIframes === "function") {
+            loadDeferredIframes(scopeElement);
+        }
+
+        const torsionIframes = scopeElement.querySelectorAll('.viz-iframe[data-src]');
+        torsionIframes.forEach((iframe) => {
+            const loaderContainer = iframe.closest('[data-iframe-loader]');
+            if (!loaderContainer) return;
+
+            if (iframe.getAttribute('src')) {
+                setTimeout(function() {
+                    if (!loaderContainer.classList.contains('iframe-loaded')) {
+                        loaderContainer.classList.add('iframe-error');
+                    }
+                }, 3000);
+            }
+        });
+    }
+
+    function openTorsionsSubTab(evt, subTabName) {
+        var i, subTabContent, subTabButtons;
+        let parentScope = evt.target.closest('.torsion-sub-tab-nav').parentNode;
+
+        subTabContent = parentScope.getElementsByClassName("torsion-sub-tab-content");
+        for (i = 0; i < subTabContent.length; i++) {
+            subTabContent[i].style.display = "none";
+            subTabContent[i].classList.remove("active");
+        }
+
+        subTabButtons = parentScope.getElementsByClassName("torsion-sub-tab-button");
+        for (i = 0; i < subTabButtons.length; i++) {
+            subTabButtons[i].classList.remove("active");
+        }
+
+        let targetContentElement = document.getElementById(subTabName);
+        if (targetContentElement) {
+            targetContentElement.style.display = "block";
+            targetContentElement.classList.add("active");
+            loadMergedTorsionIframesWithFallback(targetContentElement);
+        }
+        if (evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const activeSubTabs = document.querySelectorAll('.torsion-sub-tab-content.active');
+        activeSubTabs.forEach(tab => {
+            tab.style.display = 'block';
+            loadMergedTorsionIframesWithFallback(tab);
+        });
+    });
+</script>
+                </div>
+
+                <div id="methodsTab" class="tab-content">
+                    <style>
+    .methods-section {
+        margin-bottom: 20px;
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .methods-section h3 {
+        margin-top: 0;
+        color: #00ff00;
+    }
+
+    .methods-citations {
+        margin-top: 12px;
+    }
+
+    .methods-citations .protocol-content-text strong {
+        color: #ffffff;
+    }
+
+    .methods-citations .protocol-content-text a {
+        color: yellow;
+    }
+
+    .qm-method-citations {
+        margin-top: 12px;
+        border-top: 1px dashed #3a3a3a;
+        padding-top: 10px;
+    }
+
+    .qm-method-citations .protocol-content-text strong {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    .qm-method-citations .protocol-content-text a {
+        color: yellow;
+    }
+</style>
+
+
+
+
+
+<h2>Methods</h2>
+
+
+    
+        <div class="methods-section">
+            <h3>Conformer Generation</h3>
+            <div class="protocol-content-text">
+A library of 107 low-energy conformers of capped PCY was generated using ORCA's GOAT protocol. GOAT conformer generation was run with the GFN2-XTB method. These conformers were then used as starting structures for torsion scanning and charge fitting.
+</div>
+            <div class="qm-method-citations">
+        <div class="protocol-content-text"><strong>QM Methods Citations:</strong></div>
+        
+            
+                
+                    <div class="protocol-content-text">Method: GFN2-xTB | Grimme, Stefan, DOI: <a href="https://doi.org/10.1021/acs.jctc.8b01176" target="_blank">doi.org/10.1021/acs.jctc.8b01176</a></div>
+                
+            
+        
+    </div>
+            
+        <div class="methods-citations">
+            
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                
+                    <div class="protocol-content-text">Grimme, S., DOI: <a href="https://doi.org/10.1021/acs.jctc.8b01176" target="_blank">doi.org/10.1021/acs.jctc.8b01176</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.7019" target="_blank">doi.org/10.1002/wcms.7019</a></div>
+                
+                    <div class="protocol-content-text">de Souza, B., DOI: <a href="https://doi.org/10.1002/anie.202500393" target="_blank">doi.org/10.1002/anie.202500393</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                
+                    <div class="protocol-content-text">Grimme, S., DOI: <a href="https://doi.org/10.1002/wcms.1493" target="_blank">doi.org/10.1002/wcms.1493</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.81" target="_blank">doi.org/10.1002/wcms.81</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.1327" target="_blank">doi.org/10.1002/wcms.1327</a></div>
+                
+                    <div class="protocol-content-text">Riplinger, C., DOI: <a href="https://doi.org/10.1063/5.0004608" target="_blank">doi.org/10.1063/5.0004608</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.1606" target="_blank">doi.org/10.1002/wcms.1606</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1016/s0009-2614(00)00662-x" target="_blank">doi.org/10.1016/s0009-2614(00)00662-x</a></div>
+                
+            
+        </div>
+    
+        </div>
+    
+
+    
+        <div class="methods-section">
+            <h3>Torsion Scanning</h3>
+            <div class="protocol-content-text">
+Torsion scans were performed on the set of rotatable dihedrals selected by the torsion-scan settings for PCY. Each selected torsion was scanned over 360 degrees in both forward and backward directions using 10 degree increments (37 points per direction). Relaxed scans were run at the XTB2 level with the ALPB(water) solvation model.                             
+The torsion-scanning workflow was repeated for 3 starting conformers. Only successfully completed forward/backward scan pairs were retained, and the final profile for each torsion was taken as the average over those retained scans.                             </div>
+            <div class="qm-method-citations">
+        <div class="protocol-content-text"><strong>QM Methods Citations:</strong></div>
+        
+            
+                
+                    <div class="protocol-content-text">Method: GFN2-xTB | Grimme, Stefan, DOI: <a href="https://doi.org/10.1021/acs.jctc.8b01176" target="_blank">doi.org/10.1021/acs.jctc.8b01176</a></div>
+                
+            
+        
+    </div>
+            
+        <div class="methods-citations">
+            
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                
+                    <div class="protocol-content-text">T. E. Markland, DOI: <a href="https://doi.org/10.1021/acs.jpcb.3c06662" target="_blank">doi.org/10.1021/acs.jpcb.3c06662</a></div>
+                
+                    <div class="protocol-content-text">Kenneth M. Merz Jr., DOI: <a href="https://doi.org/10.1021/acs.jcim.3c01153" target="_blank">doi.org/10.1021/acs.jcim.3c01153</a></div>
+                
+            
+
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">V S Pande, DOI: <a href="https://doi.org/10.1142/9789814295291" target="_blank">doi.org/10.1142/9789814295291</a></div>
+                
+                    <div class="protocol-content-text">Travis E. Oliphant, DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank">doi.org/10.1038/s41586-020-2649-2</a></div>
+                
+            
+
+            
+        </div>
+    
+        </div>
+    
+
+    
+        <div class="methods-section">
+            <h3>Charge Calculations</h3>
+            <div class="protocol-content-text">
+Partial charges for PCY were generated using the RESP2 charge-fitting protocol.                              
+Each conformer was geometry-optimized at the XTB2 level with the ALPB(water) solvation model. Two revPBE def2-SVP D3BJ evaluations were then run: one with the CPCM(water) solvation model and one in the gas phase.                                                    
+This workflow was applied to 4 GOAT-generated conformers of PCY.                                                
+MultiWFN was used for RESP charge fitting, and conformer contributions were Boltzmann-weighted using their relative electronic energies.                                                    
+For RESP2, fitting was performed separately for solvated and gas-phase data, then combined as a 60:40 weighted average (solvated:gas-phase).                                                </div>
+            <div class="qm-method-citations">
+        <div class="protocol-content-text"><strong>QM Methods Citations:</strong></div>
+        
+            
+                
+                    <div class="protocol-content-text">Method: GFN2-xTB | Grimme, Stefan, DOI: <a href="https://doi.org/10.1021/acs.jctc.8b01176" target="_blank">doi.org/10.1021/acs.jctc.8b01176</a></div>
+                
+            
+                
+                    <div class="protocol-content-text">Method: revPBE | Yang, W, Title: Zhang, Y.; Yang, W. Phys. Rev. Lett., 1998, 80, 890</div>
+                
+            
+                
+                    <div class="protocol-content-text">Method: D3BJ | Krieg, H, Title: Grimme, S.; Antony, J.; Ehrlich, S.; Krieg, H. J. Chem. Phys., 2010, 132, 154104</div>
+                
+            
+        
+    </div>
+            
+        <div class="methods-citations">
+            
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.7019" target="_blank">doi.org/10.1002/wcms.7019</a></div>
+                
+                    <div class="protocol-content-text">Feiwu Chen, DOI: <a href="https://doi.org/10.1002/jcc.22885" target="_blank">doi.org/10.1002/jcc.22885</a></div>
+                
+                    <div class="protocol-content-text">Tian Lu, DOI: <a href="https://doi.org/10.1039/D1CP02805G" target="_blank">doi.org/10.1039/D1CP02805G</a></div>
+                
+                    <div class="protocol-content-text">Peter A. Kollman, DOI: <a href="https://doi.org/10.1021/ja00074a030" target="_blank">doi.org/10.1021/ja00074a030</a></div>
+                
+                    <div class="protocol-content-text">Michael K. Gilson, DOI: <a href="https://doi.org/10.1038/s42004-020-0291-4" target="_blank">doi.org/10.1038/s42004-020-0291-4</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>High Priority Papers:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/jcc.10318" target="_blank">doi.org/10.1002/jcc.10318</a></div>
+                
+                    <div class="protocol-content-text">Krieg, H., DOI: <a href="https://doi.org/10.1063/1.3382344" target="_blank">doi.org/10.1063/1.3382344</a></div>
+                
+                    <div class="protocol-content-text">Goerigk, L., DOI: <a href="https://doi.org/10.1002/jcc.21759" target="_blank">doi.org/10.1002/jcc.21759</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/jcc.26942" target="_blank">doi.org/10.1002/jcc.26942</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.81" target="_blank">doi.org/10.1002/wcms.81</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.1327" target="_blank">doi.org/10.1002/wcms.1327</a></div>
+                
+                    <div class="protocol-content-text">Riplinger, C., DOI: <a href="https://doi.org/10.1063/5.0004608" target="_blank">doi.org/10.1063/5.0004608</a></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1002/wcms.1606" target="_blank">doi.org/10.1002/wcms.1606</a></div>
+                
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Optional Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">Neese, F., DOI: <a href="https://doi.org/10.1016/s0009-2614(00)00662-x" target="_blank">doi.org/10.1016/s0009-2614(00)00662-x</a></div>
+                
+            
+        </div>
+    
+        </div>
+    
+
+    
+        <div class="methods-section">
+            <h3>Parameter Fitting</h3>
+            <div class="protocol-content-text">
+MM torsion parameters were optimized iteratively to reproduce the QM torsion profiles from the scanning step. For each torsion, the fitted target was defined as:
+QM(torsion) = QM(total) - MM(total) + MM(torsion)
+where QM(total) comes from the scan data, MM(total) is computed in OpenMM on scan geometries, and MM(torsion) is reconstructed from the current torsion terms. Up to 4 cosine terms were selected from a Fourier representation of QM(torsion), and the resulting amplitudes, phases, and periodicities were written back to the parameter file. This update cycle was repeated for 12 shuffles of torsion order to reduce order-dependent bias.                             </div>
+            <div class="qm-method-citations">
+        <div class="protocol-content-text"><strong>QM Methods Citations:</strong></div>
+        
+            <div class="protocol-content-text">None found.</div>
+        
+    </div>
+            
+        <div class="methods-citations">
+            
+                <div class="protocol-content-text"><strong>Essential Papers:</strong></div>
+                
+                    <div class="protocol-content-text">T. E. Markland, DOI: <a href="https://doi.org/10.1021/acs.jpcb.3c06662" target="_blank">doi.org/10.1021/acs.jpcb.3c06662</a></div>
+                
+                    <div class="protocol-content-text">Kenneth M. Merz Jr., DOI: <a href="https://doi.org/10.1021/acs.jcim.3c01153" target="_blank">doi.org/10.1021/acs.jcim.3c01153</a></div>
+                
+            
+
+            
+
+            
+                <div class="protocol-content-text" style="margin-top: 10px;"><strong>Suggested Additional Citations:</strong></div>
+                
+                    <div class="protocol-content-text">V S Pande, DOI: <a href="https://doi.org/10.1142/9789814295291" target="_blank">doi.org/10.1142/9789814295291</a></div>
+                
+                    <div class="protocol-content-text">Travis E. Oliphant, DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2" target="_blank">doi.org/10.1038/s41586-020-2649-2</a></div>
+                
+            
+
+            
+        </div>
+    
+        </div>
+    
+
+                </div>
+
+                <div id="timeReport" class="tab-content">
+                    <style>
+    .time-tabs {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .time-tab-button {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        border: 1px solid #00FF00;
+        padding: 8px 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .time-tab-button.active {
+        background-color: #00FF00;
+        color: #000000;
+    }
+
+    .time-tab-content {
+        display: none;
+        margin-top: 15px;
+    }
+
+    .time-tab-content.active {
+        display: block;
+    }
+
+    .time-plots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px; /* Space between plots */
+        justify-content: space-around; /* Distribute plots nicely */
+        margin-top: 15px;
+    }
+
+    .time-plots .plot-container {
+        text-align: center;
+        flex: 1 1 1800px; /* Adjusted basis for potentially more plots or better wrapping */
+        max-width: 1800px; /* Max width for each plot container */
+    }
+
+    /* Added/Modified styles for the image */
+    .time-plots .plot-container img {
+        width: 100%;      /* Make image fill container width */
+        height: auto;       /* Maintain aspect ratio */
+        max-width: 100%;  /* Ensure it doesn't overflow its container */
+        display: block;     /* Removes extra space below if it's an inline element */
+                            /* and allows margin auto for horizontal centering if width is less than 100% */
+    }
+    /* End of added/modified styles */
+
+    .time-plots .plot-container p {
+        color: #e0e0e0;
+    }
+    .time-plots .plot-container p strong {
+        color: #ffffff;
+    }
+</style>
+
+<h2> Time Report Summary</h2>
+<div class="time-tabs">
+    <button class="time-tab-button active" onclick="openTimeTab(event, 'timeTotal')">Total Time</button>
+    <button class="time-tab-button" onclick="openTimeTab(event, 'timeCpu')">CPU Time</button>
+</div>
+
+<div id="timeTotal" class="time-tab-content active">
+    
+        <div class="time-plots">
+            <div class="plot-container">
+                <img src="Images/time_data/gantt_chart.png" alt="Total Time Gantt">
+            </div>
+        </div>
+    
+</div>
+
+<div id="timeCpu" class="time-tab-content">
+    
+        <div class="time-plots">
+            <div class="plot-container">
+                <img src="Images/time_data/gantt_chart_cpu.png" alt="CPU Time Gantt">
+            </div>
+        </div>
+    
+</div>
+
+<script>
+    function openTimeTab(evt, tabName) {
+        var tabcontent = document.getElementsByClassName("time-tab-content");
+        for (var i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        var tabbuttons = document.getElementsByClassName("time-tab-button");
+        for (var i = 0; i < tabbuttons.length; i++) {
+            tabbuttons[i].classList.remove("active");
+        }
+        const activeTab = document.getElementById(tabName);
+        if (activeTab) {
+            activeTab.classList.add("active");
+        }
+        if (evt && evt.currentTarget) {
+            evt.currentTarget.classList.add("active");
+        }
+    }
+</script>
+                </div>
+            </div> <!-- End of tab-container -->
+        </div> <!-- End of page-content-wrapper -->
+    </div> <!-- End of parallax-viewport -->
+    <div id="pngPopoutModal" class="png-popout-modal" aria-hidden="true">
+        <button type="button" class="png-popout-close" id="pngPopoutClose">Close (Esc)</button>
+        <img id="pngPopoutImage" alt="Expanded report plot">
+    </div>
+
+    <script>
+        function isPngSource(src) {
+            return typeof src === 'string' && /\.png(?:$|[?#])/i.test(src.trim());
+        }
+
+        function markClickablePngs(scopeElement) {
+            if (!scopeElement) return;
+            const images = scopeElement.querySelectorAll('img');
+            images.forEach((img) => {
+                if (img.dataset.popoutReady === 'true') return;
+                const src = img.getAttribute('src') || '';
+                if (!isPngSource(src)) return;
+                img.dataset.popoutReady = 'true';
+                img.classList.add('report-clickable-png');
+                if (!img.title) {
+                    img.title = 'Click to open enlarged image';
+                }
+            });
+        }
+
+        function openModalFallback(src, alt) {
+            const modal = document.getElementById('pngPopoutModal');
+            const modalImg = document.getElementById('pngPopoutImage');
+            if (!modal || !modalImg) return;
+            modalImg.src = src;
+            modalImg.alt = alt || 'Expanded report plot';
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModalFallback() {
+            const modal = document.getElementById('pngPopoutModal');
+            const modalImg = document.getElementById('pngPopoutImage');
+            if (!modal || !modalImg) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            modalImg.removeAttribute('src');
+        }
+
+        function openPngPopout(imgElement) {
+            const src = imgElement.getAttribute('src');
+            if (!isPngSource(src)) return;
+            const alt = imgElement.getAttribute('alt') || 'Expanded report plot';
+            openModalFallback(src, alt);
+        }
+
+        function attachIframeLoadHandler(iframe) {
+            if (!iframe || iframe.dataset.loaderBound === 'true') return;
+            iframe.dataset.loaderBound = 'true';
+
+            const loaderContainer = iframe.closest('[data-iframe-loader]');
+            if (!loaderContainer) return;
+
+            iframe.addEventListener('load', function() {
+                loaderContainer.classList.add('iframe-loaded');
+            }, { once: true });
+        }
+
+        function loadDeferredIframes(scopeElement) {
+            if (!scopeElement) return;
+            const deferredIframes = scopeElement.querySelectorAll('iframe[data-src]:not([src])');
+            deferredIframes.forEach((iframe) => {
+                attachIframeLoadHandler(iframe);
+                iframe.setAttribute('src', iframe.getAttribute('data-src'));
+            });
+        }
+
+        function openTab(evt, tabName) {
+            var tabcontent = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            var tabbuttons = document.getElementsByClassName("tab-button");
+            for (var i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+            const activeTab = document.getElementById(tabName);
+            activeTab.style.display = "block";
+            activeTab.classList.add("active");
+            loadDeferredIframes(activeTab);
+            markClickablePngs(activeTab);
+            evt.currentTarget.classList.add("active");
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const allDeferredIframes = document.querySelectorAll('iframe[data-src]');
+            allDeferredIframes.forEach((iframe) => attachIframeLoadHandler(iframe));
+            const activeTab = document.querySelector('.tab-content.active');
+            loadDeferredIframes(activeTab);
+            markClickablePngs(document);
+
+            document.addEventListener('click', function(event) {
+                const targetImg = event.target.closest('img.report-clickable-png');
+                if (targetImg) {
+                    event.preventDefault();
+                    openPngPopout(targetImg);
+                    return;
+                }
+
+                const modal = document.getElementById('pngPopoutModal');
+                const closeButton = document.getElementById('pngPopoutClose');
+                if (!modal) return;
+
+                if (event.target === modal || event.target === closeButton) {
+                    closeModalFallback();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeModalFallback();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

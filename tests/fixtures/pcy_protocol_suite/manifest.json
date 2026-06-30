@@ -1,0 +1,24 @@
+{
+  "source": "_FrankenParams_PCY",
+  "inputs": [
+    "drFrankenstein.yaml",
+    "01_termini_capping/PCY_capped.pdb",
+    "02_GOAT_conformers/PCY_conformer_1.xyz",
+    "03_charge_calculations/resp2_charges.csv",
+    "04_parameter_assembly/PCY_capped.mol2",
+    "04_parameter_assembly/PCY_capped.frcmod",
+    "05_torsion_scanning/torsion_C-CT-c3-ca/scan_data/final_scan_energies.csv",
+    "06_parameter_fitting/qm-mm_parameter_fitting/mean_average_errors.csv",
+    "08_Parameterisation_Report/drFrankenstein_report.html"
+  ],
+  "expected": {
+    "protocol_1_capping": "01_termini_capping/PCY_capped.pdb",
+    "protocol_2_wriggling": "02_GOAT_conformers/PCY_conformer_1.xyz",
+    "protocol_3_charging": "03_charge_calculations/resp2_charges.csv",
+    "protocol_4_assembly": "04_parameter_assembly/PCY_capped.frcmod",
+    "protocol_5_twisting": "05_torsion_scanning/torsion_C-CT-c3-ca/scan_data/final_scan_energies.csv",
+    "protocol_6_stitching": "06_parameter_fitting/qm-mm_parameter_fitting/mean_average_errors.csv",
+    "protocol_7_creation": "07_final_creation/expected_files.txt",
+    "protocol_8_reporter": "08_Parameterisation_Report/drFrankenstein_report.html"
+  }
+}

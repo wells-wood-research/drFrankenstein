@@ -160,9 +160,9 @@ def plot_run_fit_score_heatmap(
     darkGrey: str = '#1a1a1a'
     yellow: str = '#FFFF00'
     # Match the torsion navigation tab colors.
-    brightGreen: str = '#2e7d32'
-    brightOrange: str = '#f57c00'
-    brightRed: str = '#c62828'
+    brightGreen: str = '#39FF14'   # neon green
+    brightOrange: str = '#FF9100'  # vivid orange
+    brightRed: str = '#FF1744'     # electric red
 
     figHeight = max(4.0, 2.8 * panelCount)
     fig, axes = plt.subplots(

@@ -50,10 +50,10 @@ moleculeInfo:
     H: [H]      
 
 conformerGenerationInfo:
-  goatMode: GOAT-ENTROPY
-  energyCutoff: 12.0
-  goatMethod: GFN-FF
-  conformerSelection: DIVERSE
+  goatMode: GOAT
+  energyCutoff: 6.0
+  goatMethod: XTB2
+  conformerSelection: ENERGY
 
 ##########################################################################################################################
 #   _                          _                   ____                           ___            __                      #

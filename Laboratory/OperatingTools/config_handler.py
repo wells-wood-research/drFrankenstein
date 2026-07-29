@@ -464,12 +464,10 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
         "cleanUpLevel": int,
         "assemblyProtocol": str,
         "seed": int,
-        "conformerSelectionMethods": str,
         "debug": bool,
         "gpuPlatform": (str, type(None)),
     }
     allowedAssemblyProtocols = ["ANTECHAMBER", "CGENFF", "AGNOSTIC"]
-    allowedSelectionMethods = ["ENERGY", "DIVERSE"]
     for key, expectedType in requiredKeys.items():
         keyPath = f"{sectionName}.{key}"
         if _check_key_exists(sectionData, key, sectionName, errors):
@@ -488,10 +486,6 @@ def _validate_misc_info(sectionData: Optional[Dict[str, Any]], sectionName: str,
                     _validate_allowed_values(value, allowedAssemblyProtocols, keyPath, errors)
                 elif key == "seed" and isinstance(value, int) and value < 0:
                     _add_error(errors, keyPath, f"Value for '{key}' must be 0 or greater, but got {value}.")
-                elif key == "conformerSelectionMethods" and isinstance(value, str):
-                    if value.upper() in allowedSelectionMethods:
-                        continue
-                    _validate_allowed_values(value, allowedSelectionMethods, keyPath, errors)
                 elif key == "gpuPlatform" and isinstance(value, str):
                     allowedGpu = ["CUDA", "HIP", "OpenCL", "CPU"]
                     if value.upper() not in allowedGpu:

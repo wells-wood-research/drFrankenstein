@@ -151,7 +151,6 @@ miscInfo:
   cleanUpLevel: 1
   ## random seed used for all stochastic selections
   seed: 1818
-  conformerSelectionMethods: DIVERSE
   debug: false
   gpuPlatform: CPU
   assemblyProtocol: ANTECHAMBER ## accepts ANTECHAMBER, CGENFF, or AGNOSTIC

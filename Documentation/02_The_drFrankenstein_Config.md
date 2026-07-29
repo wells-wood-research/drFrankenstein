@@ -487,7 +487,6 @@ miscInfo:
   cleanUpLevel: 1
   assemblyProtocol: ANTECHAMBER
   seed: 1818
-  conformerSelectionMethods: ENERGY
   debug: false
   gpuPlatform: CPU
 ```

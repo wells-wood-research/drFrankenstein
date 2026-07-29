@@ -7,22 +7,15 @@ class FilePath:
 
 _ENERGY_METHOD = "ENERGY"
 _DIVERSE_METHOD = "DIVERSE"
-_LEGACY_BOLTZMANN_METHOD = "BOLTZMANN"
-_LEGACY_PCA_KMEANS_METHOD = "PCA_KMEANS"
-_LEGACY_PCA_KNN_METHOD = "PCA_KNN"
 
 
 def _normalize_selection_method(selection_method: str) -> str:
-    """Map legacy conformer-selection labels onto the current method names."""
+    """Normalize the configured conformer-selection method."""
     if not selection_method:
         return _ENERGY_METHOD
     normalized = selection_method.upper()
     if normalized in (_ENERGY_METHOD, _DIVERSE_METHOD):
         return normalized
-    if normalized == _LEGACY_BOLTZMANN_METHOD:
-        return _ENERGY_METHOD
-    if normalized in (_LEGACY_PCA_KMEANS_METHOD, _LEGACY_PCA_KNN_METHOD):
-        return _DIVERSE_METHOD
     return selection_method
 
 
@@ -66,9 +59,7 @@ def select_conformer_xyzs(config: dict, nConformers: int, temperature: float = 3
     if nConformers == -1 or nConformers >= len(conformerXyzs):
         return conformerXyzs
 
-    selection_method = config.get("miscInfo", {}).get("conformerSelectionMethods")
-    if selection_method is None:
-        selection_method = config.get("chargeFittingInfo", {}).get("conformerSelectionMethod", _ENERGY_METHOD)
+    selection_method = config["conformerGenerationInfo"]["conformerSelection"]
     selection_method = _normalize_selection_method(selection_method)
 
     if selection_method == _ENERGY_METHOD:

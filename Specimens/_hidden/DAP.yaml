@@ -83,7 +83,6 @@ miscInfo:
   availableCpus: 30
   cleanUpLevel: 1
   seed: 1818
-  conformerSelectionMethods: ENERGY
   debug: false
   gpuPlatform: CPU
   assemblyProtocol: ANTECHAMBER

@@ -574,3 +574,25 @@ def validate_config(config: Dict[str, Any]) -> Union[Dict[str, Any], None]:
         return config
     drSplash.show_config_error(errors)
     return None
+
+
+def set_xtb_environment(config: Dict[str, Any]) -> str:
+    """Set ``XTBEXE`` to the ORCA-bundled ``otool_xtb`` executable.
+
+    ORCA's GOAT workflow looks for ``otool_xtb`` through the ``XTBEXE``
+    environment variable.  Configure it before any workflow protocol can
+    launch an ORCA calculation, and fail early if the ORCA installation does
+    not contain the expected executable.
+    """
+    orcaExe = config["pathInfo"]["orcaExe"]
+    xtbExe = os.path.abspath(os.path.join(os.path.dirname(orcaExe), "otool_xtb"))
+
+    if not os.path.isfile(xtbExe):
+        raise FileNotFoundError(
+            f"ORCA companion executable not found: {xtbExe}. "
+            f"Expected 'otool_xtb' beside the configured ORCA executable "
+            f"({orcaExe})."
+        )
+
+    os.environ["XTBEXE"] = xtbExe
+    return xtbExe

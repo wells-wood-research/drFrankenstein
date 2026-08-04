@@ -43,6 +43,9 @@ def main() -> None:
         ## check config for errors#
         config = config_handler.validate_config(config)
 
+        ## configure ORCA's bundled XTB helper before running any protocols
+        config_handler.set_xtb_environment(config)
+
         ## unpack config to find outputDir, make directory
         outputDir = config["pathInfo"]["outputDir"]
         os.makedirs(outputDir,exist_ok=True)
@@ -75,6 +78,8 @@ def main() -> None:
 
         cappedPdb = pdb_checker.get_capped_pdb_path(config)
         pdb_checker.validate_charge_multiplicity(config, cappedPdb)
+
+        exit()
 
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:

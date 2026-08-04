@@ -11,13 +11,29 @@ from OperatingTools import file_parsers
 from OperatingTools import drLogger
 ########################################
 def run_orca(orcaInput: FilePath, orcaOutput: FilePath, config: dict) -> None:
-    """Run ORCA with the configured executable and capture stdout/stderr to a file."""
+    """Run ORCA with an explicit XTB environment and capture its output.
+
+    ORCA's XTB-backed calculations can be launched from different working
+    directories during a torsion scan.  Resolve the companion ``otool_xtb``
+    beside the configured ORCA executable for every child process so scans do
+    not depend on inherited shell state or the current working directory.
+    """
     orcaExe = config["pathInfo"]["orcaExe"]
+    orcaDir = os.path.dirname(os.path.abspath(orcaExe))
+    xtbExe = os.path.join(orcaDir, "otool_xtb")
     orcaCommand = [orcaExe, orcaInput]
+    environment = os.environ.copy()
+    environment["XTBEXE"] = xtbExe
+    environment["PATH"] = orcaDir + os.pathsep + environment.get("PATH", "")
     logger = drLogger.get_logger()
     with open(orcaOutput, 'w') as outputFile:
         try:
-            result = call(orcaCommand, stdout=outputFile, stderr=outputFile)
+            result = call(
+                orcaCommand,
+                stdout=outputFile,
+                stderr=outputFile,
+                env=environment,
+            )
             if logger:
                 logger.log_subprocess_call(orcaCommand, result)
         except Exception as e:

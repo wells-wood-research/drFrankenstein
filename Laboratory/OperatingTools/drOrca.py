@@ -258,7 +258,8 @@ def  make_orca_input_for_scan(inputXyz,
                                      solvationMethod,
                                        torsionIndexes,
                                          scanAngles,
-                                           nCpus: int | None = None):
+                                           nCpus: int | None = None,
+                                           fallback: bool = False):
     ## unpack moleculeInfo
     charge = moleculeInfo["charge"]
     multiplicity = moleculeInfo["multiplicity"]
@@ -268,13 +269,16 @@ def  make_orca_input_for_scan(inputXyz,
         f.write(" # --------------------------------- #\n")
         f.write(" #  Torsion Scan                     #\n")
         f.write(" # --------------------------------- #\n")
-        ## METHOD
+        ## METHOD (default internal coords opt, use cartesian opt as a fallback)
+        optimisationMethod = "COPT" if fallback else "Opt" 
         if solvationMethod is None:
-            f.write(f"! {qmMethod} Opt\n")
+            f.write(f"! {qmMethod} {optimisationMethod}\n")
         else:
-            f.write(f"! {qmMethod} {solvationMethod} Opt\n") 
+            f.write(f"! {qmMethod} {solvationMethod} {optimisationMethod}\n")
         if nCpus is not None:
             f.write(f"%pal nprocs {nCpus}\nend\n")
+        if fallback: ## increase max iterations for fallback (slower)
+            f.write("%scf\nMaxIter 500\nend\n")
         ## SCAN 
         if not scanAngles is None:
             f.write("%geom Scan\n")

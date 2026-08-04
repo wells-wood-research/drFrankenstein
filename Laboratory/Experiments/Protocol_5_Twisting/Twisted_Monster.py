@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from os import path as p
 import pandas as pd
 
@@ -16,6 +17,42 @@ from typing import Dict, List, Tuple
 ## drFRANKENSTEIN MODULES ##
 from . import Twisted_Assistant
 from OperatingTools import drOrca, Timer
+
+
+def _orca_hit_optimisation_iteration_limit(orcaOutput: FilePath) -> bool:
+    """Return whether ORCA stopped after exhausting optimisation iterations."""
+    if not p.isfile(orcaOutput):
+        return False
+
+    failureMessage = "*** convergence criteria cannot be satisfied within * iterations ***"
+    with open(orcaOutput, "r") as f:
+        return any(fnmatch.fnmatch(line.strip().lower(), failureMessage) for line in f)
+
+
+def _retry_crashed_scan_with_copt(inputXyz, scanDir, moleculeInfo, qmMethod,
+                                  solvationMethod, torsionIndexes, scanAngles,
+                                  nCpus, config) -> bool:
+    """Retry a scan with COPT when its only detected failure is iteration exhaustion."""
+    crashedFlag = p.join(scanDir, "ORCA_CRASHED")
+    orcaOutput = p.join(scanDir, "orca_scan.out")
+    if not (p.isfile(crashedFlag) and _orca_hit_optimisation_iteration_limit(orcaOutput)):
+        return False
+
+    # Preserve scan geometries and ancillary ORCA files; replace only this run's
+    # input, output, and status so the COPT calculation is a clean retry.
+    for filePath in (p.join(scanDir, "orca_scan.inp"), orcaOutput, crashedFlag):
+        if p.isfile(filePath):
+            os.remove(filePath)
+
+    coptInput = drOrca.make_orca_input_for_scan(
+        inputXyz=inputXyz, outDir=scanDir, moleculeInfo=moleculeInfo,
+        qmMethod=qmMethod, solvationMethod=solvationMethod,
+        torsionIndexes=torsionIndexes, scanAngles=scanAngles, nCpus=nCpus,
+        fallback=True,
+    )
+    drOrca.run_orca(coptInput, orcaOutput, config)
+    Twisted_Assistant.create_orca_terminated_flag(scanDir, orcaOutput)
+    return True
 
 #🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲🗲
 def run_optimisation_step(conformerXyz, conformerScanDir, conformerId, config):
@@ -68,14 +105,18 @@ def run_forwards_scan_step(optXyz, initialTorsionAngle, torsionIndexes, conforme
     crashedFlag = p.join(forwardsDir, "ORCA_CRASHED")
     flags = [finishedFlag, crashedFlag]
 
-    if p.isfile(crashedFlag):
-        raise FileNotFoundError(f"ORCA crashed during forwards scan for {conformerId}: {forwardsDir}")
-
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(forwardsDir)
         forwardsOrcaOutput: FilePath = p.join(forwardsDir, "orca_scan.out")
         drOrca.run_orca(forwardsOrcaInput, forwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(forwardsDir, forwardsOrcaOutput)
+    _retry_crashed_scan_with_copt(
+        inputXyz=optXyz, scanDir=forwardsDir, moleculeInfo=config["moleculeInfo"],
+        qmMethod=config["torsionScanInfo"]["scanMethod"],
+        solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
+        torsionIndexes=torsionIndexes, scanAngles=forwardsScanText,
+        nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1), config=config,
+    )
     if p.isfile(crashedFlag):
         raise FileNotFoundError(f"ORCA crashed during forwards scan for {conformerId}: {forwardsDir}")
     
@@ -114,14 +155,18 @@ def run_backwards_scan_step(forwardsScanXyz, initialTorsionAngle, torsionIndexes
     crashedFlag = p.join(backwardsDir, "ORCA_CRASHED")
     flags = [finishedFlag, crashedFlag]
 
-    if p.isfile(crashedFlag):
-        raise FileNotFoundError(f"ORCA crashed during backwards scan for {conformerId}: {backwardsDir}")
-
     if not any ([p.isfile(flag) for flag in flags]):
         os.chdir(backwardsDir)
         backwardsOrcaOutput: FilePath = p.join(backwardsDir, "orca_scan.out")
         drOrca.run_orca(backwardsOrcaInput, backwardsOrcaOutput, config)
         Twisted_Assistant.create_orca_terminated_flag(backwardsDir, backwardsOrcaOutput)
+    _retry_crashed_scan_with_copt(
+        inputXyz=forwardsScanXyz, scanDir=backwardsDir, moleculeInfo=config["moleculeInfo"],
+        qmMethod=config["torsionScanInfo"]["scanMethod"],
+        solvationMethod=config["torsionScanInfo"]["scanSolvationMethod"],
+        torsionIndexes=torsionIndexes, scanAngles=backwardsScanText,
+        nCpus=config["torsionScanInfo"].get("nCoresPerCalculation", 1), config=config,
+    )
     if p.isfile(crashedFlag):
         raise FileNotFoundError(f"ORCA crashed during backwards scan for {conformerId}: {backwardsDir}")
 

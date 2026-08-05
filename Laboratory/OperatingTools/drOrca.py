@@ -11,18 +11,23 @@ from OperatingTools import file_parsers
 from OperatingTools import drLogger
 ########################################
 def run_orca(orcaInput: FilePath, orcaOutput: FilePath, config: dict) -> None:
-    """Run ORCA with an explicit XTB environment and capture its output.
+    """Run ORCA with the external Grimme xTB interface enabled.
 
-    ORCA's XTB-backed calculations can be launched from different working
-    directories during a torsion scan.  Resolve the companion ``otool_xtb``
-    beside the configured ORCA executable for every child process so scans do
-    not depend on inherited shell state or the current working directory.
+    ORCA 6.1's external XTB interface expects ``otool_xtb`` to be available
+    beside the ORCA binaries and on ``PATH``.  Give every ORCA subprocess the
+    same explicit environment as a direct shell invocation, and run it from
+    the calculation directory so ORCA's auxiliary files and lookup context
+    are identical to a manual scan.
     """
-    orcaExe = config["pathInfo"]["orcaExe"]
-    orcaDir = os.path.dirname(os.path.abspath(orcaExe))
+    orcaExe = os.path.abspath(config["pathInfo"]["orcaExe"])
+    orcaDir = os.path.dirname(orcaExe)
     xtbExe = os.path.join(orcaDir, "otool_xtb")
+    orcaInput = os.path.abspath(orcaInput)
+    orcaOutput = os.path.abspath(orcaOutput)
+    calculationDir = os.path.dirname(orcaInput)
     orcaCommand = [orcaExe, orcaInput]
     environment = os.environ.copy()
+    environment["ORCA_DIR"] = orcaDir
     environment["XTBEXE"] = xtbExe
     environment["PATH"] = orcaDir + os.pathsep + environment.get("PATH", "")
     logger = drLogger.get_logger()
@@ -33,6 +38,7 @@ def run_orca(orcaInput: FilePath, orcaOutput: FilePath, config: dict) -> None:
                 stdout=outputFile,
                 stderr=outputFile,
                 env=environment,
+                cwd=calculationDir,
             )
             if logger:
                 logger.log_subprocess_call(orcaCommand, result)

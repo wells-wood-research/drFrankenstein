@@ -114,16 +114,11 @@ def run_torsion_scanning(torsionTag: str,
     config["runtimeInfo"]["madeByTwisting"]["torsionTags"].append(torsionTag)
 
     allConformerXyzs = select_conformers.get_ordered_conformer_xyzs(config)
-    nConformersRequested = config["torsionScanInfo"]["nConformers"]
-    if nConformersRequested == -1 or nConformersRequested >= len(allConformerXyzs):
-        nConformersTarget = len(allConformerXyzs)
-    else:
-        nConformersTarget = nConformersRequested
-
-    if "conformerXyzsForTorsionScans" not in config["runtimeInfo"]["madeByTwisting"]:
-        config["runtimeInfo"]["madeByTwisting"]["conformerXyzsForTorsionScans"] = (
-            allConformerXyzs[:nConformersTarget]
-        )
+    nConformersRequested = config["torsionScanInfo"].get("nConformers", -1)
+    nConformersTarget = _get_conformer_scan_target(
+        nConformersRequested, len(allConformerXyzs)
+    )
+    config["runtimeInfo"]["madeByTwisting"]["conformerXyzsForTorsionScans"] = []
 
     scanDfs = []
     scanDirs = []
@@ -162,6 +157,19 @@ def run_torsion_scanning(torsionTag: str,
             "All sampled conformers failed before completing forwards and backwards scans."
         )
 
+    # scanDfs contains one forward and one backward dataframe per successful
+    # conformer.  Derive the successful conformer names from the returned scan
+    # directories so fallback replacements are reflected in runtime metadata.
+    successfulConformerIds = {
+        p.basename(p.dirname(scanDir)).removeprefix("scans_")
+        for scanDir in scanDirs
+    }
+    config["runtimeInfo"]["madeByTwisting"]["conformerXyzsForTorsionScans"] = [
+        conformerXyz
+        for conformerXyz in allConformerXyzs
+        if p.splitext(p.basename(conformerXyz))[0] in successfulConformerIds
+    ]
+
     if config["torsionScanInfo"]["singlePointMethod"] is None:
         singlePointDfs = None
     elif debug:
@@ -184,6 +192,17 @@ def run_torsion_scanning(torsionTag: str,
     
 
     return config
+
+
+def _get_conformer_scan_target(nConformersRequested: int, nConformersGenerated: int) -> int:
+    """Bound the requested scan count by the conformers Protocol 2 produced."""
+    if nConformersGenerated <= 0:
+        return 0
+    if nConformersRequested == -1:
+        return nConformersGenerated
+    if nConformersRequested < -1:
+        raise ValueError("torsionScanInfo.nConformers must be -1 or a non-negative integer")
+    return min(nConformersRequested, nConformersGenerated)
 
 
 
@@ -257,13 +276,10 @@ def scan_in_parallel(torsionScanDir, conformerXyzs, torsionIndexes, torsionTag, 
     nCoresPerCalculation = config["torsionScanInfo"].get("nCoresPerCalculation", 1)
     availableCpus = config["miscInfo"]["availableCpus"]
     maxPoolCores = max(1, availableCpus // nCoresPerCalculation)
-    conformerLimit = config["torsionScanInfo"]["nConformers"]
-    if conformerLimit == -1:
-        conformerLimit = len(argsList)
-    ## save on cores 
-    nCores = min(len(argsList),                             ## total number of conformers created
-                  maxPoolCores,                             ## number of available CPUs per calculation
-                  conformerLimit)                           ## number of conformers we want to scan
+    # The caller already supplies a bounded fallback batch.  Do not apply the
+    # configured request a second time here: Protocol 2 may have generated
+    # fewer conformers than requested, and this batch may contain replacements.
+    nCores = min(len(argsList), maxPoolCores)
 
     with WorkerPool(n_jobs = nCores) as pool:
         results = pool.map(do_the_twist_worker,

@@ -276,11 +276,10 @@ def  make_orca_input_for_scan(inputXyz,
         f.write(" #  Torsion Scan                     #\n")
         f.write(" # --------------------------------- #\n")
         ## METHOD (default internal coords opt, use cartesian opt as a fallback)
-        optimisationMethod = "COPT" if fallback else "Opt" 
         if solvationMethod is None:
-            f.write(f"! {qmMethod} {optimisationMethod}\n")
+            f.write(f"! {qmMethod} OPT\n")
         else:
-            f.write(f"! {qmMethod} {solvationMethod} {optimisationMethod}\n")
+            f.write(f"! {qmMethod} {solvationMethod} OPT\n")
         if nCpus is not None:
             f.write(f"%pal nprocs {nCpus}\nend\n")
         if fallback: ## increase max iterations for fallback (slower)

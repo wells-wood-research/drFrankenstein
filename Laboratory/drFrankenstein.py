@@ -79,8 +79,6 @@ def main() -> None:
         cappedPdb = pdb_checker.get_capped_pdb_path(config)
         pdb_checker.validate_charge_multiplicity(config, cappedPdb)
 
-        exit()
-
         ## run conformer generation protocol
         if not checkpointInfo["conformersComplete"]:
             drSplash.show_wriggle_splash()
